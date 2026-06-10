@@ -93,6 +93,15 @@ h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; whit
   background: transparent; border: 1px dashed rgba(255,255,255,0.2); color: #9aa;
   padding: 8px; border-radius: 7px; font-size: 12.5px; cursor: pointer; margin-top: 4px;
 }
+.poolSummary {
+  font-size: 11px; color: #8c9098; font-family: 'Inter', sans-serif;
+  padding: 2px 2px 5px; border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex; justify-content: space-between; gap: 8px; flex-shrink: 0;
+}
+.poolSummary b { color: #c8ccd4; font-weight: 600; }
+@media (max-width: 720px) {
+  .poolSummary { flex-direction: column; justify-content: center; border-bottom: none; border-right: 1px solid rgba(255,255,255,0.08); padding: 0 10px 0 0; min-width: 92px; gap: 2px; }
+}
 
 /* ── Grid ── */
 #gridWrap { flex: 1; padding: 14px 14px 0 2px; min-width: 0; }
@@ -630,6 +639,19 @@ if (IS_BROWSER) (function () {
     const active = cats.filter((c) => c.hours - (used[c.id] || 0) > 0.001);
     const done = cats.filter((c) => c.hours - (used[c.id] || 0) <= 0.001);
     pool.innerHTML = "";
+    // summary: total unassigned hours across all categories
+    let totalBudget = 0, totalPlaced = 0, totalUnassigned = 0;
+    for (const c of cats) {
+      totalBudget += c.hours;
+      totalPlaced += used[c.id] || 0;
+      totalUnassigned += Math.max(0, c.hours - (used[c.id] || 0));
+    }
+    const summary = document.createElement("div");
+    summary.className = "poolSummary";
+    summary.innerHTML =
+      "<span><b>" + fmtH(totalUnassigned) + "h</b> unassigned</span>" +
+      "<span>" + fmtH(totalPlaced) + "h / " + fmtH(totalBudget) + "h placed</span>";
+    pool.appendChild(summary);
     for (const cat of active.concat(done)) {
       const u = used[cat.id] || 0;
       const remaining = Math.round((cat.hours - u) * 100) / 100;
@@ -1098,5 +1120,6 @@ if (IS_BROWSER) (function () {
   if (!cfg) setDot("", "Sync not set up yet — tap ⚙");
 })();
 </script>
+<!-- v1.1 -->
 </body>
 </html>
