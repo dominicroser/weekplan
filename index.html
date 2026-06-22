@@ -55,6 +55,8 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; line-height: 1.55; }
 .poolSummary .l1 b { color: var(--ink); font-weight: 700; }
 .poolSummary .l2 { color: var(--ink3); }
+.poolSummary .l3 { color: var(--accent); margin-top: 2px; }
+.poolSummary .l3 b { color: var(--accent); font-weight: 700; }
 .sheetBtn { display: block; width: 100%; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink2); padding: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 .sheetBtn:active { background: var(--panel2); }
 .poolItem { position: relative; background: var(--panel); border-radius: 0 8px 8px 0; border-left: 4px solid #888; padding: 8px 11px 8px 12px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
@@ -721,9 +723,11 @@ if (IS_BROWSER) (function () {
     const W = state.weeks.length;
     const summary = document.createElement("div");
     summary.className = "poolSummary";
+    const avgOther = W > 1 ? Math.max(0, allBudget - thisPlaced) / (W - 1) : null;
     summary.innerHTML =
       '<div class="l1">This week: <b>' + fmtH(Math.max(0, totalBudget - thisPlaced)) + "h</b> free · " + fmtH(thisPlaced) + "h / " + fmtH(totalBudget) + "h planned</div>" +
-      '<div class="l2">All ' + W + " week" + (W > 1 ? "s" : "") + ": " + fmtH(Math.max(0, allBudget - allPlaced)) + "h free · " + fmtH(allPlaced) + "h / " + fmtH(allBudget) + "h planned</div>";
+      '<div class="l2">All ' + W + " week" + (W > 1 ? "s" : "") + ": " + fmtH(Math.max(0, allBudget - allPlaced)) + "h free · " + fmtH(allPlaced) + "h / " + fmtH(allBudget) + "h planned</div>" +
+      (avgOther != null ? '<div class="l3">Other ' + (W - 1) + " week" + (W - 1 > 1 ? "s" : "") + ": <b>" + fmtH(avgOther) + "h</b>/week left on avg</div>" : "");
     if (sheetUrl) {
       const sb = document.createElement("button");
       sb.className = "sheetBtn"; sb.textContent = "⤓ Import from sheet";
