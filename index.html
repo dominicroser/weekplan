@@ -17,7 +17,7 @@
   --bg:#ffffff; --panel:#f5f6f8; --panel2:#eceef1; --ink:#1f2328; --ink2:#5b626b;
   --ink3:#8b919a; --line:rgba(0,0,0,0.09); --line2:rgba(0,0,0,0.05);
   --accent:#2b6cb0; --grid:#ffffff; --gridLine:rgba(0,0,0,0.07); --gridHour:rgba(0,0,0,0.14);
-  --good:#2f855a; --over:#c05621; --overbg:#fff4ec;
+  --good:#2f855a; --over:#c05621; --overbg:#fff4ec; --pink:#d6336c;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; }
@@ -101,6 +101,19 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .overlap { position: absolute; background: rgba(255,221,0,0.5); border: 1px solid #f5c000; border-radius: 3px; pointer-events: none; z-index: 4; }
 #ghost { position: fixed; pointer-events: none; z-index: 999; padding: 4px 9px; border-radius: 5px; font-size: 11.5px; font-weight: 700; box-shadow: 0 3px 10px rgba(0,0,0,0.25); font-family: 'Inter', sans-serif; display: none; }
 
+/* ── Sticky note ── */
+#stickyNote { position: fixed; z-index: 40; width: 230px; height: 150px; background: #fffdf2; border: 1px solid #ece1b3; border-radius: 10px; box-shadow: 0 6px 22px rgba(0,0,0,0.14); display: none; flex-direction: column; overflow: hidden; min-width: 150px; min-height: 92px; resize: both; }
+#stickyNote.open { display: flex; }
+#noteBar { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 8px; background: #fbf5d6; cursor: move; font-family: 'Inter', sans-serif; font-size: 11px; color: #9a8c3e; flex-shrink: 0; }
+#noteGrip { flex: 1; font-weight: 600; letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; }
+#noteTools { display: flex; gap: 2px; }
+#noteTools button { width: 22px; height: 22px; border: 1px solid rgba(0,0,0,0.12); background: rgba(255,255,255,0.6); border-radius: 5px; cursor: pointer; font-size: 12px; line-height: 1; color: #5b5320; padding: 0; }
+#noteTools button:active { background: #fff; }
+#noteTools button[data-cmd=pink] { color: var(--pink); font-weight: 700; }
+#noteClose { width: 22px; height: 22px; border: none; background: transparent; cursor: pointer; font-size: 15px; line-height: 1; color: #8a7c2e; padding: 0; }
+#noteBody { flex: 1; padding: 7px 9px; overflow: auto; font-family: 'Inter', sans-serif; font-size: 12.5px; line-height: 1.45; color: #3a3320; outline: none; -webkit-user-select: text; user-select: text; cursor: text; }
+#noteBody:empty:before { content: 'Quick notes…'; color: #b3a86a; }
+
 /* ── Action bar ── */
 #actionBar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 50; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 7px 9px; display: none; align-items: center; gap: 5px; box-shadow: 0 6px 24px rgba(0,0,0,0.18); flex-wrap: wrap; max-width: 94vw; justify-content: center; }
 #actionBar.show { display: flex; }
@@ -160,6 +173,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
     <input id="cmdInput" placeholder='Type a task or meeting… e.g. "Growth mon-sat 5–5:30am" or "Meet Fred tue 1–2:30pm"' autocomplete="off">
   </form>
   <button class="iconBtn" id="undoBtn" title="Undo">&#8630;</button>
+  <button class="iconBtn" id="noteBtn" title="Sticky note">&#128209;</button>
   <button class="iconBtn" id="settingsBtn" title="Settings">&#9881;</button>
   <div id="syncDot" title="Sync status"></div>
 </header>
@@ -174,6 +188,19 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 
 <div id="ghost"></div>
 <div id="toast"></div>
+
+<div id="stickyNote">
+  <div id="noteBar">
+    <span id="noteGrip">&#9783; note</span>
+    <span id="noteTools">
+      <button data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+      <button data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+      <button data-cmd="pink" title="Pink text (Ctrl+H)">A</button>
+    </span>
+    <button id="noteClose" title="Hide note">&times;</button>
+  </div>
+  <div id="noteBody" contenteditable="true" spellcheck="true"></div>
+</div>
 
 <div id="actionBar">
   <span id="abInfo"></span>
@@ -227,7 +254,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type a known task name to place it as a budgeted block; type any other name to drop in a one-off <b>meeting</b> (no hour budget). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Drag either end of a block to resize; tap a block for nudge buttons.</p>
+  <p class="muted">Type a known task name to place it as a budgeted block; type any other name to drop in a one-off <b>meeting</b> (no hour budget). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Drag either end of a block to resize; tap a block for nudge buttons. The 🗒 button shows/hides a sticky note you can drag anywhere (Ctrl+B bold, Ctrl+I italic, Ctrl+H pink).</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -258,6 +285,7 @@ const STORAGE_KEY = "weekly-planner-v3";
 const OLD_KEY = "weekly-planner-v2";
 const CFG_KEY = "weekly-planner-sync";
 const EVENT_COLOR = "#64748b";
+const PINK = "#d6336c";
 
 const PALETTE = [
   "#3b6fb5","#e08a2e","#7aa66b","#9b59b6","#c0392b","#16a085","#8e44ad","#a9744f",
@@ -283,6 +311,8 @@ const DEFAULT_CATEGORIES = [
   { id: "fruit", name: "Fruit", hours: 7, color: "#d98880" },
   { id: "wifi", name: "WiFi", hours: 1, color: "#1c7ed6" },
 ];
+
+function defaultNote() { return { html: "", x: null, y: null, w: 230, h: 150, open: true }; }
 
 /* ═══════════════ Pure helpers ═══════════════ */
 function fmtH(n) { return String(Math.round(n * 100) / 100); }
@@ -345,6 +375,29 @@ function layoutDay(list) {
   return { pos, overlays };
 }
 
+/* ── Merge blocks of the SAME task that touch or overlap on the same day ── */
+function mergeAdjacent(blocks) {
+  const keyOf = (b) => (b.event ? "e:" + (b.name || "") + "|" + (b.color || "") : "c:" + b.catId) + "|" + b.day;
+  const groups = {};
+  for (const b of blocks) { (groups[keyOf(b)] = groups[keyOf(b)] || []).push(b); }
+  const result = [];
+  for (const k in groups) {
+    const arr = groups[k].slice().sort((a, b) => a.startSlot - b.startSlot || a.id - b.id);
+    let cur = null;
+    for (const b of arr) {
+      if (cur && b.startSlot <= cur.startSlot + cur.lenSlots) {
+        const end = Math.max(cur.startSlot + cur.lenSlots, b.startSlot + b.lenSlots);
+        cur.lenSlots = end - cur.startSlot;
+        if (b.id < cur.id) cur.id = b.id;
+      } else {
+        cur = Object.assign({}, b);
+        result.push(cur);
+      }
+    }
+  }
+  return result;
+}
+
 /* ── Time range ── */
 const TIME_RE = /(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\s*(?:-|–|—|to|until)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?/i;
 function parseTimeRange(text) {
@@ -380,7 +433,7 @@ function parseDays(text) {
   const wd = /\bweek\s*days?\b/.exec(t);
   if (wd) { for (let i = 0; i < 5; i++) days.add(i); matches.push(wd[0]); }
   const we = /\bweek\s*ends?\b/.exec(t);
-  if (we) { days.add(5); matches.push(we[0]); } // Sat only (no Sunday)
+  if (we) { days.add(5); matches.push(we[0]); }
   const rangeRe = new RegExp("\\b(" + DAY_WORD + ")\\s*(?:-|–|—|to|through)\\s*(" + DAY_WORD + ")\\b", "g");
   while ((m = rangeRe.exec(t))) {
     const a = dayIdxOf(m[1]), b = dayIdxOf(m[2]);
@@ -519,7 +572,7 @@ function applySheetWeeks(state, parsed) {
     if (!cat) { cat = { id: "cat" + Date.now() + (n++), name, hours: 1, color: row.color || pickColor(cats) }; cats.push(cat); added++; }
     else { if (row.color) cat.color = row.color; updated++; }
     const firstVal = row.hours.find((h) => h != null);
-    if (firstVal != null) cat.hours = firstVal; // template default (weeks without an explicit value fall back to this)
+    if (firstVal != null) cat.hours = firstVal;
     if (parsed.weekCount > 1) {
       for (let j = 0; j < parsed.weekCount; j++) {
         const h = row.hours[j];
@@ -538,20 +591,21 @@ function migrate(s) {
     if (!s.weeks.length) s.weeks = [{ id: "w" + Date.now(), blocks: [], budgets: {} }];
     s.currentWeek = Math.max(0, Math.min(s.currentWeek || 0, s.weeks.length - 1));
     s.nextId = s.nextId || 1; s.version = 3;
+    if (!s.note) s.note = defaultNote();
     return s;
   }
   const blocks = (s.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0);
-  return { version: 3, categories: s.categories || [], weeks: [{ id: "w" + Date.now(), blocks, budgets: {} }], currentWeek: 0, nextId: s.nextId || 1 };
+  return { version: 3, categories: s.categories || [], weeks: [{ id: "w" + Date.now(), blocks, budgets: {} }], currentWeek: 0, nextId: s.nextId || 1, note: defaultNote() };
 }
 
 if (!IS_BROWSER && typeof module !== "undefined") {
-  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, usedByCat, fmtH, slotLabel, textOn, pickColor, parseCSV, csvToRows, applySheet, csvToWeeks, applySheetWeeks, migrate, TOTAL_SLOTS, DAYS };
+  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, mergeAdjacent, usedByCat, fmtH, slotLabel, textOn, pickColor, parseCSV, csvToRows, applySheet, csvToWeeks, applySheetWeeks, migrate, defaultNote, TOTAL_SLOTS, DAYS };
 }
 
 /* ═══════════════ Browser app ═══════════════ */
 if (IS_BROWSER) (function () {
-  let state = { version: 3, categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)), weeks: [{ id: "w" + Date.now(), blocks: [], budgets: {} }], currentWeek: 0, nextId: 1 };
-  let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0;
+  let state = { version: 3, categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)), weeks: [{ id: "w" + Date.now(), blocks: [], budgets: {} }], currentWeek: 0, nextId: 1, note: defaultNote() };
+  let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null;
 
   const $ = (id) => document.getElementById(id);
   const grid = $("grid"), pool = $("pool"), ghost = $("ghost");
@@ -601,9 +655,13 @@ if (IS_BROWSER) (function () {
   }
   function schedulePush() { if (pushTimer) clearTimeout(pushTimer); pushTimer = setTimeout(pushRemote, 900); }
 
-  function commit() { localUpdatedAt = Date.now(); saveLocal(); schedulePush(); renderAll(); }
+  function commit() {
+    state.weeks.forEach((w) => { w.blocks = mergeAdjacent(w.blocks); });
+    if (selectedId != null && !curBlocks().some((b) => b.id === selectedId)) selectedId = null;
+    localUpdatedAt = Date.now(); saveLocal(); schedulePush(); renderAll();
+  }
   function snap() { undoStack.push(JSON.stringify(state)); if (undoStack.length > 60) undoStack.shift(); }
-  function undo() { if (!undoStack.length) { toast("Nothing to undo"); return; } state = migrate(JSON.parse(undoStack.pop())); selectedId = null; commit(); }
+  function undo() { if (!undoStack.length) { toast("Nothing to undo"); return; } state = migrate(JSON.parse(undoStack.pop())); selectedId = null; commit(); renderNote(true); }
 
   let toastTimer = null;
   function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); if (toastTimer) clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2800); }
@@ -611,6 +669,20 @@ if (IS_BROWSER) (function () {
   function nameTaken(name, exceptId) {
     const q = name.trim().toLowerCase();
     return state.categories.some((c) => c.id !== exceptId && c.name.trim().toLowerCase() === q);
+  }
+
+  /* ── sticky note ── */
+  function saveNoteSoon() { localUpdatedAt = Date.now(); if (noteTimer) clearTimeout(noteTimer); noteTimer = setTimeout(() => { saveLocal(); schedulePush(); }, 600); }
+  function renderNote(force) {
+    const el = $("stickyNote"), body = $("noteBody");
+    if (!state.note) state.note = defaultNote();
+    const nt = state.note;
+    if (nt.x == null) { nt.w = nt.w || 230; nt.x = Math.max(16, (window.innerWidth || 800) - nt.w - 28); nt.y = 138; }
+    el.style.left = nt.x + "px"; el.style.top = nt.y + "px";
+    if (nt.w) el.style.width = nt.w + "px";
+    if (nt.h) el.style.height = nt.h + "px";
+    el.classList.toggle("open", !!nt.open);
+    if (force || document.activeElement !== body) body.innerHTML = nt.html || "";
   }
 
   /* ── grid scaffold ── */
@@ -639,7 +711,6 @@ if (IS_BROWSER) (function () {
     const exact = cats.filter((c) => Math.abs(weekBudget(c, cw) - (used[c.id] || 0)) <= eps);
     pool.innerHTML = "";
 
-    // summary
     const totalBudget = cats.reduce((a, c) => a + weekBudget(c, cw), 0);
     const thisPlaced = Object.values(used).reduce((a, b) => a + b, 0);
     let allBudget = 0, allPlaced = 0;
@@ -778,7 +849,7 @@ if (IS_BROWSER) (function () {
     $("abInfo").textContent = blockName(b, catById) + " · " + slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots);
     bar.classList.add("show");
   }
-  function renderAll() { $("weekLabel").textContent = "Week " + (state.currentWeek + 1) + " / " + state.weeks.length; renderPool(); renderBlocks(); }
+  function renderAll() { $("weekLabel").textContent = "Week " + (state.currentWeek + 1) + " / " + state.weeks.length; renderPool(); renderBlocks(); renderNote(false); }
 
   /* ── pointer ── */
   function gridPos(clientX, clientY) {
@@ -896,12 +967,55 @@ if (IS_BROWSER) (function () {
   /* ── undo / keys ── */
   $("undoBtn").addEventListener("click", undo);
   document.addEventListener("keydown", (e) => {
-    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable)) return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); }
     if (e.key === "Escape") { armedCat = null; selectedId = null; renderAll(); }
     if (e.key === "ArrowLeft" && !e.ctrlKey && !e.metaKey) $("weekPrev").click();
     if (e.key === "ArrowRight" && !e.ctrlKey && !e.metaKey) { if (state.currentWeek < state.weeks.length - 1) $("weekNext").click(); }
   });
+
+  /* ── sticky note wiring ── */
+  function noteCmd(cmd) {
+    $("noteBody").focus();
+    if (cmd === "bold") document.execCommand("bold");
+    else if (cmd === "italic") document.execCommand("italic");
+    else if (cmd === "pink") document.execCommand("foreColor", false, PINK);
+    state.note.html = $("noteBody").innerHTML; saveNoteSoon();
+  }
+  $("noteBtn").addEventListener("click", () => { state.note.open = !state.note.open; renderNote(true); saveNoteSoon(); if (state.note.open) $("noteBody").focus(); });
+  $("noteClose").addEventListener("click", () => { state.note.open = false; renderNote(false); saveNoteSoon(); });
+  $("noteBody").addEventListener("input", () => { state.note.html = $("noteBody").innerHTML; saveNoteSoon(); });
+  $("noteBody").addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      const k = e.key.toLowerCase();
+      if (k === "b") { e.preventDefault(); noteCmd("bold"); }
+      else if (k === "i") { e.preventDefault(); noteCmd("italic"); }
+      else if (k === "h") { e.preventDefault(); noteCmd("pink"); }
+    }
+  });
+  $("noteTools").addEventListener("pointerdown", (e) => { const b = e.target.closest("button"); if (!b) return; e.preventDefault(); noteCmd(b.dataset.cmd); });
+  $("noteBar").addEventListener("pointerdown", (e) => {
+    if (e.target.closest("#noteTools") || e.target.closest("#noteClose")) return;
+    noteDrag = { dx: e.clientX - state.note.x, dy: e.clientY - state.note.y };
+    try { $("noteBar").setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  $("noteBar").addEventListener("pointermove", (e) => {
+    if (!noteDrag) return;
+    state.note.x = Math.max(0, Math.min(e.clientX - noteDrag.dx, (window.innerWidth || 800) - 44));
+    state.note.y = Math.max(0, Math.min(e.clientY - noteDrag.dy, (window.innerHeight || 600) - 44));
+    const el = $("stickyNote"); el.style.left = state.note.x + "px"; el.style.top = state.note.y + "px";
+  });
+  function endNoteDrag() { if (!noteDrag) return; noteDrag = null; saveNoteSoon(); }
+  $("noteBar").addEventListener("pointerup", endNoteDrag);
+  $("noteBar").addEventListener("pointercancel", endNoteDrag);
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => {
+      if (!state.note || !state.note.open) return;
+      const el = $("stickyNote"); const w = el.offsetWidth, h = el.offsetHeight;
+      if (w && h && (w !== state.note.w || h !== state.note.h)) { state.note.w = w; state.note.h = h; saveNoteSoon(); }
+    });
+    ro.observe($("stickyNote"));
+  }
 
   /* ── sheet import ── */
   async function doSheetImport() {
@@ -941,7 +1055,7 @@ if (IS_BROWSER) (function () {
     saveCfg(); $("syncStatus").textContent = "Testing…";
     const row = await pullRemote(false);
     if ($("syncDot").className === "err") $("syncStatus").textContent = "❌ Connection failed — check URL/key and that the SQL was run.";
-    else if (row) { const remoteAt = Date.parse(row.updated_at); if (remoteAt > localUpdatedAt) { state = migrate(row.data); localUpdatedAt = remoteAt; saveLocal(); renderAll(); $("syncStatus").textContent = "✅ Connected — loaded existing plan from cloud."; } else { $("syncStatus").textContent = "✅ Connected."; schedulePush(); } }
+    else if (row) { const remoteAt = Date.parse(row.updated_at); if (remoteAt > localUpdatedAt) { state = migrate(row.data); localUpdatedAt = remoteAt; saveLocal(); renderAll(); renderNote(true); $("syncStatus").textContent = "✅ Connected — loaded existing plan from cloud."; } else { $("syncStatus").textContent = "✅ Connected."; schedulePush(); } }
     else { $("syncStatus").textContent = "✅ Connected — saving your current plan to cloud."; schedulePush(); }
   });
   $("sbLink").addEventListener("click", () => {
@@ -968,7 +1082,7 @@ if (IS_BROWSER) (function () {
     const f = e.target.files && e.target.files[0]; if (!f) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      try { const d = JSON.parse(ev.target.result); const mig = migrate(d.state || d); if (!mig || !mig.categories) { alert("That file doesn't look like a week plan."); return; } if (curBlocks().length && !confirm("Replace your current plan with the imported one?")) return; snap(); state = mig; commit(); dlg.close(); }
+      try { const d = JSON.parse(ev.target.result); const mig = migrate(d.state || d); if (!mig || !mig.categories) { alert("That file doesn't look like a week plan."); return; } if (curBlocks().length && !confirm("Replace your current plan with the imported one?")) return; snap(); state = mig; commit(); renderNote(true); dlg.close(); }
       catch (err) { alert("Couldn't read that file."); } finally { e.target.value = ""; }
     };
     reader.readAsText(f);
@@ -980,7 +1094,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  loadLocal(); buildGrid(); renderAll();
+  loadLocal(); buildGrid(); renderAll(); renderNote(true);
   $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8;
   pullRemote(true);
   if (!cfg) setDot("", "Sync not set up yet — tap ⚙");
