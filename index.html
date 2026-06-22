@@ -4,226 +4,163 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Week Plan</title>
-<meta name="theme-color" content="#16181d">
+<meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Week Plan">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Inter:wght@400;500;600;700&display=swap');
+:root{
+  --bg:#ffffff; --panel:#f5f6f8; --panel2:#eceef1; --ink:#1f2328; --ink2:#5b626b;
+  --ink3:#8b919a; --line:rgba(0,0,0,0.09); --line2:rgba(0,0,0,0.05);
+  --accent:#2b6cb0; --grid:#ffffff; --gridLine:rgba(0,0,0,0.07); --gridHour:rgba(0,0,0,0.14);
+  --good:#2f855a; --over:#c05621; --overbg:#fff4ec;
+}
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; }
 body {
-  font-family: 'Spectral', Georgia, serif;
-  background: #16181d; color: #e8e6df;
-  min-height: 100vh; user-select: none; -webkit-user-select: none;
-  overscroll-behavior: none;
+  font-family: 'Spectral', Georgia, serif; background: var(--bg); color: var(--ink);
+  min-height: 100vh; user-select: none; -webkit-user-select: none; overscroll-behavior: none;
 }
 button { font-family: 'Inter', system-ui, sans-serif; }
 input, textarea { font-family: 'Inter', system-ui, sans-serif; }
 ::-webkit-scrollbar { width: 9px; height: 9px; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 5px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-input:focus { outline: 1px solid rgba(255,255,255,0.3); }
+input:focus { outline: 1px solid rgba(43,108,176,0.5); }
 
 /* ── Header ── */
-header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 18px 10px; border-bottom: 1px solid rgba(255,255,255,0.08);
-  flex-wrap: wrap;
-}
-h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
+header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 9px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
+.weekNav { display: flex; align-items: center; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 2px; flex-shrink: 0; }
+.weekNav button { background: transparent; border: none; color: var(--ink2); width: 28px; height: 28px; border-radius: 7px; font-size: 14px; cursor: pointer; }
+.weekNav button:hover { background: var(--panel2); }
+#weekLabel { font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; color: var(--ink); min-width: 74px; text-align: center; }
 #cmdForm { flex: 1; min-width: 200px; display: flex; }
-#cmdInput {
-  flex: 1; background: #1f222a; border: 1px solid rgba(255,255,255,0.10);
-  color: #e8e6df; border-radius: 8px; padding: 8px 12px; font-size: 13px;
-}
-#cmdInput::placeholder { color: #5c616b; }
-.iconBtn {
-  background: transparent; border: 1px solid rgba(255,255,255,0.14); color: #c8ccd4;
-  width: 34px; height: 34px; border-radius: 8px; font-size: 15px; cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.iconBtn:active { background: rgba(255,255,255,0.08); }
-#syncDot { width: 9px; height: 9px; border-radius: 50%; background: #555; flex-shrink: 0; cursor: pointer; }
-#syncDot.ok { background: #6fbf73; }
-#syncDot.saving { background: #e0b84a; }
-#syncDot.err { background: #d95f5f; }
+#cmdInput { flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+#cmdInput::placeholder { color: var(--ink3); }
+.iconBtn { background: transparent; border: 1px solid var(--line); color: var(--ink2); width: 34px; height: 34px; border-radius: 8px; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.iconBtn:active { background: var(--panel2); }
+#syncDot { width: 9px; height: 9px; border-radius: 50%; background: #bbb; flex-shrink: 0; cursor: pointer; }
+#syncDot.ok { background: #38a169; }
+#syncDot.saving { background: #d69e2e; }
+#syncDot.err { background: #e53e3e; }
 
 /* ── Layout ── */
 #body { display: flex; align-items: flex-start; }
-#pool {
-  width: 224px; flex-shrink: 0; padding: 14px 12px;
-  display: flex; flex-direction: column; gap: 7px;
-  max-height: calc(100vh - 64px); overflow-y: auto;
-}
-.poolItem {
-  position: relative; background: #1f222a; border-radius: 0 8px 8px 0;
-  border-left: 4px solid #888; padding: 8px 11px 8px 12px;
-  transition: opacity .15s, outline-color .15s; outline: 2px solid transparent;
-  cursor: grab; touch-action: pan-y;
-}
-.poolItem.done { opacity: 0.45; cursor: default; }
-.poolItem.armed { outline-color: #e8e6df; }
+#pool { width: 230px; flex-shrink: 0; padding: 12px 11px; display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 60px); overflow-y: auto; }
+.poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; line-height: 1.55; }
+.poolSummary .l1 b { color: var(--ink); font-weight: 700; }
+.poolSummary .l2 { color: var(--ink3); }
+.sheetBtn { display: block; width: 100%; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink2); padding: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+.sheetBtn:active { background: var(--panel2); }
+.poolItem { position: relative; background: var(--panel); border-radius: 0 8px 8px 0; border-left: 4px solid #888; padding: 8px 11px 8px 12px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
+.poolItem.done { opacity: 0.5; cursor: default; }
+.poolItem.over { background: var(--overbg); border-left-style: solid; }
+.poolItem.armed { outline-color: var(--accent); }
 .poolTop { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
-.nameInput {
-  background: transparent; border: none; color: #e8e6df; font-size: 13.5px;
-  font-weight: 600; padding: 0; flex: 1; min-width: 0; border-radius: 3px;
-}
-.poolHours { font-size: 11.5px; font-weight: 600; font-family: 'Inter', sans-serif; white-space: nowrap; }
-.poolHours.over { color: #e07070 !important; }
-.barTrack { height: 4px; background: rgba(255,255,255,0.08); border-radius: 3px; margin: 6px 0 3px; overflow: hidden; }
+.nameInput { background: transparent; border: none; color: var(--ink); font-size: 13.5px; font-weight: 600; padding: 0; flex: 1; min-width: 0; border-radius: 3px; }
+.poolHours { font-size: 11.5px; font-weight: 600; font-family: 'Inter', sans-serif; white-space: nowrap; color: var(--good); }
+.poolHours.isover { color: var(--over); font-weight: 700; }
+.poolHours.isdone { color: var(--ink3); }
+.barTrack { height: 4px; background: rgba(0,0,0,0.08); border-radius: 3px; margin: 6px 0 3px; overflow: hidden; }
 .barFill { height: 100%; border-radius: 3px; transition: width .2s; }
-.poolMeta { font-size: 10.5px; color: #777c85; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
-.hoursInput {
-  width: 38px; background: transparent; border: none; color: #9aa0aa;
-  font-size: 10.5px; padding: 0 2px; border-radius: 3px; text-align: right;
-}
-.hoursInput:focus, .nameInput:focus { background: #14161b; outline: 1px solid rgba(255,255,255,0.25); }
+.barFill.isover { background: var(--over) !important; }
+.poolMeta { font-size: 10.5px; color: var(--ink3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
+.warn { color: var(--over); font-weight: 700; margin-right: 2px; }
+.hoursInput { width: 38px; background: transparent; border: none; color: var(--ink2); font-size: 10.5px; padding: 0 2px; border-radius: 3px; text-align: right; }
+.hoursInput:focus, .nameInput:focus { background: #fff; outline: 1px solid rgba(43,108,176,0.4); }
 .stripe { position: absolute; left: -4px; top: 0; bottom: 0; width: 14px; cursor: pointer; }
 .stripe input { opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
-.catX {
-  position: absolute; top: 2px; right: 4px; background: transparent; border: none;
-  color: rgba(255,255,255,0.22); font-size: 14px; cursor: pointer; line-height: 1; padding: 2px;
-}
-.catX:hover { color: #c45b6e; }
-#addCat {
-  background: transparent; border: 1px dashed rgba(255,255,255,0.2); color: #9aa;
-  padding: 8px; border-radius: 7px; font-size: 12.5px; cursor: pointer; margin-top: 4px;
-}
-.poolSummary {
-  font-size: 11px; color: #8c9098; font-family: 'Inter', sans-serif;
-  padding: 2px 2px 5px; border-bottom: 1px solid rgba(255,255,255,0.08);
-  display: flex; justify-content: space-between; gap: 8px; flex-shrink: 0;
-}
-.poolSummary b { color: #c8ccd4; font-weight: 600; }
-@media (max-width: 720px) {
-  .poolSummary { flex-direction: column; justify-content: center; border-bottom: none; border-right: 1px solid rgba(255,255,255,0.08); padding: 0 10px 0 0; min-width: 92px; gap: 2px; }
-}
+.catX { position: absolute; top: 2px; right: 4px; background: transparent; border: none; color: rgba(0,0,0,0.22); font-size: 14px; cursor: pointer; line-height: 1; padding: 2px; }
+.catX:hover { color: #c53030; }
+#addCat { background: transparent; border: 1px dashed var(--line); color: var(--ink2); padding: 8px; border-radius: 7px; font-size: 12.5px; cursor: pointer; margin-top: 4px; }
 
 /* ── Grid ── */
-#gridWrap { flex: 1; padding: 14px 14px 0 2px; min-width: 0; }
+#gridWrap { flex: 1; padding: 12px 14px 0 2px; min-width: 0; }
 #dayHeaderRow { display: flex; margin-bottom: 4px; }
-.dayHeader {
-  flex: 1; text-align: center; font-size: 12px; font-weight: 600; color: #aab;
-  letter-spacing: 0.04em; font-family: 'Inter', sans-serif; text-transform: uppercase;
-}
-#gridScroll { max-height: calc(100vh - 110px); overflow: auto; border-radius: 8px; }
-#grid { position: relative; background: #1a1d23; border-radius: 8px; touch-action: pan-y pan-x; }
+.dayHeader { flex: 1; text-align: center; font-size: 12px; font-weight: 600; color: var(--ink2); letter-spacing: 0.04em; font-family: 'Inter', sans-serif; text-transform: uppercase; }
+#gridScroll { max-height: calc(100vh - 108px); overflow: auto; border-radius: 8px; border: 1px solid var(--line); }
+#grid { position: relative; background: var(--grid); border-radius: 8px; touch-action: pan-y pan-x; }
 .slotLine { position: absolute; left: 0; right: 0; height: 0; pointer-events: none; }
-.timeLabel {
-  position: absolute; left: 3px; top: -7px; font-size: 9.5px; color: #666b73;
-  font-family: 'Inter', sans-serif; background: #1a1d23; padding: 0 2px;
-}
-.colSep { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.05); pointer-events: none; }
-.block {
-  position: absolute; border-radius: 5px; padding: 2px 5px; overflow: hidden;
-  cursor: grab; box-shadow: 0 1px 4px rgba(0,0,0,0.3); color: #1a1a1a;
-  display: flex; flex-direction: column; touch-action: none; z-index: 2;
-}
-.block.selected { outline: 2px solid #e8e6df; z-index: 4; }
+.timeLabel { position: absolute; left: 3px; top: -7px; font-size: 9.5px; color: var(--ink3); font-family: 'Inter', sans-serif; background: var(--grid); padding: 0 2px; }
+.colSep { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line2); pointer-events: none; }
+.block { position: absolute; border-radius: 5px; padding: 1px 5px; overflow: hidden; cursor: grab; box-shadow: 0 1px 3px rgba(0,0,0,0.18); display: flex; flex-direction: column; justify-content: flex-start; touch-action: none; z-index: 2; }
+.block.event { border: 1.5px dashed rgba(0,0,0,0.45); }
+.block.selected { outline: 2px solid var(--accent); outline-offset: 1px; z-index: 6; }
 .block.dragging { opacity: 0.45; }
-.blockLabel { font-size: 10.5px; font-weight: 700; line-height: 1.15; font-family: 'Inter', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-.blockTime { font-size: 9px; opacity: 0.7; font-family: 'Inter', sans-serif; pointer-events: none; }
-.blockX {
-  position: absolute; top: 0; right: 1px; background: transparent; border: none;
-  font-size: 13px; cursor: pointer; line-height: 1; color: rgba(0,0,0,0.5); padding: 2px 3px;
-}
-.resizeHandle { position: absolute; left: 0; right: 0; bottom: 0; cursor: ns-resize; }
-.overlap {
-  position: absolute; background: rgba(255,225,0,0.45); border: 1px solid #ffe600;
-  border-radius: 3px; pointer-events: none; z-index: 3;
-}
-#ghost {
-  position: fixed; pointer-events: none; z-index: 999; padding: 4px 9px;
-  border-radius: 5px; font-size: 11.5px; font-weight: 700; color: #1a1a1a;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.4); font-family: 'Inter', sans-serif; display: none;
-}
+.blockLabel { font-size: 10.5px; font-weight: 700; line-height: 1.1; font-family: 'Inter', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.blockTime { font-size: 8.5px; opacity: 0.78; font-family: 'Inter', sans-serif; pointer-events: none; line-height: 1.05; }
+.blockX { position: absolute; top: -1px; right: 0; background: transparent; border: none; font-size: 13px; cursor: pointer; line-height: 1; color: rgba(0,0,0,0.45); padding: 2px 3px; }
+.resizeHandle { position: absolute; left: 0; right: 0; cursor: ns-resize; z-index: 3; }
+.resizeHandle.top { top: 0; }
+.resizeHandle.bot { bottom: 0; }
+.overlap { position: absolute; background: rgba(255,221,0,0.5); border: 1px solid #f5c000; border-radius: 3px; pointer-events: none; z-index: 4; }
+#ghost { position: fixed; pointer-events: none; z-index: 999; padding: 4px 9px; border-radius: 5px; font-size: 11.5px; font-weight: 700; box-shadow: 0 3px 10px rgba(0,0,0,0.25); font-family: 'Inter', sans-serif; display: none; }
 
-/* ── Action bar (selected block) ── */
-#actionBar {
-  position: fixed; left: 50%; transform: translateX(-50%);
-  bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50;
-  background: #23262e; border: 1px solid rgba(255,255,255,0.14); border-radius: 12px;
-  padding: 7px 9px; display: none; align-items: center; gap: 5px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.5);
-}
+/* ── Action bar ── */
+#actionBar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 50; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 7px 9px; display: none; align-items: center; gap: 5px; box-shadow: 0 6px 24px rgba(0,0,0,0.18); flex-wrap: wrap; max-width: 94vw; justify-content: center; }
 #actionBar.show { display: flex; }
-#abName { font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif; margin-right: 4px; max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#actionBar button {
-  background: #2c303a; border: 1px solid rgba(255,255,255,0.12); color: #e8e6df;
-  min-width: 36px; height: 36px; border-radius: 8px; font-size: 14px; cursor: pointer;
-}
-#actionBar button:active { background: #3a3f4c; }
-#abDel { color: #e07070 !important; }
+#abInfo { font-size: 11.5px; font-weight: 600; font-family: 'Inter', sans-serif; margin-right: 4px; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#actionBar button { background: var(--panel); border: 1px solid var(--line); color: var(--ink); min-width: 38px; height: 38px; border-radius: 8px; font-size: 14px; cursor: pointer; }
+#actionBar button:active { background: var(--panel2); }
+#abDel { color: #c53030 !important; }
+.abGroup { display: flex; gap: 3px; align-items: center; }
+.abLbl { font-size: 9px; color: var(--ink3); font-family: 'Inter', sans-serif; margin: 0 1px; }
 
 /* ── Toast ── */
-#toast {
-  position: fixed; left: 50%; transform: translateX(-50%); bottom: 70px; z-index: 100;
-  background: #2c303a; border: 1px solid rgba(255,255,255,0.15); color: #e8e6df;
-  padding: 9px 16px; border-radius: 9px; font-size: 12.5px; font-family: 'Inter', sans-serif;
-  opacity: 0; transition: opacity .25s; pointer-events: none; max-width: 86vw; text-align: center;
-}
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 78px; z-index: 100; background: #2d3138; color: #fff; padding: 9px 16px; border-radius: 9px; font-size: 12.5px; font-family: 'Inter', sans-serif; opacity: 0; transition: opacity .25s; pointer-events: none; max-width: 86vw; text-align: center; }
 #toast.show { opacity: 1; }
 
-/* ── Settings dialog ── */
-dialog {
-  background: #1f222a; color: #e8e6df; border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 12px; padding: 20px; max-width: 460px; width: 92vw; max-height: 86vh; overflow-y: auto;
-}
-dialog::backdrop { background: rgba(0,0,0,0.6); }
+/* ── Dialog ── */
+dialog { background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 20px; max-width: 470px; width: 92vw; max-height: 86vh; overflow-y: auto; box-shadow: 0 12px 48px rgba(0,0,0,0.2); }
+dialog::backdrop { background: rgba(0,0,0,0.35); }
 dialog h2 { font-size: 17px; margin: 0 0 4px; }
-dialog h3 { font-size: 13px; margin: 18px 0 6px; color: #aab; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
-dialog label { display: block; font-size: 11.5px; color: #9aa0aa; font-family: 'Inter', sans-serif; margin: 8px 0 3px; }
-dialog input[type=text], dialog input[type=password] {
-  width: 100%; background: #14161b; border: 1px solid rgba(255,255,255,0.12);
-  color: #e8e6df; border-radius: 6px; padding: 7px 9px; font-size: 12.5px;
-}
+dialog h3 { font-size: 13px; margin: 18px 0 6px; color: var(--ink2); font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
+dialog label { display: block; font-size: 11.5px; color: var(--ink2); font-family: 'Inter', sans-serif; margin: 8px 0 3px; }
+dialog input[type=text], dialog input[type=password] { width: 100%; background: #fff; border: 1px solid var(--line); color: var(--ink); border-radius: 6px; padding: 7px 9px; font-size: 12.5px; }
 .btnRow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.btn {
-  background: #e8e6df; border: 1px solid #e8e6df; color: #16181d;
-  padding: 7px 13px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer;
-}
-.btnGhost {
-  background: transparent; border: 1px solid rgba(255,255,255,0.16); color: #e8e6df;
-  padding: 7px 13px; border-radius: 7px; font-size: 12.5px; cursor: pointer;
-}
-.muted { font-size: 11.5px; color: #8c9098; font-family: 'Inter', sans-serif; line-height: 1.5; }
-pre {
-  background: #14161b; border: 1px solid rgba(255,255,255,0.1); border-radius: 7px;
-  padding: 10px; font-size: 10.5px; overflow-x: auto; user-select: text; -webkit-user-select: text; white-space: pre-wrap;
-}
-#syncStatus { font-size: 11.5px; font-family: 'Inter', sans-serif; margin-top: 8px; min-height: 16px; }
+.btn { background: var(--accent); border: 1px solid var(--accent); color: #fff; padding: 7px 13px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.btnGhost { background: #fff; border: 1px solid var(--line); color: var(--ink); padding: 7px 13px; border-radius: 7px; font-size: 12.5px; cursor: pointer; }
+.muted { font-size: 11.5px; color: var(--ink2); font-family: 'Inter', sans-serif; line-height: 1.5; }
+pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 10px; font-size: 10.5px; overflow-x: auto; user-select: text; -webkit-user-select: text; white-space: pre-wrap; }
+#syncStatus, #sheetStatus { font-size: 11.5px; font-family: 'Inter', sans-serif; margin-top: 8px; min-height: 16px; }
 
 /* ── Mobile ── */
-@media (max-width: 720px) {
-  header { padding: 10px 12px 8px; gap: 8px; }
-  h1 { font-size: 18px; }
+@media (max-width: 760px) {
+  header { padding: 9px 11px 7px; gap: 7px; }
+  h1 { font-size: 17px; }
   #cmdForm { order: 10; flex-basis: 100%; }
   #body { flex-direction: column; }
-  #pool {
-    width: 100%; flex-direction: row; overflow-x: auto; overflow-y: hidden;
-    max-height: none; padding: 10px 12px 6px; gap: 8px;
-  }
-  .poolItem { min-width: 138px; flex-shrink: 0; touch-action: pan-x; }
-  #addCat { min-width: 90px; flex-shrink: 0; margin-top: 0; }
+  #pool { width: 100%; flex-direction: row; overflow-x: auto; overflow-y: hidden; max-height: none; padding: 9px 11px 5px; gap: 7px; align-items: stretch; }
+  .poolSummary { border-bottom: none; border-right: 1px solid var(--line); padding: 0 9px 0 1px; margin: 0; min-width: 120px; display: flex; flex-direction: column; justify-content: center; }
+  .poolItem { min-width: 140px; flex-shrink: 0; touch-action: pan-x; }
+  #addCat { min-width: 92px; flex-shrink: 0; margin-top: 0; }
   #gridWrap { width: 100%; padding: 4px 8px 0; }
-  #gridScroll { max-height: calc(100vh - 230px); }
-  #gridInner { min-width: 600px; }
-  #dayHeaderRow { min-width: 600px; }
+  #gridScroll { max-height: calc(100vh - 232px); }
+  #gridInner { min-width: 540px; }
+  #dayHeaderRow { min-width: 540px; }
 }
 </style>
 </head>
 <body>
 <header>
   <h1>Week Plan</h1>
+  <div class="weekNav">
+    <button id="weekPrev" title="Previous week">&#9664;</button>
+    <span id="weekLabel">Week 1</span>
+    <button id="weekNext" title="Next week">&#9654;</button>
+    <button id="weekAdd" title="Add a week">+</button>
+    <button id="weekDel" title="Delete this week">&#128465;</button>
+  </div>
   <form id="cmdForm">
-    <input id="cmdInput" placeholder='Type a command… e.g. "Growth every day 5–5:30am"' autocomplete="off">
+    <input id="cmdInput" placeholder='Type a task or meeting… e.g. "Growth mon-sat 5–5:30am" or "Meet Fred tue 1–2:30pm"' autocomplete="off">
   </form>
   <button class="iconBtn" id="undoBtn" title="Undo">&#8630;</button>
-  <button class="iconBtn" id="settingsBtn" title="Settings &amp; sync">&#9881;</button>
+  <button class="iconBtn" id="settingsBtn" title="Settings">&#9881;</button>
   <div id="syncDot" title="Sync status"></div>
 </header>
 
@@ -239,13 +176,15 @@ pre {
 <div id="toast"></div>
 
 <div id="actionBar">
-  <span id="abName"></span>
-  <button id="abDayL" title="Previous day">&#9664;</button>
-  <button id="abUp" title="Earlier 15 min">&#9650;</button>
-  <button id="abDown" title="Later 15 min">&#9660;</button>
-  <button id="abDayR" title="Next day">&#9654;</button>
-  <button id="abShrink" title="Shorter 15 min">&minus;</button>
-  <button id="abGrow" title="Longer 15 min">+</button>
+  <span id="abInfo"></span>
+  <span class="abLbl">day</span>
+  <div class="abGroup"><button id="abDayL">&#9664;</button><button id="abDayR">&#9654;</button></div>
+  <span class="abLbl">move</span>
+  <div class="abGroup"><button id="abUp">&#9650;</button><button id="abDown">&#9660;</button></div>
+  <span class="abLbl">top</span>
+  <div class="abGroup"><button id="abTopUp" title="Start earlier">&#43;</button><button id="abTopDn" title="Start later">&minus;</button></div>
+  <span class="abLbl">end</span>
+  <div class="abGroup"><button id="abGrow" title="End later">&#43;</button><button id="abShrink" title="End earlier">&minus;</button></div>
   <button id="abDel" title="Delete">&#10005;</button>
   <button id="abClose" title="Done">&#10003;</button>
 </div>
@@ -253,11 +192,20 @@ pre {
 <dialog id="settingsDialog">
   <h2>Settings</h2>
 
+  <h3>Import from Google Sheet</h3>
+  <p class="muted"><b>Task</b> in the first column, then one column per week headed <b>Week 1</b>, <b>Week 2</b>, … with that week's hours. (A single <b>Hours</b> column also works — same budget every week.) An optional <b>Color</b> column is honoured. Publish via <b>File → Share → Publish to web</b> as <b>Comma-separated values (.csv)</b>, paste the link below. Import sets each week's budget, adds new tasks, and creates extra weeks if your sheet has more — it never deletes.</p>
+  <label>Published CSV link</label>
+  <input type="text" id="sheetUrl" placeholder="https://docs.google.com/.../pub?output=csv" autocomplete="off">
+  <div class="btnRow">
+    <button class="btn" id="sheetImport">Save &amp; import now</button>
+  </div>
+  <div id="sheetStatus"></div>
+
   <h3>Sync (Supabase)</h3>
-  <p class="muted">One-time setup: see README. Enter the same three values on every device, or use the setup link.</p>
+  <p class="muted">Enter the same three values on every device, or use the setup link.</p>
   <label>Project URL</label>
   <input type="text" id="sbUrl" placeholder="https://xxxx.supabase.co" autocomplete="off">
-  <label>Anon (public) API key</label>
+  <label>Publishable / anon key</label>
   <input type="password" id="sbKey" autocomplete="off">
   <label>Plan code (same on all devices)</label>
   <input type="text" id="sbPid" autocomplete="off">
@@ -267,8 +215,8 @@ pre {
   </div>
   <div id="syncStatus"></div>
   <details style="margin-top:10px;">
-    <summary class="muted" style="cursor:pointer;">SQL to run once in Supabase (SQL Editor)</summary>
-    <pre id="sqlSnippet">create table if not exists plans (
+    <summary class="muted" style="cursor:pointer;">SQL to run once in Supabase</summary>
+    <pre>create table if not exists plans (
   id text primary key,
   data jsonb not null,
   updated_at timestamptz not null default now()
@@ -278,14 +226,14 @@ create policy "planner anon access" on plans
   for all using (true) with check (true);</pre>
   </details>
 
-  <h3>Commands</h3>
-  <p class="muted">Examples: &ldquo;Growth every day 5&ndash;5:30am&rdquo; &middot; &ldquo;assign Mails mon&ndash;fri 9&ndash;9:30&rdquo; &middot; &ldquo;Fruit tue and thu 14:00&ndash;15:00&rdquo; &middot; &ldquo;Plan weekends 8&ndash;9am&rdquo;. Unknown task names create a new category.</p>
+  <h3>Tips</h3>
+  <p class="muted">Type a known task name to place it as a budgeted block; type any other name to drop in a one-off <b>meeting</b> (no hour budget). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Drag either end of a block to resize; tap a block for nudge buttons.</p>
 
   <h3>Data</h3>
   <div class="btnRow">
     <button class="btnGhost" id="exportBtn">&darr; Export JSON</button>
     <button class="btnGhost" id="importBtn">&uarr; Import</button>
-    <button class="btnGhost" id="clearBtn">Clear week</button>
+    <button class="btnGhost" id="clearBtn">Clear this week</button>
   </div>
   <input type="file" id="fileInput" accept="application/json,.json" style="display:none">
 
@@ -298,53 +246,69 @@ create policy "planner anon access" on plans
 "use strict";
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
+const ND = DAYS.length;
 const SLOT_MIN = 15, SPH = 4;
 const DAY_START_HOUR = 0, DAY_END_HOUR = 24;
 const TOTAL_SLOTS = (DAY_END_HOUR - DAY_START_HOUR) * SPH; // 96
 const COARSE = IS_BROWSER && window.matchMedia && matchMedia("(pointer: coarse)").matches;
 const SLOT_PX = COARSE ? 13 : 11;
 const LABEL_W = 40;
-const STORAGE_KEY = "weekly-planner-v2";
+const STORAGE_KEY = "weekly-planner-v3";
+const OLD_KEY = "weekly-planner-v2";
 const CFG_KEY = "weekly-planner-sync";
-const PALETTE = ["#3b6fb5","#e08a2e","#7aa66b","#9b8cc4","#c45b6e","#5a9e8f","#8a5fb0","#b5946b","#e3a6b0","#88c0d0","#d4a5c9","#6b8cb5","#c98f5a","#e6c34a","#d98324"];
+const EVENT_COLOR = "#64748b";
+
+const PALETTE = [
+  "#3b6fb5","#e08a2e","#7aa66b","#9b59b6","#c0392b","#16a085","#8e44ad","#a9744f",
+  "#d98880","#48a9c5","#cf6fa3","#5d7cb5","#b8862b","#d4b106","#2f9e44","#e8590c",
+  "#1c7ed6","#f06595","#82c91e","#fa5252","#12b886","#7048e8","#fab005","#5c940d",
+  "#e64980","#15aabf","#4263eb","#d6336c","#74b816","#ae3ec9","#0ca678","#f76707"
+];
 
 const DEFAULT_CATEGORIES = [
   { id: "growth", name: "Growth", hours: 10, color: "#3b6fb5" },
   { id: "mails", name: "Mails", hours: 4, color: "#e08a2e" },
-  { id: "tasks", name: "Tasks", hours: 4, color: "#d98324" },
+  { id: "tasks", name: "Tasks", hours: 4, color: "#16a085" },
   { id: "nest", name: "Nest", hours: 4, color: "#7aa66b" },
-  { id: "plan", name: "Plan", hours: 1, color: "#9b8cc4" },
-  { id: "kgb", name: "KGB", hours: 1, color: "#c45b6e" },
-  { id: "bday", name: "Mom & Dad-BDay", hours: 2, color: "#d4a5c9" },
-  { id: "eow", name: "EOW", hours: 1, color: "#c98f5a" },
-  { id: "adhs", name: "ADHS", hours: 3, color: "#e6c34a" },
-  { id: "visioning", name: "Visioning", hours: 2, color: "#5a9e8f" },
-  { id: "zouth", name: "Zouth-Varia", hours: 5, color: "#8a5fb0" },
-  { id: "stuai", name: "StU-AI-Talk", hours: 1, color: "#6b8cb5" },
-  { id: "kinderforum", name: "Kinderforum", hours: 1, color: "#b5946b" },
-  { id: "fruit", name: "Fruit", hours: 7, color: "#e3a6b0" },
-  { id: "wifi", name: "WiFi", hours: 1, color: "#88c0d0" },
+  { id: "plan", name: "Plan", hours: 1, color: "#9b59b6" },
+  { id: "kgb", name: "KGB", hours: 1, color: "#c0392b" },
+  { id: "bday", name: "Mom & Dad-BDay", hours: 2, color: "#cf6fa3" },
+  { id: "eow", name: "EOW", hours: 1, color: "#a9744f" },
+  { id: "adhs", name: "ADHS", hours: 3, color: "#d4b106" },
+  { id: "visioning", name: "Visioning", hours: 2, color: "#48a9c5" },
+  { id: "zouth", name: "Zouth-Varia", hours: 5, color: "#8e44ad" },
+  { id: "stuai", name: "StU-AI-Talk", hours: 1, color: "#5d7cb5" },
+  { id: "kinderforum", name: "Kinderforum", hours: 1, color: "#b8862b" },
+  { id: "fruit", name: "Fruit", hours: 7, color: "#d98880" },
+  { id: "wifi", name: "WiFi", hours: 1, color: "#1c7ed6" },
 ];
 
-/* ═══════════════ Pure helpers (testable) ═══════════════ */
-function fmtH(n) {
-  const v = Math.round(n * 100) / 100;
-  return String(v);
-}
+/* ═══════════════ Pure helpers ═══════════════ */
+function fmtH(n) { return String(Math.round(n * 100) / 100); }
 function slotLabel(slot) {
   const totalMin = DAY_START_HOUR * 60 + slot * SLOT_MIN;
   return String(Math.floor(totalMin / 60)).padStart(2, "0") + ":" + String(totalMin % 60).padStart(2, "0");
 }
+function textOn(hex) {
+  const c = (hex || "#888888").replace("#", "");
+  const r = parseInt(c.slice(0, 2), 16), g = parseInt(c.slice(2, 4), 16), b = parseInt(c.slice(4, 6), 16);
+  const L = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return L > 0.62 ? "#1a1a1a" : "#ffffff";
+}
+function pickColor(cats) {
+  const used = new Set(cats.map((c) => (c.color || "").toLowerCase()));
+  for (const c of PALETTE) if (!used.has(c.toLowerCase())) return c;
+  const h = (cats.length * 137.508) % 360;
+  return "hsl(" + Math.round(h) + ",58%,52%)";
+}
 function usedByCat(blocks) {
   const u = {};
-  for (const b of blocks) u[b.catId] = (u[b.catId] || 0) + b.lenSlots / SPH;
+  for (const b of blocks) if (!b.event) u[b.catId] = (u[b.catId] || 0) + b.lenSlots / SPH;
   return u;
 }
-
-/* Layout blocks of ONE day side-by-side; return per-block {col,nCols} + merged overlap intervals */
 function layoutDay(list) {
-  const blocks = [...list].sort((a, b) => a.startSlot - b.startSlot || b.lenSlots - a.lenSlots);
+  const blocks = list.slice().sort((a, b) => a.startSlot - b.startSlot || b.lenSlots - a.lenSlots);
   const pos = {};
   let cluster = [], colEnds = [], clusterEnd = -Infinity;
   const flush = () => {
@@ -363,7 +327,6 @@ function layoutDay(list) {
     clusterEnd = Math.max(clusterEnd, e);
   }
   if (cluster.length) flush();
-  // pairwise intersections → merged intervals
   const iv = [];
   for (let i = 0; i < blocks.length; i++)
     for (let j = i + 1; j < blocks.length; j++) {
@@ -374,58 +337,36 @@ function layoutDay(list) {
     }
   iv.sort((a, b) => a[0] - b[0]);
   const overlays = [];
-  for (const [s, e] of iv) {
+  for (const it of iv) {
     const last = overlays[overlays.length - 1];
-    if (last && s <= last[1]) last[1] = Math.max(last[1], e);
-    else overlays.push([s, e]);
+    if (last && it[0] <= last[1]) last[1] = Math.max(last[1], it[1]);
+    else overlays.push([it[0], it[1]]);
   }
   return { pos, overlays };
 }
 
-/* ── Time range parsing: "5-5:30am", "17:00 to 18:00", "9pm-10pm", "11-1pm" ── */
+/* ── Time range ── */
 const TIME_RE = /(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\s*(?:-|–|—|to|until)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?/i;
 function parseTimeRange(text) {
   const m = TIME_RE.exec(text);
   if (!m) return null;
   const h1 = +m[1], min1 = +(m[2] || 0), h2 = +m[4], min2 = +(m[5] || 0);
-  const a1 = m[3] ? m[3].toLowerCase() : null;
-  const a2 = m[6] ? m[6].toLowerCase() : null;
-  const mk = (H, M, ap) => {
-    let x = H;
-    if (ap === "pm" && x < 12) x += 12;
-    if (ap === "am" && x === 12) x = 0;
-    return x * 60 + M;
-  };
+  const a1 = m[3] ? m[3].toLowerCase() : null, a2 = m[6] ? m[6].toLowerCase() : null;
+  const mk = (H, M, ap) => { let x = H; if (ap === "pm" && x < 12) x += 12; if (ap === "am" && x === 12) x = 0; return x * 60 + M; };
   let start, end;
   if (a1 || a2) {
-    start = mk(h1, min1, a1);
-    end = mk(h2, min2, a2);
-    if (!a1) {
-      const b = mk(h1, min1, a2);
-      if (b < end) start = b;
-      if (start >= end) {
-        const alt = mk(h1, min1, a2 === "am" ? "pm" : "am");
-        if (alt < end) start = alt;
-      }
-    }
-    if (!a2) {
-      const b = mk(h2, min2, a1);
-      if (b > start) end = b;
-      else {
-        const alt = mk(h2, min2, a1 === "am" ? "pm" : "am");
-        if (alt > start) end = alt;
-      }
-    }
+    start = mk(h1, min1, a1); end = mk(h2, min2, a2);
+    if (!a1) { const b = mk(h1, min1, a2); if (b < end) start = b; if (start >= end) { const alt = mk(h1, min1, a2 === "am" ? "pm" : "am"); if (alt < end) start = alt; } }
+    if (!a2) { const b = mk(h2, min2, a1); if (b > start) end = b; else { const alt = mk(h2, min2, a1 === "am" ? "pm" : "am"); if (alt > start) end = alt; } }
   } else {
-    start = h1 * 60 + min1;
-    end = h2 * 60 + min2;
-    if (end <= start && h2 < 12) end += 720; // "9-1" → 09:00–13:00
+    start = h1 * 60 + min1; end = h2 * 60 + min2;
+    if (end <= start && h2 < 12) end += 720;
   }
   if (end <= start || start < 0 || end > 1440) return { error: true, raw: m[0] };
   return { startMin: start, endMin: end, raw: m[0] };
 }
 
-/* ── Day parsing ── */
+/* ── Days (Mon–Sat; Sunday dropped) ── */
 const DAY_TOKENS = { mon:0, monday:0, tue:1, tues:1, tuesday:1, wed:2, weds:2, wednesday:2, thu:3, thur:3, thurs:3, thursday:3, fri:4, friday:4, sat:5, saturday:5, sun:6, sunday:6 };
 const DAY_WORD = "(?:mon(?:day)?|tue(?:s|sday)?|wed(?:s|nesday)?|thu(?:r|rs|rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)";
 function dayIdxOf(w) { return DAY_TOKENS[w.toLowerCase()]; }
@@ -435,12 +376,11 @@ function parseDays(text) {
   const matches = [];
   let m;
   const every = /\b(every\s*day|everyday|daily|all\s*days)\b/.exec(t);
-  if (every) { for (let i = 0; i < 7; i++) days.add(i); matches.push(every[0]); }
+  if (every) { for (let i = 0; i < ND; i++) days.add(i); matches.push(every[0]); }
   const wd = /\bweek\s*days?\b/.exec(t);
   if (wd) { for (let i = 0; i < 5; i++) days.add(i); matches.push(wd[0]); }
   const we = /\bweek\s*ends?\b/.exec(t);
-  if (we) { days.add(5); days.add(6); matches.push(we[0]); }
-  // ranges like "mon-fri", "tue to thu"
+  if (we) { days.add(5); matches.push(we[0]); } // Sat only (no Sunday)
   const rangeRe = new RegExp("\\b(" + DAY_WORD + ")\\s*(?:-|–|—|to|through)\\s*(" + DAY_WORD + ")\\b", "g");
   while ((m = rangeRe.exec(t))) {
     const a = dayIdxOf(m[1]), b = dayIdxOf(m[2]);
@@ -449,34 +389,24 @@ function parseDays(text) {
     if (a <= b) for (let i = a; i <= b; i++) days.add(i);
     else { for (let i = a; i < 7; i++) days.add(i); for (let i = 0; i <= b; i++) days.add(i); }
   }
-  // strip found phrases so single tokens don't double-match
   let rest = t;
   for (const s of matches) rest = rest.replace(s, " ");
   const singleRe = new RegExp("\\b(" + DAY_WORD + ")\\b", "g");
-  while ((m = singleRe.exec(rest))) {
-    const i = dayIdxOf(m[1]);
-    if (i != null) { days.add(i); matches.push(m[1]); }
-  }
-  return { days: [...days].sort((a, b) => a - b), matches };
+  while ((m = singleRe.exec(rest))) { const i = dayIdxOf(m[1]); if (i != null) { days.add(i); matches.push(m[1]); } }
+  return { days: [...days].filter((d) => d < ND).sort((a, b) => a - b), matches };
 }
 
-/* ── Full command: returns action or {error} ── */
 function parseCommand(text, categories) {
   const tr = parseTimeRange(text);
-  if (!tr) return { error: "No time range found. Try e.g. “Growth every day 5–5:30am”." };
+  if (!tr) return { error: "No time range found. Try e.g. “Growth mon-sat 5–5:30am”." };
   if (tr.error) return { error: "That time range looks off (end must be after start)." };
   const pd = parseDays(text.replace(tr.raw, " "));
-  if (!pd.days.length) return { error: "Which days? Try “every day”, “mon–fri”, or “tue and thu”." };
+  if (!pd.days.length) return { error: "Which days? Try “every day”, “mon–fri”, or “tue and thu” (Mon–Sat only)." };
   let rest = text.replace(tr.raw, " ");
-  for (const s of pd.matches) {
-    rest = rest.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), " ");
-  }
-  rest = rest
-    .replace(/\b(assign|add|plan|put|schedule|block|task|every|each|from|at|on|and|the)\b/gi, " ")
-    .replace(/[,.;:!]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!rest) return { error: "Which task? Include the task name in the command." };
+  for (const s of pd.matches) rest = rest.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), " ");
+  rest = rest.replace(/\b(assign|add|plan|put|schedule|block|task|meeting|meet w|every|each|from|at|on|and|the)\b/gi, " ")
+    .replace(/[,.;:!]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!rest) return { error: "Which task or meeting? Include a name in the command." };
   const q = rest.toLowerCase();
   const cat =
     categories.find((c) => c.name.toLowerCase() === q) ||
@@ -489,77 +419,174 @@ function parseCommand(text, categories) {
   return { name: rest, cat, days: pd.days, startSlot, lenSlots };
 }
 
-/* ═══════════════ Node export for tests ═══════════════ */
+/* ── CSV ── */
+function parseCSV(text) {
+  const rows = []; let row = [], cur = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+      else cur += ch;
+    } else {
+      if (ch === '"') q = true;
+      else if (ch === ",") { row.push(cur); cur = ""; }
+      else if (ch === "\n") { row.push(cur); rows.push(row); row = []; cur = ""; }
+      else if (ch === "\r") { /* skip */ }
+      else cur += ch;
+    }
+  }
+  if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter((r) => r.some((c) => c.trim() !== ""));
+}
+function csvToRows(text) {
+  const grid = parseCSV(text);
+  if (!grid.length) return [];
+  const header = grid[0].map((h) => h.trim().toLowerCase());
+  let ni = header.findIndex((h) => /task|name|categor|activity|project/.test(h));
+  let hi = header.findIndex((h) => /hour|hrs|budget|^h$|time|per\s*week/.test(h));
+  const ci = header.findIndex((h) => /colou?r/.test(h));
+  let start = 1;
+  if (ni === -1 && hi === -1) { ni = 0; hi = 1; start = 0; }
+  const out = [];
+  for (let r = start; r < grid.length; r++) {
+    const cells = grid[r];
+    const name = (ni >= 0 ? cells[ni] : cells[0]) || "";
+    const hraw = hi >= 0 ? cells[hi] : cells[1];
+    const color = ci >= 0 ? cells[ci] : undefined;
+    if (!name || !name.trim()) continue;
+    const hours = hraw != null ? parseFloat(String(hraw).replace(",", ".")) : NaN;
+    out.push({ name: name.trim(), hours, color: color && color.trim() ? color.trim() : undefined });
+  }
+  return out;
+}
+function applySheet(categories, rows) {
+  const cats = categories.map((c) => Object.assign({}, c));
+  let updated = 0, added = 0, n = 0;
+  for (const row of rows) {
+    const name = (row.name || "").trim();
+    if (!name) continue;
+    const ex = cats.find((c) => c.name.toLowerCase() === name.toLowerCase());
+    if (ex) {
+      if (typeof row.hours === "number" && !isNaN(row.hours)) ex.hours = Math.max(0, row.hours);
+      if (row.color) ex.color = row.color;
+      updated++;
+    } else {
+      cats.push({ id: "cat" + Date.now() + (n++), name, hours: (typeof row.hours === "number" && !isNaN(row.hours)) ? Math.max(0, row.hours) : 1, color: row.color || pickColor(cats) });
+      added++;
+    }
+  }
+  return { cats, updated, added };
+}
+
+/* ── multi-week sheet: Task | Week 1 | Week 2 | … (or a single Hours column) ── */
+function csvToWeeks(text) {
+  const grid = parseCSV(text);
+  if (!grid.length) return { weekCount: 0, rows: [] };
+  const header = grid[0].map((h) => (h || "").trim());
+  const low = header.map((h) => h.toLowerCase());
+  let ni = low.findIndex((h) => /task|name|categor|activity|project/.test(h));
+  const ci = low.findIndex((h) => /colou?r/.test(h));
+  const looksHeaderless = ni === -1 && ci === -1 && !low.some((h) => /week|hour|hrs|budget|time/.test(h));
+  let start = 1, valueCols = [];
+  if (looksHeaderless) {
+    ni = 0; start = 0;
+    for (let j = 1; j < grid[0].length; j++) valueCols.push(j);
+  } else {
+    if (ni === -1) ni = 0;
+    for (let j = 0; j < header.length; j++) { if (j === ni || j === ci) continue; valueCols.push(j); }
+  }
+  const rows = [];
+  for (let r = start; r < grid.length; r++) {
+    const cells = grid[r];
+    const name = ((cells[ni] != null ? cells[ni] : "")).trim();
+    if (!name) continue;
+    const color = ci >= 0 && cells[ci] && cells[ci].trim() ? cells[ci].trim() : undefined;
+    const hours = valueCols.map((j) => { const v = parseFloat(String(cells[j] == null ? "" : cells[j]).replace(",", ".")); return isNaN(v) ? null : Math.max(0, v); });
+    rows.push({ name, color, hours });
+  }
+  return { weekCount: valueCols.length, rows };
+}
+function applySheetWeeks(state, parsed) {
+  const cats = state.categories;
+  let updated = 0, added = 0, weeksCreated = 0, n = 0;
+  if (parsed.weekCount > 1) {
+    while (state.weeks.length < parsed.weekCount) { state.weeks.push({ id: "w" + Date.now() + (n++), blocks: [], budgets: {} }); weeksCreated++; }
+  }
+  for (const row of parsed.rows) {
+    const name = (row.name || "").trim();
+    if (!name) continue;
+    let cat = cats.find((c) => c.name.toLowerCase() === name.toLowerCase());
+    if (!cat) { cat = { id: "cat" + Date.now() + (n++), name, hours: 1, color: row.color || pickColor(cats) }; cats.push(cat); added++; }
+    else { if (row.color) cat.color = row.color; updated++; }
+    const firstVal = row.hours.find((h) => h != null);
+    if (firstVal != null) cat.hours = firstVal; // template default (weeks without an explicit value fall back to this)
+    if (parsed.weekCount > 1) {
+      for (let j = 0; j < parsed.weekCount; j++) {
+        const h = row.hours[j];
+        if (h != null) { const w = state.weeks[j]; if (!w.budgets) w.budgets = {}; w.budgets[cat.id] = h; }
+      }
+    }
+  }
+  return { updated, added, weeksCreated };
+}
+
+/* ── migration ── */
+function migrate(s) {
+  if (!s) return null;
+  if (s.weeks && Array.isArray(s.weeks)) {
+    s.weeks.forEach((w) => { w.blocks = (w.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0); if (!w.budgets) w.budgets = {}; });
+    if (!s.weeks.length) s.weeks = [{ id: "w" + Date.now(), blocks: [], budgets: {} }];
+    s.currentWeek = Math.max(0, Math.min(s.currentWeek || 0, s.weeks.length - 1));
+    s.nextId = s.nextId || 1; s.version = 3;
+    return s;
+  }
+  const blocks = (s.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0);
+  return { version: 3, categories: s.categories || [], weeks: [{ id: "w" + Date.now(), blocks, budgets: {} }], currentWeek: 0, nextId: s.nextId || 1 };
+}
+
 if (!IS_BROWSER && typeof module !== "undefined") {
-  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, usedByCat, fmtH, slotLabel, TOTAL_SLOTS };
+  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, usedByCat, fmtH, slotLabel, textOn, pickColor, parseCSV, csvToRows, applySheet, csvToWeeks, applySheetWeeks, migrate, TOTAL_SLOTS, DAYS };
 }
 
 /* ═══════════════ Browser app ═══════════════ */
 if (IS_BROWSER) (function () {
-
-  /* ── State ── */
-  let state = { categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)), blocks: [], nextId: 1 };
-  let localUpdatedAt = 0;
-  let undoStack = [];
-  let drag = null;            // {mode:'new'|'move'|'resize', ...}
-  let armedCat = null;        // category id armed for tap-placement (touch)
-  let selectedId = null;      // selected block id
-  let cfg = null;             // {url, key, pid}
-  let pushTimer = null;
-  let lastPull = 0;
+  let state = { version: 3, categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)), weeks: [{ id: "w" + Date.now(), blocks: [], budgets: {} }], currentWeek: 0, nextId: 1 };
+  let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0;
 
   const $ = (id) => document.getElementById(id);
   const grid = $("grid"), pool = $("pool"), ghost = $("ghost");
 
-  /* ── Local persistence ── */
+  const curBlocks = () => state.weeks[state.currentWeek].blocks;
+  function ensureBudgets(w) { if (!w.budgets) w.budgets = {}; return w.budgets; }
+  function weekBudget(cat, wIdx) { const w = state.weeks[wIdx]; if (w && w.budgets && w.budgets[cat.id] != null) return w.budgets[cat.id]; return cat.hours; }
+
+  /* ── persistence ── */
   function loadLocal() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d.state && d.state.categories) { state = d.state; localUpdatedAt = d.localUpdatedAt || 0; }
-      }
+      let raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) { const old = localStorage.getItem(OLD_KEY); if (old) { const od = JSON.parse(old); state = migrate(od.state || od); } }
+      else { const d = JSON.parse(raw); if (d.state) { state = migrate(d.state); localUpdatedAt = d.localUpdatedAt || 0; } }
     } catch (e) {}
-    try {
-      const c = localStorage.getItem(CFG_KEY);
-      if (c) cfg = JSON.parse(c);
-    } catch (e) {}
+    try { const c = localStorage.getItem(CFG_KEY); if (c) { cfg = JSON.parse(c); sheetUrl = (cfg && cfg.sheet) || ""; } } catch (e) {}
   }
-  function saveLocal() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, localUpdatedAt })); } catch (e) {}
-  }
+  function saveLocal() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, localUpdatedAt })); } catch (e) {} }
+  function saveCfg() { try { localStorage.setItem(CFG_KEY, JSON.stringify(Object.assign({}, cfg, { sheet: sheetUrl }))); } catch (e) {} }
 
-  /* ── Supabase sync (plain REST, no library) ── */
-  function sbHeaders() {
-    return { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json" };
-  }
-  function setDot(cls, title) {
-    const d = $("syncDot");
-    d.className = cls || "";
-    d.title = title || "Sync status";
-  }
+  /* ── Supabase ── */
+  function sbHeaders() { return { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json" }; }
+  function setDot(cls, title) { const d = $("syncDot"); d.className = cls || ""; d.title = title || "Sync status"; }
   async function pullRemote(apply) {
     if (!cfg || !cfg.url || !cfg.key || !cfg.pid) { setDot("", "Sync not configured — open ⚙"); return null; }
     try {
       const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans?id=eq." + encodeURIComponent(cfg.pid) + "&select=data,updated_at", { headers: sbHeaders() });
       if (!r.ok) throw new Error("HTTP " + r.status);
-      const rows = await r.json();
-      setDot("ok", "Synced");
-      lastPull = Date.now();
+      const rows = await r.json(); setDot("ok", "Synced"); lastPull = Date.now();
       if (rows.length && apply) {
         const remoteAt = Date.parse(rows[0].updated_at);
-        if (remoteAt > localUpdatedAt) {
-          state = rows[0].data;
-          localUpdatedAt = remoteAt;
-          saveLocal();
-          renderAll();
-        }
+        if (remoteAt > localUpdatedAt) { state = migrate(rows[0].data); localUpdatedAt = remoteAt; saveLocal(); renderAll(); }
       }
       return rows[0] || null;
-    } catch (e) {
-      setDot("err", "Sync error: " + e.message);
-      return null;
-    }
+    } catch (e) { setDot("err", "Sync error: " + e.message); return null; }
   }
   async function pushRemote() {
     pushTimer = null;
@@ -567,559 +594,397 @@ if (IS_BROWSER) (function () {
     setDot("saving", "Saving…");
     try {
       const now = new Date().toISOString();
-      const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans", {
-        method: "POST",
-        headers: Object.assign(sbHeaders(), { Prefer: "resolution=merge-duplicates" }),
-        body: JSON.stringify([{ id: cfg.pid, data: state, updated_at: now }]),
-      });
+      const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans", { method: "POST", headers: Object.assign(sbHeaders(), { Prefer: "resolution=merge-duplicates" }), body: JSON.stringify([{ id: cfg.pid, data: state, updated_at: now }]) });
       if (!r.ok) throw new Error("HTTP " + r.status);
-      localUpdatedAt = Date.parse(now);
-      saveLocal();
-      setDot("ok", "Synced");
-    } catch (e) {
-      setDot("err", "Cloud save failed: " + e.message + " (kept locally)");
-    }
+      localUpdatedAt = Date.parse(now); saveLocal(); setDot("ok", "Synced");
+    } catch (e) { setDot("err", "Cloud save failed: " + e.message + " (kept locally)"); }
   }
-  function schedulePush() {
-    if (pushTimer) clearTimeout(pushTimer);
-    pushTimer = setTimeout(pushRemote, 900);
-  }
+  function schedulePush() { if (pushTimer) clearTimeout(pushTimer); pushTimer = setTimeout(pushRemote, 900); }
 
-  /* ── Commit: every state change goes through here ── */
-  function commit() {
-    localUpdatedAt = Date.now();
-    saveLocal();
-    schedulePush();
-    renderAll();
-  }
-  function snap() {
-    undoStack.push(JSON.stringify(state));
-    if (undoStack.length > 50) undoStack.shift();
-  }
-  function undo() {
-    if (!undoStack.length) { toast("Nothing to undo"); return; }
-    state = JSON.parse(undoStack.pop());
-    selectedId = null;
-    commit();
-  }
+  function commit() { localUpdatedAt = Date.now(); saveLocal(); schedulePush(); renderAll(); }
+  function snap() { undoStack.push(JSON.stringify(state)); if (undoStack.length > 60) undoStack.shift(); }
+  function undo() { if (!undoStack.length) { toast("Nothing to undo"); return; } state = migrate(JSON.parse(undoStack.pop())); selectedId = null; commit(); }
 
-  /* ── Toast ── */
   let toastTimer = null;
-  function toast(msg) {
-    const t = $("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); if (toastTimer) clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2800); }
+
+  function nameTaken(name, exceptId) {
+    const q = name.trim().toLowerCase();
+    return state.categories.some((c) => c.id !== exceptId && c.name.trim().toLowerCase() === q);
   }
 
-  /* ── Static grid build ── */
+  /* ── grid scaffold ── */
   function buildGrid() {
-    const hr = $("dayHeaderRow");
-    hr.innerHTML = '<div style="width:' + LABEL_W + 'px;flex-shrink:0;"></div>' +
-      DAYS.map((d) => '<div class="dayHeader">' + d + "</div>").join("");
+    $("dayHeaderRow").innerHTML = '<div style="width:' + LABEL_W + 'px;flex-shrink:0;"></div>' + DAYS.map((d) => '<div class="dayHeader">' + d + "</div>").join("");
     grid.style.height = TOTAL_SLOTS * SLOT_PX + "px";
     let html = "";
     for (let i = 0; i < TOTAL_SLOTS; i++) {
       const isHour = i % SPH === 0;
-      html += '<div class="slotLine" style="top:' + i * SLOT_PX + "px;border-top:1px solid rgba(255,255,255," + (isHour ? "0.13" : "0.04") + ');">' +
-        (isHour ? '<span class="timeLabel">' + slotLabel(i) + "</span>" : "") + "</div>";
+      html += '<div class="slotLine" style="top:' + i * SLOT_PX + "px;border-top:1px solid " + (isHour ? "var(--gridHour)" : "var(--gridLine)") + ';">' + (isHour ? '<span class="timeLabel">' + slotLabel(i) + "</span>" : "") + "</div>";
     }
-    for (let di = 0; di < DAYS.length; di++) {
-      html += '<div class="colSep" style="left:calc(' + LABEL_W + "px + " + di + " * (100% - " + LABEL_W + "px) / 7);\"></div>";
-    }
+    for (let di = 1; di < ND; di++) html += '<div class="colSep" style="left:calc(' + LABEL_W + "px + " + (di / ND) + " * (100% - " + LABEL_W + 'px));"></div>';
     html += '<div id="blocksLayer"></div>';
     grid.innerHTML = html;
   }
 
-  /* ── Pool render ── */
+  /* ── pool ── */
+  function weekPlaced(idx) { const u = usedByCat(state.weeks[idx].blocks); return Object.values(u).reduce((a, b) => a + b, 0); }
   function renderPool() {
-    const used = usedByCat(state.blocks);
+    const used = usedByCat(curBlocks());
     const cats = state.categories;
-    const active = cats.filter((c) => c.hours - (used[c.id] || 0) > 0.001);
-    const done = cats.filter((c) => c.hours - (used[c.id] || 0) <= 0.001);
+    const eps = 0.001;
+    const cw = state.currentWeek;
+    const under = cats.filter((c) => weekBudget(c, cw) - (used[c.id] || 0) > eps);
+    const over = cats.filter((c) => (used[c.id] || 0) - weekBudget(c, cw) > eps);
+    const exact = cats.filter((c) => Math.abs(weekBudget(c, cw) - (used[c.id] || 0)) <= eps);
     pool.innerHTML = "";
-    // summary: total unassigned hours across all categories
-    let totalBudget = 0, totalPlaced = 0, totalUnassigned = 0;
-    for (const c of cats) {
-      totalBudget += c.hours;
-      totalPlaced += used[c.id] || 0;
-      totalUnassigned += Math.max(0, c.hours - (used[c.id] || 0));
-    }
+
+    // summary
+    const totalBudget = cats.reduce((a, c) => a + weekBudget(c, cw), 0);
+    const thisPlaced = Object.values(used).reduce((a, b) => a + b, 0);
+    let allBudget = 0, allPlaced = 0;
+    for (let i = 0; i < state.weeks.length; i++) { allPlaced += weekPlaced(i); allBudget += cats.reduce((a, c) => a + weekBudget(c, i), 0); }
+    const W = state.weeks.length;
     const summary = document.createElement("div");
     summary.className = "poolSummary";
     summary.innerHTML =
-      "<span><b>" + fmtH(totalUnassigned) + "h</b> unassigned</span>" +
-      "<span>" + fmtH(totalPlaced) + "h / " + fmtH(totalBudget) + "h placed</span>";
+      '<div class="l1">This week: <b>' + fmtH(Math.max(0, totalBudget - thisPlaced)) + "h</b> free · " + fmtH(thisPlaced) + "h / " + fmtH(totalBudget) + "h planned</div>" +
+      '<div class="l2">All ' + W + " week" + (W > 1 ? "s" : "") + ": " + fmtH(Math.max(0, allBudget - allPlaced)) + "h free · " + fmtH(allPlaced) + "h / " + fmtH(allBudget) + "h planned</div>";
+    if (sheetUrl) {
+      const sb = document.createElement("button");
+      sb.className = "sheetBtn"; sb.textContent = "⤓ Import from sheet";
+      sb.addEventListener("click", () => doSheetImport());
+      summary.appendChild(sb);
+    }
     pool.appendChild(summary);
-    for (const cat of active.concat(done)) {
+
+    for (const cat of under.concat(over).concat(exact)) {
+      const bw = weekBudget(cat, cw);
       const u = used[cat.id] || 0;
-      const remaining = Math.round((cat.hours - u) * 100) / 100;
-      const isDone = remaining <= 0.001;
-      const pct = cat.hours > 0 ? Math.min(100, (u / cat.hours) * 100) : 100;
+      const remaining = Math.round((bw - u) * 100) / 100;
+      const isOver = u - bw > eps;
+      const isDone = Math.abs(bw - u) <= eps;
+      const pct = bw > 0 ? Math.min(100, (u / bw) * 100) : 100;
       const el = document.createElement("div");
-      el.className = "poolItem" + (isDone ? " done" : "") + (armedCat === cat.id ? " armed" : "");
+      el.className = "poolItem" + (isDone ? " done" : "") + (isOver ? " over" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
       el.style.borderLeftColor = cat.color;
-      const hoursTxt = remaining > 0.001 ? fmtH(remaining) + "h left"
-        : remaining < -0.001 ? fmtH(-remaining) + "h over" : "done";
+      const hoursTxt = isOver ? fmtH(u - bw) + "h over" : isDone ? "✓ done" : fmtH(remaining) + "h left";
+      const hoursCls = isOver ? "isover" : isDone ? "isdone" : "";
       el.innerHTML =
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
         '<button class="catX" title="Delete category">&times;</button>' +
         '<div class="poolTop"><input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
-        '<span class="poolHours' + (remaining < -0.001 ? " over" : "") + '" style="color:' + (isDone ? "#9aa" : cat.color) + ';">' + hoursTxt + "</span></div>" +
-        '<div class="barTrack"><div class="barFill" style="width:' + pct + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + fmtH(u) + 'h of <input class="hoursInput" type="number" step="0.25" min="0" value="' + cat.hours + '">h</div>';
-      // events
-      const nameIn = el.querySelector(".nameInput");
-      const hoursIn = el.querySelector(".hoursInput");
-      const colorIn = el.querySelector(".stripe input");
-      const stripe = el.querySelector(".stripe");
-      const xBtn = el.querySelector(".catX");
-      for (const inp of [nameIn, hoursIn, stripe, xBtn]) {
-        inp.addEventListener("pointerdown", (e) => e.stopPropagation());
-        inp.addEventListener("click", (e) => e.stopPropagation());
-      }
-      nameIn.addEventListener("change", () => { snap(); cat.name = nameIn.value.trim() || cat.name; commit(); });
+        '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
+        '<div class="barTrack"><div class="barFill ' + (isOver ? "isover" : "") + '" style="width:' + pct + "%;background:" + cat.color + ';"></div></div>' +
+        '<div class="poolMeta">' + (isOver ? '<span class="warn">⚠</span>' : "") + fmtH(u) + 'h of <input class="hoursInput" type="number" step="0.25" min="0" value="' + bw + '">h</div>';
+      const nameIn = el.querySelector(".nameInput"), hoursIn = el.querySelector(".hoursInput");
+      const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe"), xBtn = el.querySelector(".catX");
+      for (const inp of [nameIn, hoursIn, stripe, xBtn]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
+      nameIn.addEventListener("change", () => {
+        const v = nameIn.value.trim();
+        if (!v) { nameIn.value = cat.name; return; }
+        if (nameTaken(v, cat.id)) { toast('A task named "' + v + '" already exists.'); nameIn.value = cat.name; return; }
+        snap(); cat.name = v; commit();
+      });
       nameIn.addEventListener("keydown", (e) => { if (e.key === "Enter") nameIn.blur(); });
-      hoursIn.addEventListener("change", () => { snap(); cat.hours = Math.max(0, +hoursIn.value || 0); commit(); });
+      hoursIn.addEventListener("change", () => { snap(); ensureBudgets(state.weeks[state.currentWeek])[cat.id] = Math.max(0, +hoursIn.value || 0); commit(); });
       colorIn.addEventListener("input", () => { cat.color = colorIn.value; renderAll(); });
       colorIn.addEventListener("change", () => { snap(); commit(); });
       xBtn.addEventListener("click", () => {
-        const has = state.blocks.some((b) => b.catId === cat.id);
-        if (has && !confirm('Delete "' + cat.name + '" and its placed blocks?')) return;
+        const has = state.weeks.some((w) => w.blocks.some((b) => b.catId === cat.id));
+        if (has && !confirm('Delete "' + cat.name + '" and its placed blocks in all weeks?')) return;
         snap();
         state.categories = state.categories.filter((c) => c.id !== cat.id);
-        state.blocks = state.blocks.filter((b) => b.catId !== cat.id);
+        state.weeks.forEach((w) => { w.blocks = w.blocks.filter((b) => b.catId !== cat.id); if (w.budgets) delete w.budgets[cat.id]; });
         if (armedCat === cat.id) armedCat = null;
         commit();
       });
       if (!isDone) {
-        el.addEventListener("pointerdown", (e) => {
-          if (COARSE) return; // touch uses tap-to-arm via click
-          e.preventDefault();
-          startNewDrag(e, cat);
-        });
-        el.addEventListener("click", () => {
-          if (!COARSE) return;
-          armedCat = armedCat === cat.id ? null : cat.id;
-          renderPool();
-          if (armedCat) toast("Now tap the grid where “" + cat.name + "” should go");
-        });
+        el.addEventListener("pointerdown", (e) => { if (COARSE) return; e.preventDefault(); startNewDrag(e, cat); });
+        el.addEventListener("click", () => { if (!COARSE) return; armedCat = armedCat === cat.id ? null : cat.id; renderPool(); if (armedCat) toast("Now tap the grid where “" + cat.name + "” should go"); });
       }
       pool.appendChild(el);
     }
     const add = document.createElement("button");
-    add.id = "addCat";
-    add.textContent = "+ Add category";
+    add.id = "addCat"; add.textContent = "+ Add task";
     add.addEventListener("click", () => {
       snap();
-      const usedColors = new Set(state.categories.map((c) => c.color));
-      const color = PALETTE.find((c) => !usedColors.has(c)) || PALETTE[state.categories.length % PALETTE.length];
-      state.categories.push({ id: "cat" + Date.now(), name: "New task", hours: 1, color: color });
+      let base = "New task", name = base, n = 2;
+      while (nameTaken(name, null)) name = base + " " + (n++);
+      state.categories.push({ id: "cat" + Date.now(), name, hours: 1, color: pickColor(state.categories) });
       commit();
-      const items = pool.querySelectorAll(".poolItem .nameInput");
-      for (const i of items) if (i.value === "New task") { i.focus(); i.select(); break; }
+      for (const i of pool.querySelectorAll(".poolItem .nameInput")) if (i.value === name) { i.focus(); i.select(); break; }
     });
     pool.appendChild(add);
   }
 
-  /* ── Blocks render ── */
+  /* ── blocks ── */
+  function blockName(b, catById) { return b.event ? (b.name || "Meeting") : (catById[b.catId] ? catById[b.catId].name : "?"); }
+  function blockColor(b, catById) { return b.event ? (b.color || EVENT_COLOR) : (catById[b.catId] ? catById[b.catId].color : "#888"); }
+
   function renderBlocks() {
-    const layer = $("blocksLayer");
-    if (!layer) return;
-    const catById = {};
-    for (const c of state.categories) catById[c.id] = c;
+    const layer = $("blocksLayer"); if (!layer) return;
+    const catById = {}; for (const c of state.categories) catById[c.id] = c;
     layer.innerHTML = "";
-    for (let di = 0; di < DAYS.length; di++) {
+    const blocks = curBlocks();
+    for (let di = 0; di < ND; di++) {
       const day = DAYS[di];
-      const dayBlocks = state.blocks.filter((b) => b.day === day);
+      const dayBlocks = blocks.filter((b) => b.day === day && (b.event || catById[b.catId]));
       const lay = layoutDay(dayBlocks);
       for (const b of dayBlocks) {
-        const cat = catById[b.catId];
-        if (!cat) continue;
         const p = lay.pos[b.id];
+        const color = blockColor(b, catById);
+        const ink = textOn(color);
+        const hPx = b.lenSlots * SLOT_PX - 2;
         const el = document.createElement("div");
-        el.className = "block" + (selectedId === b.id ? " selected" : "");
+        el.className = "block" + (b.event ? " event" : "") + (selectedId === b.id ? " selected" : "");
         el.dataset.id = b.id;
-        const fr = "(100% - " + LABEL_W + "px)";
+        const frac = di / ND + p.col / (ND * p.nCols);
         el.style.cssText =
-          "background:" + cat.color +
-          ";top:" + (b.startSlot * SLOT_PX + 1) + "px" +
-          ";height:" + (b.lenSlots * SLOT_PX - 2) + "px" +
-          ";left:calc(" + LABEL_W + "px + " + fr + " * " + (di / 7 + p.col / (7 * p.nCols)) + " + 1px)" +
-          ";width:calc(" + fr + " / " + (7 * p.nCols) + " - 3px);";
-        el.innerHTML =
-          '<span class="blockLabel">' + cat.name.replace(/</g, "&lt;") + "</span>" +
-          '<span class="blockTime">' + slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots) + " · " + fmtH(b.lenSlots / SPH) + "h</span>" +
-          '<button class="blockX">&times;</button>' +
-          '<div class="resizeHandle" style="height:' + (COARSE ? 16 : 7) + 'px;"></div>';
-        el.title = cat.name + "  " + slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots);
-        el.querySelector(".blockX").addEventListener("pointerdown", (e) => {
-          e.stopPropagation();
-          snap();
-          state.blocks = state.blocks.filter((x) => x.id !== b.id);
-          if (selectedId === b.id) selectedId = null;
-          commit();
-        });
-        el.querySelector(".resizeHandle").addEventListener("pointerdown", (e) => {
-          e.stopPropagation(); e.preventDefault();
-          startBlockDrag(e, b, "resize");
-        });
-        el.addEventListener("pointerdown", (e) => {
-          if (e.target.closest(".blockX") || e.target.closest(".resizeHandle")) return;
-          e.preventDefault();
-          startBlockDrag(e, b, "move");
-        });
+          "background:" + color + ";color:" + ink +
+          ";top:" + (b.startSlot * SLOT_PX + 1) + "px;height:" + hPx + "px" +
+          ";left:calc(" + LABEL_W + "px + " + frac + " * (100% - " + LABEL_W + "px) + 1px)" +
+          ";width:calc((100% - " + LABEL_W + "px) / " + (ND * p.nCols) + " - 3px);";
+        const nm = blockName(b, catById);
+        let inner = '<span class="blockLabel">' + nm.replace(/</g, "&lt;") + "</span>";
+        if (hPx >= 22) inner += '<span class="blockTime">' + slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots) + "</span>";
+        inner += '<button class="blockX" style="color:' + (ink === "#ffffff" ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.5)") + '">&times;</button>';
+        const handleH = Math.max(4, Math.min(COARSE ? 14 : 9, Math.floor(hPx / 3)));
+        inner += '<div class="resizeHandle top" style="height:' + handleH + 'px;"></div><div class="resizeHandle bot" style="height:' + handleH + 'px;"></div>';
+        el.innerHTML = inner;
+        el.title = nm + "  " + slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots) + " (" + fmtH(b.lenSlots / SPH) + "h)";
+        el.querySelector(".blockX").addEventListener("pointerdown", (e) => { e.stopPropagation(); snap(); removeBlock(b.id); if (selectedId === b.id) selectedId = null; commit(); });
+        el.querySelector(".resizeHandle.top").addEventListener("pointerdown", (e) => { e.stopPropagation(); e.preventDefault(); startBlockDrag(e, b, "resizeTop"); });
+        el.querySelector(".resizeHandle.bot").addEventListener("pointerdown", (e) => { e.stopPropagation(); e.preventDefault(); startBlockDrag(e, b, "resize"); });
+        el.addEventListener("pointerdown", (e) => { if (e.target.closest(".blockX") || e.target.closest(".resizeHandle")) return; e.preventDefault(); startBlockDrag(e, b, "move"); });
         layer.appendChild(el);
       }
       for (const ov of lay.overlays) {
-        const s = ov[0], e = ov[1];
-        const o = document.createElement("div");
-        o.className = "overlap";
-        const fr = "(100% - " + LABEL_W + "px)";
-        o.style.cssText =
-          "top:" + (s * SLOT_PX) + "px;height:" + ((e - s) * SLOT_PX) + "px" +
-          ";left:calc(" + LABEL_W + "px + " + fr + " * " + (di / 7) + " + 1px)" +
-          ";width:calc(" + fr + " / 7 - 3px);";
+        const o = document.createElement("div"); o.className = "overlap";
+        o.style.cssText = "top:" + (ov[0] * SLOT_PX) + "px;height:" + ((ov[1] - ov[0]) * SLOT_PX) + "px;left:calc(" + LABEL_W + "px + " + (di / ND) + " * (100% - " + LABEL_W + "px) + 1px);width:calc((100% - " + LABEL_W + "px) / " + ND + " - 3px);";
         layer.appendChild(o);
       }
     }
     renderActionBar();
   }
+  function removeBlock(id) { const w = state.weeks[state.currentWeek]; w.blocks = w.blocks.filter((b) => b.id !== id); }
+  function findBlock(id) { return curBlocks().find((b) => b.id === id); }
 
   function renderActionBar() {
-    const bar = $("actionBar");
-    const b = state.blocks.find((x) => x.id === selectedId);
+    const bar = $("actionBar"); const b = findBlock(selectedId);
     if (!b) { bar.classList.remove("show"); return; }
-    const cat = state.categories.find((c) => c.id === b.catId);
-    $("abName").textContent = cat ? cat.name : "";
+    const catById = {}; for (const c of state.categories) catById[c.id] = c;
+    $("abInfo").textContent = blockName(b, catById) + " · " + slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots);
     bar.classList.add("show");
   }
+  function renderAll() { $("weekLabel").textContent = "Week " + (state.currentWeek + 1) + " / " + state.weeks.length; renderPool(); renderBlocks(); }
 
-  function renderAll() { renderPool(); renderBlocks(); }
-
-  /* ── Pointer math ── */
+  /* ── pointer ── */
   function gridPos(clientX, clientY) {
     const rect = grid.getBoundingClientRect();
     const x = clientX - rect.left, y = clientY - rect.top;
-    const colW = (rect.width - LABEL_W) / 7;
+    const colW = (rect.width - LABEL_W) / ND;
     const dayIdx = Math.floor((x - LABEL_W) / colW);
-    if (dayIdx < 0 || dayIdx > 6) return null;
+    if (dayIdx < 0 || dayIdx >= ND) return null;
     if (y < -20 || y > rect.height + 20) return null;
-    let slot = Math.floor(y / SLOT_PX);
-    slot = Math.max(0, Math.min(TOTAL_SLOTS - 1, slot));
-    return { day: DAYS[dayIdx], dayIdx: dayIdx, slot: slot };
+    let slot = Math.floor(y / SLOT_PX); slot = Math.max(0, Math.min(TOTAL_SLOTS - 1, slot));
+    return { day: DAYS[dayIdx], dayIdx, slot };
   }
-
-  /* ── Drag: new block from pool (desktop) ── */
   function startNewDrag(e, cat) {
-    const used = usedByCat(state.blocks);
-    const remaining = cat.hours - (used[cat.id] || 0);
-    drag = {
-      mode: "new", catId: cat.id,
-      lenSlots: Math.max(1, Math.round(remaining * SPH)),
-    };
-    ghost.textContent = cat.name;
-    ghost.style.background = cat.color;
-    ghost.style.display = "block";
-    moveGhost(e.clientX, e.clientY);
+    const used = usedByCat(curBlocks()); const remaining = weekBudget(cat, state.currentWeek) - (used[cat.id] || 0);
+    drag = { mode: "new", catId: cat.id, lenSlots: Math.max(1, Math.round(remaining * SPH)) };
+    ghost.textContent = cat.name; ghost.style.background = cat.color; ghost.style.color = textOn(cat.color); ghost.style.display = "block"; moveGhost(e.clientX, e.clientY);
   }
-
-  /* ── Drag: move / resize an existing block ── */
   function startBlockDrag(e, block, mode) {
     const posNow = gridPos(e.clientX, e.clientY);
-    drag = {
-      mode: mode, blockId: block.id, catId: block.catId,
-      lenSlots: block.lenSlots,
-      grabOffset: posNow ? posNow.slot - block.startSlot : 0,
-      moved: false, startX: e.clientX, startY: e.clientY,
-    };
-    if (mode === "move") {
-      const el = $("blocksLayer").querySelector('[data-id="' + block.id + '"]');
-      if (el) el.classList.add("dragging");
-    }
+    drag = { mode, blockId: block.id, lenSlots: block.lenSlots, grabOffset: posNow ? posNow.slot - block.startSlot : 0, moved: false, startX: e.clientX, startY: e.clientY };
+    if (mode === "move") { const el = $("blocksLayer").querySelector('[data-id="' + block.id + '"]'); if (el) el.classList.add("dragging"); }
   }
-
-  function moveGhost(x, y) {
-    ghost.style.left = x + 12 + "px";
-    ghost.style.top = y + 12 + "px";
-  }
-
-  function autoScroll(clientY) {
-    const sc = $("gridScroll");
-    const r = sc.getBoundingClientRect();
-    if (clientY < r.top + 36) sc.scrollTop -= 10;
-    else if (clientY > r.bottom - 36) sc.scrollTop += 10;
-  }
+  function moveGhost(x, y) { ghost.style.left = x + 12 + "px"; ghost.style.top = y + 12 + "px"; }
+  function autoScroll(clientY) { const sc = $("gridScroll"); const r = sc.getBoundingClientRect(); if (clientY < r.top + 34) sc.scrollTop -= 10; else if (clientY > r.bottom - 34) sc.scrollTop += 10; }
 
   document.addEventListener("pointermove", (e) => {
     if (!drag) return;
-    if (drag.startX != null) {
-      const dx = Math.abs(e.clientX - drag.startX), dy = Math.abs(e.clientY - drag.startY);
-      if (dx + dy > 6) drag.moved = true;
-    }
+    if (drag.startX != null) { const dx = Math.abs(e.clientX - drag.startX), dy = Math.abs(e.clientY - drag.startY); if (dx + dy > 6) drag.moved = true; }
     if (drag.mode === "new" || drag.mode === "move") {
       if (drag.mode === "move" && drag.moved && ghost.style.display !== "block") {
-        const cat = state.categories.find((c) => c.id === drag.catId);
-        ghost.textContent = cat ? cat.name : "";
-        ghost.style.background = cat ? cat.color : "#888";
-        ghost.style.display = "block";
+        const b = findBlock(drag.blockId); const catById = {}; for (const c of state.categories) catById[c.id] = c;
+        if (b) { const col = blockColor(b, catById); ghost.textContent = blockName(b, catById); ghost.style.background = col; ghost.style.color = textOn(col); ghost.style.display = "block"; }
       }
-      moveGhost(e.clientX, e.clientY);
-      autoScroll(e.clientY);
-    } else if (drag.mode === "resize") {
-      const pos = gridPos(e.clientX, e.clientY);
-      const block = state.blocks.find((b) => b.id === drag.blockId);
+      moveGhost(e.clientX, e.clientY); autoScroll(e.clientY);
+    } else if (drag.mode === "resize" || drag.mode === "resizeTop") {
+      const pos = gridPos(e.clientX, e.clientY); const block = findBlock(drag.blockId);
       if (pos && block) {
-        const newLen = Math.max(1, pos.slot - block.startSlot + 1);
-        if (newLen !== block.lenSlots) {
-          if (!drag.snapped) { snap(); drag.snapped = true; }
-          block.lenSlots = newLen;
-          renderBlocks();
-          renderPool(); // live hours update
+        if (drag.mode === "resize") {
+          const newLen = Math.max(1, pos.slot - block.startSlot + 1);
+          if (newLen !== block.lenSlots) { if (!drag.snapped) { snap(); drag.snapped = true; } block.lenSlots = newLen; renderBlocks(); renderPool(); }
+        } else {
+          const end = block.startSlot + block.lenSlots;
+          const newStart = Math.max(0, Math.min(pos.slot, end - 1));
+          if (newStart !== block.startSlot) { if (!drag.snapped) { snap(); drag.snapped = true; } block.startSlot = newStart; block.lenSlots = end - newStart; renderBlocks(); renderPool(); }
         }
       }
       autoScroll(e.clientY);
     }
   });
-
   document.addEventListener("pointerup", (e) => {
-    if (!drag) return;
-    const d = drag;
-    drag = null;
-    ghost.style.display = "none";
+    if (!drag) return; const d = drag; drag = null; ghost.style.display = "none";
     const pos = gridPos(e.clientX, e.clientY);
-
     if (d.mode === "new") {
-      if (pos) {
-        snap();
-        const len = Math.max(1, Math.min(d.lenSlots, TOTAL_SLOTS - pos.slot));
-        state.blocks.push({ id: state.nextId++, catId: d.catId, day: pos.day, startSlot: pos.slot, lenSlots: len });
-        commit();
-      }
+      if (pos) { snap(); const len = Math.max(1, Math.min(d.lenSlots, TOTAL_SLOTS - pos.slot)); curBlocks().push({ id: state.nextId++, catId: d.catId, day: pos.day, startSlot: pos.slot, lenSlots: len }); commit(); }
     } else if (d.mode === "move") {
-      const el = $("blocksLayer").querySelector('[data-id="' + d.blockId + '"]');
-      if (el) el.classList.remove("dragging");
-      if (!d.moved) {
-        // tap → select / deselect
-        selectedId = selectedId === d.blockId ? null : d.blockId;
-        renderBlocks();
-      } else if (pos) {
-        snap();
-        const b = state.blocks.find((x) => x.id === d.blockId);
-        if (b) {
-          b.day = pos.day;
-          b.startSlot = Math.max(0, Math.min(pos.slot - d.grabOffset, TOTAL_SLOTS - b.lenSlots));
-        }
-        commit();
-      } else {
-        renderBlocks();
-      }
-    } else if (d.mode === "resize") {
-      if (d.snapped) commit(); // lenSlots already mutated live
-    }
+      const el = $("blocksLayer").querySelector('[data-id="' + d.blockId + '"]'); if (el) el.classList.remove("dragging");
+      if (!d.moved) { selectedId = selectedId === d.blockId ? null : d.blockId; renderBlocks(); }
+      else if (pos) { snap(); const b = findBlock(d.blockId); if (b) { b.day = pos.day; b.startSlot = Math.max(0, Math.min(pos.slot - d.grabOffset, TOTAL_SLOTS - b.lenSlots)); } commit(); }
+      else renderBlocks();
+    } else if (d.mode === "resize" || d.mode === "resizeTop") { if (d.snapped) commit(); }
   });
+  document.addEventListener("pointercancel", () => { if (!drag) return; drag = null; ghost.style.display = "none"; renderAll(); });
 
-  document.addEventListener("pointercancel", () => {
-    if (!drag) return;
-    drag = null;
-    ghost.style.display = "none";
-    renderAll();
-  });
-
-  /* ── Tap on grid: place armed category, or deselect ── */
   grid.addEventListener("click", (e) => {
     if (e.target.closest(".block")) return;
     const pos = gridPos(e.clientX, e.clientY);
     if (armedCat && pos) {
       const cat = state.categories.find((c) => c.id === armedCat);
-      if (cat) {
-        const used = usedByCat(state.blocks);
-        const remaining = cat.hours - (used[cat.id] || 0);
-        const len = Math.max(1, Math.min(Math.round(Math.max(remaining, 0.25) * SPH), TOTAL_SLOTS - pos.slot));
-        snap();
-        state.blocks.push({ id: state.nextId++, catId: armedCat, day: pos.day, startSlot: pos.slot, lenSlots: len });
-        armedCat = null;
-        commit();
-        return;
-      }
+      if (cat) { const used = usedByCat(curBlocks()); const remaining = weekBudget(cat, state.currentWeek) - (used[cat.id] || 0); const len = Math.max(1, Math.min(Math.round(Math.max(remaining, 0.25) * SPH), TOTAL_SLOTS - pos.slot)); snap(); curBlocks().push({ id: state.nextId++, catId: armedCat, day: pos.day, startSlot: pos.slot, lenSlots: len }); armedCat = null; commit(); return; }
       armedCat = null;
     }
     if (selectedId != null) { selectedId = null; renderBlocks(); }
   });
 
-  /* ── Action bar ── */
-  function nudge(fn) {
-    const b = state.blocks.find((x) => x.id === selectedId);
-    if (!b) return;
-    snap();
-    fn(b);
-    b.startSlot = Math.max(0, Math.min(b.startSlot, TOTAL_SLOTS - 1));
-    b.lenSlots = Math.max(1, Math.min(b.lenSlots, TOTAL_SLOTS - b.startSlot));
-    commit();
-  }
+  /* ── action bar ── */
+  function nudge(fn) { const b = findBlock(selectedId); if (!b) return; snap(); fn(b); b.startSlot = Math.max(0, Math.min(b.startSlot, TOTAL_SLOTS - 1)); b.lenSlots = Math.max(1, Math.min(b.lenSlots, TOTAL_SLOTS - b.startSlot)); commit(); }
   $("abUp").onclick = () => nudge((b) => (b.startSlot -= 1));
   $("abDown").onclick = () => nudge((b) => (b.startSlot += 1));
-  $("abDayL").onclick = () => nudge((b) => (b.day = DAYS[(DAYS.indexOf(b.day) + 6) % 7]));
-  $("abDayR").onclick = () => nudge((b) => (b.day = DAYS[(DAYS.indexOf(b.day) + 1) % 7]));
+  $("abDayL").onclick = () => nudge((b) => (b.day = DAYS[(DAYS.indexOf(b.day) + ND - 1) % ND]));
+  $("abDayR").onclick = () => nudge((b) => (b.day = DAYS[(DAYS.indexOf(b.day) + 1) % ND]));
+  $("abTopUp").onclick = () => nudge((b) => { if (b.startSlot > 0) { b.startSlot -= 1; b.lenSlots += 1; } });
+  $("abTopDn").onclick = () => nudge((b) => { if (b.lenSlots > 1) { b.startSlot += 1; b.lenSlots -= 1; } });
   $("abGrow").onclick = () => nudge((b) => (b.lenSlots += 1));
-  $("abShrink").onclick = () => nudge((b) => (b.lenSlots -= 1));
-  $("abDel").onclick = () => {
-    snap();
-    state.blocks = state.blocks.filter((x) => x.id !== selectedId);
-    selectedId = null;
-    commit();
-  };
+  $("abShrink").onclick = () => nudge((b) => (b.lenSlots = Math.max(1, b.lenSlots - 1)));
+  $("abDel").onclick = () => { snap(); removeBlock(selectedId); selectedId = null; commit(); };
   $("abClose").onclick = () => { selectedId = null; renderBlocks(); };
 
-  /* ── Command input ── */
+  /* ── command ── */
   $("cmdForm").addEventListener("submit", (e) => {
     e.preventDefault();
-    const text = $("cmdInput").value.trim();
-    if (!text) return;
+    const text = $("cmdInput").value.trim(); if (!text) return;
     const r = parseCommand(text, state.categories);
     if (r.error) { toast(r.error); return; }
     snap();
-    let cat = r.cat;
-    if (!cat) {
-      const usedColors = new Set(state.categories.map((c) => c.color));
-      const color = PALETTE.find((c) => !usedColors.has(c)) || PALETTE[state.categories.length % PALETTE.length];
-      cat = { id: "cat" + Date.now(), name: r.name, hours: (r.days.length * r.lenSlots) / SPH, color: color };
-      state.categories.push(cat);
-      toast('Created "' + r.name + '" and placed ' + r.days.length + " block(s)");
+    if (r.cat) {
+      for (const di of r.days) curBlocks().push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots });
+      toast("Placed " + r.days.length + " × " + fmtH(r.lenSlots / SPH) + "h of “" + r.cat.name + "”");
     } else {
-      toast("Placed " + r.days.length + " × " + fmtH(r.lenSlots / SPH) + "h of “" + cat.name + "”");
+      for (const di of r.days) curBlocks().push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots });
+      toast("Added meeting “" + r.name + "” (" + r.days.length + "×)");
     }
-    for (const di of r.days) {
-      state.blocks.push({ id: state.nextId++, catId: cat.id, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots });
-    }
-    $("cmdInput").value = "";
-    $("cmdInput").blur();
-    commit();
+    $("cmdInput").value = ""; $("cmdInput").blur(); commit();
   });
 
-  /* ── Undo ── */
+  /* ── weeks ── */
+  $("weekPrev").onclick = () => { if (state.currentWeek > 0) { state.currentWeek--; selectedId = null; commit(); } };
+  $("weekNext").onclick = () => { if (state.currentWeek < state.weeks.length - 1) { state.currentWeek++; selectedId = null; commit(); } else { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); } };
+  $("weekAdd").onclick = () => { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); };
+  $("weekDel").onclick = () => {
+    if (state.weeks.length === 1) { toast("Can't delete the only week — use Clear instead."); return; }
+    if (!confirm("Delete Week " + (state.currentWeek + 1) + " and its blocks?")) return;
+    snap(); state.weeks.splice(state.currentWeek, 1); if (state.currentWeek >= state.weeks.length) state.currentWeek = state.weeks.length - 1; selectedId = null; commit();
+  };
+
+  /* ── undo / keys ── */
   $("undoBtn").addEventListener("click", undo);
   document.addEventListener("keydown", (e) => {
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); }
     if (e.key === "Escape") { armedCat = null; selectedId = null; renderAll(); }
+    if (e.key === "ArrowLeft" && !e.ctrlKey && !e.metaKey) $("weekPrev").click();
+    if (e.key === "ArrowRight" && !e.ctrlKey && !e.metaKey) { if (state.currentWeek < state.weeks.length - 1) $("weekNext").click(); }
   });
 
-  /* ── Settings ── */
+  /* ── sheet import ── */
+  async function doSheetImport() {
+    if (!sheetUrl) { toast("No sheet link set — open ⚙."); return; }
+    const status = $("sheetStatus"); if (status) status.textContent = "Importing…";
+    try {
+      const r = await fetch(sheetUrl);
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const text = await r.text();
+      if (/<html/i.test(text)) throw new Error("got a web page, not CSV — make sure you published as CSV");
+      const parsed = csvToWeeks(text);
+      if (!parsed.rows.length) throw new Error("no task rows found");
+      snap();
+      const res = applySheetWeeks(state, parsed);
+      commit();
+      let msg = "Imported: " + res.updated + " updated, " + res.added + " added";
+      if (parsed.weekCount > 1) msg += " · " + parsed.weekCount + " week-columns";
+      if (res.weeksCreated) msg += " · " + res.weeksCreated + " new week(s)";
+      msg += ".";
+      toast(msg); if (status) status.textContent = "✅ " + msg;
+    } catch (e) { toast("Sheet import failed: " + e.message); if (status) status.textContent = "❌ " + e.message; }
+  }
+
+  /* ── settings ── */
   const dlg = $("settingsDialog");
   $("settingsBtn").addEventListener("click", () => {
-    $("sbUrl").value = (cfg && cfg.url) || "";
-    $("sbKey").value = (cfg && cfg.key) || "";
+    $("sheetUrl").value = sheetUrl || "";
+    $("sbUrl").value = (cfg && cfg.url) || ""; $("sbKey").value = (cfg && cfg.key) || "";
     $("sbPid").value = (cfg && cfg.pid) || "wp-" + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 12);
-    $("syncStatus").textContent = "";
-    dlg.showModal();
+    $("syncStatus").textContent = ""; $("sheetStatus").textContent = ""; dlg.showModal();
   });
   $("syncDot").addEventListener("click", () => $("settingsBtn").click());
   $("closeSettings").addEventListener("click", () => dlg.close());
+  $("sheetImport").addEventListener("click", () => { sheetUrl = $("sheetUrl").value.trim(); saveCfg(); doSheetImport(); });
   $("sbSave").addEventListener("click", async () => {
-    cfg = { url: $("sbUrl").value.trim(), key: $("sbKey").value.trim(), pid: $("sbPid").value.trim() };
-    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-    $("syncStatus").textContent = "Testing…";
+    cfg = { url: $("sbUrl").value.trim(), key: $("sbKey").value.trim(), pid: $("sbPid").value.trim(), sheet: sheetUrl };
+    saveCfg(); $("syncStatus").textContent = "Testing…";
     const row = await pullRemote(false);
-    if ($("syncDot").className === "err") {
-      $("syncStatus").textContent = "❌ Connection failed — check URL/key, and that the SQL was run.";
-    } else if (row) {
-      const remoteAt = Date.parse(row.updated_at);
-      if (remoteAt > localUpdatedAt) {
-        state = row.data; localUpdatedAt = remoteAt; saveLocal(); renderAll();
-        $("syncStatus").textContent = "✅ Connected — loaded existing plan from cloud.";
-      } else {
-        $("syncStatus").textContent = "✅ Connected.";
-        schedulePush();
-      }
-    } else {
-      $("syncStatus").textContent = "✅ Connected — saving your current plan to cloud.";
-      schedulePush();
-    }
+    if ($("syncDot").className === "err") $("syncStatus").textContent = "❌ Connection failed — check URL/key and that the SQL was run.";
+    else if (row) { const remoteAt = Date.parse(row.updated_at); if (remoteAt > localUpdatedAt) { state = migrate(row.data); localUpdatedAt = remoteAt; saveLocal(); renderAll(); $("syncStatus").textContent = "✅ Connected — loaded existing plan from cloud."; } else { $("syncStatus").textContent = "✅ Connected."; schedulePush(); } }
+    else { $("syncStatus").textContent = "✅ Connected — saving your current plan to cloud."; schedulePush(); }
   });
   $("sbLink").addEventListener("click", () => {
-    if (!cfg || !cfg.url) { $("syncStatus").textContent = "Save the settings first."; return; }
-    const link = location.origin + location.pathname + "#s=" + btoa(JSON.stringify(cfg));
-    navigator.clipboard.writeText(link).then(
-      () => ($("syncStatus").textContent = "Link copied — open it once on your phone, then bookmark / add to home screen."),
-      () => { prompt("Copy this link:", link); }
-    );
+    if (!cfg || !cfg.url) { $("syncStatus").textContent = "Save the sync settings first."; return; }
+    const payload = Object.assign({}, cfg, { sheet: sheetUrl });
+    const link = location.origin + location.pathname + "#s=" + btoa(JSON.stringify(payload));
+    navigator.clipboard.writeText(link).then(() => ($("syncStatus").textContent = "Link copied — open it once on your phone, then add to home screen."), () => prompt("Copy this link:", link));
   });
 
-  /* setup link import */
   if (location.hash.indexOf("#s=") === 0) {
-    try {
-      cfg = JSON.parse(atob(location.hash.slice(3)));
-      localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-      history.replaceState(null, "", location.pathname);
-      toast("Sync settings imported from link");
-    } catch (e) {}
+    try { cfg = JSON.parse(atob(location.hash.slice(3))); sheetUrl = cfg.sheet || ""; saveCfg(); history.replaceState(null, "", location.pathname); toast("Sync settings imported from link"); } catch (e) {}
   }
 
-  /* ── Export / import / clear ── */
+  /* ── export / import / clear ── */
   $("exportBtn").addEventListener("click", () => {
-    const out = { version: 2, exportedAt: new Date().toISOString(), categories: state.categories, blocks: state.blocks, nextId: state.nextId };
+    const out = Object.assign({ exportedAt: new Date().toISOString() }, state);
     const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    const d = new Date();
-    a.download = "week-plan-" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + ".json";
-    a.click();
-    URL.revokeObjectURL(a.href);
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    const d = new Date(); a.download = "week-plan-" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + ".json";
+    a.click(); URL.revokeObjectURL(a.href);
   });
   $("importBtn").addEventListener("click", () => $("fileInput").click());
   $("fileInput").addEventListener("change", (e) => {
-    const f = e.target.files && e.target.files[0];
-    if (!f) return;
+    const f = e.target.files && e.target.files[0]; if (!f) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      try {
-        const d = JSON.parse(ev.target.result);
-        if (!d.categories || !d.blocks) { alert("That file doesn't look like a week plan."); return; }
-        if (state.blocks.length && !confirm("Replace your current plan with the imported one?")) return;
-        snap();
-        state = { categories: d.categories, blocks: d.blocks, nextId: d.nextId || 1 };
-        commit();
-        dlg.close();
-      } catch (err) {
-        alert("Couldn't read that file.");
-      } finally {
-        e.target.value = "";
-      }
+      try { const d = JSON.parse(ev.target.result); const mig = migrate(d.state || d); if (!mig || !mig.categories) { alert("That file doesn't look like a week plan."); return; } if (curBlocks().length && !confirm("Replace your current plan with the imported one?")) return; snap(); state = mig; commit(); dlg.close(); }
+      catch (err) { alert("Couldn't read that file."); } finally { e.target.value = ""; }
     };
     reader.readAsText(f);
   });
-  $("clearBtn").addEventListener("click", () => {
-    if (!confirm("Clear all placed blocks? Category budgets stay.")) return;
-    snap();
-    state.blocks = [];
-    commit();
-    dlg.close();
-  });
+  $("clearBtn").addEventListener("click", () => { if (!confirm("Clear all blocks in this week? Task budgets stay.")) return; snap(); state.weeks[state.currentWeek].blocks = []; commit(); dlg.close(); });
 
-  /* ── Re-pull when returning to the app ── */
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && Date.now() - lastPull > 8000 && !pushTimer) pullRemote(true);
-  });
-  window.addEventListener("focus", () => {
-    if (Date.now() - lastPull > 8000 && !pushTimer) pullRemote(true);
-  });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && Date.now() - lastPull > 8000 && !pushTimer) pullRemote(true); });
+  window.addEventListener("focus", () => { if (Date.now() - lastPull > 8000 && !pushTimer) pullRemote(true); });
 
-  /* ── Service worker ── */
-  if ("serviceWorker" in navigator && location.protocol === "https:") {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
-  }
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  /* ── Init ── */
-  loadLocal();
-  buildGrid();
-  renderAll();
-  $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8; // open at ~06:00
+  loadLocal(); buildGrid(); renderAll();
+  $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8;
   pullRemote(true);
   if (!cfg) setDot("", "Sync not set up yet — tap ⚙");
 })();
 </script>
-<!-- v1.1 -->
 </body>
 </html>
