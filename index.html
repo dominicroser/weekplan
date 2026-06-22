@@ -543,21 +543,23 @@ function csvToWeeks(text) {
   const header = grid[0].map((h) => (h || "").trim());
   const low = header.map((h) => h.toLowerCase());
   let ni = low.findIndex((h) => /task|name|categor|activity|project/.test(h));
-  const ci = low.findIndex((h) => /colou?r/.test(h));
-  const looksHeaderless = ni === -1 && ci === -1 && !low.some((h) => /week|hour|hrs|budget|time/.test(h));
+  const ci = low.findIndex((h) => /colou?r|hex/.test(h));
+  const WEEKRE = /week|wk|hour|hrs|budget/; // only columns naming a week (or hours) count
+  const RESERVEDROW = /^(sum|subtotal|total|totals|average|avg|mean|median|count|comments?|notes?|n\/a)$/i;
+  const looksHeaderless = ni === -1 && ci === -1 && !low.some((h) => WEEKRE.test(h));
   let start = 1, valueCols = [];
   if (looksHeaderless) {
     ni = 0; start = 0;
     for (let j = 1; j < grid[0].length; j++) valueCols.push(j);
   } else {
     if (ni === -1) ni = 0;
-    for (let j = 0; j < header.length; j++) { if (j === ni || j === ci) continue; valueCols.push(j); }
+    for (let j = 0; j < header.length; j++) { if (j === ni || j === ci) continue; if (WEEKRE.test(low[j])) valueCols.push(j); }
   }
   const rows = [];
   for (let r = start; r < grid.length; r++) {
     const cells = grid[r];
     const name = ((cells[ni] != null ? cells[ni] : "")).trim();
-    if (!name) continue;
+    if (!name || RESERVEDROW.test(name)) continue;
     const color = ci >= 0 && cells[ci] && cells[ci].trim() ? cells[ci].trim() : undefined;
     const hours = valueCols.map((j) => { const v = parseFloat(String(cells[j] == null ? "" : cells[j]).replace(",", ".")); return isNaN(v) ? null : Math.max(0, v); });
     rows.push({ name, color, hours });
