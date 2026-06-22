@@ -99,11 +99,17 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .resizeHandle.top { top: 0; }
 .resizeHandle.bot { bottom: 0; }
 .overlap { position: absolute; background: rgba(255,221,0,0.5); border: 1px solid #f5c000; border-radius: 3px; pointer-events: none; z-index: 4; }
+.dropPreview { position: absolute; border: 2px dashed rgba(0,0,0,0.5); border-radius: 5px; opacity: 0.42; pointer-events: none; z-index: 5; }
 #ghost { position: fixed; pointer-events: none; z-index: 999; padding: 4px 9px; border-radius: 5px; font-size: 11.5px; font-weight: 700; box-shadow: 0 3px 10px rgba(0,0,0,0.25); font-family: 'Inter', sans-serif; display: none; }
 
 /* ── Sticky note ── */
-#stickyNote { position: fixed; z-index: 40; width: 230px; height: 150px; background: #fffdf2; border: 1px solid #ece1b3; border-radius: 10px; box-shadow: 0 6px 22px rgba(0,0,0,0.14); display: none; flex-direction: column; overflow: hidden; min-width: 150px; min-height: 92px; resize: both; }
-#stickyNote.open { display: flex; }
+#stickyNote { position: fixed; z-index: 40; width: 230px; height: 150px; background: #fbf3c9; border: 1px solid #ece1b3; border-radius: 10px; box-shadow: 0 6px 22px rgba(0,0,0,0.14); display: none; overflow: hidden; min-width: 150px; min-height: 92px; cursor: move; touch-action: none; }
+#stickyNote.open { display: block; }
+.nh { position: absolute; width: 17px; height: 17px; z-index: 3; }
+.nh.nw { left: 0; top: 0; cursor: nwse-resize; }
+.nh.ne { right: 0; top: 0; cursor: nesw-resize; }
+.nh.sw { left: 0; bottom: 0; cursor: nesw-resize; }
+.nh.se { right: 0; bottom: 0; cursor: nwse-resize; }
 #noteBar { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 8px; background: #fbf5d6; cursor: move; font-family: 'Inter', sans-serif; font-size: 11px; color: #9a8c3e; flex-shrink: 0; }
 #noteGrip { flex: 1; font-weight: 600; letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; }
 #noteTools { display: flex; gap: 2px; }
@@ -111,8 +117,10 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteTools button:active { background: #fff; }
 #noteTools button[data-cmd=pink] { color: var(--pink); font-weight: 700; }
 #noteClose { width: 22px; height: 22px; border: none; background: transparent; cursor: pointer; font-size: 15px; line-height: 1; color: #8a7c2e; padding: 0; }
-#noteBody { flex: 1; padding: 7px 9px; overflow: auto; font-family: 'Inter', sans-serif; font-size: 12.5px; line-height: 1.45; color: #3a3320; outline: none; -webkit-user-select: text; user-select: text; cursor: text; }
+#noteBody { position: absolute; inset: 7px; padding: 5px 7px; overflow: auto; background: #fffef7; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04); font-family: 'Inter', sans-serif; font-size: 12.5px; line-height: 1.45; color: #3a3320; outline: none; -webkit-user-select: text; user-select: text; cursor: text; }
 #noteBody:empty:before { content: 'Quick notes…'; color: #b3a86a; }
+#noteBody ul { margin: 2px 0 2px 18px; padding: 0; }
+#noteBody ul ul { margin-left: 16px; }
 
 /* ── Action bar ── */
 #actionBar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 50; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 7px 9px; display: none; align-items: center; gap: 5px; box-shadow: 0 6px 24px rgba(0,0,0,0.18); flex-wrap: wrap; max-width: 94vw; justify-content: center; }
@@ -190,16 +198,11 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 <div id="toast"></div>
 
 <div id="stickyNote">
-  <div id="noteBar">
-    <span id="noteGrip">&#9783; note</span>
-    <span id="noteTools">
-      <button data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
-      <button data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>
-      <button data-cmd="pink" title="Pink text (Ctrl+H)">A</button>
-    </span>
-    <button id="noteClose" title="Hide note">&times;</button>
-  </div>
   <div id="noteBody" contenteditable="true" spellcheck="true"></div>
+  <div class="nh nw" data-c="nw"></div>
+  <div class="nh ne" data-c="ne"></div>
+  <div class="nh sw" data-c="sw"></div>
+  <div class="nh se" data-c="se"></div>
 </div>
 
 <div id="actionBar">
@@ -605,7 +608,7 @@ if (!IS_BROWSER && typeof module !== "undefined") {
 /* ═══════════════ Browser app ═══════════════ */
 if (IS_BROWSER) (function () {
   let state = { version: 3, categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)), weeks: [{ id: "w" + Date.now(), blocks: [], budgets: {} }], currentWeek: 0, nextId: 1, note: defaultNote() };
-  let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null;
+  let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null, previewEl = null;
 
   const $ = (id) => document.getElementById(id);
   const grid = $("grid"), pool = $("pool"), ghost = $("ghost");
@@ -864,15 +867,26 @@ if (IS_BROWSER) (function () {
   }
   function startNewDrag(e, cat) {
     const used = usedByCat(curBlocks()); const remaining = weekBudget(cat, state.currentWeek) - (used[cat.id] || 0);
-    drag = { mode: "new", catId: cat.id, lenSlots: Math.max(1, Math.round(remaining * SPH)) };
+    drag = { mode: "new", catId: cat.id, color: cat.color, lenSlots: Math.max(1, Math.round(remaining * SPH)) };
     ghost.textContent = cat.name; ghost.style.background = cat.color; ghost.style.color = textOn(cat.color); ghost.style.display = "block"; moveGhost(e.clientX, e.clientY);
   }
   function startBlockDrag(e, block, mode) {
     const posNow = gridPos(e.clientX, e.clientY);
-    drag = { mode, blockId: block.id, lenSlots: block.lenSlots, grabOffset: posNow ? posNow.slot - block.startSlot : 0, moved: false, startX: e.clientX, startY: e.clientY };
+    const cbi = {}; for (const c of state.categories) cbi[c.id] = c;
+    drag = { mode, blockId: block.id, lenSlots: block.lenSlots, color: blockColor(block, cbi), grabOffset: posNow ? posNow.slot - block.startSlot : 0, moved: false, startX: e.clientX, startY: e.clientY };
     if (mode === "move") { const el = $("blocksLayer").querySelector('[data-id="' + block.id + '"]'); if (el) el.classList.add("dragging"); }
   }
   function moveGhost(x, y) { ghost.style.left = x + 12 + "px"; ghost.style.top = y + 12 + "px"; }
+  function clearPreview() { if (previewEl) { previewEl.remove(); previewEl = null; } }
+  function showPreview(dayIdx, startSlot, lenSlots, color) {
+    const layer = $("blocksLayer"); if (!layer) return;
+    if (!previewEl || previewEl.parentNode !== layer) { previewEl = document.createElement("div"); previewEl.className = "dropPreview"; layer.appendChild(previewEl); }
+    previewEl.style.background = color || "#888";
+    previewEl.style.top = (startSlot * SLOT_PX + 1) + "px";
+    previewEl.style.height = (lenSlots * SLOT_PX - 2) + "px";
+    previewEl.style.left = "calc(" + LABEL_W + "px + " + (dayIdx / ND) + " * (100% - " + LABEL_W + "px) + 1px)";
+    previewEl.style.width = "calc((100% - " + LABEL_W + "px) / " + ND + " - 3px)";
+  }
   function autoScroll(clientY) { const sc = $("gridScroll"); const r = sc.getBoundingClientRect(); if (clientY < r.top + 34) sc.scrollTop -= 10; else if (clientY > r.bottom - 34) sc.scrollTop += 10; }
 
   document.addEventListener("pointermove", (e) => {
@@ -884,6 +898,13 @@ if (IS_BROWSER) (function () {
         if (b) { const col = blockColor(b, catById); ghost.textContent = blockName(b, catById); ghost.style.background = col; ghost.style.color = textOn(col); ghost.style.display = "block"; }
       }
       moveGhost(e.clientX, e.clientY); autoScroll(e.clientY);
+      const pp = gridPos(e.clientX, e.clientY);
+      if (pp) {
+        let pStart, pLen;
+        if (drag.mode === "move") { pLen = drag.lenSlots; pStart = Math.max(0, Math.min(pp.slot - drag.grabOffset, TOTAL_SLOTS - pLen)); }
+        else { pLen = Math.max(1, Math.min(drag.lenSlots, TOTAL_SLOTS - pp.slot)); pStart = pp.slot; }
+        showPreview(pp.dayIdx, pStart, pLen, drag.color);
+      } else clearPreview();
     } else if (drag.mode === "resize" || drag.mode === "resizeTop") {
       const pos = gridPos(e.clientX, e.clientY); const block = findBlock(drag.blockId);
       if (pos && block) {
@@ -900,7 +921,7 @@ if (IS_BROWSER) (function () {
     }
   });
   document.addEventListener("pointerup", (e) => {
-    if (!drag) return; const d = drag; drag = null; ghost.style.display = "none";
+    if (!drag) return; const d = drag; drag = null; ghost.style.display = "none"; clearPreview();
     const pos = gridPos(e.clientX, e.clientY);
     if (d.mode === "new") {
       if (pos) { snap(); const len = Math.max(1, Math.min(d.lenSlots, TOTAL_SLOTS - pos.slot)); curBlocks().push({ id: state.nextId++, catId: d.catId, day: pos.day, startSlot: pos.slot, lenSlots: len }); commit(); }
@@ -911,7 +932,7 @@ if (IS_BROWSER) (function () {
       else renderBlocks();
     } else if (d.mode === "resize" || d.mode === "resizeTop") { if (d.snapped) commit(); }
   });
-  document.addEventListener("pointercancel", () => { if (!drag) return; drag = null; ghost.style.display = "none"; renderAll(); });
+  document.addEventListener("pointercancel", () => { if (!drag) return; drag = null; ghost.style.display = "none"; clearPreview(); renderAll(); });
 
   grid.addEventListener("click", (e) => {
     if (e.target.closest(".block")) return;
@@ -980,42 +1001,56 @@ if (IS_BROWSER) (function () {
     if (cmd === "bold") document.execCommand("bold");
     else if (cmd === "italic") document.execCommand("italic");
     else if (cmd === "pink") document.execCommand("foreColor", false, PINK);
+    else if (cmd === "bullet") document.execCommand("insertUnorderedList");
+    else if (cmd === "indent") document.execCommand("indent");
+    else if (cmd === "outdent") document.execCommand("outdent");
     state.note.html = $("noteBody").innerHTML; saveNoteSoon();
   }
   $("noteBtn").addEventListener("click", () => { state.note.open = !state.note.open; renderNote(true); saveNoteSoon(); if (state.note.open) $("noteBody").focus(); });
-  $("noteClose").addEventListener("click", () => { state.note.open = false; renderNote(false); saveNoteSoon(); });
   $("noteBody").addEventListener("input", () => { state.note.html = $("noteBody").innerHTML; saveNoteSoon(); });
   $("noteBody").addEventListener("keydown", (e) => {
+    if (e.key === "Tab") { e.preventDefault(); noteCmd(e.shiftKey ? "outdent" : "indent"); return; }
     if (e.ctrlKey || e.metaKey) {
+      if (e.shiftKey && (e.key === "8" || e.key === "*" || e.code === "Digit8")) { e.preventDefault(); noteCmd("bullet"); return; }
+      if (e.shiftKey) return;
       const k = e.key.toLowerCase();
       if (k === "b") { e.preventDefault(); noteCmd("bold"); }
       else if (k === "i") { e.preventDefault(); noteCmd("italic"); }
       else if (k === "h") { e.preventDefault(); noteCmd("pink"); }
     }
   });
-  $("noteTools").addEventListener("pointerdown", (e) => { const b = e.target.closest("button"); if (!b) return; e.preventDefault(); noteCmd(b.dataset.cmd); });
-  $("noteBar").addEventListener("pointerdown", (e) => {
-    if (e.target.closest("#noteTools") || e.target.closest("#noteClose")) return;
-    noteDrag = { dx: e.clientX - state.note.x, dy: e.clientY - state.note.y };
-    try { $("noteBar").setPointerCapture(e.pointerId); } catch (err) {}
+  // drag the frame to move; drag any corner to resize
+  const NOTE_MINW = 150, NOTE_MINH = 92;
+  let noteAct = null;
+  function applyNoteStyle() { const el = $("stickyNote"); el.style.left = state.note.x + "px"; el.style.top = state.note.y + "px"; el.style.width = state.note.w + "px"; el.style.height = state.note.h + "px"; }
+  $("stickyNote").addEventListener("pointerdown", (e) => {
+    if (e.target.closest("#noteBody")) return; // typing/selecting in the note
+    const handle = e.target.closest(".nh");
+    e.preventDefault();
+    if (handle) noteAct = { type: "resize", corner: handle.dataset.c, sx: e.clientX, sy: e.clientY, x0: state.note.x, y0: state.note.y, w0: state.note.w, h0: state.note.h };
+    else noteAct = { type: "move", sx: e.clientX, sy: e.clientY, x0: state.note.x, y0: state.note.y };
+    try { $("stickyNote").setPointerCapture(e.pointerId); } catch (err) {}
   });
-  $("noteBar").addEventListener("pointermove", (e) => {
-    if (!noteDrag) return;
-    state.note.x = Math.max(0, Math.min(e.clientX - noteDrag.dx, (window.innerWidth || 800) - 44));
-    state.note.y = Math.max(0, Math.min(e.clientY - noteDrag.dy, (window.innerHeight || 600) - 44));
-    const el = $("stickyNote"); el.style.left = state.note.x + "px"; el.style.top = state.note.y + "px";
+  $("stickyNote").addEventListener("pointermove", (e) => {
+    if (!noteAct) return;
+    const dx = e.clientX - noteAct.sx, dy = e.clientY - noteAct.sy;
+    if (noteAct.type === "move") {
+      state.note.x = Math.max(0, Math.min(noteAct.x0 + dx, (window.innerWidth || 800) - 44));
+      state.note.y = Math.max(0, Math.min(noteAct.y0 + dy, (window.innerHeight || 600) - 44));
+    } else {
+      const c = noteAct.corner, left = c.indexOf("w") >= 0, top = c.indexOf("n") >= 0;
+      let nx = noteAct.x0, ny = noteAct.y0, nw, nh;
+      if (left) { nw = noteAct.w0 - dx; nx = noteAct.x0 + dx; } else { nw = noteAct.w0 + dx; }
+      if (top) { nh = noteAct.h0 - dy; ny = noteAct.y0 + dy; } else { nh = noteAct.h0 + dy; }
+      if (nw < NOTE_MINW) { if (left) nx -= (NOTE_MINW - nw); nw = NOTE_MINW; }
+      if (nh < NOTE_MINH) { if (top) ny -= (NOTE_MINH - nh); nh = NOTE_MINH; }
+      state.note.x = nx; state.note.y = ny; state.note.w = nw; state.note.h = nh;
+    }
+    applyNoteStyle();
   });
-  function endNoteDrag() { if (!noteDrag) return; noteDrag = null; saveNoteSoon(); }
-  $("noteBar").addEventListener("pointerup", endNoteDrag);
-  $("noteBar").addEventListener("pointercancel", endNoteDrag);
-  if (window.ResizeObserver) {
-    const ro = new ResizeObserver(() => {
-      if (!state.note || !state.note.open) return;
-      const el = $("stickyNote"); const w = el.offsetWidth, h = el.offsetHeight;
-      if (w && h && (w !== state.note.w || h !== state.note.h)) { state.note.w = w; state.note.h = h; saveNoteSoon(); }
-    });
-    ro.observe($("stickyNote"));
-  }
+  function endNoteAct() { if (!noteAct) return; noteAct = null; saveNoteSoon(); }
+  $("stickyNote").addEventListener("pointerup", endNoteAct);
+  $("stickyNote").addEventListener("pointercancel", endNoteAct);
 
   /* ── sheet import ── */
   async function doSheetImport() {
