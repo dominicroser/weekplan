@@ -59,9 +59,9 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolSummary .l3 b { color: var(--accent); font-weight: 700; }
 .sheetBtn { display: block; width: 100%; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink2); padding: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 .sheetBtn:active { background: var(--panel2); }
-.poolItem { position: relative; background: var(--panel); border-radius: 0 8px 8px 0; border-left: 4px solid #888; padding: 8px 11px 8px 12px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
+.poolItem { position: relative; background: var(--panel); border-radius: 0 8px 8px 0; border-left: 4px solid #888; padding: 12px 11px 13px 12px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
 .poolItem.done { opacity: 0.36; cursor: default; }
-.poolItem.tier2 { background: #5c636d; }
+.poolItem.tier2 { background: #6b7280; }
 .poolItem.tier2 .nameInput, .poolItem.tier2 .hoursInput { color: #f3f5f7; }
 .poolItem.tier2 .poolHours { color: #ffffff !important; }
 .poolItem.tier2 .poolMeta, .poolItem.tier2 .poolTrack { color: #c7ccd3; }
@@ -178,7 +178,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .dayHeader.today .dnum { color: var(--accent); }
 .todayCol { position: absolute; top: 0; bottom: 0; background: rgba(43,108,176,0.05); pointer-events: none; z-index: 1; }
 .nowLine { position: absolute; height: 2px; background: var(--accent); opacity: 0.75; pointer-events: none; z-index: 5; }
-.block.plan:not(.event)::after { content: ""; position: absolute; inset: 2px; border: 1px dashed rgba(255,255,255,0.55); border-radius: 4px; pointer-events: none; }
+.block.plan:not(.event):not(.meeting)::after { content: ""; position: absolute; inset: 2px; border: 1px dashed rgba(255,255,255,0.55); border-radius: 4px; pointer-events: none; }
 .block.actual { box-shadow: 0 1px 3px rgba(0,0,0,0.25), inset 0 0 0 1.6px rgba(0,0,0,0.3); }
 .playBtn { position: absolute; right: 6px; bottom: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 10px; color: var(--good); display: flex; align-items: center; justify-content: center; padding: 0; }
 .playBtn.run { background: var(--good); color: #fff; border-color: var(--good); }
@@ -188,6 +188,13 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .missStar { color: #e0a800; font-size: 12px; }
 .poolSummary .l4 { color: var(--ink2); margin-top: 3px; }
 .poolSummary .l4 b { color: var(--accent); font-weight: 700; }
+.origPlan { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink2); padding: 4px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
+.opHead { font-weight: 700; color: var(--ink); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+.opBtn { background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; font-size: 11px; cursor: pointer; padding: 0 6px; color: var(--ink2); line-height: 1.6; }
+.opRow { line-height: 1.55; }
+.opRow b { color: var(--ink); font-weight: 700; }
+.opName { color: var(--ink2); }
+@media (max-width: 760px) { .origPlan { border-bottom: none; border-right: 1px solid var(--line); padding: 0 9px 0 1px; margin: 0; min-width: 150px; } }
 .logDay { margin-bottom: 8px; }
 .logRow { font-family: 'Inter', sans-serif; font-size: 12.5px; padding: 2px 0; }
 .logRow .logT { color: var(--ink2); font-variant-numeric: tabular-nums; margin-right: 6px; }
@@ -393,7 +400,7 @@ const STORAGE_KEY = "weekly-planner-v3";
 const OLD_KEY = "weekly-planner-v2";
 const CFG_KEY = "weekly-planner-sync";
 const EVENT_COLOR = "#d9544f"; // brighter red — meetings and the Termin group
-const GREY = "#ced3d9";        // None group (light grey)
+const GREY = "#dce0e5";        // None group (light grey)
 const PINK = "#d6336c";
 
 const PALETTE = [
@@ -660,15 +667,29 @@ function parseDays(text) {
 }
 
 function parseCommand(text, categories) {
-  const tr = parseTimeRange(text);
+  // optional "Task:" prefix → an assigned meeting (counts toward that task; shown red with a task-coloured band)
+  let prefixCat = null, src = text;
+  const ci = text.indexOf(":");
+  if (ci > 0) {
+    const pre = text.slice(0, ci).trim();
+    if (pre && !/\d/.test(pre)) { // a name, not a clock time like 10:00
+      const m = categories.find((c) => c.name.toLowerCase() === pre.toLowerCase()) || categories.find((c) => c.name.toLowerCase().startsWith(pre.toLowerCase()));
+      if (m) { prefixCat = m; src = text.slice(ci + 1); }
+    }
+  }
+  const tr = parseTimeRange(src);
   if (!tr) return { error: "No time range found. Try e.g. “Growth mon-sat 5–5:30am”." };
   if (tr.error) return { error: "That time range looks off (end must be after start)." };
-  const pd = parseDays(text.replace(tr.raw, " "));
+  const pd = parseDays(src.replace(tr.raw, " "));
   if (!pd.days.length) return { error: "Which days? Try “every day”, “mon–fri”, or “tue and thu” (Mon–Sat only)." };
-  let rest = text.replace(tr.raw, " ");
+  let rest = src.replace(tr.raw, " ");
   for (const s of pd.matches) rest = rest.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), " ");
   rest = rest.replace(/\b(assign|add|plan|put|schedule|block|task|meeting|meet w|every|each|from|at|on|and|the)\b/gi, " ")
     .replace(/[,.;:!]+/g, " ").replace(/\s+/g, " ").trim();
+  const startSlot = Math.round(tr.startMin / SLOT_MIN);
+  const endSlot = Math.min(TOTAL_SLOTS, Math.round(tr.endMin / SLOT_MIN));
+  const lenSlots = Math.max(1, endSlot - startSlot);
+  if (prefixCat) return { kind: "meeting", cat: prefixCat, name: rest || prefixCat.name, days: pd.days, startSlot, lenSlots };
   if (!rest) return { error: "Which task or meeting? Include a name in the command." };
   const q = rest.toLowerCase();
   const cat =
@@ -676,10 +697,8 @@ function parseCommand(text, categories) {
     categories.find((c) => c.name.toLowerCase().startsWith(q)) ||
     categories.find((c) => c.name.toLowerCase().includes(q)) ||
     categories.find((c) => q.includes(c.name.toLowerCase())) || null;
-  const startSlot = Math.round(tr.startMin / SLOT_MIN);
-  const endSlot = Math.min(TOTAL_SLOTS, Math.round(tr.endMin / SLOT_MIN));
-  const lenSlots = Math.max(1, endSlot - startSlot);
-  return { name: rest, cat, days: pd.days, startSlot, lenSlots };
+  if (cat) return { kind: "task", cat, name: rest, days: pd.days, startSlot, lenSlots };
+  return { kind: "event", name: rest, days: pd.days, startSlot, lenSlots };
 }
 
 /* ── CSV ── */
@@ -821,7 +840,7 @@ if (!IS_BROWSER && typeof module !== "undefined") {
 
 /* ═══════════════ Browser app ═══════════════ */
 if (IS_BROWSER) (function () {
-  let state = { version: 3, categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)), weeks: [{ id: "w" + Date.now(), blocks: [], budgets: {} }], currentWeek: 0, nextId: 1, note: defaultNote(), anchorMonday: ymd(mondayOf(new Date())), timer: null };
+  let state = { version: 3, categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)), weeks: [{ id: "w" + Date.now(), blocks: [], budgets: {} }], currentWeek: 0, nextId: 1, note: defaultNote(), anchorMonday: ymd(mondayOf(new Date())), timer: null, snapshot: null };
   let timerTick = null;
   let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null, previewEl = null;
 
@@ -830,7 +849,10 @@ if (IS_BROWSER) (function () {
 
   const curBlocks = () => state.weeks[state.currentWeek].blocks;
   function ensureBudgets(w) { if (!w.budgets) w.budgets = {}; return w.budgets; }
-  function weekBudget(cat, wIdx) { const w = state.weeks[wIdx]; if (w && w.budgets && w.budgets[cat.id] != null) return w.budgets[cat.id]; return cat.hours; }
+  function weekBudget(cat, wIdx) {
+    if (cat.auto) { const w = state.weeks[wIdx]; let s = 0; if (w) for (const b of w.blocks) if (b.catId === cat.id && !b.event && b.kind !== "actual") s += b.lenSlots / 4; return s; }
+    const w = state.weeks[wIdx]; if (w && w.budgets && w.budgets[cat.id] != null) return w.budgets[cat.id]; return cat.hours;
+  }
 
   /* ── persistence ── */
   function loadLocal() {
@@ -966,6 +988,15 @@ if (IS_BROWSER) (function () {
 
   /* ── pool ── */
   function weekPlaced(idx) { const u = usedByCat(state.weeks[idx].blocks); return Object.values(u).reduce((a, b) => a + b, 0); }
+  function planForToday() {
+    const cell = cellForDate(state.anchorMonday, new Date()), wk = state.weeks[cell.weekIdx], plan = {};
+    if (wk) for (const b of wk.blocks) if (b.day === DAYS[cell.dayIdx] && !b.event && b.kind !== "actual") plan[b.catId] = (plan[b.catId] || 0) + b.lenSlots / 4;
+    return plan;
+  }
+  function ensureSnapshot() {
+    const todayStr = ymd(new Date());
+    if (!state.snapshot || state.snapshot.date !== todayStr) { state.snapshot = { date: todayStr, plan: planForToday() }; saveLocal(); schedulePush(); }
+  }
   function renderPool() {
     const cats = state.categories.filter((c) => !c.archived);
     const eps = 0.001;
@@ -999,11 +1030,29 @@ if (IS_BROWSER) (function () {
     const tasksSum = comboTrack(["htasks", "wtasks"]);
     const R = Math.round;
     summary.innerHTML =
-      '<div class="l1">This week: <b>' + R(Math.max(0, totalBudget - thisPlaced)) + "h</b> · " + R(thisPlaced) + " / " + R(totalBudget) + "h planned</div>" +
-      '<div class="l2">All weeks: <b>' + R(Math.max(0, allBudget - allPlaced)) + "h</b> · " + R(allPlaced) + " / " + R(allBudget) + "h planned</div>" +
+      '<div class="l1">This week: <b>' + R(Math.max(0, totalBudget - thisPlaced)) + "h</b> + " + R(thisPlaced) + "h = " + R(totalBudget) + "h</div>" +
+      '<div class="l2">All weeks: <b>' + R(Math.max(0, allBudget - allPlaced)) + "h</b> + " + R(allPlaced) + "h = " + R(allBudget) + "h</div>" +
       (avgOther != null ? '<div class="l3">Other weeks: <b>' + R(avgOther) + "h</b>/week left on avg</div>" : "") +
-      '<div class="l4">mails <b>' + fmtHM(mailsSum) + "</b> · tasks <b>" + fmtHM(tasksSum) + "</b></div>";
+      '<div class="l4">Mails <b>' + fmtHM(mailsSum) + "</b> · Tasks <b>" + fmtHM(tasksSum) + "</b></div>";
     pool.appendChild(summary);
+
+    // ── Original plan (today's plan as captured at the start of the day) ──
+    ensureSnapshot();
+    const base = (state.snapshot && state.snapshot.plan) || {};
+    const opIds = Object.keys(base).filter((id) => base[id] > 0.0001 && state.categories.some((c) => c.id === id));
+    if (opIds.length) {
+      const op = document.createElement("div");
+      op.className = "origPlan";
+      let h = '<div class="opHead">Original plan <button class="opBtn" title="Use the current plan as the baseline">&#8635;</button></div>';
+      for (const id of opIds) {
+        const c = state.categories.find((x) => x.id === id);
+        const mid = base[id], done = trackToday(id), rem = Math.max(0, mid - done);
+        h += '<div class="opRow"><span class="opName">' + c.name.replace(/</g, "&lt;") + "</span> <b>" + fmtHM(rem) + "</b> + " + fmtHM(done) + " = " + fmtHM(mid) + "</div>";
+      }
+      op.innerHTML = h;
+      op.querySelector(".opBtn").addEventListener("click", () => { state.snapshot = { date: ymd(new Date()), plan: planForToday() }; saveLocal(); schedulePush(); renderPool(); });
+      pool.appendChild(op);
+    }
 
     const divider = () => { const dv = document.createElement("div"); dv.className = "poolDivider"; pool.appendChild(dv); };
     const renderItem = (cat, tier) => {
@@ -1026,7 +1075,7 @@ if (IS_BROWSER) (function () {
         '<div class="poolTop">' + (usage.miss[cat.id] ? '<span class="missStar" title="Planned earlier this week but no time tracked">★</span> ' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (isOver ? "isover" : "") + '" style="width:' + pct + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + (isOver ? '<span class="warn">⚠</span>' : "") + fmtH(u) + 'h of <input class="hoursInput" type="number" step="0.25" min="0" value="' + bw + '">h</div>' +
+        '<div class="poolMeta">' + (isOver ? '<span class="warn">⚠</span>' : "") + fmtH(u) + 'h of <input class="hoursInput" type="number" step="0.25" min="0"' + (cat.auto ? ' readonly title="Auto — equals the hours you’ve scheduled"' : "") + ' value="' + bw + '">h</div>' +
         (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })();
       const nameIn = el.querySelector(".nameInput"), hoursIn = el.querySelector(".hoursInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe"), xBtn = el.querySelector(".catX");
@@ -1085,8 +1134,8 @@ if (IS_BROWSER) (function () {
   }
 
   /* ── blocks ── */
-  function blockName(b, catById) { return b.event ? (b.name || "Meeting") : (catById[b.catId] ? catById[b.catId].name : "?"); }
-  function blockColor(b, catById) { return b.event ? EVENT_COLOR : (catById[b.catId] ? catById[b.catId].color : "#888"); }
+  function blockName(b, catById) { return (b.event || b.meeting) ? (b.name || "Meeting") : (catById[b.catId] ? catById[b.catId].name : "?"); }
+  function blockColor(b, catById) { return (b.event || b.meeting) ? EVENT_COLOR : (catById[b.catId] ? catById[b.catId].color : "#888"); }
 
   function renderBlocks() {
     const layer = $("blocksLayer"); if (!layer) return;
@@ -1122,7 +1171,7 @@ if (IS_BROWSER) (function () {
         const isAct = b.kind === "actual";
         const hPx = isAct ? Math.max(4, b.lenSlots * SLOT_PX) : (b.lenSlots * SLOT_PX - 2);
         const el = document.createElement("div");
-        el.className = "block" + (b.event ? " event" : "") + (isAct ? " actual" : " plan") + (selectedId === b.id ? " selected" : "");
+        el.className = "block" + (b.event ? " event" : "") + (b.meeting ? " meeting" : "") + (isAct ? " actual" : " plan") + (selectedId === b.id ? " selected" : "");
         el.dataset.id = b.id;
         const frac = di / ND + p.col / (ND * p.nCols);
         el.style.cssText =
@@ -1130,6 +1179,7 @@ if (IS_BROWSER) (function () {
           ";top:" + (b.startSlot * SLOT_PX + 1) + "px;height:" + hPx + "px" +
           ";left:calc(" + LABEL_W + "px + " + frac + " * (100% - " + LABEL_W + "px) + 1px)" +
           ";width:calc((100% - " + LABEL_W + "px) / " + (ND * p.nCols) + " - 3px);";
+        if (b.meeting && catById[b.catId]) el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.18), inset -8px 0 0 0 " + catById[b.catId].color; // red meeting with task-coloured band on the right
         const nm = blockName(b, catById);
         const tLabel = isAct && b.startMs ? (clock(b.startMs) + "–" + clock(b.endMs)) : (slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots));
         let inner = '<span class="blockLabel">' + nm.replace(/</g, "&lt;") + "</span>";
@@ -1374,18 +1424,27 @@ if (IS_BROWSER) (function () {
   $("logClose").addEventListener("click", () => $("logDialog").close());
 
   /* ── command ── */
+  function addSwitchBefore(dayLabel, startSlot) {
+    if (startSlot <= 0) return;
+    let sw = state.categories.find((c) => c.name.trim().toLowerCase() === "switch");
+    if (!sw) { sw = { id: "cat" + Date.now() + "s", name: "Switch", hours: 0, group: "work", defaultMin: 15, auto: true, color: groupColorFor("work", state.categories, null) }; state.categories.push(sw); }
+    curBlocks().push({ id: state.nextId++, catId: sw.id, day: dayLabel, startSlot: startSlot - 1, lenSlots: 1, kind: "plan" }); // Switch is an "auto" task → its weekly goal follows its blocks
+  }
   $("cmdForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const text = $("cmdInput").value.trim(); if (!text) return;
     const r = parseCommand(text, state.categories);
     if (r.error) { toast(r.error); return; }
     snap();
-    if (r.cat) {
-      for (const di of r.days) curBlocks().push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots });
+    if (r.kind === "task") {
+      for (const di of r.days) curBlocks().push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
       toast("Placed " + r.days.length + " × " + fmtH(r.lenSlots / SPH) + "h of “" + r.cat.name + "”");
+    } else if (r.kind === "meeting") {
+      for (const di of r.days) { addSwitchBefore(DAYS[di], r.startSlot); curBlocks().push({ id: state.nextId++, catId: r.cat.id, meeting: true, name: r.name, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" }); }
+      toast("Meeting “" + r.name + "” → " + r.cat.name + " (+ switch)");
     } else {
-      for (const di of r.days) curBlocks().push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots });
-      toast("Added meeting “" + r.name + "” (" + r.days.length + "×)");
+      for (const di of r.days) { addSwitchBefore(DAYS[di], r.startSlot); curBlocks().push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" }); }
+      toast("Added meeting “" + r.name + "” (+ switch)");
     }
     $("cmdInput").value = ""; $("cmdInput").blur(); commit();
   });
@@ -1506,13 +1565,14 @@ if (IS_BROWSER) (function () {
     const W = state.weeks.length;
     let html = '<div class="budWrap"><table class="budTable"><thead><tr><th>Group</th><th>Task</th>';
     for (let i = 0; i < W; i++) html += "<th>W" + (i + 1) + "</th>";
-    html += "<th>Def&nbsp;min</th><th>Done</th><th></th></tr></thead><tbody>";
+    html += "<th>Def&nbsp;min</th><th>Auto</th><th>Done</th><th></th></tr></thead><tbody>";
     for (const c of state.categories) {
       html += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '><td><select class="bgroup">' +
         GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") +
         '</select></td><td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
-      for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="number" step="0.25" min="0" value="' + weekBudget(c, i) + '"></td>';
+      for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="number" step="0.25" min="0"' + (c.auto ? " readonly" : "") + ' value="' + weekBudget(c, i) + '"></td>';
       html += '<td><input class="bdef" type="number" step="15" min="0" placeholder="max" title="Default block length in minutes when you drag this task onto the grid — leave empty to drag the whole week’s hours" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
+      html += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
       html += '<td><input type="checkbox" class="barch" title="Hide from the list (finished one-off task)"' + (c.archived ? " checked" : "") + "></td>";
       html += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
     }
@@ -1527,6 +1587,7 @@ if (IS_BROWSER) (function () {
       nm.addEventListener("change", () => { const v = nm.value.trim(); if (!v) { nm.value = cat.name; return; } if (nameTaken(v, cat.id)) { toast('A task named "' + v + '" already exists.'); nm.value = cat.name; return; } snap(); cat.name = v; commit(); });
       tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = Math.max(0, +inp.value || 0); commit(); }); });
       tr.querySelector(".bdef").addEventListener("change", (e) => { snap(); const v = e.target.value.trim(); if (v === "") delete cat.defaultMin; else cat.defaultMin = Math.max(0, +v || 0); commit(); });
+      tr.querySelector(".bauto").addEventListener("change", (e) => { snap(); cat.auto = e.target.checked; commit(); renderBudgets(); });
       tr.querySelector(".barch").addEventListener("change", (e) => { snap(); cat.archived = e.target.checked; if (cat.archived && state.timer && state.timer.catId === id) stopTimer(); commit(); renderBudgets(); });
       tr.querySelector(".budDel").addEventListener("click", () => {
         const has = state.weeks.some((w) => w.blocks.some((b) => b.catId === id));
