@@ -199,11 +199,21 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .missStar { color: #e0a800; font-size: 12px; }
 .poolSummary .l4 { color: var(--ink); margin-top: 3px; }
 .poolSummary .l4 b { color: var(--ink); font-weight: 700; }
+.poolSummary .l5 { margin-top: 3px; }
+.pOrange { color: #e8830c; font-weight: 700; }
+.pRed { color: #e03131; font-weight: 700; }
+.prioStar { background: transparent; border: none; cursor: pointer; font-size: 13px; line-height: 1; padding: 0 4px 0 0; color: #c2c8cf; }
+.prioStar.o { color: #e8830c; }
+.prioStar.r { color: #e03131; }
+.poolItem.tier2 .prioStar { color: rgba(255,255,255,0.5); }
+.poolItem.tier2 .prioStar.o { color: #ffb14e; }
+.poolItem.tier2 .prioStar.r { color: #ff7a7a; }
 .origPlan { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink2); padding: 4px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
 .opHead { font-weight: 700; color: var(--ink); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
 .opBtn { background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; font-size: 11px; cursor: pointer; padding: 0 6px; color: var(--ink2); line-height: 1.6; }
 .opRow { line-height: 1.55; }
 .opRow b { color: var(--ink); font-weight: 700; }
+.opRow.opGone, .opRow.opGone b, .opRow.opGone .opName { color: #1565d8; font-weight: 700; }
 .opName { color: var(--ink2); }
 @media (max-width: 760px) { .origPlan { border-bottom: none; border-right: 1px solid var(--line); padding: 0 9px 0 1px; margin: 0; min-width: 150px; } }
 .logDay { margin-bottom: 8px; }
@@ -249,6 +259,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
     <button id="weekAdd" title="Add a week">+</button>
     <button id="weekDel" title="Delete this week">&#128465;</button>
   </div>
+  <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="width:auto;padding:0 9px;">Day</button>
   <form id="cmdForm">
     <input id="cmdInput" placeholder='Type a task or meeting… e.g. "Growth mon-sat 5–5:30am" or "Meet Fred tue 1–2:30pm"' autocomplete="off">
   </form>
@@ -405,7 +416,8 @@ const SLOT_MIN = 15, SPH = 4;
 const DAY_START_HOUR = 0, DAY_END_HOUR = 24;
 const TOTAL_SLOTS = (DAY_END_HOUR - DAY_START_HOUR) * SPH; // 96
 const COARSE = IS_BROWSER && window.matchMedia && matchMedia("(pointer: coarse)").matches;
-const SLOT_PX = COARSE ? 19 : 16;
+const SLOT_PX_WEEK = COARSE ? 19 : 16, SLOT_PX_DAY = COARSE ? 40 : 34;
+let SLOT_PX = SLOT_PX_WEEK;
 const LABEL_W = 40;
 const STORAGE_KEY = "weekly-planner-v3";
 const OLD_KEY = "weekly-planner-v2";
@@ -539,7 +551,7 @@ function layoutDay(list) {
 /* ── Merge blocks of the SAME task that touch or overlap on the same day ── */
 function mergeAdjacent(blocks) {
   const result = [], mer = [];
-  for (const b of blocks) { if (b.event || (b.kind || "plan") !== "plan") result.push(b); else mer.push(b); } // only merge plain plan blocks; keep actuals/events intact
+  for (const b of blocks) { if (b.event || b.meeting || (b.kind || "plan") !== "plan") result.push(b); else mer.push(b); } // only merge plain plan blocks; keep actuals/events/meetings intact
   const keyOf = (b) => "c:" + b.catId + "|" + b.day;
   const groups = {};
   for (const b of mer) { (groups[keyOf(b)] = groups[keyOf(b)] || []).push(b); }
@@ -857,6 +869,7 @@ if (IS_BROWSER) (function () {
   let state = { version: 3, categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)), weeks: [{ id: "w" + Date.now(), blocks: [], budgets: {} }], currentWeek: 0, nextId: 1, note: defaultNote(), anchorMonday: ymd(mondayOf(new Date())), timer: null, snapshot: null };
   let timerTick = null;
   let budSort = { key: null, dir: 1 };
+  let viewDay = -1; // -1 = week view; 0..5 = single-day view of that weekday
   let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null, previewEl = null;
 
   const $ = (id) => document.getElementById(id);
@@ -1003,15 +1016,16 @@ if (IS_BROWSER) (function () {
   }
 
   /* ── grid scaffold ── */
+  function colList() { return viewDay >= 0 ? [viewDay] : [0, 1, 2, 3, 4, 5]; }
   function buildGrid() {
-    $("dayHeaderRow").innerHTML = '<div style="width:' + LABEL_W + 'px;flex-shrink:0;"></div>' + DAYS.map((d) => '<div class="dayHeader">' + d + "</div>").join("");
     grid.style.height = TOTAL_SLOTS * SLOT_PX + "px";
     let html = "";
     for (let i = 0; i < TOTAL_SLOTS; i++) {
       const isHour = i % SPH === 0;
       html += '<div class="slotLine" style="top:' + i * SLOT_PX + "px;border-top:1px solid " + (isHour ? "var(--gridHour)" : "var(--gridLine)") + ';">' + (isHour ? '<span class="timeLabel">' + slotLabel(i) + "</span>" : "") + "</div>";
     }
-    for (let di = 1; di < ND; di++) html += '<div class="colSep" style="left:calc(' + LABEL_W + "px + " + (di / ND) + " * (100% - " + LABEL_W + 'px));"></div>';
+    const NC = colList().length;
+    for (let di = 1; di < NC; di++) html += '<div class="colSep" style="left:calc(' + LABEL_W + "px + " + (di / NC) + " * (100% - " + LABEL_W + 'px));"></div>';
     html += '<div id="blocksLayer"></div>';
     grid.innerHTML = html;
   }
@@ -1064,12 +1078,14 @@ if (IS_BROWSER) (function () {
     const comboTrack = (names) => { let s = 0; for (const c of state.categories) if (names.indexOf((c.name || "").trim().toLowerCase()) >= 0) s += trackToday(c.id); return s; };
     const mailsSum = comboTrack(["hmails", "wmails"]);
     const tasksSum = comboTrack(["htasks", "wtasks"]);
-    const R = Math.round;
+    let prioO = 0, prioR = 0;
+    for (const c of tier2) { if (c.prio === 1) prioO += Math.max(0, rema(c)); else if (c.prio === 2) prioR += Math.max(0, rema(c)); }
     summary.innerHTML =
       '<div class="l1">This week: <b>' + fmtHM(Math.max(0, totalBudget - thisPlaced)) + "</b> + " + fmtHM(thisPlaced) + " = " + fmtHM(totalBudget) + "</div>" +
       '<div class="l2">All weeks: <b>' + fmtHM(Math.max(0, allBudget - allPlaced)) + "</b> + " + fmtHM(allPlaced) + " = " + fmtHM(allBudget) + "</div>" +
       (avgOther != null ? '<div class="l3">Other weeks: <b>' + fmtHM(avgOther) + "</b> left on avg</div>" : "") +
-      '<div class="l4">Mails <b>' + fmtHM(mailsSum) + "</b> · Tasks <b>" + fmtHM(tasksSum) + "</b></div>";
+      '<div class="l4">Mails <b>' + fmtHM(mailsSum) + "</b> · Tasks <b>" + fmtHM(tasksSum) + "</b></div>" +
+      ((prioO > 0.0001 || prioR > 0.0001) ? '<div class="l5">' + (prioO > 0.0001 ? '<span class="pOrange">★ ' + fmtHM(prioO) + "</span>" : "") + (prioO > 0.0001 && prioR > 0.0001 ? " · " : "") + (prioR > 0.0001 ? '<span class="pRed">★ ' + fmtHM(prioR) + "</span>" : "") + "</div>" : "");
     pool.appendChild(summary);
 
     // ── Original plan (today's plan as captured at the start of the day) ──
@@ -1079,11 +1095,13 @@ if (IS_BROWSER) (function () {
     if (opIds.length) {
       const op = document.createElement("div");
       op.className = "origPlan";
+      const curPlan = planForToday();
       let h = '<div class="opHead">Original plan <button class="opBtn" title="Use the current plan as the baseline">&#8635;</button></div>';
       for (const id of opIds) {
         const c = state.categories.find((x) => x.id === id);
         const mid = base[id], done = trackToday(id), rem = Math.max(0, mid - done);
-        h += '<div class="opRow"><span class="opName">' + c.name.replace(/</g, "&lt;") + "</span> <b>" + fmtHM(rem) + "</b> + " + fmtHM(done) + " = " + fmtHM(mid) + "</div>";
+        const gone = !(curPlan[id] > 0.0001); // was in the morning plan but no longer planned for today
+        h += '<div class="opRow' + (gone ? " opGone" : "") + '"><span class="opName">' + c.name.replace(/</g, "&lt;") + "</span> <b>" + fmtHM(rem) + "</b> + " + fmtHM(done) + " = " + fmtHM(mid) + "</div>";
       }
       op.innerHTML = h;
       op.querySelector(".opBtn").addEventListener("click", () => { state.snapshot = { date: ymd(new Date()), plan: planForToday() }; saveLocal(); schedulePush(); renderPool(); });
@@ -1115,7 +1133,7 @@ if (IS_BROWSER) (function () {
       el.style.borderLeftColor = cat.color;
       el.innerHTML =
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
-        '<div class="poolTop">' + (usage.miss[cat.id] ? '<span class="missStar" title="Planned earlier this week but no time tracked">★</span> ' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
+        '<div class="poolTop">' + (tier === 2 ? '<button class="prioStar ' + (cat.prio === 1 ? "o" : cat.prio === 2 ? "r" : "") + '" title="Priority — click to cycle: orange, red, off">★</button>' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
         '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — equals the hours you’ve scheduled">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><span class="goalVal">' + fmtHM(bw) + '</span><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set the weekly goal to done + planned">=</button>') + "</div>" +
@@ -1124,6 +1142,7 @@ if (IS_BROWSER) (function () {
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe");
       for (const inp of [nameIn, stripe]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
       el.querySelectorAll(".hStep").forEach((b) => { b.addEventListener("pointerdown", (e) => e.stopPropagation()); b.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, Math.round((weekBudget(cat, cw) + (+b.dataset.d) * 0.25) * 100) / 100); commit(); }); });
+      const ps = el.querySelector(".prioStar"); if (ps) { ps.addEventListener("pointerdown", (e) => e.stopPropagation()); ps.addEventListener("click", (e) => { e.stopPropagation(); snap(); cat.prio = ((cat.prio || 0) + 1) % 3; commit(); }); }
       const gset = el.querySelector(".goalSet"); if (gset) { gset.addEventListener("pointerdown", (e) => e.stopPropagation()); gset.addEventListener("click", (e) => { e.stopPropagation(); snap(); let exactAct = 0; for (const ds of wkDates) { const dd = rep.days[ds]; if (dd && dd.byCat[cat.id]) exactAct += dd.byCat[cat.id]; } const uExact = exactAct + (u - Math.floor(exactAct * 4) / 4); ensureBudgets(state.weeks[cw])[cat.id] = Math.round(uExact * 60) / 60; commit(); }); }
       nameIn.addEventListener("change", () => {
         const v = nameIn.value.trim();
@@ -1163,7 +1182,7 @@ if (IS_BROWSER) (function () {
       let base = "New task", name = base, n = 2;
       while (nameTaken(name, null)) name = base + " " + (n++);
       const ng = "work";
-      state.categories.push({ id: "cat" + Date.now(), name, hours: 0, group: ng, color: groupColorFor(ng, state.categories, null) });
+      state.categories.push({ id: "cat" + Date.now(), name, hours: 0, group: ng, defaultMin: 60, color: groupColorFor(ng, state.categories, null) });
       commit();
       for (const i of pool.querySelectorAll(".poolItem .nameInput")) if (i.value === name) { i.focus(); i.select(); break; }
     });
@@ -1182,24 +1201,28 @@ if (IS_BROWSER) (function () {
     const todayMid = new Date(); todayMid.setHours(0, 0, 0, 0);
     const tcell = cellForDate(state.anchorMonday, new Date());
     const isSun = new Date().getDay() === 0;
+    const nowSlot = (new Date().getHours() * 60 + new Date().getMinutes()) / SLOT_MIN;
+    const list = colList(), NC = list.length;
     // today column tint + now line
-    if (!isSun && tcell.weekIdx === state.currentWeek) {
-      const di = tcell.dayIdx;
+    const todayCol = (!isSun && tcell.weekIdx === state.currentWeek) ? list.indexOf(tcell.dayIdx) : -1;
+    if (todayCol >= 0) {
       const hl = document.createElement("div"); hl.className = "todayCol";
-      hl.style.cssText = "left:calc(" + LABEL_W + "px + " + (di / ND) + " * (100% - " + LABEL_W + "px));width:calc((100% - " + LABEL_W + "px) / " + ND + ");";
+      hl.style.cssText = "left:calc(" + LABEL_W + "px + " + (todayCol / NC) + " * (100% - " + LABEL_W + "px));width:calc((100% - " + LABEL_W + "px) / " + NC + ");";
       layer.appendChild(hl);
       const now = new Date(); const y = ((now.getHours() * 60 + now.getMinutes()) / SLOT_MIN) * SLOT_PX;
       const nl = document.createElement("div"); nl.className = "nowLine";
-      nl.style.cssText = "top:" + y + "px;left:calc(" + LABEL_W + "px + " + (di / ND) + " * (100% - " + LABEL_W + "px));width:calc((100% - " + LABEL_W + "px) / " + ND + ");";
+      nl.style.cssText = "top:" + y + "px;left:calc(" + LABEL_W + "px + " + (todayCol / NC) + " * (100% - " + LABEL_W + "px));width:calc((100% - " + LABEL_W + "px) / " + NC + ");";
       layer.appendChild(nl);
     }
-    for (let di = 0; di < ND; di++) {
+    for (let ci = 0; ci < NC; ci++) {
+      const di = list[ci];
       const day = DAYS[di];
       const colDate = dateOfCell(state.anchorMonday, state.currentWeek, di);
       const cmp = colDate.getTime() - todayMid.getTime(); // <0 past, 0 today, >0 future
       let dayBlocks = blocks.filter((b) => b.day === day && (b.event || catById[b.catId]));
-      if (cmp < 0) dayBlocks = dayBlocks.filter((b) => b.kind === "actual" || b.event);      // past: actual + events
-      else if (cmp > 0) dayBlocks = dayBlocks.filter((b) => b.kind !== "actual");             // future: plans + events
+      if (cmp < 0) dayBlocks = dayBlocks.filter((b) => b.kind === "actual" || b.event);                                  // past day: actual + events
+      else if (cmp > 0) dayBlocks = dayBlocks.filter((b) => b.kind !== "actual");                                         // future day: plans + events
+      else dayBlocks = dayBlocks.filter((b) => b.event || b.kind === "actual" || (b.startSlot + b.lenSlots) > nowSlot);   // today: drop plans already elapsed
       const lay = layoutDay(dayBlocks);
       for (const b of dayBlocks) {
         const p = lay.pos[b.id];
@@ -1210,12 +1233,12 @@ if (IS_BROWSER) (function () {
         const el = document.createElement("div");
         el.className = "block" + (b.event ? " event" : "") + (b.meeting ? " meeting" : "") + (isAct ? " actual" : " plan") + (selectedId === b.id ? " selected" : "");
         el.dataset.id = b.id;
-        const frac = di / ND + p.col / (ND * p.nCols);
+        const frac = ci / NC + p.col / (NC * p.nCols);
         el.style.cssText =
           "background:" + color + ";color:" + ink +
           ";top:" + (b.startSlot * SLOT_PX + 1) + "px;height:" + hPx + "px" +
           ";left:calc(" + LABEL_W + "px + " + frac + " * (100% - " + LABEL_W + "px) + 1px)" +
-          ";width:calc((100% - " + LABEL_W + "px) / " + (ND * p.nCols) + " - 3px);";
+          ";width:calc((100% - " + LABEL_W + "px) / " + (NC * p.nCols) + " - 3px);";
         if (b.meeting && catById[b.catId]) el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.18), inset -8px 0 0 0 " + catById[b.catId].color; // red meeting with task-coloured band on the right
         const nm = blockName(b, catById);
         const tLabel = isAct && b.startMs ? (clock(b.startMs) + "–" + clock(b.endMs)) : (slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots));
@@ -1234,7 +1257,7 @@ if (IS_BROWSER) (function () {
       }
       for (const ov of lay.overlays) {
         const o = document.createElement("div"); o.className = "overlap";
-        o.style.cssText = "top:" + (ov[0] * SLOT_PX) + "px;height:" + ((ov[1] - ov[0]) * SLOT_PX) + "px;left:calc(" + LABEL_W + "px + " + (di / ND) + " * (100% - " + LABEL_W + "px) + 1px);width:calc((100% - " + LABEL_W + "px) / " + ND + " - 3px);";
+        o.style.cssText = "top:" + (ov[0] * SLOT_PX) + "px;height:" + ((ov[1] - ov[0]) * SLOT_PX) + "px;left:calc(" + LABEL_W + "px + " + (ci / NC) + " * (100% - " + LABEL_W + "px) + 1px);width:calc((100% - " + LABEL_W + "px) / " + NC + " - 3px);";
         layer.appendChild(o);
       }
     }
@@ -1251,27 +1274,28 @@ if (IS_BROWSER) (function () {
     bar.classList.add("show");
   }
   function renderDayHeaders() {
-    const now = new Date(), isSun = now.getDay() === 0;
-    const tc = cellForDate(state.anchorMonday, now);
+    const now = new Date(), isSun = now.getDay() === 0, tc = cellForDate(state.anchorMonday, now);
     let html = '<div style="width:' + LABEL_W + 'px;flex-shrink:0;"></div>';
-    for (let d = 0; d < ND; d++) {
+    for (const d of colList()) {
       const dt = dateOfCell(state.anchorMonday, state.currentWeek, d);
       const isToday = !isSun && tc.weekIdx === state.currentWeek && tc.dayIdx === d;
       html += '<div class="dayHeader' + (isToday ? " today" : "") + '">' + DAYS[d] + '<span class="dnum">' + dt.getDate() + "</span></div>";
     }
     $("dayHeaderRow").innerHTML = html;
   }
-  function renderAll() { $("weekLabel").textContent = "Week " + (state.currentWeek + 1) + " / " + state.weeks.length; renderDayHeaders(); renderPool(); renderBlocks(); renderNote(false); }
+  function renderAll() { $("weekLabel").textContent = viewDay >= 0 ? (DAYS[viewDay] + " " + dateOfCell(state.anchorMonday, state.currentWeek, viewDay).getDate()) : ("Week " + (state.currentWeek + 1) + " / " + state.weeks.length); renderDayHeaders(); renderPool(); renderBlocks(); renderNote(false); }
 
   /* ── pointer ── */
   function gridPos(clientX, clientY) {
     const rect = grid.getBoundingClientRect();
     const x = clientX - rect.left, y = clientY - rect.top;
-    const colW = (rect.width - LABEL_W) / ND;
-    const dayIdx = Math.floor((x - LABEL_W) / colW);
-    if (dayIdx < 0 || dayIdx >= ND) return null;
+    const list = colList(), NC = list.length;
+    const colW = (rect.width - LABEL_W) / NC;
+    const col = Math.floor((x - LABEL_W) / colW);
+    if (col < 0 || col >= NC) return null;
     if (y < -20 || y > rect.height + 20) return null;
     let slot = Math.floor(y / SLOT_PX); slot = Math.max(0, Math.min(TOTAL_SLOTS - 1, slot));
+    const dayIdx = list[col];
     return { day: DAYS[dayIdx], dayIdx, slot };
   }
   function placeLen(cat) {
@@ -1487,8 +1511,20 @@ if (IS_BROWSER) (function () {
   });
 
   /* ── weeks ── */
-  $("weekPrev").onclick = () => { if (state.currentWeek > 0) { state.currentWeek--; selectedId = null; commit(); } };
-  $("weekNext").onclick = () => { if (state.currentWeek < state.weeks.length - 1) { state.currentWeek++; selectedId = null; commit(); } else { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); } };
+  function stepDay(d) {
+    let nd = viewDay + d, wk = state.currentWeek;
+    if (nd > 5) { nd = 0; wk++; while (state.weeks.length <= wk) state.weeks.push({ id: "w" + Date.now() + state.weeks.length, blocks: [], budgets: {} }); }
+    else if (nd < 0) { if (wk === 0) return; nd = 5; wk--; }
+    viewDay = nd; state.currentWeek = wk; selectedId = null; commit();
+  }
+  function setView() { SLOT_PX = viewDay >= 0 ? SLOT_PX_DAY : SLOT_PX_WEEK; $("viewBtn").textContent = viewDay >= 0 ? "Week" : "Day"; buildGrid(); renderAll(); $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8; }
+  $("viewBtn").addEventListener("click", () => {
+    if (viewDay >= 0) viewDay = -1;
+    else { const tc = cellForDate(state.anchorMonday, new Date()); viewDay = (tc.weekIdx === state.currentWeek && new Date().getDay() !== 0) ? tc.dayIdx : 0; }
+    setView();
+  });
+  $("weekPrev").onclick = () => { if (viewDay >= 0) { stepDay(-1); return; } if (state.currentWeek > 0) { state.currentWeek--; selectedId = null; commit(); } };
+  $("weekNext").onclick = () => { if (viewDay >= 0) { stepDay(1); return; } if (state.currentWeek < state.weeks.length - 1) { state.currentWeek++; selectedId = null; commit(); } else { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); } };
   $("weekAdd").onclick = () => { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); };
   $("weekDel").onclick = () => {
     if (state.weeks.length === 1) { toast("Can't delete the only week — use Clear instead."); return; }
@@ -1659,7 +1695,7 @@ if (IS_BROWSER) (function () {
   $("budClose").addEventListener("click", () => budDlg.close());
   $("budAddTask").addEventListener("click", () => {
     snap(); let base = "New task", name = base, n = 2; while (nameTaken(name, null)) name = base + " " + (n++);
-    const g = "work"; state.categories.push({ id: "cat" + Date.now(), name, hours: 0, group: g, color: groupColorFor(g, state.categories, null) });
+    const g = "work"; state.categories.push({ id: "cat" + Date.now(), name, hours: 0, group: g, defaultMin: 60, color: groupColorFor(g, state.categories, null) });
     commit(); renderBudgets();
   });
   $("budAddWeek").addEventListener("click", () => { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); commit(); renderBudgets(); });
@@ -1712,6 +1748,7 @@ if (IS_BROWSER) (function () {
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
+  setInterval(() => { if (document.visibilityState === "visible" && !drag && !noteAct) renderBlocks(); }, 60000); // advance now-line & drop elapsed plans each minute
   $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8;
   pullRemote(true);
   if (!cfg) setDot("", "Sync not set up yet — tap ⚙");
