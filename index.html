@@ -61,7 +61,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .sheetBtn:active { background: var(--panel2); }
 .poolItem { position: relative; background: var(--panel); border-radius: 0 8px 8px 0; border-left: 4px solid #888; padding: 8px 11px 8px 12px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
 .poolItem.done { opacity: 0.36; cursor: default; }
-.poolItem.tier2 { background: #474d56; }
+.poolItem.tier2 { background: #5c636d; }
 .poolItem.tier2 .nameInput, .poolItem.tier2 .hoursInput { color: #f3f5f7; }
 .poolItem.tier2 .poolHours { color: #ffffff !important; }
 .poolItem.tier2 .poolMeta, .poolItem.tier2 .poolTrack { color: #c7ccd3; }
@@ -80,7 +80,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .barFill.isover { background: var(--over) !important; }
 .poolMeta { font-size: 10.5px; color: var(--ink3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
 .warn { color: var(--over); font-weight: 700; margin-right: 2px; }
-.hoursInput { width: 38px; background: transparent; border: none; color: var(--ink2); font-size: 10.5px; padding: 0 2px; border-radius: 3px; text-align: right; }
+.hoursInput { width: 56px; background: transparent; border: none; color: var(--ink2); font-size: 10.5px; padding: 0 2px; border-radius: 3px; text-align: right; }
 .hoursInput:focus, .nameInput:focus { background: #fff; outline: 1px solid rgba(43,108,176,0.4); }
 .stripe { position: absolute; left: -4px; top: 0; bottom: 0; width: 14px; cursor: pointer; }
 .stripe input { opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
@@ -392,8 +392,8 @@ const LABEL_W = 40;
 const STORAGE_KEY = "weekly-planner-v3";
 const OLD_KEY = "weekly-planner-v2";
 const CFG_KEY = "weekly-planner-sync";
-const EVENT_COLOR = "#c96a6a"; // muted red — meetings and the Termin group
-const GREY = "#c2c8cf";        // None group
+const EVENT_COLOR = "#d9544f"; // brighter red — meetings and the Termin group
+const GREY = "#ced3d9";        // None group (light grey)
 const PINK = "#d6336c";
 
 const PALETTE = [
@@ -982,9 +982,8 @@ if (IS_BROWSER) (function () {
     const todayCatIds = new Set();
     if (todayIdx >= 0) for (const b of curBlocks()) if (b.day === DAYS[todayIdx] && !b.event && b.kind !== "actual") todayCatIds.add(b.catId);
     const tier1 = cats.filter((c) => todayCatIds.has(c.id));
-    const restCats = cats.filter((c) => !todayCatIds.has(c.id));
-    const tier2 = restCats.filter((c) => weekBudget(c, cw) > eps && rema(c) > eps);            // not enough assigned
-    const tier3 = restCats.filter((c) => weekBudget(c, cw) > eps && rema(c) <= eps);           // enough / over
+    const tier2 = cats.filter((c) => weekBudget(c, cw) > eps && rema(c) > eps);                 // all under-budget (even if also in tier 1)
+    const tier3 = cats.filter((c) => weekBudget(c, cw) > eps && rema(c) <= eps && !todayCatIds.has(c.id)); // enough / over
     pool.innerHTML = "";
 
     const totalBudget = cats.reduce((a, c) => a + weekBudget(c, cw), 0);
@@ -998,10 +997,11 @@ if (IS_BROWSER) (function () {
     const comboTrack = (names) => { let s = 0; for (const c of state.categories) if (names.indexOf((c.name || "").trim().toLowerCase()) >= 0) s += trackToday(c.id); return s; };
     const mailsSum = comboTrack(["hmails", "wmails"]);
     const tasksSum = comboTrack(["htasks", "wtasks"]);
+    const R = Math.round;
     summary.innerHTML =
-      '<div class="l1">This week: <b>' + fmtH(Math.max(0, totalBudget - thisPlaced)) + "h</b> free · " + fmtH(thisPlaced) + "h / " + fmtH(totalBudget) + "h planned</div>" +
-      '<div class="l2">All ' + W + " week" + (W > 1 ? "s" : "") + ": " + fmtH(Math.max(0, allBudget - allPlaced)) + "h free · " + fmtH(allPlaced) + "h / " + fmtH(allBudget) + "h planned</div>" +
-      (avgOther != null ? '<div class="l3">Other ' + (W - 1) + " week" + (W - 1 > 1 ? "s" : "") + ": <b>" + fmtH(avgOther) + "h</b>/week left on avg</div>" : "") +
+      '<div class="l1">This week: <b>' + R(Math.max(0, totalBudget - thisPlaced)) + "h</b> · " + R(thisPlaced) + " / " + R(totalBudget) + "h planned</div>" +
+      '<div class="l2">All weeks: <b>' + R(Math.max(0, allBudget - allPlaced)) + "h</b> · " + R(allPlaced) + " / " + R(allBudget) + "h planned</div>" +
+      (avgOther != null ? '<div class="l3">Other weeks: <b>' + R(avgOther) + "h</b>/week left on avg</div>" : "") +
       '<div class="l4">mails <b>' + fmtHM(mailsSum) + "</b> · tasks <b>" + fmtHM(tasksSum) + "</b></div>";
     pool.appendChild(summary);
 
@@ -1342,7 +1342,7 @@ if (IS_BROWSER) (function () {
     const gW = {}, gA = {};
     for (const ds in rep.days) { const inWk = dates.indexOf(ds) >= 0; const bg = rep.days[ds].byGroup; for (const g in bg) { gA[g] = (gA[g] || 0) + bg[g]; if (inWk) gW[g] = (gW[g] || 0) + bg[g]; } }
     let gs = "<h3>By group</h3>" + '<table class="repTable"><thead><tr><th>Group</th><th>This week</th><th>All weeks</th></tr></thead><tbody>';
-    for (const g of GROUP_ORDER) { if (!(gA[g] > 0.0001)) continue; gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtHM(gW[g] || 0) + "</td><td>" + fmtHM(gA[g] || 0) + "</td></tr>"; }
+    for (const g of ["home", "fruit", "work", "none", "termin"]) { if (!(gA[g] > 0.0001)) continue; gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtHM(gW[g] || 0) + "</td><td>" + fmtHM(gA[g] || 0) + "</td></tr>"; }
     gs += '<tr class="rfoot"><td class="rname">Work + Fruit</td><td>' + fmtHM((gW.work || 0) + (gW.fruit || 0)) + "</td><td>" + fmtHM((gA.work || 0) + (gA.fruit || 0)) + "</td></tr>";
     gs += "</tbody></table>";
     $("reportsBody").innerHTML = (any ? html : '<p class="muted">No tracked time in this week yet — press ▶ on a task to start the timer.</p>') + gs;
@@ -1351,17 +1351,16 @@ if (IS_BROWSER) (function () {
   $("reportsClose").addEventListener("click", () => $("reportsDialog").close());
 
   function renderLog() {
-    const W = state.currentWeek;
     const catById = {}; for (const c of state.categories) catById[c.id] = c;
+    const byDate = {};
+    for (const wk of state.weeks) for (const b of (wk.blocks || [])) { if (b.kind === "actual" && b.date) (byDate[b.date] = byDate[b.date] || []).push(b); }
+    const dates = Object.keys(byDate).sort().reverse(); // newest day first
     let html = "";
-    for (let d = 0; d < ND; d++) {
-      const dt = dateOfCell(state.anchorMonday, W, d), ds = ymd(dt);
-      const sessions = [];
-      for (const wk of state.weeks) for (const b of (wk.blocks || [])) if (b.kind === "actual" && b.date === ds) sessions.push(b);
-      if (!sessions.length) continue;
-      sessions.sort((a, b) => a.startMs - b.startMs);
+    for (const ds of dates) {
+      const dt = parseYMD(ds);
+      const sessions = byDate[ds].sort((a, b) => a.startMs - b.startMs);
       let tot = 0;
-      html += "<h3>" + DAYS[d] + " " + dt.getDate() + "</h3><div class=\"logDay\">";
+      html += "<h3>" + DAYS[weekDayIdx(dt)] + " " + dt.getDate() + "." + (dt.getMonth() + 1) + ".</h3><div class=\"logDay\">";
       for (const s of sessions) {
         tot += (s.endMs - s.startMs) / 3600000;
         const nm = catById[s.catId] ? catById[s.catId].name : "?";
@@ -1369,7 +1368,7 @@ if (IS_BROWSER) (function () {
       }
       html += '<div class="logTot">' + fmtHM(tot) + " total</div></div>";
     }
-    $("logBody").innerHTML = html || '<p class="muted">No tracked sessions in this week yet.</p>';
+    $("logBody").innerHTML = html || '<p class="muted">No tracked sessions yet.</p>';
   }
   $("logBtn").addEventListener("click", () => { renderLog(); $("logDialog").showModal(); });
   $("logClose").addEventListener("click", () => $("logDialog").close());
@@ -1513,7 +1512,7 @@ if (IS_BROWSER) (function () {
         GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") +
         '</select></td><td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
       for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="number" step="0.25" min="0" value="' + weekBudget(c, i) + '"></td>';
-      html += '<td><input class="bdef" type="number" step="5" min="0" placeholder="max" title="Default block length in minutes when you drag this task onto the grid — leave empty to drag the whole week’s hours" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
+      html += '<td><input class="bdef" type="number" step="15" min="0" placeholder="max" title="Default block length in minutes when you drag this task onto the grid — leave empty to drag the whole week’s hours" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
       html += '<td><input type="checkbox" class="barch" title="Hide from the list (finished one-off task)"' + (c.archived ? " checked" : "") + "></td>";
       html += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
     }
@@ -1593,6 +1592,7 @@ if (IS_BROWSER) (function () {
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
+  document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
   $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8;
   pullRemote(true);
