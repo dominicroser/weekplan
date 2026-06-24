@@ -60,7 +60,9 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .sheetBtn { display: block; width: 100%; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink2); padding: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 .sheetBtn:active { background: var(--panel2); }
 .poolItem { position: relative; background: var(--panel); border-radius: 0 8px 8px 0; border-left: 4px solid #888; padding: 8px 11px 8px 12px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
-.poolItem.done { opacity: 0.5; cursor: default; }
+.poolItem.done { opacity: 0.36; cursor: default; }
+.poolItem.tier1 { box-shadow: inset 6px 0 0 0 #e6b800; }  /* today: yellow band */
+.poolItem.tier2 { box-shadow: inset 6px 0 0 0 #cf6a6a; }  /* under-budget: red band */
 .poolItem.over { background: var(--overbg); border-left-style: solid; }
 .poolItem.armed { outline-color: var(--accent); }
 .poolTop { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
@@ -177,9 +179,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .playBtn.run { background: var(--good); color: #fff; border-color: var(--good); }
 .runElapsed { position: absolute; right: 34px; bottom: 9px; font-size: 10.5px; font-family: 'Inter', sans-serif; color: var(--good); font-weight: 600; cursor: pointer; }
 .poolTrack { font-size: 10px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
-.poolDivider { height: 1px; background: rgba(0,0,0,0.16); margin: 6px 2px; flex-shrink: 0; }
+.poolDivider { height: 3px; background: rgba(0,0,0,0.34); border-radius: 2px; margin: 9px 2px; flex-shrink: 0; }
 .missStar { color: #e0a800; font-size: 12px; }
-@media (max-width: 760px) { .poolDivider { width: 1px; height: auto; margin: 0 3px; align-self: stretch; } }
+@media (max-width: 760px) { .poolDivider { width: 3px; height: auto; margin: 0 4px; align-self: stretch; border-radius: 2px; } }
 .budTable tr.arch td { opacity: 0.5; }
 .repTable { border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; width: 100%; margin-top: 4px; }
 .repTable th, .repTable td { border: 1px solid var(--line); padding: 3px 6px; text-align: center; }
@@ -364,7 +366,7 @@ const SLOT_MIN = 15, SPH = 4;
 const DAY_START_HOUR = 0, DAY_END_HOUR = 24;
 const TOTAL_SLOTS = (DAY_END_HOUR - DAY_START_HOUR) * SPH; // 96
 const COARSE = IS_BROWSER && window.matchMedia && matchMedia("(pointer: coarse)").matches;
-const SLOT_PX = COARSE ? 13 : 11;
+const SLOT_PX = COARSE ? 19 : 16;
 const LABEL_W = 40;
 const STORAGE_KEY = "weekly-planner-v3";
 const OLD_KEY = "weekly-planner-v2";
@@ -985,15 +987,16 @@ if (IS_BROWSER) (function () {
     pool.appendChild(summary);
 
     const divider = () => { const dv = document.createElement("div"); dv.className = "poolDivider"; pool.appendChild(dv); };
-    const renderItem = (cat, faded) => {
+    const renderItem = (cat, tier) => {
       const bw = weekBudget(cat, cw);
       const u = used[cat.id] || 0;
       const remaining = Math.round((bw - u) * 100) / 100;
       const isOver = u - bw > eps;
       const isDone = Math.abs(bw - u) <= eps;
+      const faded = tier === 3 && isDone;
       const pct = bw > 0 ? Math.min(100, (u / bw) * 100) : 100;
       const el = document.createElement("div");
-      el.className = "poolItem" + (faded ? " done" : "") + (isOver ? " over" : "") + (armedCat === cat.id ? " armed" : "");
+      el.className = "poolItem" + (tier === 1 ? " tier1" : tier === 2 ? " tier2" : "") + (faded ? " done" : "") + (isOver ? " over" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
       el.style.borderLeftColor = cat.color;
       const hoursTxt = isOver ? fmtH(u - bw) + "h over" : isDone ? "✓ done" : fmtH(remaining) + "h left";
@@ -1043,11 +1046,11 @@ if (IS_BROWSER) (function () {
       if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.title = "Click to adjust the start time"; re.textContent = fmtDur(Date.now() - state.timer.startMs); re.addEventListener("pointerdown", (e) => e.stopPropagation()); re.addEventListener("click", (e) => { e.stopPropagation(); adjustTimerStart(); }); el.appendChild(re); }
       pool.appendChild(el);
     };
-    tier1.forEach((c) => renderItem(c, false));
+    tier1.forEach((c) => renderItem(c, 1));
     if (tier1.length && (tier2.length || tier3.length)) divider();
-    tier2.forEach((c) => renderItem(c, false));
+    tier2.forEach((c) => renderItem(c, 2));
     if (tier2.length && tier3.length) divider();
-    tier3.forEach((c) => renderItem(c, rema(c) <= eps && !((used[c.id] || 0) - weekBudget(c, cw) > eps)));
+    tier3.forEach((c) => renderItem(c, 3));
     const add = document.createElement("button");
     add.id = "addCat"; add.textContent = "+ Add task";
     add.addEventListener("click", () => {
