@@ -921,7 +921,21 @@ if (IS_BROWSER) (function () {
   /* ── time tracking ── */
   function fmtDur(ms) { const s = Math.max(0, Math.floor(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = s % 60; return h > 0 ? (h + ":" + pad2(m) + ":" + pad2(ss)) : (m + ":" + pad2(ss)); }
   function clock(ms) { const d = new Date(ms); return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); }
-  function updateTimerDisplay() { if (!state.timer) return; const el = pool.querySelector(".runElapsed"); if (el) el.textContent = fmtDur(Date.now() - state.timer.startMs); }
+  function fmtClock(ms) { const m = Math.floor(Math.max(0, ms) / 60000); return Math.floor(m / 60) + ":" + pad2(m % 60); }
+  function liveDayRemaining(catId) {
+    const cell = cellForDate(state.anchorMonday, new Date()), wk = state.weeks[cell.weekIdx];
+    let dayPlan = 0; if (wk) for (const b of wk.blocks) if (b.catId === catId && b.day === DAYS[cell.dayIdx] && !b.event && b.kind !== "actual") dayPlan += b.lenSlots / 4;
+    const rep = buildReport(state), ds = ymd(new Date());
+    let done = (rep.days[ds] && rep.days[ds].byCat[catId]) || 0;
+    if (state.timer && state.timer.catId === catId) done += (Date.now() - state.timer.startMs) / 3600000; // include running session
+    return { dayPlan: dayPlan, done: done };
+  }
+  function updateTimerDisplay() {
+    if (!state.timer) return;
+    const el = pool.querySelector(".runElapsed"); if (el) el.textContent = fmtClock(Date.now() - state.timer.startMs);
+    const item = pool.querySelector('.poolItem.tier1[data-cat="' + state.timer.catId + '"]');
+    if (item) { const hp = item.querySelector(".poolHours"); if (hp) { const r = liveDayRemaining(state.timer.catId), eps = 0.001, over = r.done - r.dayPlan > eps, dn = Math.abs(r.dayPlan - r.done) <= eps; hp.className = "poolHours " + (over ? "isover" : dn ? "isdone" : ""); hp.textContent = over ? fmtH(r.done - r.dayPlan) + "h over" : dn ? "✓ done" : fmtH(Math.round((r.dayPlan - r.done) * 100) / 100) + "h left"; } }
+  }
   function startTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = setInterval(updateTimerDisplay, 1000); }
   function stopTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = null; }
   function toggleTimer(catId) {
@@ -1076,12 +1090,11 @@ if (IS_BROWSER) (function () {
       const isDone = Math.abs(bw - u) <= eps;
       const faded = tier === 3 && isDone;
       let ovr = isOver, pctV = bw > 0 ? Math.min(100, (u / bw) * 100) : 100, hoursTxt, hoursCls;
-      if (tier === 1) {                                   // Tier 1 → remaining for TODAY
-        let dayPlan = 0; for (const b of curBlocks()) if (b.catId === cat.id && b.day === DAYS[todayIdx] && !b.event && b.kind !== "actual") dayPlan += b.lenSlots / 4;
-        const doneT = trackToday(cat.id), dRem = Math.round((dayPlan - doneT) * 100) / 100, dDone = Math.abs(dayPlan - doneT) <= eps;
-        ovr = doneT - dayPlan > eps;
-        pctV = dayPlan > 0 ? Math.min(100, (doneT / dayPlan) * 100) : 100;
-        hoursTxt = ovr ? fmtH(doneT - dayPlan) + "h over" : dDone ? "✓ done" : fmtH(dRem) + "h left";
+      if (tier === 1) {                                   // Tier 1 → remaining for TODAY (incl. running session)
+        const r = liveDayRemaining(cat.id), dRem = Math.round((r.dayPlan - r.done) * 100) / 100, dDone = Math.abs(r.dayPlan - r.done) <= eps;
+        ovr = r.done - r.dayPlan > eps;
+        pctV = r.dayPlan > 0 ? Math.min(100, (r.done / r.dayPlan) * 100) : 100;
+        hoursTxt = ovr ? fmtH(r.done - r.dayPlan) + "h over" : dDone ? "✓ done" : fmtH(dRem) + "h left";
         hoursCls = ovr ? "isover" : dDone ? "isdone" : "";
       } else {                                            // Tier 2/3 → remaining for the WEEK
         hoursTxt = isOver ? fmtH(u - bw) + "h over" : isDone ? "✓ done" : fmtH(remaining) + "h left";
@@ -1095,7 +1108,7 @@ if (IS_BROWSER) (function () {
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
         '<button class="catX" title="Delete category">&times;</button>' +
         '<div class="poolTop">' + (usage.miss[cat.id] ? '<span class="missStar" title="Planned earlier this week but no time tracked">★</span> ' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
-        '<span class="poolHours ' + hoursCls + '">' + hoursTxt + (tier === 1 ? " today" : "") + "</span></div>" +
+        '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
         '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtH(u) + 'h of <input class="hoursInput" type="number" step="0.25" min="0"' + (cat.auto ? ' readonly title="Auto — equals the hours you’ve scheduled"' : "") + ' value="' + bw + '">h</div>' +
         (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })();
@@ -1134,7 +1147,7 @@ if (IS_BROWSER) (function () {
         play.addEventListener("pointerdown", (e) => e.stopPropagation());
         play.addEventListener("click", (e) => { e.stopPropagation(); toggleTimer(cat.id); });
         el.appendChild(play);
-        if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.title = "Click to adjust the start time"; re.textContent = fmtDur(Date.now() - state.timer.startMs); re.addEventListener("pointerdown", (e) => e.stopPropagation()); re.addEventListener("click", (e) => { e.stopPropagation(); adjustTimerStart(); }); el.appendChild(re); }
+        if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.title = "Click to adjust the start time"; re.textContent = fmtClock(Date.now() - state.timer.startMs); re.addEventListener("pointerdown", (e) => e.stopPropagation()); re.addEventListener("click", (e) => { e.stopPropagation(); adjustTimerStart(); }); el.appendChild(re); }
       }
       pool.appendChild(el);
     };
