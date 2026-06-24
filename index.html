@@ -401,7 +401,7 @@ const LABEL_W = 40;
 const STORAGE_KEY = "weekly-planner-v3";
 const OLD_KEY = "weekly-planner-v2";
 const CFG_KEY = "weekly-planner-sync";
-const EVENT_COLOR = "#d9544f"; // brighter red — meetings and the Termin group
+const EVENT_COLOR = "#f03434"; // vivid red — meetings and the Termin group
 const GREY = "#dce0e5";        // None group (light grey)
 const ZUG_COLOR = "#eaff00";   // bright neon yellow — Zug group
 const PINK = "#d6336c";
@@ -465,8 +465,8 @@ function pickColor(cats) {
 }
 // ── Task groups: distinct colour families, varied shades within ──
 const GROUPS = {
-  work:  { label: "Work",  palette: ["#1c4e80","#3b82c4","#274bb5","#6aa7e0","#4b3fb0","#7e5bd0","#2b6cb0","#9b6fd6","#3a52a3","#5fa0e0"] },
-  home:  { label: "Home",  palette: ["#e6a700","#f6c453","#e8730c","#f59f00","#c98a16","#fab234","#d9600a","#eac54a","#f0851e","#b07d10"] },
+  work:  { label: "Work",  palette: ["#1c4e80","#2b6cb0","#3b82c4","#5fa0e0","#0d3b66","#1a5fa0","#4a90d9","#7fb3e6","#245e9e","#0f6fc4"] },
+  home:  { label: "Home",  palette: ["#e6b800","#ffd633","#c9a227","#f5d76e","#b8920a","#ffe066","#d4af1f","#f0c419","#a87f00","#ffd24d"] },
   fruit: { label: "Fruit", palette: ["#1e7a46","#52b35e","#2b8a3e","#74c365","#157f4a","#43a047","#6abf69","#2f9e44","#3f7d3a","#86c97a"] },
   none:  { label: "None",  palette: [GREY] },
   termin:{ label: "Termin", palette: [EVENT_COLOR] },
@@ -1018,9 +1018,15 @@ if (IS_BROWSER) (function () {
     // tier 1: tasks planned for the current day
     const todayCatIds = new Set();
     if (todayIdx >= 0) for (const b of curBlocks()) if (b.day === DAYS[todayIdx] && !b.event && b.kind !== "actual") todayCatIds.add(b.catId);
-    const tier1 = cats.filter((c) => todayCatIds.has(c.id));
-    const tier2 = cats.filter((c) => weekBudget(c, cw) > eps && rema(c) > eps);                 // all under-budget (even if also in tier 1)
-    const tier3 = cats.filter((c) => weekBudget(c, cw) > eps && rema(c) <= eps && !todayCatIds.has(c.id)); // enough / over
+    const isUtil = (c) => c.auto || c.noTrack;
+    const tier1 = [], tier2 = [], tier3 = [];
+    for (const c of cats) {
+      if (isUtil(c)) { tier3.push(c); continue; }                  // Auto / untracked → always bottom tier
+      const bud = weekBudget(c, cw), under = bud > eps && rema(c) > eps, inToday = todayCatIds.has(c.id);
+      if (inToday) tier1.push(c);
+      if (under) tier2.push(c);                                    // all under-budget (even if also today)
+      if (!inToday && !under && bud > eps) tier3.push(c);          // enough / over
+    }
     pool.innerHTML = "";
 
     const totalBudget = cats.reduce((a, c) => a + weekBudget(c, cw), 0);
