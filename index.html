@@ -179,9 +179,10 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .dayHeader .dnum { font-weight: 400; color: var(--ink3); font-size: 11px; margin-left: 2px; }
 .dayHeader.today .dnum { color: var(--accent); }
 .todayCol { position: absolute; top: 0; bottom: 0; background: rgba(43,108,176,0.05); pointer-events: none; z-index: 1; }
-.nowLine { position: absolute; height: 2px; background: var(--accent); opacity: 0.75; pointer-events: none; z-index: 5; }
-.block.plan:not(.event):not(.meeting)::after { content: ""; position: absolute; inset: 2px; border: 1px dashed rgba(255,255,255,0.55); border-radius: 4px; pointer-events: none; }
-.block.actual { box-shadow: 0 1px 3px rgba(0,0,0,0.25), inset 0 0 0 1.6px rgba(0,0,0,0.3); }
+.nowLine { position: absolute; height: 3px; background: #111; opacity: 0.92; pointer-events: none; z-index: 8; border-radius: 2px; }
+.nowLine::before { content: ""; position: absolute; left: -1px; top: -3px; width: 9px; height: 9px; border-radius: 50%; background: #111; }
+/* plan & actual task blocks: no extra border, for a cleaner look */
+.block.actual { box-shadow: 0 1px 3px rgba(0,0,0,0.22); }
 .playBtn { position: absolute; right: 6px; bottom: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 10px; color: var(--good); display: flex; align-items: center; justify-content: center; padding: 0; }
 .playBtn.run { background: var(--good); color: #fff; border-color: var(--good); }
 .runElapsed { position: absolute; right: 34px; bottom: 9px; font-size: 10.5px; font-family: 'Inter', sans-serif; color: var(--good); font-weight: 600; cursor: pointer; }
@@ -1074,20 +1075,29 @@ if (IS_BROWSER) (function () {
       const isOver = u - bw > eps;
       const isDone = Math.abs(bw - u) <= eps;
       const faded = tier === 3 && isDone;
-      const pct = bw > 0 ? Math.min(100, (u / bw) * 100) : 100;
+      let ovr = isOver, pctV = bw > 0 ? Math.min(100, (u / bw) * 100) : 100, hoursTxt, hoursCls;
+      if (tier === 1) {                                   // Tier 1 → remaining for TODAY
+        let dayPlan = 0; for (const b of curBlocks()) if (b.catId === cat.id && b.day === DAYS[todayIdx] && !b.event && b.kind !== "actual") dayPlan += b.lenSlots / 4;
+        const doneT = trackToday(cat.id), dRem = Math.round((dayPlan - doneT) * 100) / 100, dDone = Math.abs(dayPlan - doneT) <= eps;
+        ovr = doneT - dayPlan > eps;
+        pctV = dayPlan > 0 ? Math.min(100, (doneT / dayPlan) * 100) : 100;
+        hoursTxt = ovr ? fmtH(doneT - dayPlan) + "h over" : dDone ? "✓ done" : fmtH(dRem) + "h left";
+        hoursCls = ovr ? "isover" : dDone ? "isdone" : "";
+      } else {                                            // Tier 2/3 → remaining for the WEEK
+        hoursTxt = isOver ? fmtH(u - bw) + "h over" : isDone ? "✓ done" : fmtH(remaining) + "h left";
+        hoursCls = isOver ? "isover" : isDone ? "isdone" : "";
+      }
       const el = document.createElement("div");
-      el.className = "poolItem" + (tier === 1 ? " tier1" : tier === 2 ? " tier2" : "") + (faded ? " done" : "") + (isOver ? " over" : "") + (armedCat === cat.id ? " armed" : "");
+      el.className = "poolItem" + (tier === 1 ? " tier1" : tier === 2 ? " tier2" : "") + (faded ? " done" : "") + (ovr ? " over" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
       el.style.borderLeftColor = cat.color;
-      const hoursTxt = isOver ? fmtH(u - bw) + "h over" : isDone ? "✓ done" : fmtH(remaining) + "h left";
-      const hoursCls = isOver ? "isover" : isDone ? "isdone" : "";
       el.innerHTML =
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
         '<button class="catX" title="Delete category">&times;</button>' +
         '<div class="poolTop">' + (usage.miss[cat.id] ? '<span class="missStar" title="Planned earlier this week but no time tracked">★</span> ' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
-        '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
-        '<div class="barTrack"><div class="barFill ' + (isOver ? "isover" : "") + '" style="width:' + pct + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + (isOver ? '<span class="warn">⚠</span>' : "") + fmtH(u) + 'h of <input class="hoursInput" type="number" step="0.25" min="0"' + (cat.auto ? ' readonly title="Auto — equals the hours you’ve scheduled"' : "") + ' value="' + bw + '">h</div>' +
+        '<span class="poolHours ' + hoursCls + '">' + hoursTxt + (tier === 1 ? " today" : "") + "</span></div>" +
+        '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
+        '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtH(u) + 'h of <input class="hoursInput" type="number" step="0.25" min="0"' + (cat.auto ? ' readonly title="Auto — equals the hours you’ve scheduled"' : "") + ' value="' + bw + '">h</div>' +
         (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })();
       const nameIn = el.querySelector(".nameInput"), hoursIn = el.querySelector(".hoursInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe"), xBtn = el.querySelector(".catX");
