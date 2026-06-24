@@ -53,10 +53,11 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #body { display: flex; align-items: flex-start; }
 #pool { width: 230px; flex-shrink: 0; padding: 12px 11px; display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 60px); overflow-y: auto; }
 .poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; line-height: 1.55; }
+.poolSummary .l1 { color: var(--ink); }
 .poolSummary .l1 b { color: var(--ink); font-weight: 700; }
 .poolSummary .l2 { color: var(--ink3); }
-.poolSummary .l3 { color: var(--accent); margin-top: 2px; }
-.poolSummary .l3 b { color: var(--accent); font-weight: 700; }
+.poolSummary .l3 { color: var(--ink3); margin-top: 2px; }
+.poolSummary .l3 b { color: var(--ink2); font-weight: 700; }
 .sheetBtn { display: block; width: 100%; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink2); padding: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 .sheetBtn:active { background: var(--panel2); }
 .poolItem { position: relative; background: var(--panel); border-radius: 0 8px 8px 0; border-left: 4px solid #888; padding: 12px 11px 13px 12px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
@@ -84,6 +85,9 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 12px; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: var(--ink2); }
 .hStep:active { background: var(--panel); }
 .goalVal { display: inline-block; min-width: 30px; text-align: center; }
+.goalSet { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 11px; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: var(--ink2); }
+.goalSet:active { background: var(--panel); }
+.poolItem.tier2 .goalSet { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.28); color: #f3f5f7; }
 .poolItem.tier2 .hStep { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.28); color: #f3f5f7; }
 .hoursInput:focus, .nameInput:focus { background: #fff; outline: 1px solid rgba(43,108,176,0.4); }
 .stripe { position: absolute; left: -4px; top: 0; bottom: 0; width: 14px; cursor: pointer; }
@@ -193,8 +197,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .poolTrack { font-size: 10px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .missStar { color: #e0a800; font-size: 12px; }
-.poolSummary .l4 { color: var(--ink2); margin-top: 3px; }
-.poolSummary .l4 b { color: var(--accent); font-weight: 700; }
+.poolSummary .l4 { color: var(--ink); margin-top: 3px; }
+.poolSummary .l4 b { color: var(--ink); font-weight: 700; }
 .origPlan { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink2); padding: 4px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
 .opHead { font-weight: 700; color: var(--ink); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
 .opBtn { background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; font-size: 11px; cursor: pointer; padding: 0 6px; color: var(--ink2); line-height: 1.6; }
@@ -1064,7 +1068,7 @@ if (IS_BROWSER) (function () {
     summary.innerHTML =
       '<div class="l1">This week: <b>' + fmtHM(Math.max(0, totalBudget - thisPlaced)) + "</b> + " + fmtHM(thisPlaced) + " = " + fmtHM(totalBudget) + "</div>" +
       '<div class="l2">All weeks: <b>' + fmtHM(Math.max(0, allBudget - allPlaced)) + "</b> + " + fmtHM(allPlaced) + " = " + fmtHM(allBudget) + "</div>" +
-      (avgOther != null ? '<div class="l3">Other weeks: <b>' + fmtHM(avgOther) + "</b>/week left on avg</div>" : "") +
+      (avgOther != null ? '<div class="l3">Other weeks: <b>' + fmtHM(avgOther) + "</b> left on avg</div>" : "") +
       '<div class="l4">Mails <b>' + fmtHM(mailsSum) + "</b> · Tasks <b>" + fmtHM(tasksSum) + "</b></div>";
     pool.appendChild(summary);
 
@@ -1115,12 +1119,13 @@ if (IS_BROWSER) (function () {
         '<div class="poolTop">' + (usage.miss[cat.id] ? '<span class="missStar" title="Planned earlier this week but no time tracked">★</span> ' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — equals the hours you’ve scheduled">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><span class="goalVal">' + fmtHM(bw) + '</span><button class="hStep" data-d="1">+</button>') + "</div>" +
+        '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — equals the hours you’ve scheduled">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><span class="goalVal">' + fmtHM(bw) + '</span><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set the weekly goal to done + planned">=</button>') + "</div>" +
         (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })();
       const nameIn = el.querySelector(".nameInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe"), xBtn = el.querySelector(".catX");
       for (const inp of [nameIn, stripe, xBtn]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
       el.querySelectorAll(".hStep").forEach((b) => { b.addEventListener("pointerdown", (e) => e.stopPropagation()); b.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, Math.round((weekBudget(cat, cw) + (+b.dataset.d) * 0.25) * 100) / 100); commit(); }); });
+      const gset = el.querySelector(".goalSet"); if (gset) { gset.addEventListener("pointerdown", (e) => e.stopPropagation()); gset.addEventListener("click", (e) => { e.stopPropagation(); snap(); let exactAct = 0; for (const ds of wkDates) { const dd = rep.days[ds]; if (dd && dd.byCat[cat.id]) exactAct += dd.byCat[cat.id]; } const uExact = exactAct + (u - Math.floor(exactAct * 4) / 4); ensureBudgets(state.weeks[cw])[cat.id] = Math.round(uExact * 60) / 60; commit(); }); }
       nameIn.addEventListener("change", () => {
         const v = nameIn.value.trim();
         if (!v) { nameIn.value = cat.name; return; }
