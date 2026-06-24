@@ -175,7 +175,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .block.actual { box-shadow: 0 1px 3px rgba(0,0,0,0.25), inset 0 0 0 1.6px rgba(0,0,0,0.3); }
 .playBtn { position: absolute; right: 6px; bottom: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 10px; color: var(--good); display: flex; align-items: center; justify-content: center; padding: 0; }
 .playBtn.run { background: var(--good); color: #fff; border-color: var(--good); }
-.runElapsed { position: absolute; right: 34px; bottom: 9px; font-size: 10.5px; font-family: 'Inter', sans-serif; color: var(--good); font-weight: 600; }
+.runElapsed { position: absolute; right: 34px; bottom: 9px; font-size: 10.5px; font-family: 'Inter', sans-serif; color: var(--good); font-weight: 600; cursor: pointer; }
+.poolTrack { font-size: 10px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
+.budTable tr.arch td { opacity: 0.5; }
 .repTable { border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; width: 100%; margin-top: 4px; }
 .repTable th, .repTable td { border: 1px solid var(--line); padding: 3px 6px; text-align: center; }
 .repTable th { background: var(--panel); font-weight: 600; color: var(--ink2); }
@@ -364,7 +366,7 @@ const LABEL_W = 40;
 const STORAGE_KEY = "weekly-planner-v3";
 const OLD_KEY = "weekly-planner-v2";
 const CFG_KEY = "weekly-planner-sync";
-const EVENT_COLOR = "#64748b";
+const EVENT_COLOR = "#c2c8cf"; // light grey — meetings and None/Termin groups
 const PINK = "#d6336c";
 
 const PALETTE = [
@@ -396,6 +398,18 @@ function defaultNote() { return { html: "", x: null, y: null, w: 230, h: 150, op
 
 /* ═══════════════ Pure helpers ═══════════════ */
 function fmtH(n) { return String(Math.round(n * 100) / 100); }
+function fmtHM(hours) { const m = Math.round((hours || 0) * 60); return Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0"); }
+// exact (fractional, sub-15-min) slot position for a tracked session
+function actualSlots(startMs, endMs) {
+  const sd = new Date(startMs), ed = new Date(endMs);
+  const sMin = sd.getHours() * 60 + sd.getMinutes() + sd.getSeconds() / 60;
+  const sameDay = sd.getFullYear() === ed.getFullYear() && sd.getMonth() === ed.getMonth() && sd.getDate() === ed.getDate();
+  const eMin = sameDay ? (ed.getHours() * 60 + ed.getMinutes() + ed.getSeconds() / 60) : 1440;
+  let s = Math.max(0, Math.min(sMin, 1440)) / SLOT_MIN;
+  let len = Math.max(1 / 60, (Math.max(eMin, sMin + 1 / 60) - sMin)) / SLOT_MIN;
+  if (s + len > TOTAL_SLOTS) len = TOTAL_SLOTS - s;
+  return { startSlot: s, lenSlots: len };
+}
 function slotLabel(slot) {
   const totalMin = DAY_START_HOUR * 60 + slot * SLOT_MIN;
   return String(Math.floor(totalMin / 60)).padStart(2, "0") + ":" + String(totalMin % 60).padStart(2, "0");
@@ -417,10 +431,14 @@ const GROUPS = {
   work:  { label: "Work",  palette: ["#1c4e80","#3b82c4","#274bb5","#6aa7e0","#4b3fb0","#7e5bd0","#2b6cb0","#9b6fd6","#3a52a3","#5fa0e0"] },
   home:  { label: "Home",  palette: ["#e6a700","#f6c453","#e8730c","#f59f00","#c98a16","#fab234","#d9600a","#eac54a","#f0851e","#b07d10"] },
   fruit: { label: "Fruit", palette: ["#1e7a46","#52b35e","#2b8a3e","#74c365","#157f4a","#43a047","#6abf69","#2f9e44","#3f7d3a","#86c97a"] },
+  none:  { label: "None",  palette: [EVENT_COLOR] },
+  termin:{ label: "Termin", palette: [EVENT_COLOR] },
 };
+const GROUP_ORDER = ["work", "home", "fruit", "none", "termin"];
 const GROUP_HUE = { work: 225, home: 42, fruit: 135 };
 function groupColorFor(group, cats, exceptId) {
   const g = GROUPS[group] ? group : "work";
+  if (g === "none" || g === "termin") return EVENT_COLOR; // always light grey
   const used = new Set(cats.filter((c) => c.id !== exceptId && (c.group || "work") === g).map((c) => (c.color || "").toLowerCase()));
   for (const col of GROUPS[g].palette) if (!used.has(col.toLowerCase())) return col;
   const L = 40 + (used.size * 9) % 32;
@@ -738,7 +756,7 @@ function migrate(s) {
 }
 
 if (!IS_BROWSER && typeof module !== "undefined") {
-  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, mergeAdjacent, usedByCat, fmtH, slotLabel, textOn, pickColor, groupColorFor, GROUPS, parseCSV, csvToRows, applySheet, csvToWeeks, applySheetWeeks, migrate, defaultNote, ymd, parseYMD, mondayOf, weekDayIdx, cellForDate, dateOfCell, sessionToSlots, msAt, buildReport, TOTAL_SLOTS, DAYS };
+  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, mergeAdjacent, usedByCat, fmtH, fmtHM, slotLabel, textOn, pickColor, groupColorFor, GROUPS, GROUP_ORDER, parseCSV, csvToRows, applySheet, csvToWeeks, applySheetWeeks, migrate, defaultNote, ymd, parseYMD, mondayOf, weekDayIdx, cellForDate, dateOfCell, sessionToSlots, actualSlots, msAt, buildReport, TOTAL_SLOTS, DAYS };
 }
 
 /* ═══════════════ Browser app ═══════════════ */
@@ -813,6 +831,7 @@ if (IS_BROWSER) (function () {
 
   /* ── time tracking ── */
   function fmtDur(ms) { const s = Math.max(0, Math.floor(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = s % 60; return h > 0 ? (h + ":" + pad2(m) + ":" + pad2(ss)) : (m + ":" + pad2(ss)); }
+  function clock(ms) { const d = new Date(ms); return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); }
   function updateTimerDisplay() { if (!state.timer) return; const el = pool.querySelector(".runElapsed"); if (el) el.textContent = fmtDur(Date.now() - state.timer.startMs); }
   function startTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = setInterval(updateTimerDisplay, 1000); }
   function stopTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = null; }
@@ -831,12 +850,22 @@ if (IS_BROWSER) (function () {
     if (dur >= 60000) { snap(); createActualBlock(t.catId, t.startMs, endMs); commit(); toast("Logged " + fmtDur(dur)); }
     else { saveLocal(); schedulePush(); renderPool(); toast("Too short (under 1 min) — not logged"); }
   }
+  function adjustTimerStart() {
+    if (!state.timer) return;
+    const cur = new Date(state.timer.startMs);
+    const v = prompt("Timer started at (HH:MM today):", pad2(cur.getHours()) + ":" + pad2(cur.getMinutes()));
+    if (v == null) return;
+    const p = v.split(":").map(Number); if (isNaN(p[0])) { toast("Use HH:MM, e.g. 7:35"); return; }
+    const d = new Date(); d.setHours(p[0] || 0, p[1] || 0, 0, 0);
+    let ms = d.getTime(); if (ms > Date.now()) ms = Date.now();
+    state.timer.startMs = ms; saveLocal(); schedulePush(); updateTimerDisplay();
+  }
   function createActualBlock(catId, startMs, endMs) {
     const cell = cellForDate(state.anchorMonday, new Date(startMs));
     let wi = cell.weekIdx; if (wi < 0) wi = 0;
     while (state.weeks.length <= wi) state.weeks.push({ id: "w" + Date.now() + state.weeks.length, blocks: [], budgets: {} });
     const dateStr = ymd(dateOfCell(state.anchorMonday, wi, cell.dayIdx));
-    const ss = sessionToSlots(startMs, endMs);
+    const ss = actualSlots(startMs, endMs);
     state.weeks[wi].blocks.push({ id: state.nextId++, kind: "actual", catId: catId, day: DAYS[cell.dayIdx], date: dateStr, startMs: startMs, endMs: endMs, startSlot: ss.startSlot, lenSlots: ss.lenSlots });
   }
 
@@ -872,9 +901,14 @@ if (IS_BROWSER) (function () {
   function weekPlaced(idx) { const u = usedByCat(state.weeks[idx].blocks); return Object.values(u).reduce((a, b) => a + b, 0); }
   function renderPool() {
     const used = usedByCat(curBlocks());
-    const cats = state.categories;
+    const cats = state.categories.filter((c) => !c.archived);
     const eps = 0.001;
     const cw = state.currentWeek;
+    const rep = buildReport(state);
+    const wkDates = []; for (let d = 0; d < ND; d++) wkDates.push(ymd(dateOfCell(state.anchorMonday, cw, d)));
+    const todayStr = ymd(new Date()), todayInWeek = wkDates.indexOf(todayStr) >= 0;
+    const trackWeek = (id) => { let s = 0; for (const ds of wkDates) { const dd = rep.days[ds]; if (dd && dd.byCat[id]) s += dd.byCat[id]; } return s; };
+    const trackToday = (id) => { const dd = rep.days[todayStr]; return dd && dd.byCat[id] ? dd.byCat[id] : 0; };
     const under = cats.filter((c) => weekBudget(c, cw) - (used[c.id] || 0) > eps);
     const over = cats.filter((c) => (used[c.id] || 0) - weekBudget(c, cw) > eps);
     const exact = cats.filter((c) => Math.abs(weekBudget(c, cw) - (used[c.id] || 0)) <= eps);
@@ -919,7 +953,8 @@ if (IS_BROWSER) (function () {
         '<div class="poolTop"><input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (isOver ? "isover" : "") + '" style="width:' + pct + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + (isOver ? '<span class="warn">⚠</span>' : "") + fmtH(u) + 'h of <input class="hoursInput" type="number" step="0.25" min="0" value="' + bw + '">h</div>';
+        '<div class="poolMeta">' + (isOver ? '<span class="warn">⚠</span>' : "") + fmtH(u) + 'h of <input class="hoursInput" type="number" step="0.25" min="0" value="' + bw + '">h</div>' +
+        (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })();
       const nameIn = el.querySelector(".nameInput"), hoursIn = el.querySelector(".hoursInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe"), xBtn = el.querySelector(".catX");
       for (const inp of [nameIn, hoursIn, stripe, xBtn]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
@@ -954,7 +989,7 @@ if (IS_BROWSER) (function () {
       play.addEventListener("pointerdown", (e) => e.stopPropagation());
       play.addEventListener("click", (e) => { e.stopPropagation(); toggleTimer(cat.id); });
       el.appendChild(play);
-      if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.textContent = fmtDur(Date.now() - state.timer.startMs); el.appendChild(re); }
+      if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.title = "Click to adjust the start time"; re.textContent = fmtDur(Date.now() - state.timer.startMs); re.addEventListener("pointerdown", (e) => e.stopPropagation()); re.addEventListener("click", (e) => { e.stopPropagation(); adjustTimerStart(); }); el.appendChild(re); }
       pool.appendChild(el);
     }
     const add = document.createElement("button");
@@ -1006,9 +1041,10 @@ if (IS_BROWSER) (function () {
         const p = lay.pos[b.id];
         const color = blockColor(b, catById);
         const ink = textOn(color);
-        const hPx = b.lenSlots * SLOT_PX - 2;
+        const isAct = b.kind === "actual";
+        const hPx = isAct ? Math.max(4, b.lenSlots * SLOT_PX) : (b.lenSlots * SLOT_PX - 2);
         const el = document.createElement("div");
-        el.className = "block" + (b.event ? " event" : "") + (b.kind === "actual" ? " actual" : " plan") + (selectedId === b.id ? " selected" : "");
+        el.className = "block" + (b.event ? " event" : "") + (isAct ? " actual" : " plan") + (selectedId === b.id ? " selected" : "");
         el.dataset.id = b.id;
         const frac = di / ND + p.col / (ND * p.nCols);
         el.style.cssText =
@@ -1017,13 +1053,14 @@ if (IS_BROWSER) (function () {
           ";left:calc(" + LABEL_W + "px + " + frac + " * (100% - " + LABEL_W + "px) + 1px)" +
           ";width:calc((100% - " + LABEL_W + "px) / " + (ND * p.nCols) + " - 3px);";
         const nm = blockName(b, catById);
+        const tLabel = isAct && b.startMs ? (clock(b.startMs) + "–" + clock(b.endMs)) : (slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots));
         let inner = '<span class="blockLabel">' + nm.replace(/</g, "&lt;") + "</span>";
-        if (hPx >= 22) inner += '<span class="blockTime">' + slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots) + "</span>";
+        if (hPx >= 22) inner += '<span class="blockTime">' + tLabel + "</span>";
         inner += '<button class="blockX" style="color:' + (ink === "#ffffff" ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.5)") + '">&times;</button>';
         const handleH = Math.max(4, Math.min(COARSE ? 14 : 9, Math.floor(hPx / 3)));
         inner += '<div class="resizeHandle top" style="height:' + handleH + 'px;"></div><div class="resizeHandle bot" style="height:' + handleH + 'px;"></div>';
         el.innerHTML = inner;
-        el.title = nm + "  " + slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots) + " (" + fmtH(b.lenSlots / SPH) + "h)";
+        el.title = nm + "  " + tLabel + " (" + (isAct ? fmtHM((b.endMs - b.startMs) / 3600000) : fmtH(b.lenSlots / SPH) + "h") + ")";
         el.querySelector(".blockX").addEventListener("pointerdown", (e) => { e.stopPropagation(); snap(); removeBlock(b.id); if (selectedId === b.id) selectedId = null; commit(); });
         el.querySelector(".resizeHandle.top").addEventListener("pointerdown", (e) => { e.stopPropagation(); e.preventDefault(); startBlockDrag(e, b, "resizeTop"); });
         el.querySelector(".resizeHandle.bot").addEventListener("pointerdown", (e) => { e.stopPropagation(); e.preventDefault(); startBlockDrag(e, b, "resize"); });
@@ -1191,9 +1228,9 @@ if (IS_BROWSER) (function () {
     b.day = DAYS[di];
     if (b.kind === "actual") {
       const dateStr = ymd(dateOfCell(state.anchorMonday, state.currentWeek, di));
-      let s = msAt(dateStr, sMin), e = msAt(dateStr, eMin); if (e <= s) e = s + 15 * 60000;
+      let s = msAt(dateStr, sMin), e = msAt(dateStr, eMin); if (e <= s) e = s + 60000;
       b.date = dateStr; b.startMs = s; b.endMs = e;
-      const ss = sessionToSlots(s, e); b.startSlot = ss.startSlot; b.lenSlots = ss.lenSlots;
+      const ss = actualSlots(s, e); b.startSlot = ss.startSlot; b.lenSlots = ss.lenSlots;
     } else {
       let ssl = Math.round(sMin / SLOT_MIN), esl = Math.round(eMin / SLOT_MIN); if (esl <= ssl) esl = ssl + 1;
       ssl = Math.max(0, Math.min(ssl, TOTAL_SLOTS - 1)); esl = Math.max(ssl + 1, Math.min(esl, TOTAL_SLOTS));
@@ -1214,16 +1251,16 @@ if (IS_BROWSER) (function () {
       for (const ds of dates) { const h = (rep.days[ds] && rep.days[ds].byCat[c.id]) || 0; rowTotal += h; cells.push(h); }
       if (rowTotal <= 0.0001) continue; any = true;
       html += '<tr><td class="rname"><span class="budSwatch" style="background:' + c.color + '"></span>' + c.name.replace(/</g, "&lt;") + "</td>";
-      for (const h of cells) html += "<td>" + (h > 0.0001 ? fmtH(h) : "") + "</td>";
-      html += '<td class="rtot">' + fmtH(rowTotal) + "</td></tr>";
+      for (const h of cells) html += "<td>" + (h > 0.0001 ? fmtHM(h) : "") + "</td>";
+      html += '<td class="rtot">' + fmtHM(rowTotal) + "</td></tr>";
     }
     let weekTot = 0, dayHtml = "";
-    for (const ds of dates) { const h = (rep.days[ds] && rep.days[ds].total) || 0; weekTot += h; dayHtml += "<td>" + (h > 0.0001 ? fmtH(h) : "") + "</td>"; }
-    html += '<tr class="rfoot"><td>All tasks</td>' + dayHtml + "<td>" + fmtH(weekTot) + "</td></tr></tbody></table>";
-    const gW = { work: 0, home: 0, fruit: 0 }, gA = { work: 0, home: 0, fruit: 0 };
+    for (const ds of dates) { const h = (rep.days[ds] && rep.days[ds].total) || 0; weekTot += h; dayHtml += "<td>" + (h > 0.0001 ? fmtHM(h) : "") + "</td>"; }
+    html += '<tr class="rfoot"><td>All tasks</td>' + dayHtml + "<td>" + fmtHM(weekTot) + "</td></tr></tbody></table>";
+    const gW = {}, gA = {};
     for (const ds in rep.days) { const inWk = dates.indexOf(ds) >= 0; const bg = rep.days[ds].byGroup; for (const g in bg) { gA[g] = (gA[g] || 0) + bg[g]; if (inWk) gW[g] = (gW[g] || 0) + bg[g]; } }
     let gs = "<h3>By group</h3>" + '<table class="repTable"><thead><tr><th>Group</th><th>This week</th><th>All weeks</th></tr></thead><tbody>';
-    for (const g of ["work", "home", "fruit"]) gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtH(gW[g] || 0) + "</td><td>" + fmtH(gA[g] || 0) + "</td></tr>";
+    for (const g of GROUP_ORDER) { if (!(gA[g] > 0.0001)) continue; gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtHM(gW[g] || 0) + "</td><td>" + fmtHM(gA[g] || 0) + "</td></tr>"; }
     gs += "</tbody></table>";
     $("reportsBody").innerHTML = (any ? html : '<p class="muted">No tracked time in this week yet — press ▶ on a task to start the timer.</p>') + gs;
   }
@@ -1363,12 +1400,13 @@ if (IS_BROWSER) (function () {
     const W = state.weeks.length;
     let html = '<div class="budWrap"><table class="budTable"><thead><tr><th>Group</th><th>Task</th>';
     for (let i = 0; i < W; i++) html += "<th>W" + (i + 1) + "</th>";
-    html += "<th></th></tr></thead><tbody>";
+    html += "<th>Done</th><th></th></tr></thead><tbody>";
     for (const c of state.categories) {
-      html += '<tr data-id="' + c.id + '"><td><select class="bgroup">' +
-        ["work", "home", "fruit"].map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") +
+      html += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '><td><select class="bgroup">' +
+        GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") +
         '</select></td><td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
       for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="number" step="0.25" min="0" value="' + weekBudget(c, i) + '"></td>';
+      html += '<td><input type="checkbox" class="barch" title="Hide from the list (finished one-off task)"' + (c.archived ? " checked" : "") + "></td>";
       html += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
     }
     html += "</tbody></table></div>";
@@ -1381,6 +1419,7 @@ if (IS_BROWSER) (function () {
       const nm = tr.querySelector(".tname");
       nm.addEventListener("change", () => { const v = nm.value.trim(); if (!v) { nm.value = cat.name; return; } if (nameTaken(v, cat.id)) { toast('A task named "' + v + '" already exists.'); nm.value = cat.name; return; } snap(); cat.name = v; commit(); });
       tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = Math.max(0, +inp.value || 0); commit(); }); });
+      tr.querySelector(".barch").addEventListener("change", (e) => { snap(); cat.archived = e.target.checked; if (cat.archived && state.timer && state.timer.catId === id) stopTimer(); commit(); renderBudgets(); });
       tr.querySelector(".budDel").addEventListener("click", () => {
         const has = state.weeks.some((w) => w.blocks.some((b) => b.catId === id));
         if (has && !confirm('Delete "' + cat.name + '" and its placed blocks in all weeks?')) return;
