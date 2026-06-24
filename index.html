@@ -875,10 +875,17 @@ if (IS_BROWSER) (function () {
     const el = $("stickyNote"), body = $("noteBody");
     if (!state.note) state.note = defaultNote();
     const nt = state.note;
-    if (nt.x == null) { nt.w = nt.w || 230; nt.x = Math.max(16, (window.innerWidth || 800) - nt.w - 28); nt.y = 138; }
+    const vw = window.innerWidth || 800, vh = window.innerHeight || 600;
+    if (nt.w == null) nt.w = 230;
+    if (nt.h == null) nt.h = 150;
+    nt.w = Math.min(nt.w, Math.max(150, vw - 20));
+    nt.h = Math.min(nt.h, Math.max(92, vh - 20));
+    if (nt.x == null) nt.x = Math.max(12, vw - nt.w - 28);
+    if (nt.y == null) nt.y = 138;
+    nt.x = Math.max(0, Math.min(nt.x, vw - 60));   // keep on-screen
+    nt.y = Math.max(0, Math.min(nt.y, vh - 44));
     el.style.left = nt.x + "px"; el.style.top = nt.y + "px";
-    if (nt.w) el.style.width = nt.w + "px";
-    if (nt.h) el.style.height = nt.h + "px";
+    el.style.width = nt.w + "px"; el.style.height = nt.h + "px";
     el.classList.toggle("open", !!nt.open);
     if (force || document.activeElement !== body) body.innerHTML = nt.html || "";
   }
