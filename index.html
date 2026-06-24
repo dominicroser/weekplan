@@ -1115,15 +1115,14 @@ if (IS_BROWSER) (function () {
       el.style.borderLeftColor = cat.color;
       el.innerHTML =
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
-        '<button class="catX" title="Delete category">&times;</button>' +
         '<div class="poolTop">' + (usage.miss[cat.id] ? '<span class="missStar" title="Planned earlier this week but no time tracked">★</span> ' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
         '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — equals the hours you’ve scheduled">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><span class="goalVal">' + fmtHM(bw) + '</span><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set the weekly goal to done + planned">=</button>') + "</div>" +
         (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })();
       const nameIn = el.querySelector(".nameInput");
-      const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe"), xBtn = el.querySelector(".catX");
-      for (const inp of [nameIn, stripe, xBtn]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
+      const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe");
+      for (const inp of [nameIn, stripe]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
       el.querySelectorAll(".hStep").forEach((b) => { b.addEventListener("pointerdown", (e) => e.stopPropagation()); b.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, Math.round((weekBudget(cat, cw) + (+b.dataset.d) * 0.25) * 100) / 100); commit(); }); });
       const gset = el.querySelector(".goalSet"); if (gset) { gset.addEventListener("pointerdown", (e) => e.stopPropagation()); gset.addEventListener("click", (e) => { e.stopPropagation(); snap(); let exactAct = 0; for (const ds of wkDates) { const dd = rep.days[ds]; if (dd && dd.byCat[cat.id]) exactAct += dd.byCat[cat.id]; } const uExact = exactAct + (u - Math.floor(exactAct * 4) / 4); ensureBudgets(state.weeks[cw])[cat.id] = Math.round(uExact * 60) / 60; commit(); }); }
       nameIn.addEventListener("change", () => {
@@ -1135,15 +1134,6 @@ if (IS_BROWSER) (function () {
       nameIn.addEventListener("keydown", (e) => { if (e.key === "Enter") nameIn.blur(); });
       colorIn.addEventListener("input", () => { cat.color = colorIn.value; renderAll(); });
       colorIn.addEventListener("change", () => { snap(); commit(); });
-      xBtn.addEventListener("click", () => {
-        const has = state.weeks.some((w) => w.blocks.some((b) => b.catId === cat.id));
-        if (has && !confirm('Delete "' + cat.name + '" and its placed blocks in all weeks?')) return;
-        snap();
-        state.categories = state.categories.filter((c) => c.id !== cat.id);
-        state.weeks.forEach((w) => { w.blocks = w.blocks.filter((b) => b.catId !== cat.id); if (w.budgets) delete w.budgets[cat.id]; });
-        if (armedCat === cat.id) armedCat = null;
-        commit();
-      });
       if (!isDone) {
         el.addEventListener("pointerdown", (e) => { if (COARSE) return; if (e.target.closest(".playBtn")) return; e.preventDefault(); startNewDrag(e, cat); });
         el.addEventListener("click", (e) => { if (!COARSE) return; if (e.target.closest(".playBtn")) return; armedCat = armedCat === cat.id ? null : cat.id; renderPool(); if (armedCat) toast("Now tap the grid where “" + cat.name + "” should go"); });
