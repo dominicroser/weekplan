@@ -163,6 +163,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .budTable { border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; }
 .budTable th, .budTable td { border: 1px solid var(--line); padding: 3px 5px; text-align: center; }
 .budTable th { background: var(--panel); font-weight: 600; color: var(--ink2); position: sticky; top: 0; z-index: 1; }
+.budTable th[data-sort] { cursor: pointer; user-select: none; white-space: nowrap; }
+.budTable th[data-sort]:hover { background: var(--panel2); }
 .budTable td.name { text-align: left; white-space: nowrap; }
 .budSwatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: middle; margin-right: 5px; }
 .budTable input { width: 50px; border: 1px solid transparent; background: transparent; font: inherit; text-align: center; border-radius: 4px; color: var(--ink); }
@@ -401,6 +403,7 @@ const OLD_KEY = "weekly-planner-v2";
 const CFG_KEY = "weekly-planner-sync";
 const EVENT_COLOR = "#d9544f"; // brighter red — meetings and the Termin group
 const GREY = "#dce0e5";        // None group (light grey)
+const ZUG_COLOR = "#eaff00";   // bright neon yellow — Zug group
 const PINK = "#d6336c";
 
 const PALETTE = [
@@ -467,13 +470,15 @@ const GROUPS = {
   fruit: { label: "Fruit", palette: ["#1e7a46","#52b35e","#2b8a3e","#74c365","#157f4a","#43a047","#6abf69","#2f9e44","#3f7d3a","#86c97a"] },
   none:  { label: "None",  palette: [GREY] },
   termin:{ label: "Termin", palette: [EVENT_COLOR] },
+  zug:   { label: "Zug",   palette: [ZUG_COLOR] },
 };
-const GROUP_ORDER = ["work", "home", "fruit", "none", "termin"];
+const GROUP_ORDER = ["work", "home", "fruit", "none", "termin", "zug"];
 const GROUP_HUE = { work: 225, home: 42, fruit: 135 };
 function groupColorFor(group, cats, exceptId) {
   const g = GROUPS[group] ? group : "work";
   if (g === "none") return GREY;          // light grey
   if (g === "termin") return EVENT_COLOR; // muted red (same as meetings)
+  if (g === "zug") return ZUG_COLOR;      // neon yellow
   const used = new Set(cats.filter((c) => c.id !== exceptId && (c.group || "work") === g).map((c) => (c.color || "").toLowerCase()));
   for (const col of GROUPS[g].palette) if (!used.has(col.toLowerCase())) return col;
   const L = 40 + (used.size * 9) % 32;
@@ -818,7 +823,7 @@ function applySheetWeeks(state, parsed) {
 function migrate(s) {
   if (!s) return null;
   if (s.weeks && Array.isArray(s.weeks)) {
-    (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; if (c.group === "termin") c.color = EVENT_COLOR; if (c.group === "none") c.color = GREY; });
+    (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; if (c.group === "termin") c.color = EVENT_COLOR; if (c.group === "none") c.color = GREY; if (c.group === "zug") c.color = ZUG_COLOR; });
     s.weeks.forEach((w) => { w.blocks = (w.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0); w.blocks.forEach((b) => { if (!b.kind) b.kind = "plan"; }); if (!w.budgets) w.budgets = {}; });
     if (!s.weeks.length) s.weeks = [{ id: "w" + Date.now(), blocks: [], budgets: {} }];
     s.currentWeek = Math.max(0, Math.min(s.currentWeek || 0, s.weeks.length - 1));
@@ -842,6 +847,7 @@ if (!IS_BROWSER && typeof module !== "undefined") {
 if (IS_BROWSER) (function () {
   let state = { version: 3, categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)), weeks: [{ id: "w" + Date.now(), blocks: [], budgets: {} }], currentWeek: 0, nextId: 1, note: defaultNote(), anchorMonday: ymd(mondayOf(new Date())), timer: null, snapshot: null };
   let timerTick = null;
+  let budSort = { key: null, dir: 1 };
   let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null, previewEl = null;
 
   const $ = (id) => document.getElementById(id);
@@ -1103,15 +1109,17 @@ if (IS_BROWSER) (function () {
         el.addEventListener("pointerdown", (e) => { if (COARSE) return; if (e.target.closest(".playBtn")) return; e.preventDefault(); startNewDrag(e, cat); });
         el.addEventListener("click", (e) => { if (!COARSE) return; if (e.target.closest(".playBtn")) return; armedCat = armedCat === cat.id ? null : cat.id; renderPool(); if (armedCat) toast("Now tap the grid where “" + cat.name + "” should go"); });
       }
-      const isRun = state.timer && state.timer.catId === cat.id;
-      const play = document.createElement("button");
-      play.className = "playBtn" + (isRun ? " run" : "");
-      play.textContent = isRun ? "⏸" : "▶";
-      play.title = isRun ? "Stop timer" : "Start timer";
-      play.addEventListener("pointerdown", (e) => e.stopPropagation());
-      play.addEventListener("click", (e) => { e.stopPropagation(); toggleTimer(cat.id); });
-      el.appendChild(play);
-      if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.title = "Click to adjust the start time"; re.textContent = fmtDur(Date.now() - state.timer.startMs); re.addEventListener("pointerdown", (e) => e.stopPropagation()); re.addEventListener("click", (e) => { e.stopPropagation(); adjustTimerStart(); }); el.appendChild(re); }
+      if (!cat.noTrack) {
+        const isRun = state.timer && state.timer.catId === cat.id;
+        const play = document.createElement("button");
+        play.className = "playBtn" + (isRun ? " run" : "");
+        play.textContent = isRun ? "⏸" : "▶";
+        play.title = isRun ? "Stop timer" : "Start timer";
+        play.addEventListener("pointerdown", (e) => e.stopPropagation());
+        play.addEventListener("click", (e) => { e.stopPropagation(); toggleTimer(cat.id); });
+        el.appendChild(play);
+        if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.title = "Click to adjust the start time"; re.textContent = fmtDur(Date.now() - state.timer.startMs); re.addEventListener("pointerdown", (e) => e.stopPropagation()); re.addEventListener("click", (e) => { e.stopPropagation(); adjustTimerStart(); }); el.appendChild(re); }
+      }
       pool.appendChild(el);
     };
     tier1.forEach((c) => renderItem(c, 1));
@@ -1126,7 +1134,7 @@ if (IS_BROWSER) (function () {
       let base = "New task", name = base, n = 2;
       while (nameTaken(name, null)) name = base + " " + (n++);
       const ng = "work";
-      state.categories.push({ id: "cat" + Date.now(), name, hours: 1, group: ng, color: groupColorFor(ng, state.categories, null) });
+      state.categories.push({ id: "cat" + Date.now(), name, hours: 0, group: ng, color: groupColorFor(ng, state.categories, null) });
       commit();
       for (const i of pool.querySelectorAll(".poolItem .nameInput")) if (i.value === name) { i.focus(); i.select(); break; }
     });
@@ -1392,7 +1400,7 @@ if (IS_BROWSER) (function () {
     const gW = {}, gA = {};
     for (const ds in rep.days) { const inWk = dates.indexOf(ds) >= 0; const bg = rep.days[ds].byGroup; for (const g in bg) { gA[g] = (gA[g] || 0) + bg[g]; if (inWk) gW[g] = (gW[g] || 0) + bg[g]; } }
     let gs = "<h3>By group</h3>" + '<table class="repTable"><thead><tr><th>Group</th><th>This week</th><th>All weeks</th></tr></thead><tbody>';
-    for (const g of ["home", "fruit", "work", "none", "termin"]) { if (!(gA[g] > 0.0001)) continue; gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtHM(gW[g] || 0) + "</td><td>" + fmtHM(gA[g] || 0) + "</td></tr>"; }
+    for (const g of ["home", "fruit", "work", "none", "termin", "zug"]) { if (!(gA[g] > 0.0001)) continue; gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtHM(gW[g] || 0) + "</td><td>" + fmtHM(gA[g] || 0) + "</td></tr>"; }
     gs += '<tr class="rfoot"><td class="rname">Work + Fruit</td><td>' + fmtHM((gW.work || 0) + (gW.fruit || 0)) + "</td><td>" + fmtHM((gA.work || 0) + (gA.fruit || 0)) + "</td></tr>";
     gs += "</tbody></table>";
     $("reportsBody").innerHTML = (any ? html : '<p class="muted">No tracked time in this week yet — press ▶ on a task to start the timer.</p>') + gs;
@@ -1563,16 +1571,34 @@ if (IS_BROWSER) (function () {
   const budDlg = $("budgetsDialog");
   function renderBudgets() {
     const W = state.weeks.length;
-    let html = '<div class="budWrap"><table class="budTable"><thead><tr><th>Group</th><th>Task</th>';
-    for (let i = 0; i < W; i++) html += "<th>W" + (i + 1) + "</th>";
-    html += "<th>Def&nbsp;min</th><th>Auto</th><th>Done</th><th></th></tr></thead><tbody>";
-    for (const c of state.categories) {
+    const gi = (g) => { const i = GROUP_ORDER.indexOf(g || "work"); return i < 0 ? 99 : i; };
+    const arrow = (k) => budSort.key === k ? (budSort.dir > 0 ? " ▲" : " ▼") : "";
+    let html = '<div class="budWrap"><table class="budTable"><thead><tr><th data-sort="group">Group' + arrow("group") + '</th><th data-sort="name">Task' + arrow("name") + "</th>";
+    for (let i = 0; i < W; i++) html += '<th data-sort="w' + i + '">W' + (i + 1) + arrow("w" + i) + "</th>";
+    html += '<th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th data-sort="done">Done' + arrow("done") + "</th><th></th></tr></thead><tbody>";
+    let list = state.categories.slice();
+    if (budSort.key) {
+      const d = budSort.dir, nameCmp = (a, b) => (a.name || "").localeCompare(b.name || "");
+      list.sort((a, b) => {
+        let p = 0; const k = budSort.key;
+        if (k === "group") p = gi(a.group) - gi(b.group);
+        else if (k === "name") p = nameCmp(a, b);
+        else if (k === "def") p = (a.defaultMin || 0) - (b.defaultMin || 0);
+        else if (k === "auto") p = (a.auto ? 1 : 0) - (b.auto ? 1 : 0);
+        else if (k === "track") p = (a.noTrack ? 1 : 0) - (b.noTrack ? 1 : 0);
+        else if (k === "done") p = (a.archived ? 1 : 0) - (b.archived ? 1 : 0);
+        else if (k[0] === "w") { const wi = +k.slice(1); p = weekBudget(a, wi) - weekBudget(b, wi); }
+        return p ? p * d : nameCmp(a, b); // secondary sort: always alphabetical
+      });
+    }
+    for (const c of list) {
       html += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '><td><select class="bgroup">' +
         GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") +
         '</select></td><td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
       for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="number" step="0.25" min="0"' + (c.auto ? " readonly" : "") + ' value="' + weekBudget(c, i) + '"></td>';
       html += '<td><input class="bdef" type="number" step="15" min="0" placeholder="max" title="Default block length in minutes when you drag this task onto the grid — leave empty to drag the whole week’s hours" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
       html += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
+      html += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
       html += '<td><input type="checkbox" class="barch" title="Hide from the list (finished one-off task)"' + (c.archived ? " checked" : "") + "></td>";
       html += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
     }
@@ -1588,6 +1614,7 @@ if (IS_BROWSER) (function () {
       tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = Math.max(0, +inp.value || 0); commit(); }); });
       tr.querySelector(".bdef").addEventListener("change", (e) => { snap(); const v = e.target.value.trim(); if (v === "") delete cat.defaultMin; else cat.defaultMin = Math.max(0, +v || 0); commit(); });
       tr.querySelector(".bauto").addEventListener("change", (e) => { snap(); cat.auto = e.target.checked; commit(); renderBudgets(); });
+      tr.querySelector(".btrack").addEventListener("change", (e) => { snap(); cat.noTrack = !e.target.checked; if (cat.noTrack && state.timer && state.timer.catId === cat.id) stopTimer(); commit(); renderBudgets(); });
       tr.querySelector(".barch").addEventListener("change", (e) => { snap(); cat.archived = e.target.checked; if (cat.archived && state.timer && state.timer.catId === id) stopTimer(); commit(); renderBudgets(); });
       tr.querySelector(".budDel").addEventListener("click", () => {
         const has = state.weeks.some((w) => w.blocks.some((b) => b.catId === id));
@@ -1597,12 +1624,13 @@ if (IS_BROWSER) (function () {
         commit(); renderBudgets();
       });
     });
+    wrap.querySelectorAll("th[data-sort]").forEach((th) => th.addEventListener("click", () => { const k = th.dataset.sort; if (budSort.key === k) budSort.dir = -budSort.dir; else { budSort.key = k; budSort.dir = 1; } renderBudgets(); }));
   }
   $("budgetsBtn").addEventListener("click", () => { renderBudgets(); budDlg.showModal(); });
   $("budClose").addEventListener("click", () => budDlg.close());
   $("budAddTask").addEventListener("click", () => {
     snap(); let base = "New task", name = base, n = 2; while (nameTaken(name, null)) name = base + " " + (n++);
-    const g = "work"; state.categories.push({ id: "cat" + Date.now(), name, hours: 1, group: g, color: groupColorFor(g, state.categories, null) });
+    const g = "work"; state.categories.push({ id: "cat" + Date.now(), name, hours: 0, group: g, color: groupColorFor(g, state.categories, null) });
     commit(); renderBudgets();
   });
   $("budAddWeek").addEventListener("click", () => { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); commit(); renderBudgets(); });
