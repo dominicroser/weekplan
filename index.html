@@ -177,6 +177,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .playBtn.run { background: var(--good); color: #fff; border-color: var(--good); }
 .runElapsed { position: absolute; right: 34px; bottom: 9px; font-size: 10.5px; font-family: 'Inter', sans-serif; color: var(--good); font-weight: 600; cursor: pointer; }
 .poolTrack { font-size: 10px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
+.poolDivider { height: 1px; background: rgba(0,0,0,0.16); margin: 6px 2px; flex-shrink: 0; }
+.missStar { color: #e0a800; font-size: 12px; }
+@media (max-width: 760px) { .poolDivider { width: 1px; height: auto; margin: 0 3px; align-self: stretch; } }
 .budTable tr.arch td { opacity: 0.5; }
 .repTable { border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; width: 100%; margin-top: 4px; }
 .repTable th, .repTable td { border: 1px solid var(--line); padding: 3px 6px; text-align: center; }
@@ -366,7 +369,8 @@ const LABEL_W = 40;
 const STORAGE_KEY = "weekly-planner-v3";
 const OLD_KEY = "weekly-planner-v2";
 const CFG_KEY = "weekly-planner-sync";
-const EVENT_COLOR = "#c2c8cf"; // light grey — meetings and None/Termin groups
+const EVENT_COLOR = "#c96a6a"; // muted red — meetings and the Termin group
+const GREY = "#c2c8cf";        // None group
 const PINK = "#d6336c";
 
 const PALETTE = [
@@ -431,14 +435,15 @@ const GROUPS = {
   work:  { label: "Work",  palette: ["#1c4e80","#3b82c4","#274bb5","#6aa7e0","#4b3fb0","#7e5bd0","#2b6cb0","#9b6fd6","#3a52a3","#5fa0e0"] },
   home:  { label: "Home",  palette: ["#e6a700","#f6c453","#e8730c","#f59f00","#c98a16","#fab234","#d9600a","#eac54a","#f0851e","#b07d10"] },
   fruit: { label: "Fruit", palette: ["#1e7a46","#52b35e","#2b8a3e","#74c365","#157f4a","#43a047","#6abf69","#2f9e44","#3f7d3a","#86c97a"] },
-  none:  { label: "None",  palette: [EVENT_COLOR] },
+  none:  { label: "None",  palette: [GREY] },
   termin:{ label: "Termin", palette: [EVENT_COLOR] },
 };
 const GROUP_ORDER = ["work", "home", "fruit", "none", "termin"];
 const GROUP_HUE = { work: 225, home: 42, fruit: 135 };
 function groupColorFor(group, cats, exceptId) {
   const g = GROUPS[group] ? group : "work";
-  if (g === "none" || g === "termin") return EVENT_COLOR; // always light grey
+  if (g === "none") return GREY;          // light grey
+  if (g === "termin") return EVENT_COLOR; // muted red (same as meetings)
   const used = new Set(cats.filter((c) => c.id !== exceptId && (c.group || "work") === g).map((c) => (c.color || "").toLowerCase()));
   for (const col of GROUPS[g].palette) if (!used.has(col.toLowerCase())) return col;
   const L = 40 + (used.size * 9) % 32;
@@ -546,6 +551,38 @@ function buildReport(state) {
     day.byGroup[g] = (day.byGroup[g] || 0) + hrs;
   }
   return { days, catName, catGroup };
+}
+// per-week "assigned" usage:
+//   used = floor15( actual on past + today ) + planned future (today's not-yet-elapsed + future days)
+//   miss = tasks whose TODAY plan has already elapsed with nothing tracked today
+function weekUsage(state, weekIdx) {
+  const anchor = state.anchorMonday;
+  const now = new Date(), todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const nowSlot = (now.getHours() * 60 + now.getMinutes()) / SLOT_MIN;
+  const rep = buildReport(state);
+  const wblocks = (state.weeks[weekIdx] && state.weeks[weekIdx].blocks) || [];
+  const actualRaw = {}, plannedFut = {}, miss = {};
+  for (let d = 0; d < DAYS.length; d++) {
+    const dt = dateOfCell(anchor, weekIdx, d), ds = ymd(dt);
+    const cmp = dt.getTime() - todayMid.getTime();
+    const byc = (rep.days[ds] && rep.days[ds].byCat) || {};
+    if (cmp < 0) {                       // past day → all actual
+      for (const cid in byc) actualRaw[cid] = (actualRaw[cid] || 0) + byc[cid];
+    } else if (cmp === 0) {              // today → actual so far + planned future portion
+      for (const cid in byc) actualRaw[cid] = (actualRaw[cid] || 0) + byc[cid];
+      for (const b of wblocks) {
+        if (b.day !== DAYS[d] || b.event || b.kind === "actual") continue;
+        const e = b.startSlot + b.lenSlots, futStart = Math.max(b.startSlot, nowSlot);
+        if (e > futStart) plannedFut[b.catId] = (plannedFut[b.catId] || 0) + (e - futStart) / 4;
+        if (e <= nowSlot && !(byc[b.catId] > 0)) miss[b.catId] = true; // elapsed today, nothing tracked
+      }
+    } else {                            // future day → all planned
+      for (const b of wblocks) if (b.day === DAYS[d] && !b.event && b.kind !== "actual") plannedFut[b.catId] = (plannedFut[b.catId] || 0) + b.lenSlots / 4;
+    }
+  }
+  const used = {}, ids = new Set(Object.keys(actualRaw).concat(Object.keys(plannedFut)));
+  ids.forEach((cid) => { used[cid] = Math.floor((actualRaw[cid] || 0) * 4) / 4 + (plannedFut[cid] || 0); });
+  return { used: used, miss: miss };
 }
 
 /* ── Time range ── */
@@ -739,7 +776,7 @@ function applySheetWeeks(state, parsed) {
 function migrate(s) {
   if (!s) return null;
   if (s.weeks && Array.isArray(s.weeks)) {
-    (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; });
+    (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; if (c.group === "termin") c.color = EVENT_COLOR; if (c.group === "none") c.color = GREY; });
     s.weeks.forEach((w) => { w.blocks = (w.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0); w.blocks.forEach((b) => { if (!b.kind) b.kind = "plan"; }); if (!w.budgets) w.budgets = {}; });
     if (!s.weeks.length) s.weeks = [{ id: "w" + Date.now(), blocks: [], budgets: {} }];
     s.currentWeek = Math.max(0, Math.min(s.currentWeek || 0, s.weeks.length - 1));
@@ -756,7 +793,7 @@ function migrate(s) {
 }
 
 if (!IS_BROWSER && typeof module !== "undefined") {
-  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, mergeAdjacent, usedByCat, fmtH, fmtHM, slotLabel, textOn, pickColor, groupColorFor, GROUPS, GROUP_ORDER, parseCSV, csvToRows, applySheet, csvToWeeks, applySheetWeeks, migrate, defaultNote, ymd, parseYMD, mondayOf, weekDayIdx, cellForDate, dateOfCell, sessionToSlots, actualSlots, msAt, buildReport, TOTAL_SLOTS, DAYS };
+  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, mergeAdjacent, usedByCat, fmtH, fmtHM, slotLabel, textOn, pickColor, groupColorFor, GROUPS, GROUP_ORDER, parseCSV, csvToRows, applySheet, csvToWeeks, applySheetWeeks, migrate, defaultNote, ymd, parseYMD, mondayOf, weekDayIdx, cellForDate, dateOfCell, sessionToSlots, actualSlots, msAt, buildReport, weekUsage, TOTAL_SLOTS, DAYS };
 }
 
 /* ═══════════════ Browser app ═══════════════ */
@@ -907,24 +944,30 @@ if (IS_BROWSER) (function () {
   /* ── pool ── */
   function weekPlaced(idx) { const u = usedByCat(state.weeks[idx].blocks); return Object.values(u).reduce((a, b) => a + b, 0); }
   function renderPool() {
-    const used = usedByCat(curBlocks());
     const cats = state.categories.filter((c) => !c.archived);
     const eps = 0.001;
     const cw = state.currentWeek;
     const rep = buildReport(state);
+    const usage = weekUsage(state, cw);   // past actual (floored to 15) + today/future planned
+    const used = usage.used;
     const wkDates = []; for (let d = 0; d < ND; d++) wkDates.push(ymd(dateOfCell(state.anchorMonday, cw, d)));
-    const todayStr = ymd(new Date()), todayInWeek = wkDates.indexOf(todayStr) >= 0;
+    const todayStr = ymd(new Date()), todayInWeek = wkDates.indexOf(todayStr) >= 0, todayIdx = wkDates.indexOf(todayStr);
     const trackWeek = (id) => { let s = 0; for (const ds of wkDates) { const dd = rep.days[ds]; if (dd && dd.byCat[id]) s += dd.byCat[id]; } return s; };
     const trackToday = (id) => { const dd = rep.days[todayStr]; return dd && dd.byCat[id] ? dd.byCat[id] : 0; };
-    const under = cats.filter((c) => weekBudget(c, cw) - (used[c.id] || 0) > eps);
-    const over = cats.filter((c) => (used[c.id] || 0) - weekBudget(c, cw) > eps);
-    const exact = cats.filter((c) => Math.abs(weekBudget(c, cw) - (used[c.id] || 0)) <= eps);
+    const rema = (c) => Math.round((weekBudget(c, cw) - (used[c.id] || 0)) * 100) / 100;
+    // tier 1: tasks planned for the current day
+    const todayCatIds = new Set();
+    if (todayIdx >= 0) for (const b of curBlocks()) if (b.day === DAYS[todayIdx] && !b.event && b.kind !== "actual") todayCatIds.add(b.catId);
+    const tier1 = cats.filter((c) => todayCatIds.has(c.id));
+    const restCats = cats.filter((c) => !todayCatIds.has(c.id));
+    const tier2 = restCats.filter((c) => weekBudget(c, cw) > eps && rema(c) > eps);            // not enough assigned
+    const tier3 = restCats.filter((c) => weekBudget(c, cw) > eps && rema(c) <= eps);           // enough / over
     pool.innerHTML = "";
 
     const totalBudget = cats.reduce((a, c) => a + weekBudget(c, cw), 0);
-    const thisPlaced = Object.values(used).reduce((a, b) => a + b, 0);
+    const thisPlaced = cats.reduce((a, c) => a + (used[c.id] || 0), 0);
     let allBudget = 0, allPlaced = 0;
-    for (let i = 0; i < state.weeks.length; i++) { allPlaced += weekPlaced(i); allBudget += cats.reduce((a, c) => a + weekBudget(c, i), 0); }
+    for (let i = 0; i < state.weeks.length; i++) { const uu = weekUsage(state, i).used; allPlaced += cats.reduce((a, c) => a + (uu[c.id] || 0), 0); allBudget += cats.reduce((a, c) => a + weekBudget(c, i), 0); }
     const W = state.weeks.length;
     const summary = document.createElement("div");
     summary.className = "poolSummary";
@@ -941,7 +984,8 @@ if (IS_BROWSER) (function () {
     }
     pool.appendChild(summary);
 
-    for (const cat of under.concat(over).concat(exact)) {
+    const divider = () => { const dv = document.createElement("div"); dv.className = "poolDivider"; pool.appendChild(dv); };
+    const renderItem = (cat, faded) => {
       const bw = weekBudget(cat, cw);
       const u = used[cat.id] || 0;
       const remaining = Math.round((bw - u) * 100) / 100;
@@ -949,7 +993,7 @@ if (IS_BROWSER) (function () {
       const isDone = Math.abs(bw - u) <= eps;
       const pct = bw > 0 ? Math.min(100, (u / bw) * 100) : 100;
       const el = document.createElement("div");
-      el.className = "poolItem" + (isDone ? " done" : "") + (isOver ? " over" : "") + (armedCat === cat.id ? " armed" : "");
+      el.className = "poolItem" + (faded ? " done" : "") + (isOver ? " over" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
       el.style.borderLeftColor = cat.color;
       const hoursTxt = isOver ? fmtH(u - bw) + "h over" : isDone ? "✓ done" : fmtH(remaining) + "h left";
@@ -957,7 +1001,7 @@ if (IS_BROWSER) (function () {
       el.innerHTML =
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
         '<button class="catX" title="Delete category">&times;</button>' +
-        '<div class="poolTop"><input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
+        '<div class="poolTop">' + (usage.miss[cat.id] ? '<span class="missStar" title="Planned earlier this week but no time tracked">★</span> ' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (isOver ? "isover" : "") + '" style="width:' + pct + "%;background:" + cat.color + ';"></div></div>' +
         '<div class="poolMeta">' + (isOver ? '<span class="warn">⚠</span>' : "") + fmtH(u) + 'h of <input class="hoursInput" type="number" step="0.25" min="0" value="' + bw + '">h</div>' +
@@ -998,7 +1042,12 @@ if (IS_BROWSER) (function () {
       el.appendChild(play);
       if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.title = "Click to adjust the start time"; re.textContent = fmtDur(Date.now() - state.timer.startMs); re.addEventListener("pointerdown", (e) => e.stopPropagation()); re.addEventListener("click", (e) => { e.stopPropagation(); adjustTimerStart(); }); el.appendChild(re); }
       pool.appendChild(el);
-    }
+    };
+    tier1.forEach((c) => renderItem(c, false));
+    if (tier1.length && (tier2.length || tier3.length)) divider();
+    tier2.forEach((c) => renderItem(c, false));
+    if (tier2.length && tier3.length) divider();
+    tier3.forEach((c) => renderItem(c, rema(c) <= eps && !((used[c.id] || 0) - weekBudget(c, cw) > eps)));
     const add = document.createElement("button");
     add.id = "addCat"; add.textContent = "+ Add task";
     add.addEventListener("click", () => {
@@ -1006,7 +1055,7 @@ if (IS_BROWSER) (function () {
       let base = "New task", name = base, n = 2;
       while (nameTaken(name, null)) name = base + " " + (n++);
       const ng = "work";
-      state.categories.push({ id: "cat" + Date.now(), name, hours: 1, group: ng, color: groupColorFor(ng, state.categories, null) });
+      state.categories.push({ id: "cat" + Date.now(), name, hours: 1, group: ng, defaultMin: 60, color: groupColorFor(ng, state.categories, null) });
       commit();
       for (const i of pool.querySelectorAll(".poolItem .nameInput")) if (i.value === name) { i.focus(); i.select(); break; }
     });
@@ -1015,7 +1064,7 @@ if (IS_BROWSER) (function () {
 
   /* ── blocks ── */
   function blockName(b, catById) { return b.event ? (b.name || "Meeting") : (catById[b.catId] ? catById[b.catId].name : "?"); }
-  function blockColor(b, catById) { return b.event ? (b.color || EVENT_COLOR) : (catById[b.catId] ? catById[b.catId].color : "#888"); }
+  function blockColor(b, catById) { return b.event ? EVENT_COLOR : (catById[b.catId] ? catById[b.catId].color : "#888"); }
 
   function renderBlocks() {
     const layer = $("blocksLayer"); if (!layer) return;
@@ -1117,8 +1166,7 @@ if (IS_BROWSER) (function () {
     return { day: DAYS[dayIdx], dayIdx, slot };
   }
   function startNewDrag(e, cat) {
-    const used = usedByCat(curBlocks()); const remaining = weekBudget(cat, state.currentWeek) - (used[cat.id] || 0);
-    drag = { mode: "new", catId: cat.id, color: cat.color, lenSlots: Math.max(1, Math.round(remaining * SPH)) };
+    drag = { mode: "new", catId: cat.id, color: cat.color, lenSlots: Math.max(1, Math.round((cat.defaultMin || 60) / SLOT_MIN)) };
     ghost.textContent = cat.name; ghost.style.background = cat.color; ghost.style.color = textOn(cat.color); ghost.style.display = "block"; moveGhost(e.clientX, e.clientY);
   }
   function startBlockDrag(e, block, mode) {
@@ -1190,7 +1238,7 @@ if (IS_BROWSER) (function () {
     const pos = gridPos(e.clientX, e.clientY);
     if (armedCat && pos) {
       const cat = state.categories.find((c) => c.id === armedCat);
-      if (cat) { const used = usedByCat(curBlocks()); const remaining = weekBudget(cat, state.currentWeek) - (used[cat.id] || 0); const len = Math.max(1, Math.min(Math.round(Math.max(remaining, 0.25) * SPH), TOTAL_SLOTS - pos.slot)); snap(); curBlocks().push({ id: state.nextId++, catId: armedCat, day: pos.day, startSlot: pos.slot, lenSlots: len }); armedCat = null; commit(); return; }
+      if (cat) { const len = Math.max(1, Math.min(Math.round((cat.defaultMin || 60) / SLOT_MIN), TOTAL_SLOTS - pos.slot)); snap(); curBlocks().push({ id: state.nextId++, catId: armedCat, day: pos.day, startSlot: pos.slot, lenSlots: len }); armedCat = null; commit(); return; }
       armedCat = null;
     }
     if (selectedId != null) { selectedId = null; renderBlocks(); }
@@ -1407,12 +1455,13 @@ if (IS_BROWSER) (function () {
     const W = state.weeks.length;
     let html = '<div class="budWrap"><table class="budTable"><thead><tr><th>Group</th><th>Task</th>';
     for (let i = 0; i < W; i++) html += "<th>W" + (i + 1) + "</th>";
-    html += "<th>Done</th><th></th></tr></thead><tbody>";
+    html += "<th>Def&nbsp;min</th><th>Done</th><th></th></tr></thead><tbody>";
     for (const c of state.categories) {
       html += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '><td><select class="bgroup">' +
         GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") +
         '</select></td><td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
       for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="number" step="0.25" min="0" value="' + weekBudget(c, i) + '"></td>';
+      html += '<td><input class="bdef" type="number" step="5" min="0" title="Default block length (minutes) when you drag this task onto the grid" value="' + (c.defaultMin || 60) + '"></td>';
       html += '<td><input type="checkbox" class="barch" title="Hide from the list (finished one-off task)"' + (c.archived ? " checked" : "") + "></td>";
       html += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
     }
@@ -1426,6 +1475,7 @@ if (IS_BROWSER) (function () {
       const nm = tr.querySelector(".tname");
       nm.addEventListener("change", () => { const v = nm.value.trim(); if (!v) { nm.value = cat.name; return; } if (nameTaken(v, cat.id)) { toast('A task named "' + v + '" already exists.'); nm.value = cat.name; return; } snap(); cat.name = v; commit(); });
       tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = Math.max(0, +inp.value || 0); commit(); }); });
+      tr.querySelector(".bdef").addEventListener("change", (e) => { snap(); cat.defaultMin = Math.max(0, +e.target.value || 0); commit(); });
       tr.querySelector(".barch").addEventListener("change", (e) => { snap(); cat.archived = e.target.checked; if (cat.archived && state.timer && state.timer.catId === id) stopTimer(); commit(); renderBudgets(); });
       tr.querySelector(".budDel").addEventListener("click", () => {
         const has = state.weeks.some((w) => w.blocks.some((b) => b.catId === id));
@@ -1440,7 +1490,7 @@ if (IS_BROWSER) (function () {
   $("budClose").addEventListener("click", () => budDlg.close());
   $("budAddTask").addEventListener("click", () => {
     snap(); let base = "New task", name = base, n = 2; while (nameTaken(name, null)) name = base + " " + (n++);
-    const g = "work"; state.categories.push({ id: "cat" + Date.now(), name, hours: 1, group: g, color: groupColorFor(g, state.categories, null) });
+    const g = "work"; state.categories.push({ id: "cat" + Date.now(), name, hours: 1, group: g, defaultMin: 60, color: groupColorFor(g, state.categories, null) });
     commit(); renderBudgets();
   });
   $("budAddWeek").addEventListener("click", () => { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); commit(); renderBudgets(); });
