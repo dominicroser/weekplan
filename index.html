@@ -81,6 +81,10 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolMeta { font-size: 10.5px; color: var(--ink3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
 .warn { color: var(--over); font-weight: 700; margin-right: 2px; }
 .hoursInput { width: 56px; background: transparent; border: none; color: var(--ink2); font-size: 10.5px; padding: 0 2px; border-radius: 3px; text-align: right; }
+.hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 12px; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: var(--ink2); }
+.hStep:active { background: var(--panel); }
+.goalVal { display: inline-block; min-width: 30px; text-align: center; }
+.poolItem.tier2 .hStep { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.28); color: #f3f5f7; }
 .hoursInput:focus, .nameInput:focus { background: #fff; outline: 1px solid rgba(43,108,176,0.4); }
 .stripe { position: absolute; left: -4px; top: 0; bottom: 0; width: 14px; cursor: pointer; }
 .stripe input { opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
@@ -856,6 +860,7 @@ if (IS_BROWSER) (function () {
 
   const curBlocks = () => state.weeks[state.currentWeek].blocks;
   function ensureBudgets(w) { if (!w.budgets) w.budgets = {}; return w.budgets; }
+  function parseHM(v) { v = String(v).trim(); if (!v) return 0; if (v.indexOf(":") >= 0) { const p = v.split(":"); return Math.max(0, (parseInt(p[0], 10) || 0) + (parseInt(p[1], 10) || 0) / 60); } return Math.max(0, parseFloat(v.replace(",", ".")) || 0); }
   function weekBudget(cat, wIdx) {
     if (cat.auto) { const w = state.weeks[wIdx]; let s = 0; if (w) for (const b of w.blocks) if (b.catId === cat.id && !b.event && b.kind !== "actual") s += b.lenSlots / 4; return s; }
     const w = state.weeks[wIdx]; if (w && w.budgets && w.budgets[cat.id] != null) return w.budgets[cat.id]; return cat.hours;
@@ -934,7 +939,7 @@ if (IS_BROWSER) (function () {
     if (!state.timer) return;
     const el = pool.querySelector(".runElapsed"); if (el) el.textContent = fmtClock(Date.now() - state.timer.startMs);
     const item = pool.querySelector('.poolItem.tier1[data-cat="' + state.timer.catId + '"]');
-    if (item) { const hp = item.querySelector(".poolHours"); if (hp) { const r = liveDayRemaining(state.timer.catId), eps = 0.001, over = r.done - r.dayPlan > eps, dn = Math.abs(r.dayPlan - r.done) <= eps; hp.className = "poolHours " + (over ? "isover" : dn ? "isdone" : ""); hp.textContent = over ? fmtH(r.done - r.dayPlan) + "h over" : dn ? "✓ done" : fmtH(Math.round((r.dayPlan - r.done) * 100) / 100) + "h left"; } }
+    if (item) { const hp = item.querySelector(".poolHours"); if (hp) { const r = liveDayRemaining(state.timer.catId), eps = 0.001, over = r.done - r.dayPlan > eps, dn = Math.abs(r.dayPlan - r.done) <= eps; hp.className = "poolHours " + (over ? "isover" : dn ? "isdone" : ""); hp.textContent = over ? fmtHM(r.done - r.dayPlan) + " over" : dn ? "✓ done" : fmtHM(r.dayPlan - r.done) + " left"; } }
   }
   function startTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = setInterval(updateTimerDisplay, 1000); }
   function stopTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = null; }
@@ -1057,9 +1062,9 @@ if (IS_BROWSER) (function () {
     const tasksSum = comboTrack(["htasks", "wtasks"]);
     const R = Math.round;
     summary.innerHTML =
-      '<div class="l1">This week: <b>' + R(Math.max(0, totalBudget - thisPlaced)) + "h</b> + " + R(thisPlaced) + "h = " + R(totalBudget) + "h</div>" +
-      '<div class="l2">All weeks: <b>' + R(Math.max(0, allBudget - allPlaced)) + "h</b> + " + R(allPlaced) + "h = " + R(allBudget) + "h</div>" +
-      (avgOther != null ? '<div class="l3">Other weeks: <b>' + R(avgOther) + "h</b>/week left on avg</div>" : "") +
+      '<div class="l1">This week: <b>' + fmtHM(Math.max(0, totalBudget - thisPlaced)) + "</b> + " + fmtHM(thisPlaced) + " = " + fmtHM(totalBudget) + "</div>" +
+      '<div class="l2">All weeks: <b>' + fmtHM(Math.max(0, allBudget - allPlaced)) + "</b> + " + fmtHM(allPlaced) + " = " + fmtHM(allBudget) + "</div>" +
+      (avgOther != null ? '<div class="l3">Other weeks: <b>' + fmtHM(avgOther) + "</b>/week left on avg</div>" : "") +
       '<div class="l4">Mails <b>' + fmtHM(mailsSum) + "</b> · Tasks <b>" + fmtHM(tasksSum) + "</b></div>";
     pool.appendChild(summary);
 
@@ -1094,10 +1099,10 @@ if (IS_BROWSER) (function () {
         const r = liveDayRemaining(cat.id), dRem = Math.round((r.dayPlan - r.done) * 100) / 100, dDone = Math.abs(r.dayPlan - r.done) <= eps;
         ovr = r.done - r.dayPlan > eps;
         pctV = r.dayPlan > 0 ? Math.min(100, (r.done / r.dayPlan) * 100) : 100;
-        hoursTxt = ovr ? fmtH(r.done - r.dayPlan) + "h over" : dDone ? "✓ done" : fmtH(dRem) + "h left";
+        hoursTxt = ovr ? fmtHM(r.done - r.dayPlan) + " over" : dDone ? "✓ done" : fmtHM(dRem) + " left";
         hoursCls = ovr ? "isover" : dDone ? "isdone" : "";
       } else {                                            // Tier 2/3 → remaining for the WEEK
-        hoursTxt = isOver ? fmtH(u - bw) + "h over" : isDone ? "✓ done" : fmtH(remaining) + "h left";
+        hoursTxt = isOver ? fmtHM(u - bw) + " over" : isDone ? "✓ done" : fmtHM(remaining) + " left";
         hoursCls = isOver ? "isover" : isDone ? "isdone" : "";
       }
       const el = document.createElement("div");
@@ -1110,11 +1115,12 @@ if (IS_BROWSER) (function () {
         '<div class="poolTop">' + (usage.miss[cat.id] ? '<span class="missStar" title="Planned earlier this week but no time tracked">★</span> ' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtH(u) + 'h of <input class="hoursInput" type="number" step="0.25" min="0"' + (cat.auto ? ' readonly title="Auto — equals the hours you’ve scheduled"' : "") + ' value="' + bw + '">h</div>' +
+        '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — equals the hours you’ve scheduled">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><span class="goalVal">' + fmtHM(bw) + '</span><button class="hStep" data-d="1">+</button>') + "</div>" +
         (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })();
-      const nameIn = el.querySelector(".nameInput"), hoursIn = el.querySelector(".hoursInput");
+      const nameIn = el.querySelector(".nameInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe"), xBtn = el.querySelector(".catX");
-      for (const inp of [nameIn, hoursIn, stripe, xBtn]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
+      for (const inp of [nameIn, stripe, xBtn]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
+      el.querySelectorAll(".hStep").forEach((b) => { b.addEventListener("pointerdown", (e) => e.stopPropagation()); b.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, Math.round((weekBudget(cat, cw) + (+b.dataset.d) * 0.25) * 100) / 100); commit(); }); });
       nameIn.addEventListener("change", () => {
         const v = nameIn.value.trim();
         if (!v) { nameIn.value = cat.name; return; }
@@ -1122,7 +1128,6 @@ if (IS_BROWSER) (function () {
         snap(); cat.name = v; commit();
       });
       nameIn.addEventListener("keydown", (e) => { if (e.key === "Enter") nameIn.blur(); });
-      hoursIn.addEventListener("change", () => { snap(); ensureBudgets(state.weeks[state.currentWeek])[cat.id] = Math.max(0, +hoursIn.value || 0); commit(); });
       colorIn.addEventListener("input", () => { cat.color = colorIn.value; renderAll(); });
       colorIn.addEventListener("change", () => { snap(); commit(); });
       xBtn.addEventListener("click", () => {
@@ -1225,7 +1230,7 @@ if (IS_BROWSER) (function () {
         const handleH = Math.max(4, Math.min(COARSE ? 14 : 9, Math.floor(hPx / 3)));
         inner += '<div class="resizeHandle top" style="height:' + handleH + 'px;"></div><div class="resizeHandle bot" style="height:' + handleH + 'px;"></div>';
         el.innerHTML = inner;
-        el.title = nm + "  " + tLabel + " (" + (isAct ? fmtHM((b.endMs - b.startMs) / 3600000) : fmtH(b.lenSlots / SPH) + "h") + ")";
+        el.title = nm + "  " + tLabel + " (" + (isAct ? fmtHM((b.endMs - b.startMs) / 3600000) : fmtHM(b.lenSlots / SPH)) + ")";
         el.querySelector(".blockX").addEventListener("pointerdown", (e) => { e.stopPropagation(); snap(); removeBlock(b.id); if (selectedId === b.id) selectedId = null; commit(); });
         el.querySelector(".resizeHandle.top").addEventListener("pointerdown", (e) => { e.stopPropagation(); e.preventDefault(); startBlockDrag(e, b, "resizeTop"); });
         el.querySelector(".resizeHandle.bot").addEventListener("pointerdown", (e) => { e.stopPropagation(); e.preventDefault(); startBlockDrag(e, b, "resize"); });
@@ -1624,7 +1629,7 @@ if (IS_BROWSER) (function () {
       html += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '><td><select class="bgroup">' +
         GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") +
         '</select></td><td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
-      for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="number" step="0.25" min="0"' + (c.auto ? " readonly" : "") + ' value="' + weekBudget(c, i) + '"></td>';
+      for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="text" inputmode="numeric"' + (c.auto ? " readonly" : "") + ' value="' + fmtHM(weekBudget(c, i)) + '"></td>';
       html += '<td><input class="bdef" type="number" step="15" min="0" placeholder="max" title="Default block length in minutes when you drag this task onto the grid — leave empty to drag the whole week’s hours" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
       html += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
       html += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
@@ -1640,7 +1645,7 @@ if (IS_BROWSER) (function () {
       tr.querySelector(".bgroup").addEventListener("change", (e) => { snap(); cat.group = e.target.value; cat.color = groupColorFor(cat.group, state.categories, cat.id); commit(); renderBudgets(); });
       const nm = tr.querySelector(".tname");
       nm.addEventListener("change", () => { const v = nm.value.trim(); if (!v) { nm.value = cat.name; return; } if (nameTaken(v, cat.id)) { toast('A task named "' + v + '" already exists.'); nm.value = cat.name; return; } snap(); cat.name = v; commit(); });
-      tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = Math.max(0, +inp.value || 0); commit(); }); });
+      tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = parseHM(inp.value); commit(); renderBudgets(); }); });
       tr.querySelector(".bdef").addEventListener("change", (e) => { snap(); const v = e.target.value.trim(); if (v === "") delete cat.defaultMin; else cat.defaultMin = Math.max(0, +v || 0); commit(); });
       tr.querySelector(".bauto").addEventListener("change", (e) => { snap(); cat.auto = e.target.checked; commit(); renderBudgets(); });
       tr.querySelector(".btrack").addEventListener("change", (e) => { snap(); cat.noTrack = !e.target.checked; if (cat.noTrack && state.timer && state.timer.catId === cat.id) stopTimer(); commit(); renderBudgets(); });
