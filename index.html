@@ -151,6 +151,40 @@ dialog input[type=text], dialog input[type=password] { width: 100%; background: 
 .muted { font-size: 11.5px; color: var(--ink2); font-family: 'Inter', sans-serif; line-height: 1.5; }
 pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 10px; font-size: 10.5px; overflow-x: auto; user-select: text; -webkit-user-select: text; white-space: pre-wrap; }
 #syncStatus, #sheetStatus { font-size: 11.5px; font-family: 'Inter', sans-serif; margin-top: 8px; min-height: 16px; }
+#budgetsDialog { max-width: 820px; }
+.budWrap { max-height: 62vh; overflow: auto; }
+.budTable { border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; }
+.budTable th, .budTable td { border: 1px solid var(--line); padding: 3px 5px; text-align: center; }
+.budTable th { background: var(--panel); font-weight: 600; color: var(--ink2); position: sticky; top: 0; z-index: 1; }
+.budTable td.name { text-align: left; white-space: nowrap; }
+.budSwatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: middle; margin-right: 5px; }
+.budTable input { width: 50px; border: 1px solid transparent; background: transparent; font: inherit; text-align: center; border-radius: 4px; color: var(--ink); }
+.budTable input.tname { width: 140px; text-align: left; }
+.budTable input:focus { border-color: rgba(43,108,176,0.45); background: #fff; outline: none; }
+.budTable select { font: inherit; border: 1px solid var(--line); border-radius: 5px; padding: 2px 3px; background: #fff; color: var(--ink); }
+.budDel { background: transparent; border: none; color: rgba(0,0,0,0.3); cursor: pointer; font-size: 15px; line-height: 1; }
+.budDel:hover { color: #c53030; }
+
+/* ── time tracking ── */
+.dayHeader.today { color: var(--accent); }
+.dayHeader .dnum { font-weight: 400; color: var(--ink3); font-size: 11px; margin-left: 2px; }
+.dayHeader.today .dnum { color: var(--accent); }
+.todayCol { position: absolute; top: 0; bottom: 0; background: rgba(43,108,176,0.05); pointer-events: none; z-index: 1; }
+.nowLine { position: absolute; height: 2px; background: var(--accent); opacity: 0.75; pointer-events: none; z-index: 5; }
+.block.plan:not(.event)::after { content: ""; position: absolute; inset: 2px; border: 1px dashed rgba(255,255,255,0.55); border-radius: 4px; pointer-events: none; }
+.block.actual { box-shadow: 0 1px 3px rgba(0,0,0,0.25), inset 0 0 0 1.6px rgba(0,0,0,0.3); }
+.playBtn { position: absolute; right: 6px; bottom: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 10px; color: var(--good); display: flex; align-items: center; justify-content: center; padding: 0; }
+.playBtn.run { background: var(--good); color: #fff; border-color: var(--good); }
+.runElapsed { position: absolute; right: 34px; bottom: 9px; font-size: 10.5px; font-family: 'Inter', sans-serif; color: var(--good); font-weight: 600; }
+.repTable { border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; width: 100%; margin-top: 4px; }
+.repTable th, .repTable td { border: 1px solid var(--line); padding: 3px 6px; text-align: center; }
+.repTable th { background: var(--panel); font-weight: 600; color: var(--ink2); }
+.repTable td.rname { text-align: left; white-space: nowrap; }
+.repTable td.rtot, .repTable tr.rfoot td { font-weight: 700; }
+.repTable tr.rfoot td { background: var(--panel); }
+#editRow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+#editRow label { font-size: 11.5px; color: var(--ink2); font-family: 'Inter', sans-serif; }
+#editRow input, #editRow select { font: inherit; font-size: 12.5px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); }
 
 /* ── Mobile ── */
 @media (max-width: 760px) {
@@ -184,6 +218,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   </form>
   <button class="iconBtn" id="undoBtn" title="Undo">&#8630;</button>
   <button class="iconBtn" id="noteBtn" title="Sticky note">&#128209;</button>
+  <button class="iconBtn" id="budgetsBtn" title="Tasks &amp; weekly hours">&#9638;</button>
+  <button class="iconBtn" id="reportsBtn" title="Time reports">&#128202;</button>
   <button class="iconBtn" id="settingsBtn" title="Settings">&#9881;</button>
   <div id="syncDot" title="Sync status"></div>
 </header>
@@ -217,6 +253,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   <div class="abGroup"><button id="abTopUp" title="Start earlier">&#43;</button><button id="abTopDn" title="Start later">&minus;</button></div>
   <span class="abLbl">end</span>
   <div class="abGroup"><button id="abGrow" title="End later">&#43;</button><button id="abShrink" title="End earlier">&minus;</button></div>
+  <button id="abEdit" title="Edit day &amp; exact times">&#9998;</button>
   <button id="abDel" title="Delete">&#10005;</button>
   <button id="abClose" title="Done">&#10003;</button>
 </div>
@@ -274,6 +311,44 @@ create policy "planner anon access" on plans
   </div>
 </dialog>
 
+<dialog id="budgetsDialog">
+  <h2>Tasks &amp; weekly hours</h2>
+  <p class="muted">Set each task's <b>group</b> and its <b>hours per week</b>. Colours are picked automatically by group (Work = blue/purple, Home = yellow/orange, Fruit = green).</p>
+  <div id="budgetsTableWrap"></div>
+  <div class="btnRow" style="margin-top:14px;">
+    <button class="btnGhost" id="budAddTask">+ Add task</button>
+    <button class="btnGhost" id="budAddWeek">+ Add week</button>
+    <button class="btnGhost" id="budRecolour">Recolour all by group</button>
+  </div>
+  <div class="btnRow" style="margin-top:8px;">
+    <button class="btn" id="budClose">Done</button>
+  </div>
+</dialog>
+
+<dialog id="editDialog">
+  <h2 id="editTitle">Edit block</h2>
+  <p class="muted" id="editHint"></p>
+  <div id="editRow">
+    <label>Day <select id="editDay"></select></label>
+    <label>Start <input type="time" id="editStart"></label>
+    <label>End <input type="time" id="editEnd"></label>
+  </div>
+  <div class="btnRow" style="margin-top:14px;">
+    <button class="btn" id="editSave">Save</button>
+    <button class="btnGhost" id="editCancel">Cancel</button>
+    <button class="btnGhost" id="editDelete" style="color:#c53030;">Delete</button>
+  </div>
+</dialog>
+
+<dialog id="reportsDialog">
+  <h2>Time reports</h2>
+  <p class="muted">Tracked time (from the ▶ timer) for the week you're viewing, plus group totals across all weeks. Hours are exact.</p>
+  <div id="reportsBody"></div>
+  <div class="btnRow" style="margin-top:14px;">
+    <button class="btn" id="reportsClose">Done</button>
+  </div>
+</dialog>
+
 <script>
 "use strict";
 /* ═══════════════ Constants ═══════════════ */
@@ -300,21 +375,21 @@ const PALETTE = [
 ];
 
 const DEFAULT_CATEGORIES = [
-  { id: "growth", name: "Growth", hours: 10, color: "#3b6fb5" },
-  { id: "mails", name: "Mails", hours: 4, color: "#e08a2e" },
-  { id: "tasks", name: "Tasks", hours: 4, color: "#16a085" },
-  { id: "nest", name: "Nest", hours: 4, color: "#7aa66b" },
-  { id: "plan", name: "Plan", hours: 1, color: "#9b59b6" },
-  { id: "kgb", name: "KGB", hours: 1, color: "#c0392b" },
-  { id: "bday", name: "Mom & Dad-BDay", hours: 2, color: "#cf6fa3" },
-  { id: "eow", name: "EOW", hours: 1, color: "#a9744f" },
-  { id: "adhs", name: "ADHS", hours: 3, color: "#d4b106" },
-  { id: "visioning", name: "Visioning", hours: 2, color: "#48a9c5" },
-  { id: "zouth", name: "Zouth-Varia", hours: 5, color: "#8e44ad" },
-  { id: "stuai", name: "StU-AI-Talk", hours: 1, color: "#5d7cb5" },
-  { id: "kinderforum", name: "Kinderforum", hours: 1, color: "#b8862b" },
-  { id: "fruit", name: "Fruit", hours: 7, color: "#d98880" },
-  { id: "wifi", name: "WiFi", hours: 1, color: "#1c7ed6" },
+  { id: "growth", name: "Growth", hours: 10, color: "#1c4e80", group: "work" },
+  { id: "mails", name: "Mails", hours: 4, color: "#3b82c4", group: "work" },
+  { id: "tasks", name: "Tasks", hours: 4, color: "#274bb5", group: "work" },
+  { id: "nest", name: "Nest", hours: 4, color: "#e6a700", group: "home" },
+  { id: "plan", name: "Plan", hours: 1, color: "#6aa7e0", group: "work" },
+  { id: "kgb", name: "KGB", hours: 1, color: "#f6c453", group: "home" },
+  { id: "bday", name: "Mom & Dad-BDay", hours: 2, color: "#e8730c", group: "home" },
+  { id: "eow", name: "EOW", hours: 1, color: "#4b3fb0", group: "work" },
+  { id: "adhs", name: "ADHS", hours: 3, color: "#7e5bd0", group: "work" },
+  { id: "visioning", name: "Visioning", hours: 2, color: "#2b6cb0", group: "work" },
+  { id: "zouth", name: "Zouth-Varia", hours: 5, color: "#1e7a46", group: "fruit" },
+  { id: "stuai", name: "StU-AI-Talk", hours: 1, color: "#9b6fd6", group: "work" },
+  { id: "kinderforum", name: "Kinderforum", hours: 1, color: "#f59f00", group: "home" },
+  { id: "fruit", name: "Fruit", hours: 7, color: "#52b35e", group: "fruit" },
+  { id: "wifi", name: "WiFi", hours: 1, color: "#3a52a3", group: "work" },
 ];
 
 function defaultNote() { return { html: "", x: null, y: null, w: 230, h: 150, open: true }; }
@@ -337,9 +412,23 @@ function pickColor(cats) {
   const h = (cats.length * 137.508) % 360;
   return "hsl(" + Math.round(h) + ",58%,52%)";
 }
+// ── Task groups: distinct colour families, varied shades within ──
+const GROUPS = {
+  work:  { label: "Work",  palette: ["#1c4e80","#3b82c4","#274bb5","#6aa7e0","#4b3fb0","#7e5bd0","#2b6cb0","#9b6fd6","#3a52a3","#5fa0e0"] },
+  home:  { label: "Home",  palette: ["#e6a700","#f6c453","#e8730c","#f59f00","#c98a16","#fab234","#d9600a","#eac54a","#f0851e","#b07d10"] },
+  fruit: { label: "Fruit", palette: ["#1e7a46","#52b35e","#2b8a3e","#74c365","#157f4a","#43a047","#6abf69","#2f9e44","#3f7d3a","#86c97a"] },
+};
+const GROUP_HUE = { work: 225, home: 42, fruit: 135 };
+function groupColorFor(group, cats, exceptId) {
+  const g = GROUPS[group] ? group : "work";
+  const used = new Set(cats.filter((c) => c.id !== exceptId && (c.group || "work") === g).map((c) => (c.color || "").toLowerCase()));
+  for (const col of GROUPS[g].palette) if (!used.has(col.toLowerCase())) return col;
+  const L = 40 + (used.size * 9) % 32;
+  return "hsl(" + GROUP_HUE[g] + ",58%," + L + "%)";
+}
 function usedByCat(blocks) {
   const u = {};
-  for (const b of blocks) if (!b.event) u[b.catId] = (u[b.catId] || 0) + b.lenSlots / SPH;
+  for (const b of blocks) if (!b.event && b.kind !== "actual") u[b.catId] = (u[b.catId] || 0) + b.lenSlots / SPH;
   return u;
 }
 function layoutDay(list) {
@@ -382,10 +471,11 @@ function layoutDay(list) {
 
 /* ── Merge blocks of the SAME task that touch or overlap on the same day ── */
 function mergeAdjacent(blocks) {
-  const keyOf = (b) => (b.event ? "e:" + (b.name || "") + "|" + (b.color || "") : "c:" + b.catId) + "|" + b.day;
+  const result = [], mer = [];
+  for (const b of blocks) { if (b.event || (b.kind || "plan") !== "plan") result.push(b); else mer.push(b); } // only merge plain plan blocks; keep actuals/events intact
+  const keyOf = (b) => "c:" + b.catId + "|" + b.day;
   const groups = {};
-  for (const b of blocks) { (groups[keyOf(b)] = groups[keyOf(b)] || []).push(b); }
-  const result = [];
+  for (const b of mer) { (groups[keyOf(b)] = groups[keyOf(b)] || []).push(b); }
   for (const k in groups) {
     const arr = groups[k].slice().sort((a, b) => a.startSlot - b.startSlot || a.id - b.id);
     let cur = null;
@@ -401,6 +491,43 @@ function mergeAdjacent(blocks) {
     }
   }
   return result;
+}
+
+/* ── Calendar / time-tracking helpers ── */
+function pad2(n) { return String(n).padStart(2, "0"); }
+function ymd(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function parseYMD(s) { const p = String(s).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+function addDays(d, n) { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; }
+function mondayOf(d) { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); const wd = x.getDay(); x.setDate(x.getDate() + (wd === 0 ? -6 : 1 - wd)); return x; }
+function weekDayIdx(d) { const wd = d.getDay(); return wd === 0 ? 5 : wd - 1; } // Mon0..Sat5, Sun->Sat
+function cellForDate(anchor, d) { const a = mondayOf(parseYMD(anchor)); const m = mondayOf(d); return { weekIdx: Math.round((m - a) / (7 * 86400000)), dayIdx: weekDayIdx(d) }; }
+function dateOfCell(anchor, weekIdx, dayIdx) { return addDays(mondayOf(parseYMD(anchor)), weekIdx * 7 + dayIdx); }
+function sessionToSlots(startMs, endMs) {
+  const sd = new Date(startMs), ed = new Date(endMs);
+  const s0 = Math.floor((sd.getHours() * 60 + sd.getMinutes()) / SLOT_MIN);
+  const sameDay = sd.getFullYear() === ed.getFullYear() && sd.getMonth() === ed.getMonth() && sd.getDate() === ed.getDate();
+  let e = sameDay ? Math.ceil((ed.getHours() * 60 + ed.getMinutes()) / SLOT_MIN) : TOTAL_SLOTS;
+  let s = Math.max(0, Math.min(s0, TOTAL_SLOTS - 1));
+  if (e <= s) e = s + 1;
+  e = Math.max(s + 1, Math.min(e, TOTAL_SLOTS));
+  return { startSlot: s, lenSlots: e - s };
+}
+// epoch ms for a given date (YYYY-MM-DD) at a minutes-since-midnight value
+function msAt(dateStr, minutes) { const d = parseYMD(dateStr); d.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0); return d.getTime(); }
+function buildReport(state) {
+  const catGroup = {}, catName = {};
+  for (const c of state.categories) { catGroup[c.id] = c.group || "work"; catName[c.id] = c.name; }
+  const days = {};
+  for (const w of state.weeks) for (const b of (w.blocks || [])) {
+    if (b.kind !== "actual" || !b.date) continue;
+    const hrs = Math.max(0, (b.endMs - b.startMs)) / 3600000;
+    const day = days[b.date] || (days[b.date] = { total: 0, byCat: {}, byGroup: {} });
+    day.total += hrs;
+    day.byCat[b.catId] = (day.byCat[b.catId] || 0) + hrs;
+    const g = catGroup[b.catId] || "work";
+    day.byGroup[g] = (day.byGroup[g] || 0) + hrs;
+  }
+  return { days, catName, catGroup };
 }
 
 /* ── Time range ── */
@@ -594,24 +721,30 @@ function applySheetWeeks(state, parsed) {
 function migrate(s) {
   if (!s) return null;
   if (s.weeks && Array.isArray(s.weeks)) {
-    s.weeks.forEach((w) => { w.blocks = (w.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0); if (!w.budgets) w.budgets = {}; });
+    (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; });
+    s.weeks.forEach((w) => { w.blocks = (w.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0); w.blocks.forEach((b) => { if (!b.kind) b.kind = "plan"; }); if (!w.budgets) w.budgets = {}; });
     if (!s.weeks.length) s.weeks = [{ id: "w" + Date.now(), blocks: [], budgets: {} }];
     s.currentWeek = Math.max(0, Math.min(s.currentWeek || 0, s.weeks.length - 1));
     s.nextId = s.nextId || 1; s.version = 3;
     if (!s.note) s.note = defaultNote();
+    if (!s.anchorMonday) s.anchorMonday = ymd(mondayOf(new Date()));
+    if (s.timer === undefined) s.timer = null;
     return s;
   }
   const blocks = (s.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0);
-  return { version: 3, categories: s.categories || [], weeks: [{ id: "w" + Date.now(), blocks, budgets: {} }], currentWeek: 0, nextId: s.nextId || 1, note: defaultNote() };
+  blocks.forEach((b) => { if (!b.kind) b.kind = "plan"; });
+  const cats0 = (s.categories || []).map((c) => Object.assign({ group: "work" }, c));
+  return { version: 3, categories: cats0, weeks: [{ id: "w" + Date.now(), blocks, budgets: {} }], currentWeek: 0, nextId: s.nextId || 1, note: defaultNote(), anchorMonday: ymd(mondayOf(new Date())), timer: null };
 }
 
 if (!IS_BROWSER && typeof module !== "undefined") {
-  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, mergeAdjacent, usedByCat, fmtH, slotLabel, textOn, pickColor, parseCSV, csvToRows, applySheet, csvToWeeks, applySheetWeeks, migrate, defaultNote, TOTAL_SLOTS, DAYS };
+  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, mergeAdjacent, usedByCat, fmtH, slotLabel, textOn, pickColor, groupColorFor, GROUPS, parseCSV, csvToRows, applySheet, csvToWeeks, applySheetWeeks, migrate, defaultNote, ymd, parseYMD, mondayOf, weekDayIdx, cellForDate, dateOfCell, sessionToSlots, msAt, buildReport, TOTAL_SLOTS, DAYS };
 }
 
 /* ═══════════════ Browser app ═══════════════ */
 if (IS_BROWSER) (function () {
-  let state = { version: 3, categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)), weeks: [{ id: "w" + Date.now(), blocks: [], budgets: {} }], currentWeek: 0, nextId: 1, note: defaultNote() };
+  let state = { version: 3, categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)), weeks: [{ id: "w" + Date.now(), blocks: [], budgets: {} }], currentWeek: 0, nextId: 1, note: defaultNote(), anchorMonday: ymd(mondayOf(new Date())), timer: null };
+  let timerTick = null;
   let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null, previewEl = null;
 
   const $ = (id) => document.getElementById(id);
@@ -676,6 +809,35 @@ if (IS_BROWSER) (function () {
   function nameTaken(name, exceptId) {
     const q = name.trim().toLowerCase();
     return state.categories.some((c) => c.id !== exceptId && c.name.trim().toLowerCase() === q);
+  }
+
+  /* ── time tracking ── */
+  function fmtDur(ms) { const s = Math.max(0, Math.floor(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = s % 60; return h > 0 ? (h + ":" + pad2(m) + ":" + pad2(ss)) : (m + ":" + pad2(ss)); }
+  function updateTimerDisplay() { if (!state.timer) return; const el = pool.querySelector(".runElapsed"); if (el) el.textContent = fmtDur(Date.now() - state.timer.startMs); }
+  function startTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = setInterval(updateTimerDisplay, 1000); }
+  function stopTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = null; }
+  function toggleTimer(catId) {
+    if (state.timer && state.timer.catId === catId) { stopTimer(); return; }
+    if (state.timer) stopTimer();
+    state.timer = { catId: catId, startMs: Date.now() };
+    saveLocal(); schedulePush(); renderPool(); startTimerLoop();
+    const c = state.categories.find((x) => x.id === catId);
+    toast("Timing “" + (c ? c.name : "task") + "”…");
+  }
+  function stopTimer() {
+    if (!state.timer) return;
+    const t = state.timer, endMs = Date.now(); state.timer = null; stopTimerLoop();
+    const dur = endMs - t.startMs;
+    if (dur >= 60000) { snap(); createActualBlock(t.catId, t.startMs, endMs); commit(); toast("Logged " + fmtDur(dur)); }
+    else { saveLocal(); schedulePush(); renderPool(); toast("Too short (under 1 min) — not logged"); }
+  }
+  function createActualBlock(catId, startMs, endMs) {
+    const cell = cellForDate(state.anchorMonday, new Date(startMs));
+    let wi = cell.weekIdx; if (wi < 0) wi = 0;
+    while (state.weeks.length <= wi) state.weeks.push({ id: "w" + Date.now() + state.weeks.length, blocks: [], budgets: {} });
+    const dateStr = ymd(dateOfCell(state.anchorMonday, wi, cell.dayIdx));
+    const ss = sessionToSlots(startMs, endMs);
+    state.weeks[wi].blocks.push({ id: state.nextId++, kind: "actual", catId: catId, day: DAYS[cell.dayIdx], date: dateStr, startMs: startMs, endMs: endMs, startSlot: ss.startSlot, lenSlots: ss.lenSlots });
   }
 
   /* ── sticky note ── */
@@ -781,9 +943,18 @@ if (IS_BROWSER) (function () {
         commit();
       });
       if (!isDone) {
-        el.addEventListener("pointerdown", (e) => { if (COARSE) return; e.preventDefault(); startNewDrag(e, cat); });
-        el.addEventListener("click", () => { if (!COARSE) return; armedCat = armedCat === cat.id ? null : cat.id; renderPool(); if (armedCat) toast("Now tap the grid where “" + cat.name + "” should go"); });
+        el.addEventListener("pointerdown", (e) => { if (COARSE) return; if (e.target.closest(".playBtn")) return; e.preventDefault(); startNewDrag(e, cat); });
+        el.addEventListener("click", (e) => { if (!COARSE) return; if (e.target.closest(".playBtn")) return; armedCat = armedCat === cat.id ? null : cat.id; renderPool(); if (armedCat) toast("Now tap the grid where “" + cat.name + "” should go"); });
       }
+      const isRun = state.timer && state.timer.catId === cat.id;
+      const play = document.createElement("button");
+      play.className = "playBtn" + (isRun ? " run" : "");
+      play.textContent = isRun ? "⏸" : "▶";
+      play.title = isRun ? "Stop timer" : "Start timer";
+      play.addEventListener("pointerdown", (e) => e.stopPropagation());
+      play.addEventListener("click", (e) => { e.stopPropagation(); toggleTimer(cat.id); });
+      el.appendChild(play);
+      if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.textContent = fmtDur(Date.now() - state.timer.startMs); el.appendChild(re); }
       pool.appendChild(el);
     }
     const add = document.createElement("button");
@@ -792,7 +963,8 @@ if (IS_BROWSER) (function () {
       snap();
       let base = "New task", name = base, n = 2;
       while (nameTaken(name, null)) name = base + " " + (n++);
-      state.categories.push({ id: "cat" + Date.now(), name, hours: 1, color: pickColor(state.categories) });
+      const ng = "work";
+      state.categories.push({ id: "cat" + Date.now(), name, hours: 1, group: ng, color: groupColorFor(ng, state.categories, null) });
       commit();
       for (const i of pool.querySelectorAll(".poolItem .nameInput")) if (i.value === name) { i.focus(); i.select(); break; }
     });
@@ -808,9 +980,27 @@ if (IS_BROWSER) (function () {
     const catById = {}; for (const c of state.categories) catById[c.id] = c;
     layer.innerHTML = "";
     const blocks = curBlocks();
+    const todayMid = new Date(); todayMid.setHours(0, 0, 0, 0);
+    const tcell = cellForDate(state.anchorMonday, new Date());
+    const isSun = new Date().getDay() === 0;
+    // today column tint + now line
+    if (!isSun && tcell.weekIdx === state.currentWeek) {
+      const di = tcell.dayIdx;
+      const hl = document.createElement("div"); hl.className = "todayCol";
+      hl.style.cssText = "left:calc(" + LABEL_W + "px + " + (di / ND) + " * (100% - " + LABEL_W + "px));width:calc((100% - " + LABEL_W + "px) / " + ND + ");";
+      layer.appendChild(hl);
+      const now = new Date(); const y = ((now.getHours() * 60 + now.getMinutes()) / SLOT_MIN) * SLOT_PX;
+      const nl = document.createElement("div"); nl.className = "nowLine";
+      nl.style.cssText = "top:" + y + "px;left:calc(" + LABEL_W + "px + " + (di / ND) + " * (100% - " + LABEL_W + "px));width:calc((100% - " + LABEL_W + "px) / " + ND + ");";
+      layer.appendChild(nl);
+    }
     for (let di = 0; di < ND; di++) {
       const day = DAYS[di];
-      const dayBlocks = blocks.filter((b) => b.day === day && (b.event || catById[b.catId]));
+      const colDate = dateOfCell(state.anchorMonday, state.currentWeek, di);
+      const cmp = colDate.getTime() - todayMid.getTime(); // <0 past, 0 today, >0 future
+      let dayBlocks = blocks.filter((b) => b.day === day && (b.event || catById[b.catId]));
+      if (cmp < 0) dayBlocks = dayBlocks.filter((b) => b.kind === "actual" || b.event);      // past: actual + events
+      else if (cmp > 0) dayBlocks = dayBlocks.filter((b) => b.kind !== "actual");             // future: plans + events
       const lay = layoutDay(dayBlocks);
       for (const b of dayBlocks) {
         const p = lay.pos[b.id];
@@ -818,7 +1008,7 @@ if (IS_BROWSER) (function () {
         const ink = textOn(color);
         const hPx = b.lenSlots * SLOT_PX - 2;
         const el = document.createElement("div");
-        el.className = "block" + (b.event ? " event" : "") + (selectedId === b.id ? " selected" : "");
+        el.className = "block" + (b.event ? " event" : "") + (b.kind === "actual" ? " actual" : " plan") + (selectedId === b.id ? " selected" : "");
         el.dataset.id = b.id;
         const frac = di / ND + p.col / (ND * p.nCols);
         el.style.cssText =
@@ -858,7 +1048,18 @@ if (IS_BROWSER) (function () {
     $("abInfo").textContent = blockName(b, catById) + " · " + slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots);
     bar.classList.add("show");
   }
-  function renderAll() { $("weekLabel").textContent = "Week " + (state.currentWeek + 1) + " / " + state.weeks.length; renderPool(); renderBlocks(); renderNote(false); }
+  function renderDayHeaders() {
+    const now = new Date(), isSun = now.getDay() === 0;
+    const tc = cellForDate(state.anchorMonday, now);
+    let html = '<div style="width:' + LABEL_W + 'px;flex-shrink:0;"></div>';
+    for (let d = 0; d < ND; d++) {
+      const dt = dateOfCell(state.anchorMonday, state.currentWeek, d);
+      const isToday = !isSun && tc.weekIdx === state.currentWeek && tc.dayIdx === d;
+      html += '<div class="dayHeader' + (isToday ? " today" : "") + '">' + DAYS[d] + '<span class="dnum">' + dt.getDate() + "</span></div>";
+    }
+    $("dayHeaderRow").innerHTML = html;
+  }
+  function renderAll() { $("weekLabel").textContent = "Week " + (state.currentWeek + 1) + " / " + state.weeks.length; renderDayHeaders(); renderPool(); renderBlocks(); renderNote(false); }
 
   /* ── pointer ── */
   function gridPos(clientX, clientY) {
@@ -963,6 +1164,71 @@ if (IS_BROWSER) (function () {
   $("abShrink").onclick = () => nudge((b) => (b.lenSlots = Math.max(1, b.lenSlots - 1)));
   $("abDel").onclick = () => { snap(); removeBlock(selectedId); selectedId = null; commit(); };
   $("abClose").onclick = () => { selectedId = null; renderBlocks(); };
+
+  /* ── manual day/time editor ── */
+  function hhmm(min) { min = Math.max(0, Math.min(1439, Math.round(min))); return pad2(Math.floor(min / 60)) + ":" + pad2(min % 60); }
+  function parseHHMM(v) { if (!v) return null; const p = v.split(":").map(Number); return (p[0] || 0) * 60 + (p[1] || 0); }
+  function openEdit() {
+    const b = findBlock(selectedId); if (!b) return;
+    $("editDay").innerHTML = DAYS.map((d, i) => '<option value="' + i + '"' + (b.day === d ? " selected" : "") + ">" + d + "</option>").join("");
+    let sMin, eMin;
+    if (b.kind === "actual" && b.startMs != null) { const sd = new Date(b.startMs), ed = new Date(b.endMs); sMin = sd.getHours() * 60 + sd.getMinutes(); eMin = ed.getHours() * 60 + ed.getMinutes(); if (eMin <= sMin) eMin = Math.min(1439, sMin + b.lenSlots * SLOT_MIN); }
+    else { sMin = b.startSlot * SLOT_MIN; eMin = (b.startSlot + b.lenSlots) * SLOT_MIN; }
+    $("editStart").value = hhmm(sMin); $("editEnd").value = hhmm(eMin);
+    const cat = state.categories.find((c) => c.id === b.catId);
+    $("editTitle").textContent = "Edit " + (b.event ? "“" + (b.name || "Meeting") + "”" : "“" + (cat ? cat.name : "?") + "”");
+    $("editHint").textContent = b.kind === "actual" ? "Tracked session — times are exact to the minute." : "Planned block — times snap to 15-minute steps.";
+    $("editDialog").showModal();
+  }
+  $("abEdit").addEventListener("click", openEdit);
+  $("editCancel").addEventListener("click", () => $("editDialog").close());
+  $("editDelete").addEventListener("click", () => { snap(); removeBlock(selectedId); selectedId = null; commit(); $("editDialog").close(); });
+  $("editSave").addEventListener("click", () => {
+    const b = findBlock(selectedId); if (!b) { $("editDialog").close(); return; }
+    const di = +$("editDay").value, sMin = parseHHMM($("editStart").value), eMin = parseHHMM($("editEnd").value);
+    if (sMin == null || eMin == null) { toast("Enter start and end times"); return; }
+    snap();
+    b.day = DAYS[di];
+    if (b.kind === "actual") {
+      const dateStr = ymd(dateOfCell(state.anchorMonday, state.currentWeek, di));
+      let s = msAt(dateStr, sMin), e = msAt(dateStr, eMin); if (e <= s) e = s + 15 * 60000;
+      b.date = dateStr; b.startMs = s; b.endMs = e;
+      const ss = sessionToSlots(s, e); b.startSlot = ss.startSlot; b.lenSlots = ss.lenSlots;
+    } else {
+      let ssl = Math.round(sMin / SLOT_MIN), esl = Math.round(eMin / SLOT_MIN); if (esl <= ssl) esl = ssl + 1;
+      ssl = Math.max(0, Math.min(ssl, TOTAL_SLOTS - 1)); esl = Math.max(ssl + 1, Math.min(esl, TOTAL_SLOTS));
+      b.startSlot = ssl; b.lenSlots = esl - ssl;
+    }
+    commit(); $("editDialog").close();
+  });
+
+  /* ── reports ── */
+  function renderReports() {
+    const rep = buildReport(state), W = state.currentWeek, dates = [];
+    for (let d = 0; d < ND; d++) dates.push(ymd(dateOfCell(state.anchorMonday, W, d)));
+    let any = false, html = '<table class="repTable"><thead><tr><th>Task</th>';
+    for (let d = 0; d < ND; d++) { const dt = dateOfCell(state.anchorMonday, W, d); html += "<th>" + DAYS[d] + " " + dt.getDate() + "</th>"; }
+    html += "<th>Week</th></tr></thead><tbody>";
+    for (const c of state.categories) {
+      let rowTotal = 0; const cells = [];
+      for (const ds of dates) { const h = (rep.days[ds] && rep.days[ds].byCat[c.id]) || 0; rowTotal += h; cells.push(h); }
+      if (rowTotal <= 0.0001) continue; any = true;
+      html += '<tr><td class="rname"><span class="budSwatch" style="background:' + c.color + '"></span>' + c.name.replace(/</g, "&lt;") + "</td>";
+      for (const h of cells) html += "<td>" + (h > 0.0001 ? fmtH(h) : "") + "</td>";
+      html += '<td class="rtot">' + fmtH(rowTotal) + "</td></tr>";
+    }
+    let weekTot = 0, dayHtml = "";
+    for (const ds of dates) { const h = (rep.days[ds] && rep.days[ds].total) || 0; weekTot += h; dayHtml += "<td>" + (h > 0.0001 ? fmtH(h) : "") + "</td>"; }
+    html += '<tr class="rfoot"><td>All tasks</td>' + dayHtml + "<td>" + fmtH(weekTot) + "</td></tr></tbody></table>";
+    const gW = { work: 0, home: 0, fruit: 0 }, gA = { work: 0, home: 0, fruit: 0 };
+    for (const ds in rep.days) { const inWk = dates.indexOf(ds) >= 0; const bg = rep.days[ds].byGroup; for (const g in bg) { gA[g] = (gA[g] || 0) + bg[g]; if (inWk) gW[g] = (gW[g] || 0) + bg[g]; } }
+    let gs = "<h3>By group</h3>" + '<table class="repTable"><thead><tr><th>Group</th><th>This week</th><th>All weeks</th></tr></thead><tbody>';
+    for (const g of ["work", "home", "fruit"]) gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtH(gW[g] || 0) + "</td><td>" + fmtH(gA[g] || 0) + "</td></tr>";
+    gs += "</tbody></table>";
+    $("reportsBody").innerHTML = (any ? html : '<p class="muted">No tracked time in this week yet — press ▶ on a task to start the timer.</p>') + gs;
+  }
+  $("reportsBtn").addEventListener("click", () => { renderReports(); $("reportsDialog").showModal(); });
+  $("reportsClose").addEventListener("click", () => $("reportsDialog").close());
 
   /* ── command ── */
   $("cmdForm").addEventListener("submit", (e) => {
@@ -1090,6 +1356,49 @@ if (IS_BROWSER) (function () {
   });
   $("syncDot").addEventListener("click", () => $("settingsBtn").click());
   $("closeSettings").addEventListener("click", () => dlg.close());
+
+  /* ── Budgets / tasks table ── */
+  const budDlg = $("budgetsDialog");
+  function renderBudgets() {
+    const W = state.weeks.length;
+    let html = '<div class="budWrap"><table class="budTable"><thead><tr><th>Group</th><th>Task</th>';
+    for (let i = 0; i < W; i++) html += "<th>W" + (i + 1) + "</th>";
+    html += "<th></th></tr></thead><tbody>";
+    for (const c of state.categories) {
+      html += '<tr data-id="' + c.id + '"><td><select class="bgroup">' +
+        ["work", "home", "fruit"].map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") +
+        '</select></td><td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
+      for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="number" step="0.25" min="0" value="' + weekBudget(c, i) + '"></td>';
+      html += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
+    }
+    html += "</tbody></table></div>";
+    const wrap = $("budgetsTableWrap");
+    wrap.innerHTML = html;
+    wrap.querySelectorAll("tr[data-id]").forEach((tr) => {
+      const id = tr.dataset.id, cat = state.categories.find((c) => c.id === id);
+      if (!cat) return;
+      tr.querySelector(".bgroup").addEventListener("change", (e) => { snap(); cat.group = e.target.value; cat.color = groupColorFor(cat.group, state.categories, cat.id); commit(); renderBudgets(); });
+      const nm = tr.querySelector(".tname");
+      nm.addEventListener("change", () => { const v = nm.value.trim(); if (!v) { nm.value = cat.name; return; } if (nameTaken(v, cat.id)) { toast('A task named "' + v + '" already exists.'); nm.value = cat.name; return; } snap(); cat.name = v; commit(); });
+      tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = Math.max(0, +inp.value || 0); commit(); }); });
+      tr.querySelector(".budDel").addEventListener("click", () => {
+        const has = state.weeks.some((w) => w.blocks.some((b) => b.catId === id));
+        if (has && !confirm('Delete "' + cat.name + '" and its placed blocks in all weeks?')) return;
+        snap(); state.categories = state.categories.filter((c) => c.id !== id);
+        state.weeks.forEach((w) => { w.blocks = w.blocks.filter((b) => b.catId !== id); if (w.budgets) delete w.budgets[id]; });
+        commit(); renderBudgets();
+      });
+    });
+  }
+  $("budgetsBtn").addEventListener("click", () => { renderBudgets(); budDlg.showModal(); });
+  $("budClose").addEventListener("click", () => budDlg.close());
+  $("budAddTask").addEventListener("click", () => {
+    snap(); let base = "New task", name = base, n = 2; while (nameTaken(name, null)) name = base + " " + (n++);
+    const g = "work"; state.categories.push({ id: "cat" + Date.now(), name, hours: 1, group: g, color: groupColorFor(g, state.categories, null) });
+    commit(); renderBudgets();
+  });
+  $("budAddWeek").addEventListener("click", () => { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); commit(); renderBudgets(); });
+  $("budRecolour").addEventListener("click", () => { snap(); for (const c of state.categories) c.color = groupColorFor(c.group || "work", state.categories, c.id); commit(); renderBudgets(); });
   $("sheetImport").addEventListener("click", () => { sheetUrl = $("sheetUrl").value.trim(); saveCfg(); doSheetImport(); });
   $("sbSave").addEventListener("click", async () => {
     cfg = { url: $("sbUrl").value.trim(), key: $("sbKey").value.trim(), pid: $("sbPid").value.trim(), sheet: sheetUrl };
@@ -1136,6 +1445,7 @@ if (IS_BROWSER) (function () {
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
+  if (state.timer) startTimerLoop();
   $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8;
   pullRemote(true);
   if (!cfg) setDot("", "Sync not set up yet — tap ⚙");
