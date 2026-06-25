@@ -432,6 +432,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
+/* build v48 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1262,7 +1263,7 @@ if (IS_BROWSER) (function () {
         '<div class="poolTop">' + (tier === 2 ? '<button class="prioStar ' + (cat.prio === 1 ? "o" : cat.prio === 2 ? "r" : cat.prio === 3 ? "p" : "") + '" title="Priority — click to cycle: orange, red, purple (highest), off">★</button>' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — equals the hours you’ve scheduled">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><span class="goalVal">' + fmtHM(bw) + '</span><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week's goal to what's tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>') + "</div>" +
+        '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — equals the hours you’ve scheduled">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><span class="goalVal">' + fmtHM(bw) + '</span><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>') + "</div>" +
         (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })() +
         (behind ? '<div class="behindBtns"><button class="redUndo" title="Undo the red shading (just for today)"></button><button class="tierOff" title="Remove from Today’s tasks (just for today)"></button></div>' : "");
       const nameIn = el.querySelector(".nameInput");
