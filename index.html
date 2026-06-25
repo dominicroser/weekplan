@@ -438,7 +438,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v49 */
+/* build v52 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -669,7 +669,7 @@ function weekUsage(state, weekIdx) {
     }
   }
   const used = {}, ids = new Set(Object.keys(actualRaw).concat(Object.keys(plannedFut)));
-  ids.forEach((cid) => { used[cid] = (actualRaw[cid] || 0) + (plannedFut[cid] || 0); }); // exact tracked + planned ahead (no 15-min flooring)
+  ids.forEach((cid) => { used[cid] = Math.round(((actualRaw[cid] || 0) + (plannedFut[cid] || 0)) * 60) / 60; }); // tracked + planned ahead, rounded to whole minutes (no 15-min flooring)
   return { used: used, miss: miss };
 }
 
@@ -1034,6 +1034,7 @@ if (IS_BROWSER) (function () {
     const rep = buildReport(state), ds = ymd(new Date());
     let done = (rep.days[ds] && rep.days[ds].byCat[catId]) || 0;
     if (state.timer && state.timer.catId === catId) done += (Date.now() - state.timer.startMs) / 3600000; // include running session
+    done = Math.round(done * 60) / 60; // whole-minute precision so "left" stays round
     const left = Math.max(0, Math.min(future, total - done)); // time still ahead, less any work done ahead of schedule
     return { dayPlan: total, done: done, future: future, left: left };
   }
@@ -1158,11 +1159,13 @@ if (IS_BROWSER) (function () {
     const isUtil = (c) => c.auto || c.noTrack;
     const tier1 = [], tier2 = [], tier3 = [];
     for (const c of cats) {
-      if (isUtil(c)) { tier3.push(c); continue; }                  // Auto / untracked → always bottom tier
-      const bud = weekBudget(c, cw), under = bud > eps && rema(c) > eps, inToday = todayCatIds.has(c.id) && c.tier1OffDate !== todayStr;
-      if (inToday) tier1.push(c);
-      if (under) tier2.push(c);                                    // all under-budget (even if also today)
-      if (!inToday && !under && bud > eps) tier3.push(c);          // enough / over
+      if (isUtil(c)) { tier3.push(c); continue; }                 // Auto / untracked → Tier 3 (kept so they stay draggable)
+      const bud = weekBudget(c, cw);
+      const inToday = todayCatIds.has(c.id) && c.tier1OffDate !== todayStr;
+      if (inToday) tier1.push(c);                                  // today's tasks ALSO appear in Tier 1
+      if (bud <= eps) continue;                                    // no weekly goal → only Tier 1 (if today), else not listed
+      const atGoal = Math.abs(bud - (used[c.id] || 0)) <= eps;
+      if (atGoal) tier3.push(c); else tier2.push(c);              // exactly at goal → Tier 3; under OR over → Tier 2
     }
     pool.innerHTML = "";
 
@@ -1261,7 +1264,7 @@ if (IS_BROWSER) (function () {
         hoursCls = isOver ? "isover" : isDone ? "isdone" : "";
       }
       const el = document.createElement("div");
-      el.className = "poolItem" + (tier === 1 ? " tier1" : tier === 2 ? " tier2" : "") + (faded ? " done" : "") + (ovr ? " over" : "") + (behind ? " behind" : "") + (armedCat === cat.id ? " armed" : "");
+      el.className = "poolItem" + (tier === 1 ? " tier1" : (tier === 2 && !ovr) ? " tier2" : "") + (faded ? " done" : "") + (ovr ? " over" : "") + (behind ? " behind" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
       el.style.borderLeftColor = cat.color;
       el.innerHTML =
