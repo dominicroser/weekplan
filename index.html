@@ -197,6 +197,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .nowLine::before { content: ""; position: absolute; left: -1px; top: -3px; width: 9px; height: 9px; border-radius: 50%; background: #111; }
 /* plan & actual task blocks: no extra border, for a cleaner look */
 .block.actual { box-shadow: 0 1px 3px rgba(0,0,0,0.22); }
+.block.live { z-index: 3; box-shadow: 0 0 0 2px rgba(255,255,255,0.6), 0 1px 4px rgba(0,0,0,0.3); animation: livePulse 1.8s ease-in-out infinite; }
+@keyframes livePulse { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
 .playBtn { position: absolute; right: 6px; bottom: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 10px; color: var(--good); display: flex; align-items: center; justify-content: center; padding: 0; }
 .playBtn.run { background: var(--good); color: #fff; border-color: var(--good); }
 .runElapsed { position: absolute; right: 34px; bottom: 9px; font-size: 10.5px; font-family: 'Inter', sans-serif; color: var(--good); font-weight: 600; cursor: pointer; }
@@ -1005,11 +1007,17 @@ if (IS_BROWSER) (function () {
   function fmtClock(ms) { const m = Math.floor(Math.max(0, ms) / 60000); return Math.floor(m / 60) + ":" + pad2(m % 60); }
   function liveDayRemaining(catId) {
     const cell = cellForDate(state.anchorMonday, new Date()), wk = state.weeks[cell.weekIdx];
-    let dayPlan = 0; if (wk) for (const b of wk.blocks) if (b.catId === catId && b.day === DAYS[cell.dayIdx] && !b.event && b.kind !== "actual") dayPlan += b.lenSlots / 4;
+    const nowSlotL = (new Date().getHours() * 60 + new Date().getMinutes()) / SLOT_MIN;
+    let total = 0, future = 0;
+    if (wk) for (const b of wk.blocks) if (b.catId === catId && b.day === DAYS[cell.dayIdx] && !b.event && b.kind !== "actual") {
+      const end = b.startSlot + b.lenSlots; total += b.lenSlots / 4;
+      if (end > nowSlotL) future += (end - Math.max(b.startSlot, nowSlotL)) / 4; // portion still ahead of now (as shown on the grid)
+    }
     const rep = buildReport(state), ds = ymd(new Date());
     let done = (rep.days[ds] && rep.days[ds].byCat[catId]) || 0;
     if (state.timer && state.timer.catId === catId) done += (Date.now() - state.timer.startMs) / 3600000; // include running session
-    return { dayPlan: dayPlan, done: done };
+    const left = Math.max(0, Math.min(future, total - done)); // time still ahead, less any work done ahead of schedule
+    return { dayPlan: total, done: done, future: future, left: left };
   }
   function elapsedPlanToday(catId) {  // planned hours in today's blocks that have already ended
     const cell = cellForDate(state.anchorMonday, new Date()), wk = state.weeks[cell.weekIdx];
@@ -1021,7 +1029,9 @@ if (IS_BROWSER) (function () {
     if (!state.timer) return;
     const el = pool.querySelector(".runElapsed"); if (el) el.textContent = fmtClock(Date.now() - state.timer.startMs);
     const item = pool.querySelector('.poolItem.tier1[data-cat="' + state.timer.catId + '"]');
-    if (item) { const hp = item.querySelector(".poolHours"); if (hp) { const r = liveDayRemaining(state.timer.catId), eps = 0.001, over = r.done - r.dayPlan > eps, dn = Math.abs(r.dayPlan - r.done) <= eps; hp.className = "poolHours " + (over ? "isover" : dn ? "isdone" : ""); hp.textContent = over ? fmtHM(r.done - r.dayPlan) + " over" : dn ? "✓ done" : fmtHM(r.dayPlan - r.done) + " left"; } }
+    if (item) { const hp = item.querySelector(".poolHours"); if (hp) { const r = liveDayRemaining(state.timer.catId), eps = 0.001, over = r.done - r.dayPlan > eps, dn = !over && r.left <= eps && r.done >= r.dayPlan - eps; hp.className = "poolHours " + (over ? "isover" : dn ? "isdone" : ""); hp.textContent = over ? fmtHM(r.done - r.dayPlan) + " over" : dn ? "✓ done" : fmtHM(r.left) + " left"; } }
+    const lb = $("liveBlock");
+    if (lb) { const sd = new Date(state.timer.startMs), nw = new Date(); const sSlot = (sd.getHours() * 60 + sd.getMinutes() + sd.getSeconds() / 60) / SLOT_MIN, eSlot = (nw.getHours() * 60 + nw.getMinutes() + nw.getSeconds() / 60) / SLOT_MIN; lb.style.height = Math.max(3, (eSlot - sSlot) * SLOT_PX - 2) + "px"; const t = lb.querySelector(".blockTime"); if (t) t.textContent = clock(state.timer.startMs) + "–" + clock(Date.now()); }
   }
   function startTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = setInterval(updateTimerDisplay, 1000); }
   function stopTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = null; }
@@ -1219,11 +1229,12 @@ if (IS_BROWSER) (function () {
       const faded = tier === 3 && isDone;
       let ovr = isOver, pctV = bw > 0 ? Math.min(100, (u / bw) * 100) : 100, hoursTxt, hoursCls, behind = false;
       if (tier === 1) {                                   // Tier 1 → remaining for TODAY (incl. running session)
-        const r = liveDayRemaining(cat.id), dRem = Math.round((r.dayPlan - r.done) * 100) / 100, dDone = Math.abs(r.dayPlan - r.done) <= eps;
+        const r = liveDayRemaining(cat.id);
         ovr = r.done - r.dayPlan > eps;
+        const satisfied = !ovr && r.left <= eps && r.done >= r.dayPlan - eps;
         pctV = r.dayPlan > 0 ? Math.min(100, (r.done / r.dayPlan) * 100) : 100;
-        hoursTxt = ovr ? fmtHM(r.done - r.dayPlan) + " over" : dDone ? "✓ done" : fmtHM(dRem) + " left";
-        hoursCls = ovr ? "isover" : dDone ? "isdone" : "";
+        hoursTxt = ovr ? fmtHM(r.done - r.dayPlan) + " over" : satisfied ? "✓ done" : fmtHM(r.left) + " left";
+        hoursCls = ovr ? "isover" : satisfied ? "isdone" : "";
         behind = (elapsedPlanToday(cat.id) - r.done > eps) && cat.redOffDate !== todayStr;  // an elapsed plan block under-tracked
       } else {                                            // Tier 2/3 → remaining for the WEEK
         hoursTxt = isOver ? fmtHM(u - bw) + " over" : isDone ? "✓ done" : fmtHM(remaining) + " left";
@@ -1307,6 +1318,8 @@ if (IS_BROWSER) (function () {
     const tcell = cellForDate(state.anchorMonday, new Date());
     const isSun = new Date().getDay() === 0;
     const nowSlot = (new Date().getHours() * 60 + new Date().getMinutes()) / SLOT_MIN;
+    const todayDS = ymd(new Date());
+    const minLabel = (slotF) => { const tm = Math.round(slotF * SLOT_MIN); return pad2(Math.floor(tm / 60)) + ":" + pad2(tm % 60); };
     const list = colList(), NC = list.length;
     // today column tint + now line
     const todayCol = (!isSun && tcell.weekIdx === state.currentWeek) ? list.indexOf(tcell.dayIdx) : -1;
@@ -1318,6 +1331,22 @@ if (IS_BROWSER) (function () {
       const nl = document.createElement("div"); nl.className = "nowLine";
       nl.style.cssText = "top:" + y + "px;left:calc(" + LABEL_W + "px + " + (todayCol / NC) + " * (100% - " + LABEL_W + "px));width:calc((100% - " + LABEL_W + "px) / " + NC + ");";
       layer.appendChild(nl);
+      // live, growing block for the running timer
+      const tcat = state.timer && catById[state.timer.catId];
+      if (tcat) {
+        const sd = new Date(state.timer.startMs);
+        if (ymd(sd) === todayDS) {
+          const sSlot = (sd.getHours() * 60 + sd.getMinutes() + sd.getSeconds() / 60) / SLOT_MIN;
+          const eSlot = (now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60) / SLOT_MIN;
+          if (eSlot > sSlot) {
+            const color = tcat.color, ink = textOn(color);
+            const lb = document.createElement("div"); lb.id = "liveBlock"; lb.className = "block actual live";
+            lb.style.cssText = "background:" + color + ";color:" + ink + ";top:" + (sSlot * SLOT_PX + 1) + "px;height:" + Math.max(3, (eSlot - sSlot) * SLOT_PX - 2) + "px;left:calc(" + LABEL_W + "px + " + (todayCol / NC) + " * (100% - " + LABEL_W + "px) + 1px);width:calc((100% - " + LABEL_W + "px) / " + NC + " - 3px);pointer-events:none;";
+            lb.innerHTML = '<span class="blockLabel">' + tcat.name.replace(/</g, "&lt;") + '</span><span class="blockTime">' + clock(state.timer.startMs) + "–" + clock(Date.now()) + "</span>";
+            layer.appendChild(lb);
+          }
+        }
+      }
     }
     for (let ci = 0; ci < NC; ci++) {
       const di = list[ci];
@@ -1328,32 +1357,40 @@ if (IS_BROWSER) (function () {
       if (cmp < 0) dayBlocks = dayBlocks.filter((b) => b.kind === "actual" || b.event);                                  // past day: actual + events
       else if (cmp > 0) dayBlocks = dayBlocks.filter((b) => b.kind !== "actual");                                         // future day: plans + events
       else dayBlocks = dayBlocks.filter((b) => b.event || b.kind === "actual" || (b.startSlot + b.lenSlots) > nowSlot);   // today: drop plans already elapsed
-      const lay = layoutDay(dayBlocks);
+      // today: once the day has started, slide a plan block's front to "now" so it no longer overlaps tracked time
+      const vGeom = {};
+      for (const b of dayBlocks) {
+        let vs = b.startSlot, vl = b.lenSlots;
+        if (cmp === 0 && !b.event && b.kind !== "actual" && b.startSlot < nowSlot && (b.startSlot + b.lenSlots) > nowSlot) { vs = nowSlot; vl = (b.startSlot + b.lenSlots) - nowSlot; }
+        vGeom[b.id] = { s: vs, l: vl };
+      }
+      const lay = layoutDay(dayBlocks.map((b) => Object.assign({}, b, { startSlot: vGeom[b.id].s, lenSlots: vGeom[b.id].l })));
       for (const b of dayBlocks) {
         const p = lay.pos[b.id];
         const color = blockColor(b, catById);
         const ink = textOn(color);
         const isAct = b.kind === "actual";
-        const hPx = isAct ? Math.max(4, b.lenSlots * SLOT_PX) : (b.lenSlots * SLOT_PX - 2);
+        const vs = vGeom[b.id].s, vl = vGeom[b.id].l;
+        const hPx = isAct ? Math.max(4, vl * SLOT_PX) : (vl * SLOT_PX - 2);
         const el = document.createElement("div");
         el.className = "block" + (b.event ? " event" : "") + (b.meeting ? " meeting" : "") + (isAct ? " actual" : " plan") + (selectedId === b.id ? " selected" : "");
         el.dataset.id = b.id;
         const frac = ci / NC + p.col / (NC * p.nCols);
         el.style.cssText =
           "background:" + color + ";color:" + ink +
-          ";top:" + (b.startSlot * SLOT_PX + 1) + "px;height:" + hPx + "px" +
+          ";top:" + (vs * SLOT_PX + 1) + "px;height:" + hPx + "px" +
           ";left:calc(" + LABEL_W + "px + " + frac + " * (100% - " + LABEL_W + "px) + 1px)" +
           ";width:calc((100% - " + LABEL_W + "px) / " + (NC * p.nCols) + " - 3px);";
         if (b.meeting && catById[b.catId]) el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.18), inset -8px 0 0 0 " + catById[b.catId].color; // red meeting with task-coloured band on the right
         const nm = blockName(b, catById);
-        const tLabel = isAct && b.startMs ? (clock(b.startMs) + "–" + clock(b.endMs)) : (slotLabel(b.startSlot) + "–" + slotLabel(b.startSlot + b.lenSlots));
+        const tLabel = isAct && b.startMs ? (clock(b.startMs) + "–" + clock(b.endMs)) : (minLabel(vs) + "–" + minLabel(vs + vl));
         let inner = '<span class="blockLabel">' + nm.replace(/</g, "&lt;") + "</span>";
         if (hPx >= 22) inner += '<span class="blockTime">' + tLabel + "</span>";
         inner += '<button class="blockX" style="color:' + (ink === "#ffffff" ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.5)") + '">&times;</button>';
         const handleH = Math.max(4, Math.min(COARSE ? 14 : 9, Math.floor(hPx / 3)));
         inner += '<div class="resizeHandle top" style="height:' + handleH + 'px;"></div><div class="resizeHandle bot" style="height:' + handleH + 'px;"></div>';
         el.innerHTML = inner;
-        el.title = nm + "  " + tLabel + " (" + (isAct ? fmtHM((b.endMs - b.startMs) / 3600000) : fmtHM(b.lenSlots / SPH)) + ")";
+        el.title = nm + "  " + tLabel + " (" + (isAct ? fmtHM((b.endMs - b.startMs) / 3600000) : fmtHM(vl / SPH)) + ")";
         el.querySelector(".blockX").addEventListener("pointerdown", (e) => { e.stopPropagation(); snap(); removeBlock(b.id); if (selectedId === b.id) selectedId = null; commit(); });
         el.querySelector(".resizeHandle.top").addEventListener("pointerdown", (e) => { e.stopPropagation(); e.preventDefault(); startBlockDrag(e, b, "resizeTop"); });
         el.querySelector(".resizeHandle.bot").addEventListener("pointerdown", (e) => { e.stopPropagation(); e.preventDefault(); startBlockDrag(e, b, "resize"); });
@@ -1860,7 +1897,7 @@ if (IS_BROWSER) (function () {
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
-  setInterval(() => { if (document.visibilityState === "visible" && !drag && !noteAct) renderBlocks(); }, 60000); // advance now-line & drop elapsed plans each minute
+  setInterval(() => { if (document.visibilityState === "visible" && !drag && !noteAct) renderBlocks(); }, 15000); // advance now-line, slide plans & drop elapsed plans
   $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8;
   pullRemote(true);
   if (!cfg) setDot("", "Sync not set up yet — tap ⚙");
