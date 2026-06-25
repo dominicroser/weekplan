@@ -605,6 +605,7 @@ function mondayOf(d) { const x = new Date(d.getFullYear(), d.getMonth(), d.getDa
 function weekDayIdx(d) { const wd = d.getDay(); return wd === 0 ? 5 : wd - 1; } // Mon0..Sat5, Sun->Sat
 function cellForDate(anchor, d) { const a = mondayOf(parseYMD(anchor)); const m = mondayOf(d); return { weekIdx: Math.round((m - a) / (7 * 86400000)), dayIdx: weekDayIdx(d) }; }
 function dateOfCell(anchor, weekIdx, dayIdx) { return addDays(mondayOf(parseYMD(anchor)), weekIdx * 7 + dayIdx); }
+function isoWeek(d) { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); const day = (x.getDay() + 6) % 7; x.setDate(x.getDate() - day + 3); const firstThu = new Date(x.getFullYear(), 0, 4); const fday = (firstThu.getDay() + 6) % 7; firstThu.setDate(firstThu.getDate() - fday + 3); return 1 + Math.round((x - firstThu) / 604800000); }
 function sessionToSlots(startMs, endMs) {
   const sd = new Date(startMs), ed = new Date(endMs);
   const s0 = Math.floor((sd.getHours() * 60 + sd.getMinutes()) / SLOT_MIN);
@@ -898,6 +899,14 @@ if (IS_BROWSER) (function () {
 
   const $ = (id) => document.getElementById(id);
 
+  window.addEventListener("error", function (ev) {
+    try {
+      let b = document.getElementById("__startupErr");
+      if (!b) { b = document.createElement("div"); b.id = "__startupErr"; b.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:99999;background:#c0392b;color:#fff;font:12px/1.45 monospace;padding:8px 10px;white-space:pre-wrap;"; (document.body || document.documentElement).appendChild(b); }
+      b.textContent = "⚠ Startup error — please screenshot this and send it:\n" + (ev.message || (ev.error && ev.error.message) || "unknown") + (ev.lineno ? ("   [line " + ev.lineno + ":" + ev.colno + "]") : "");
+    } catch (e) {}
+  });
+
   // device-local UI prefs (collapsible sections) — not synced
   let ui = {}; try { ui = JSON.parse(localStorage.getItem("weekplan-ui") || "{}"); } catch (e) { ui = {}; }
   function saveUI() { try { localStorage.setItem("weekplan-ui", JSON.stringify(ui)); } catch (e) {} }
@@ -961,16 +970,18 @@ if (IS_BROWSER) (function () {
   function setDot(cls, title) { const d = $("syncDot"); d.className = cls || ""; d.title = title || "Sync status"; }
   async function pullRemote(apply) {
     if (!cfg || !cfg.url || !cfg.key || !cfg.pid) { setDot("", "Sync not configured — open ⚙"); return null; }
+    let rows;
     try {
       const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans?id=eq." + encodeURIComponent(cfg.pid) + "&select=data,updated_at", { headers: sbHeaders() });
       if (!r.ok) throw new Error("HTTP " + r.status);
-      const rows = await r.json(); setDot("ok", "Synced"); lastPull = Date.now();
-      if (rows.length && apply) {
-        const remoteAt = Date.parse(rows[0].updated_at);
-        if (remoteAt > localUpdatedAt) { state = migrate(rows[0].data); localUpdatedAt = remoteAt; saveLocal(); renderAll(); }
-      }
-      return rows[0] || null;
+      rows = await r.json(); setDot("ok", "Synced"); lastPull = Date.now();
     } catch (e) { setDot("err", "Sync error: " + e.message); return null; }
+    // render OUTSIDE the network try/catch, so a render bug surfaces (not silently swallowed as a "sync error")
+    if (rows.length && apply) {
+      const remoteAt = Date.parse(rows[0].updated_at);
+      if (remoteAt > localUpdatedAt) { state = migrate(rows[0].data); localUpdatedAt = remoteAt; saveLocal(); renderAll(); }
+    }
+    return rows[0] || null;
   }
   async function pushRemote() {
     pushTimer = null;
@@ -1236,6 +1247,8 @@ if (IS_BROWSER) (function () {
         hoursTxt = ovr ? fmtHM(r.done - r.dayPlan) + " over" : satisfied ? "✓ done" : fmtHM(r.left) + " left";
         hoursCls = ovr ? "isover" : satisfied ? "isdone" : "";
         behind = (elapsedPlanToday(cat.id) - r.done > eps) && cat.redOffDate !== todayStr;  // an elapsed plan block under-tracked
+      } else if (tier === 3 && (cat.auto || cat.noTrack)) { // Tier 3 utility tasks (Auto / not tracked) → no "left" figure
+        hoursTxt = ""; hoursCls = "";
       } else {                                            // Tier 2/3 → remaining for the WEEK
         hoursTxt = isOver ? fmtHM(u - bw) + " over" : isDone ? "✓ done" : fmtHM(remaining) + " left";
         hoursCls = isOver ? "isover" : isDone ? "isdone" : "";
@@ -1428,7 +1441,7 @@ if (IS_BROWSER) (function () {
   function renderAll() {
     let lbl;
     if (viewDay >= 0) { const cl = colList(), a = cl[0], b = cl[cl.length - 1]; const da = dateOfCell(state.anchorMonday, state.currentWeek, a).getDate(); lbl = DAYS[a] + " " + da + (b !== a ? " – " + DAYS[b] + " " + dateOfCell(state.anchorMonday, state.currentWeek, b).getDate() : ""); }
-    else lbl = "Week " + (state.currentWeek + 1) + " / " + state.weeks.length;
+    else lbl = "Week " + isoWeek(dateOfCell(state.anchorMonday, state.currentWeek, 0)) + " · " + (state.currentWeek + 1) + "/" + state.weeks.length;
     $("weekLabel").textContent = lbl; renderDayHeaders(); renderPool(); renderBlocks(); renderNote(false);
   }
 
