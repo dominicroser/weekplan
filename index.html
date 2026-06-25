@@ -91,6 +91,12 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 12px; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: var(--ink2); }
 .hStep:active { background: var(--panel); }
 .goalVal { display: inline-block; min-width: 30px; text-align: center; }
+.goalInput { width: 40px; min-width: 40px; border: 1px solid transparent; background: transparent; font: inherit; font-size: 10.5px; text-align: center; color: var(--ink2); border-radius: 4px; padding: 1px 0; cursor: text; }
+.goalInput:hover { border-color: var(--line); }
+.goalInput:focus { border-color: rgba(43,108,176,0.5); background: #fff; color: var(--ink); outline: none; }
+.poolItem.tier2 .goalInput { color: #f3f5f7; }
+.poolItem.tier2 .goalInput:hover { border-color: rgba(255,255,255,0.4); }
+.poolItem.tier2 .goalInput:focus { color: #1f2328; background: #fff; }
 .goalSet { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 11px; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: var(--ink2); }
 .goalSet:active { background: var(--panel); }
 .poolItem.tier2 .goalSet { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.28); color: #f3f5f7; }
@@ -432,7 +438,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v48 */
+/* build v49 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1263,7 +1269,7 @@ if (IS_BROWSER) (function () {
         '<div class="poolTop">' + (tier === 2 ? '<button class="prioStar ' + (cat.prio === 1 ? "o" : cat.prio === 2 ? "r" : cat.prio === 3 ? "p" : "") + '" title="Priority — click to cycle: orange, red, purple (highest), off">★</button>' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — equals the hours you’ve scheduled">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><span class="goalVal">' + fmtHM(bw) + '</span><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>') + "</div>" +
+        '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — equals the hours you’ve scheduled">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><input class="goalVal goalInput" title="Click to set the weekly goal" value="' + fmtHM(bw) + '"><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>') + "</div>" +
         (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })() +
         (behind ? '<div class="behindBtns"><button class="redUndo" title="Undo the red shading (just for today)"></button><button class="tierOff" title="Remove from Today’s tasks (just for today)"></button></div>' : "");
       const nameIn = el.querySelector(".nameInput");
@@ -1272,6 +1278,7 @@ if (IS_BROWSER) (function () {
       el.querySelectorAll(".hStep").forEach((b) => { b.addEventListener("pointerdown", (e) => e.stopPropagation()); b.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, Math.round((weekBudget(cat, cw) + (+b.dataset.d) * 0.25) * 100) / 100); commit(); }); });
       const ps = el.querySelector(".prioStar"); if (ps) { ps.addEventListener("pointerdown", (e) => e.stopPropagation()); ps.addEventListener("click", (e) => { e.stopPropagation(); snap(); cat.prio = ((cat.prio || 0) + 1) % 4; commit(); }); }
       const gset = el.querySelector(".goalSet"); if (gset) { gset.addEventListener("pointerdown", (e) => e.stopPropagation()); gset.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = used[cat.id] || 0; commit(); }); }
+      const gv = el.querySelector(".goalInput"); if (gv) { gv.addEventListener("pointerdown", (e) => e.stopPropagation()); gv.addEventListener("click", (e) => e.stopPropagation()); gv.addEventListener("change", () => { snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, parseHM(gv.value)); commit(); }); gv.addEventListener("keydown", (e) => { if (e.key === "Enter") gv.blur(); }); }
       const redUndo = el.querySelector(".redUndo"); if (redUndo) { redUndo.addEventListener("pointerdown", (e) => e.stopPropagation()); redUndo.addEventListener("click", (e) => { e.stopPropagation(); cat.redOffDate = todayStr; commit(); }); }
       const tierOff = el.querySelector(".tierOff"); if (tierOff) { tierOff.addEventListener("pointerdown", (e) => e.stopPropagation()); tierOff.addEventListener("click", (e) => { e.stopPropagation(); cat.tier1OffDate = todayStr; commit(); }); }
       nameIn.addEventListener("change", () => {
@@ -1370,12 +1377,12 @@ if (IS_BROWSER) (function () {
       let dayBlocks = blocks.filter((b) => b.day === day && (b.event || catById[b.catId]));
       if (cmp < 0) dayBlocks = dayBlocks.filter((b) => b.kind === "actual" || b.event);                                  // past day: actual + events
       else if (cmp > 0) dayBlocks = dayBlocks.filter((b) => b.kind !== "actual");                                         // future day: plans + events
-      else dayBlocks = dayBlocks.filter((b) => b.event || b.kind === "actual" || (b.startSlot + b.lenSlots) > nowSlot);   // today: drop plans already elapsed
+      else dayBlocks = dayBlocks.filter((b) => b.kind === "actual" || (b.startSlot + b.lenSlots) > nowSlot);   // today: drop plans & meetings already elapsed
       // today: once the day has started, slide a plan block's front to "now" so it no longer overlaps tracked time
       const vGeom = {};
       for (const b of dayBlocks) {
         let vs = b.startSlot, vl = b.lenSlots;
-        if (cmp === 0 && !b.event && b.kind !== "actual" && b.startSlot < nowSlot && (b.startSlot + b.lenSlots) > nowSlot) { vs = nowSlot; vl = (b.startSlot + b.lenSlots) - nowSlot; }
+        if (cmp === 0 && b.kind !== "actual" && b.startSlot < nowSlot && (b.startSlot + b.lenSlots) > nowSlot) { vs = nowSlot; vl = (b.startSlot + b.lenSlots) - nowSlot; }
         vGeom[b.id] = { s: vs, l: vl };
       }
       const lay = layoutDay(dayBlocks.map((b) => Object.assign({}, b, { startSlot: vGeom[b.id].s, lenSlots: vGeom[b.id].l })));
