@@ -219,9 +219,22 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .opRow.opGone { color: #1565d8; }
 .opName { color: var(--ink2); }
 @media (max-width: 760px) { .origPlan { border-bottom: none; border-right: 1px solid var(--line); padding: 0 9px 0 1px; margin: 0; min-width: 150px; } }
+.collapsible .opHead { cursor: pointer; user-select: none; }
+.triangle { display: inline-block; width: 0; height: 0; border-left: 5px solid var(--ink2); border-top: 4px solid transparent; border-bottom: 4px solid transparent; transition: transform .12s; flex-shrink: 0; }
+.collapsible.open .triangle { transform: rotate(90deg); }
+.collapsible .secBody { display: none; }
+.collapsible.open .secBody { display: block; }
 .logDay { margin-bottom: 8px; }
-.logRow { font-family: 'Inter', sans-serif; font-size: 12.5px; padding: 2px 0; }
+.logDate { font-weight: 700; color: var(--ink2); font-size: 11px; margin: 5px 0 1px; }
+.logRow { font-family: 'Inter', sans-serif; font-size: 12.5px; padding: 2px 0; display: flex; align-items: center; gap: 1px; }
 .logRow .logT { color: var(--ink2); font-variant-numeric: tabular-nums; margin-right: 6px; }
+.logTime { width: 42px; border: 1px solid transparent; background: transparent; font: inherit; text-align: center; border-radius: 4px; color: var(--ink2); font-variant-numeric: tabular-nums; padding: 1px 0; }
+.logTime:focus { border-color: rgba(43,108,176,0.45); background: #fff; outline: none; }
+.logDash { color: var(--ink3); margin: 0 1px; }
+.logCat { font: inherit; font-size: 12px; border: 1px solid transparent; background: transparent; color: var(--ink); border-radius: 4px; max-width: 120px; margin-left: 4px; cursor: pointer; }
+.logCat:hover, .logCat:focus { border-color: var(--line); background: #fff; outline: none; }
+.logDel { background: transparent; border: none; color: var(--ink3); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; margin-left: auto; }
+.logDel:hover { color: #e03131; }
 .logTot { font-size: 11px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
 @media (max-width: 760px) { .poolDivider { width: 6px; height: auto; margin: 0 5px; align-self: stretch; border-radius: 3px; } }
 .budTable tr.arch td { opacity: 0.5; }
@@ -876,6 +889,43 @@ if (IS_BROWSER) (function () {
   let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null, previewEl = null;
 
   const $ = (id) => document.getElementById(id);
+
+  // device-local UI prefs (collapsible sections) — not synced
+  let ui = {}; try { ui = JSON.parse(localStorage.getItem("weekplan-ui") || "{}"); } catch (e) { ui = {}; }
+  function saveUI() { try { localStorage.setItem("weekplan-ui", JSON.stringify(ui)); } catch (e) {} }
+
+  // ── editable tracked-session helpers (shared by inline log + popup) ──
+  function findBlock(id) { for (const wk of state.weeks) { const b = (wk.blocks || []).find((x) => String(x.id) === String(id)); if (b) return { b: b, wk: wk }; } return null; }
+  function msFromDateTime(dateStr, hhmm) { const d = parseYMD(dateStr); const p = String(hhmm).split(":").map(Number); if (isNaN(p[0])) return null; d.setHours(p[0] || 0, p[1] || 0, 0, 0); return d.getTime(); }
+  function reslotSession(b) { const ss = actualSlots(b.startMs, b.endMs); b.startSlot = ss.startSlot; b.lenSlots = ss.lenSlots; }
+  function editSessionTime(id, which, hhmm) {
+    const f = findBlock(id); if (!f) return false; const b = f.b;
+    const ms = msFromDateTime(b.date, hhmm); if (ms == null) { toast("Use HH:MM, e.g. 9:30"); return false; }
+    if (which === "start" && ms >= b.endMs) { toast("Start must be before end."); return false; }
+    if (which === "end" && ms <= b.startMs) { toast("End must be after start."); return false; }
+    snap();
+    if (which === "start") b.startMs = ms; else b.endMs = ms;
+    reslotSession(b); commit(); return true;
+  }
+  function editSessionCat(id, catId) { const f = findBlock(id); if (!f) return; snap(); f.b.catId = catId; commit(); }
+  function deleteSession(id) { const f = findBlock(id); if (!f) return; snap(); f.wk.blocks = f.wk.blocks.filter((x) => String(x.id) !== String(id)); commit(); }
+  function catOptions(sel) { return state.categories.map((c) => '<option value="' + c.id + '"' + (c.id === sel ? " selected" : "") + ">" + (c.name || "").replace(/</g, "&lt;") + "</option>").join(""); }
+  function sessionRowHtml(b) {
+    return '<div class="logRow" data-id="' + b.id + '">' +
+      '<input class="logTime" data-f="start" value="' + clock(b.startMs) + '">' +
+      '<span class="logDash">–</span>' +
+      '<input class="logTime" data-f="end" value="' + clock(b.endMs) + '">' +
+      '<select class="logCat">' + catOptions(b.catId) + "</select>" +
+      '<button class="logDel" title="Delete this entry">&times;</button></div>';
+  }
+  function wireSessionRows(container, after) {
+    container.querySelectorAll(".logRow").forEach((row) => {
+      const id = row.dataset.id;
+      row.querySelectorAll(".logTime").forEach((inp) => inp.addEventListener("change", () => { if (!editSessionTime(id, inp.dataset.f, inp.value)) { const f = findBlock(id); if (f) inp.value = clock(inp.dataset.f === "start" ? f.b.startMs : f.b.endMs); } after(); }));
+      row.querySelector(".logCat").addEventListener("change", (e) => { editSessionCat(id, e.target.value); after(); });
+      row.querySelector(".logDel").addEventListener("click", () => { deleteSession(id); after(); });
+    });
+  }
   const grid = $("grid"), pool = $("pool"), ghost = $("ghost");
 
   const curBlocks = () => state.weeks[state.currentWeek].blocks;
@@ -1098,21 +1148,44 @@ if (IS_BROWSER) (function () {
     // ── Original plan (today's plan as captured at the start of the day) ──
     ensureSnapshot();
     const base = (state.snapshot && state.snapshot.plan) || {};
-    const opIds = Object.keys(base).filter((id) => base[id] > 0.0001 && state.categories.some((c) => c.id === id));
+    const opIds = Object.keys(base).filter((id) => { const c = state.categories.find((x) => x.id === id); return base[id] > 0.0001 && c && !c.auto && !c.noTrack; });
     if (opIds.length) {
       const op = document.createElement("div");
-      op.className = "origPlan";
+      op.className = "origPlan collapsible" + (ui.opCollapsed ? "" : " open");
       const curPlan = planForToday();
-      let h = '<div class="opHead">Original plan <button class="opBtn" title="Use the current plan as the baseline">&#8635;</button></div>';
+      let h = '<div class="opHead"><span class="triangle"></span>Original plan <button class="opBtn" title="Use the current plan as the baseline">&#8635;</button></div><div class="secBody">';
       for (const id of opIds) {
         const c = state.categories.find((x) => x.id === id);
         const mid = base[id], done = trackToday(id), rem = Math.max(0, mid - done);
         const gone = !(curPlan[id] > 0.0001) && done <= 0.0001; // dropped from today's plan AND not worked on
         h += '<div class="opRow' + (gone ? " opGone" : "") + '"><span class="opName">' + c.name.replace(/</g, "&lt;") + "</span> <b>" + fmtHM(rem) + "</b> + " + fmtHM(done) + " = " + fmtHM(mid) + "</div>";
       }
+      h += "</div>";
       op.innerHTML = h;
-      op.querySelector(".opBtn").addEventListener("click", () => { state.snapshot = { date: ymd(new Date()), plan: planForToday() }; saveLocal(); schedulePush(); renderPool(); });
+      op.querySelector(".opHead").addEventListener("click", (e) => { if (e.target.closest(".opBtn")) return; ui.opCollapsed = !ui.opCollapsed; saveUI(); op.classList.toggle("open"); });
+      op.querySelector(".opBtn").addEventListener("click", (e) => { e.stopPropagation(); state.snapshot = { date: ymd(new Date()), plan: planForToday() }; saveLocal(); schedulePush(); renderPool(); });
       pool.appendChild(op);
+    }
+
+    // ── Inline activity log: today + yesterday (collapsible, editable) ──
+    {
+      const sec = document.createElement("div");
+      sec.className = "origPlan collapsible" + (ui.logCollapsed ? "" : " open");
+      const todayD = new Date(), yD = new Date(); yD.setDate(yD.getDate() - 1);
+      let h = '<div class="opHead"><span class="triangle"></span>Activity — today &amp; yesterday</div><div class="secBody">';
+      for (const d of [todayD, yD]) {
+        const ds = ymd(d), sessions = [];
+        for (const wk of state.weeks) for (const b of (wk.blocks || [])) if (b.kind === "actual" && b.date === ds) sessions.push(b);
+        sessions.sort((a, b) => a.startMs - b.startMs);
+        h += '<div class="logDate">' + DAYS[weekDayIdx(d)] + " " + d.getDate() + "." + (d.getMonth() + 1) + ".</div>";
+        if (!sessions.length) { h += '<div class="opRow" style="color:var(--ink3)">—</div>'; continue; }
+        for (const b of sessions) h += sessionRowHtml(b);
+      }
+      h += "</div>";
+      sec.innerHTML = h;
+      sec.querySelector(".opHead").addEventListener("click", () => { ui.logCollapsed = !ui.logCollapsed; saveUI(); sec.classList.toggle("open"); });
+      wireSessionRows(sec, () => renderPool());
+      pool.appendChild(sec);
     }
 
     const divider = () => { const dv = document.createElement("div"); dv.className = "poolDivider"; pool.appendChild(dv); };
@@ -1481,12 +1554,12 @@ if (IS_BROWSER) (function () {
       html += "<h3>" + DAYS[weekDayIdx(dt)] + " " + dt.getDate() + "." + (dt.getMonth() + 1) + ".</h3><div class=\"logDay\">";
       for (const s of sessions) {
         tot += (s.endMs - s.startMs) / 3600000;
-        const nm = catById[s.catId] ? catById[s.catId].name : "?";
-        html += '<div class="logRow"><span class="logT">' + clock(s.startMs) + "–" + clock(s.endMs) + "</span>" + nm.replace(/</g, "&lt;") + "</div>";
+        html += sessionRowHtml(s);
       }
       html += '<div class="logTot">' + fmtHM(tot) + " total</div></div>";
     }
     $("logBody").innerHTML = html || '<p class="muted">No tracked sessions yet.</p>';
+    wireSessionRows($("logBody"), () => renderLog());
   }
   $("logBtn").addEventListener("click", () => { renderLog(); $("logDialog").showModal(); });
   $("logClose").addEventListener("click", () => $("logDialog").close());
