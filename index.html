@@ -213,8 +213,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .gUnder { color: #e03131; font-weight: 600; }
 .poolTrack { font-size: 10px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
-.poolDivider.abDiv { height: 2px; background: #e03131; opacity: 0.65; border-radius: 2px; margin: 7px 2px; }
-.poolDivider.lbl { height: auto; background: none; border-radius: 0; border-top: 2px solid rgba(0,0,0,0.45); padding-top: 4px; margin: 12px 2px 5px; color: var(--ink2); font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.poolDivider.abDiv { height: 2px; background: #9aa0a8; opacity: 0.8; border-radius: 2px; margin: 7px 2px; }
+.poolDivider.lbl { height: auto; background: none; border-radius: 0; border-top: 3px solid #e03131; padding-top: 4px; margin: 12px 2px 5px; color: #e03131; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; }
 .missStar { color: #e0a800; font-size: 12px; }
 .poolSummary .l4 { color: var(--ink); margin-top: 3px; }
 .poolSummary .l4 b { color: var(--ink); font-weight: 700; }
@@ -450,7 +450,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v55 */
+/* build v56 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
