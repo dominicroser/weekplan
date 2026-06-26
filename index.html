@@ -202,15 +202,19 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 @keyframes livePulse { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
 .playBtn { position: absolute; right: 6px; bottom: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 10px; color: var(--good); display: flex; align-items: center; justify-content: center; padding: 0; }
 .playBtn.run { background: var(--good); color: #fff; border-color: var(--good); }
-.runElapsed { position: absolute; right: 62px; bottom: 9px; font-size: 10.5px; font-family: 'Inter', sans-serif; color: var(--good); font-weight: 600; cursor: pointer; }
-.discardBtn { position: absolute; right: 34px; bottom: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 11px; color: #e03131; display: flex; align-items: center; justify-content: center; padding: 0; }
-.runBar { display: inline-flex; align-items: center; gap: 6px; background: var(--good); color: #fff; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 14px; white-space: nowrap; }
+.runElapsed { position: absolute; right: 34px; bottom: 9px; font-size: 10.5px; font-family: 'Inter', sans-serif; color: var(--good); font-weight: 600; cursor: pointer; }
+.runBar { display: inline-flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; padding: 3px 6px 3px 11px; border-radius: 15px; white-space: nowrap; }
+.runBar .rbElapsed { font-variant-numeric: tabular-nums; opacity: 0.92; }
+.runBar .rbBtn { background: rgba(255,255,255,0.28); border: none; color: inherit; cursor: pointer; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.runBar .rbBtn:hover { background: rgba(255,255,255,0.45); }
 .goalGin { width: 58px; text-align: center; border: 1px solid var(--line); border-radius: 5px; padding: 2px 4px; font: inherit; }
 .goalSet2 { margin: 6px 0 12px; font-size: 13px; color: var(--ink); }
 .gOver { color: #2f9e44; font-weight: 600; }
 .gUnder { color: #e03131; font-weight: 600; }
 .poolTrack { font-size: 10px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
+.poolDivider.abDiv { height: 2px; background: #e03131; opacity: 0.65; border-radius: 2px; margin: 7px 2px; }
+.poolDivider.lbl { height: auto; background: none; border-radius: 0; border-top: 2px solid rgba(0,0,0,0.45); padding-top: 4px; margin: 12px 2px 5px; color: var(--ink2); font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
 .missStar { color: #e0a800; font-size: 12px; }
 .poolSummary .l4 { color: var(--ink); margin-top: 3px; }
 .poolSummary .l4 b { color: var(--ink); font-weight: 700; }
@@ -446,7 +450,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v54 */
+/* build v55 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1058,12 +1062,23 @@ if (IS_BROWSER) (function () {
     if (item) { const hp = item.querySelector(".poolHours"); if (hp) { const r = liveDayRemaining(state.timer.catId), eps = 0.001, over = r.done - r.dayPlan > eps, dn = !over && r.left <= eps && r.done >= r.dayPlan - eps; hp.className = "poolHours " + (over ? "isover" : dn ? "isdone" : ""); hp.textContent = over ? fmtHM(r.done - r.dayPlan) + " over" : dn ? "✓ done" : fmtHM(r.left) + " left"; } }
     const lb = $("liveBlock");
     if (lb) { const sd = new Date(state.timer.startMs), nw = new Date(); const sSlot = (sd.getHours() * 60 + sd.getMinutes() + sd.getSeconds() / 60) / SLOT_MIN, eSlot = (nw.getHours() * 60 + nw.getMinutes() + nw.getSeconds() / 60) / SLOT_MIN; lb.style.height = Math.max(3, (eSlot - sSlot) * SLOT_PX - 2) + "px"; const t = lb.querySelector(".blockTime"); if (t) t.textContent = clock(state.timer.startMs) + "–" + clock(Date.now()); }
-    updateRunBar();
+    const rbe = $("rbElapsed"); if (rbe) rbe.textContent = fmtClock(Date.now() - state.timer.startMs);
   }
   function updateRunBar() {
     const el = $("runBar"); if (!el) return;
-    if (state.timer) { const c = state.categories.find((x) => x.id === state.timer.catId); el.textContent = "● " + (c ? c.name : "?") + "  " + fmtClock(Date.now() - state.timer.startMs); el.style.display = ""; }
-    else { el.textContent = ""; el.style.display = "none"; }
+    if (!state.timer) { el.innerHTML = ""; el.style.display = "none"; el.style.background = "transparent"; return; }
+    const c = state.categories.find((x) => x.id === state.timer.catId);
+    const color = c ? c.color : "#888", ink = textOn(color);
+    el.style.display = ""; el.style.background = color; el.style.color = ink;
+    el.innerHTML = '<span class="rbName"></span><span class="rbElapsed" id="rbElapsed"></span>' +
+      '<button class="rbBtn rbStop" title="Stop timer (log it)">⏸</button>' +
+      '<button class="rbBtn rbEdit" title="Edit the start time">✎</button>' +
+      '<button class="rbBtn rbDel" title="Discard the current timing (do not log it)">✕</button>';
+    el.querySelector(".rbName").textContent = c ? c.name : "?";
+    el.querySelector("#rbElapsed").textContent = fmtClock(Date.now() - state.timer.startMs);
+    el.querySelector(".rbStop").addEventListener("click", () => toggleTimer(state.timer.catId));
+    el.querySelector(".rbEdit").addEventListener("click", adjustTimerStart);
+    el.querySelector(".rbDel").addEventListener("click", discardTimer);
   }
   function discardTimer() {
     if (!state.timer) return;
@@ -1075,7 +1090,7 @@ if (IS_BROWSER) (function () {
     if (state.timer && state.timer.catId === catId) { stopTimer(); return; }
     if (state.timer) stopTimer();
     state.timer = { catId: catId, startMs: Date.now() };
-    saveLocal(); schedulePush(); renderPool(); startTimerLoop();
+    saveLocal(); schedulePush(); renderAll(); startTimerLoop();
     const c = state.categories.find((x) => x.id === catId);
     toast("Timing “" + (c ? c.name : "task") + "”…");
   }
@@ -1084,7 +1099,7 @@ if (IS_BROWSER) (function () {
     const t = state.timer, endMs = Date.now(); state.timer = null; stopTimerLoop();
     const dur = endMs - t.startMs;
     if (dur >= 60000) { snap(); createActualBlock(t.catId, t.startMs, endMs); commit(); toast("Logged " + fmtDur(dur)); }
-    else { saveLocal(); schedulePush(); renderPool(); toast("Too short (under 1 min) — not logged"); }
+    else { saveLocal(); schedulePush(); renderAll(); toast("Too short (under 1 min) — not logged"); }
   }
   function adjustTimerStart() {
     if (!state.timer) return;
@@ -1277,7 +1292,7 @@ if (IS_BROWSER) (function () {
       pool.appendChild(sec);
     }
 
-    const divider = () => { const dv = document.createElement("div"); dv.className = "poolDivider"; pool.appendChild(dv); };
+    const divider = (label, cls) => { const dv = document.createElement("div"); dv.className = "poolDivider" + (cls ? " " + cls : ""); if (label) dv.textContent = label; pool.appendChild(dv); };
     const renderItem = (cat, tier, shade) => {
       if (shade == null) shade = tier;                   // tier drives the numbers; shade drives the box styling
       const bw = weekBudget(cat, cw);
@@ -1340,17 +1355,16 @@ if (IS_BROWSER) (function () {
         play.addEventListener("pointerdown", (e) => e.stopPropagation());
         play.addEventListener("click", (e) => { e.stopPropagation(); toggleTimer(cat.id); });
         el.appendChild(play);
-        if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.title = "Click to adjust the start time"; re.textContent = fmtClock(Date.now() - state.timer.startMs); re.addEventListener("pointerdown", (e) => e.stopPropagation()); re.addEventListener("click", (e) => { e.stopPropagation(); adjustTimerStart(); }); el.appendChild(re);
-          const del = document.createElement("button"); del.className = "discardBtn"; del.textContent = "✕"; del.title = "Discard the current timing (do not log it)"; del.addEventListener("pointerdown", (e) => e.stopPropagation()); del.addEventListener("click", (e) => { e.stopPropagation(); discardTimer(); }); el.appendChild(del); }
+        if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.title = "Click to adjust the start time"; re.textContent = fmtClock(Date.now() - state.timer.startMs); re.addEventListener("pointerdown", (e) => e.stopPropagation()); re.addEventListener("click", (e) => { e.stopPropagation(); adjustTimerStart(); }); el.appendChild(re); }
       }
       pool.appendChild(el);
     };
     t1a.forEach((o) => renderItem(o.cat, 1, o.shade));
-    if (t1a.length && t1b.length) divider();
+    if (t1a.length && t1b.length) divider(null, "abDiv");   // red thin divider between upcoming (1a) and passed (1b)
     t1b.forEach((o) => renderItem(o.cat, 1, o.shade));
-    if ((t1a.length + t1b.length) && (tier2.length || tier3.length)) divider();
+    if (tier2.length) divider("Open", "lbl");
     tier2.forEach((c) => renderItem(c, 2));
-    if (tier2.length && tier3.length) divider();
+    if (tier3.length) divider("Done", "lbl");
     tier3.forEach((c) => renderItem(c, 3));
     const add = document.createElement("button");
     add.id = "addCat"; add.textContent = "+ Add task";
