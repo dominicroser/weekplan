@@ -71,11 +71,6 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolItem.tier2 .catX { color: rgba(255,255,255,0.45); }
 .poolItem.tier2 .nameInput:focus, .poolItem.tier2 .hoursInput:focus { color: #1f2328; }
 .poolItem.over { background: var(--overbg); border-left-style: solid; }
-.poolItem.tier1.behind { background: #f7d6d6; }
-.behindBtns { display: flex; gap: 7px; margin-top: 8px; }
-.behindBtns button { width: 18px; height: 18px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.18); cursor: pointer; padding: 0; }
-.behindBtns .redUndo { background: var(--panel); }
-.behindBtns .tierOff { background: #6b7280; border-color: #6b7280; }
 .poolItem.armed { outline-color: var(--accent); }
 .poolTop { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
 .nameInput { background: transparent; border: none; color: var(--ink); font-size: 13.5px; font-weight: 600; padding: 0; flex: 1; min-width: 0; border-radius: 3px; }
@@ -207,22 +202,32 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 @keyframes livePulse { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
 .playBtn { position: absolute; right: 6px; bottom: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 10px; color: var(--good); display: flex; align-items: center; justify-content: center; padding: 0; }
 .playBtn.run { background: var(--good); color: #fff; border-color: var(--good); }
-.runElapsed { position: absolute; right: 34px; bottom: 9px; font-size: 10.5px; font-family: 'Inter', sans-serif; color: var(--good); font-weight: 600; cursor: pointer; }
+.runElapsed { position: absolute; right: 62px; bottom: 9px; font-size: 10.5px; font-family: 'Inter', sans-serif; color: var(--good); font-weight: 600; cursor: pointer; }
+.discardBtn { position: absolute; right: 34px; bottom: 6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 11px; color: #e03131; display: flex; align-items: center; justify-content: center; padding: 0; }
+.runBar { display: inline-flex; align-items: center; gap: 6px; background: var(--good); color: #fff; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 14px; white-space: nowrap; }
+.goalGin { width: 58px; text-align: center; border: 1px solid var(--line); border-radius: 5px; padding: 2px 4px; font: inherit; }
+.goalSet2 { margin: 6px 0 12px; font-size: 13px; color: var(--ink); }
+.gOver { color: #2f9e44; font-weight: 600; }
+.gUnder { color: #e03131; font-weight: 600; }
 .poolTrack { font-size: 10px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .missStar { color: #e0a800; font-size: 12px; }
 .poolSummary .l4 { color: var(--ink); margin-top: 3px; }
 .poolSummary .l4 b { color: var(--ink); font-weight: 700; }
+.poolSummary .lWork { color: #1d4ed8; margin-top: 2px; }
+.poolSummary .lWork b { color: #1d4ed8; font-weight: 700; }
+.poolSummary .lFruit { color: #15803d; margin-top: 1px; }
+.poolSummary .lFruit b { color: #15803d; font-weight: 700; }
 .poolSummary .l5 { margin-top: 3px; }
-.pOrange { color: #e8830c; font-weight: 700; }
+.pOrange { color: #b8860b; font-weight: 700; }
 .pRed { color: #e03131; font-weight: 700; }
 .pPurple { color: #8b3bd6; font-weight: 700; }
 .prioStar { background: transparent; border: none; cursor: pointer; font-size: 13px; line-height: 1; padding: 0 4px 0 0; color: #c2c8cf; }
-.prioStar.o { color: #e8830c; }
+.prioStar.o { color: #b8860b; }
 .prioStar.r { color: #e03131; }
 .prioStar.p { color: #8b3bd6; }
 .poolItem.tier2 .prioStar { color: rgba(255,255,255,0.5); }
-.poolItem.tier2 .prioStar.o { color: #ffb14e; }
+.poolItem.tier2 .prioStar.o { color: #e3c34a; }
 .poolItem.tier2 .prioStar.r { color: #ff7a7a; }
 .poolItem.tier2 .prioStar.p { color: #c08bf0; }
 .origPlan { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink2); padding: 4px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
@@ -291,7 +296,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
     <button id="weekAdd" title="Add a week">+</button>
     <button id="weekDel" title="Delete this week">&#128465;</button>
   </div>
-  <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="width:auto;padding:0 9px;">Day</button>
+  <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="width:auto;padding:0 9px;">Week</button>
+  <span id="runBar" class="runBar" style="display:none;"></span>
   <form id="cmdForm">
     <input id="cmdInput" placeholder='Type a task or meeting… e.g. "Growth mon-sat 5–5:30am" or "Meet Fred tue 1–2:30pm"' autocomplete="off">
   </form>
@@ -440,7 +446,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v53 */
+/* build v54 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1052,6 +1058,16 @@ if (IS_BROWSER) (function () {
     if (item) { const hp = item.querySelector(".poolHours"); if (hp) { const r = liveDayRemaining(state.timer.catId), eps = 0.001, over = r.done - r.dayPlan > eps, dn = !over && r.left <= eps && r.done >= r.dayPlan - eps; hp.className = "poolHours " + (over ? "isover" : dn ? "isdone" : ""); hp.textContent = over ? fmtHM(r.done - r.dayPlan) + " over" : dn ? "✓ done" : fmtHM(r.left) + " left"; } }
     const lb = $("liveBlock");
     if (lb) { const sd = new Date(state.timer.startMs), nw = new Date(); const sSlot = (sd.getHours() * 60 + sd.getMinutes() + sd.getSeconds() / 60) / SLOT_MIN, eSlot = (nw.getHours() * 60 + nw.getMinutes() + nw.getSeconds() / 60) / SLOT_MIN; lb.style.height = Math.max(3, (eSlot - sSlot) * SLOT_PX - 2) + "px"; const t = lb.querySelector(".blockTime"); if (t) t.textContent = clock(state.timer.startMs) + "–" + clock(Date.now()); }
+    updateRunBar();
+  }
+  function updateRunBar() {
+    const el = $("runBar"); if (!el) return;
+    if (state.timer) { const c = state.categories.find((x) => x.id === state.timer.catId); el.textContent = "● " + (c ? c.name : "?") + "  " + fmtClock(Date.now() - state.timer.startMs); el.style.display = ""; }
+    else { el.textContent = ""; el.style.display = "none"; }
+  }
+  function discardTimer() {
+    if (!state.timer) return;
+    state.timer = null; stopTimerLoop(); saveLocal(); schedulePush(); renderAll(); toast("Timer discarded — nothing logged");
   }
   function startTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = setInterval(updateTimerDisplay, 1000); }
   function stopTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = null; }
@@ -1154,21 +1170,32 @@ if (IS_BROWSER) (function () {
     const trackWeek = (id) => { let s = 0; for (const ds of wkDates) { const dd = rep.days[ds]; if (dd && dd.byCat[id]) s += dd.byCat[id]; } return s; };
     const trackToday = (id) => { const dd = rep.days[todayStr]; return dd && dd.byCat[id] ? dd.byCat[id] : 0; };
     const rema = (c) => Math.round((weekBudget(c, cw) - (used[c.id] || 0)) * 100) / 100;
-    // tier 1: tasks planned for the current day
-    const todayCatIds = new Set();
-    if (todayIdx >= 0) for (const b of curBlocks()) if (b.day === DAYS[todayIdx] && !b.event && b.kind !== "actual") todayCatIds.add(b.catId);
     const isUtil = (c) => c.noTrack;
-    const tier1 = [], tier2 = [], tier3 = [];
+    const tier2 = [], tier3 = [];
     for (const c of cats) {
-      if (isUtil(c)) { tier3.push(c); continue; }                 // Auto / untracked → Tier 3 (kept so they stay draggable)
+      if (isUtil(c)) { tier3.push(c); continue; }                 // not-tracked utilities → Tier 3 (kept so they stay draggable)
       const bud = weekBudget(c, cw);
-      const inToday = todayCatIds.has(c.id) && c.tier1OffDate !== todayStr;
-      if (inToday) tier1.push(c);                                  // today's tasks ALSO appear in Tier 1
-      if (bud <= eps) continue;                                    // no weekly goal → only Tier 1 (if today), else not listed
+      if (bud <= eps) continue;                                    // no weekly goal → not listed in Tier 2/3
       const atGoal = Math.abs(bud - (used[c.id] || 0)) <= eps;
       if (atGoal) tier3.push(c); else tier2.push(c);              // exactly at goal → Tier 3; under OR over → Tier 2
     }
-    // Tier 2 order: purple ★, red ★, orange ★, then no-star under-budget, then no-star over-budget
+    // Tier 1: today's tasks, split into 1a (still upcoming) and 1b (already passed), each in calendar order
+    const t1a = [], t1b = [];
+    if (todayIdx >= 0) {
+      const nowSlotP = (new Date().getHours() * 60 + new Date().getMinutes()) / SLOT_MIN;
+      const byCat = {};
+      for (const b of curBlocks()) { if (b.day !== DAYS[todayIdx] || b.event || b.kind === "actual") continue; const cat = cats.find((c) => c.id === b.catId); if (!cat || isUtil(cat)) continue; (byCat[b.catId] = byCat[b.catId] || { cat: cat, blocks: [] }).blocks.push(b); }
+      for (const cid in byCat) {
+        const o = byCat[cid]; o.blocks.sort((a, b) => a.startSlot - b.startSlot);
+        const future = o.blocks.filter((b) => (b.startSlot + b.lenSlots) > nowSlotP);
+        const bud = weekBudget(o.cat, cw), atGoal = bud > eps && Math.abs(bud - (used[o.cat.id] || 0)) <= eps, isT2 = bud > eps && !atGoal;
+        if (future.length) t1a.push({ cat: o.cat, key: future[0].startSlot, shade: isT2 ? 2 : 1 });   // upcoming today
+        else t1b.push({ cat: o.cat, key: o.blocks[0].startSlot, shade: isT2 ? 2 : (atGoal ? 3 : 1) }); // already passed today
+      }
+      t1a.sort((a, b) => a.key - b.key);
+      t1b.sort((a, b) => a.key - b.key);
+    }
+    // Tier 2 order: purple ★, red ★, yellow ★, then no-star under-budget, then no-star over-budget
     const prioRank = (c) => c.prio === 3 ? 3 : c.prio === 2 ? 2 : c.prio === 1 ? 1 : 0;
     const isOverC = (c) => (used[c.id] || 0) - weekBudget(c, cw) > eps;
     tier2.sort((a, b) => (prioRank(b) - prioRank(a)) || ((isOverC(a) ? 1 : 0) - (isOverC(b) ? 1 : 0)));
@@ -1187,6 +1214,8 @@ if (IS_BROWSER) (function () {
     const comboTrack = (names) => { let s = 0; for (const c of state.categories) if (names.indexOf((c.name || "").trim().toLowerCase()) >= 0) s += trackToday(c.id); return s; };
     const mailsSum = comboTrack(["hmails", "wmails"]);
     const tasksSum = comboTrack(["htasks", "wtasks"]);
+    const grpWeek = (g) => { let s = 0; for (const ds of wkDates) { const dd = rep.days[ds]; if (dd && dd.byGroup[g]) s += dd.byGroup[g]; } return s; };
+    const grpToday = (g) => { const dd = rep.days[todayStr]; return dd && dd.byGroup[g] ? dd.byGroup[g] : 0; };
     let prioO = 0, prioR = 0, prioP = 0;
     for (const c of tier2) { if (c.prio === 1) prioO += Math.max(0, rema(c)); else if (c.prio === 2) prioR += Math.max(0, rema(c)); else if (c.prio === 3) prioP += Math.max(0, rema(c)); }
     summary.innerHTML =
@@ -1196,6 +1225,8 @@ if (IS_BROWSER) (function () {
       (avgOther != null ? '<div class="l3">Other weeks: <b>' + fmtHM(avgOther) + "</b> left on avg</div>" : "") +
       '</div>' +
       '<div class="l4">Mails <b>' + fmtHM(mailsSum) + "</b> · Tasks <b>" + fmtHM(tasksSum) + "</b></div>" +
+      '<div class="lWork">Work — D: <b>' + fmtHM(grpToday("work")) + "</b> · W: <b>" + fmtHM(grpWeek("work")) + "</b></div>" +
+      '<div class="lFruit">Fruit — D: <b>' + fmtHM(grpToday("fruit")) + "</b> · W: <b>" + fmtHM(grpWeek("fruit")) + "</b></div>" +
       ((prioP > 0.0001 || prioR > 0.0001 || prioO > 0.0001) ? '<div class="l5">' + [
         prioP > 0.0001 ? '<span class="pPurple">★ ' + fmtHM(prioP) + "</span>" : "",
         prioR > 0.0001 ? '<span class="pRed">★ ' + fmtHM(prioR) + "</span>" : "",
@@ -1247,14 +1278,15 @@ if (IS_BROWSER) (function () {
     }
 
     const divider = () => { const dv = document.createElement("div"); dv.className = "poolDivider"; pool.appendChild(dv); };
-    const renderItem = (cat, tier) => {
+    const renderItem = (cat, tier, shade) => {
+      if (shade == null) shade = tier;                   // tier drives the numbers; shade drives the box styling
       const bw = weekBudget(cat, cw);
       const u = used[cat.id] || 0;
       const remaining = Math.round((bw - u) * 100) / 100;
       const isOver = u - bw > eps;
       const isDone = Math.abs(bw - u) <= eps;
-      const faded = tier === 3; // all Tier 3 boxes shaded equally
-      let ovr = isOver, pctV = bw > 0 ? Math.min(100, (u / bw) * 100) : 100, hoursTxt, hoursCls, behind = false;
+      const faded = shade === 3; // Tier 3 boxes shaded equally
+      let ovr = isOver, pctV = bw > 0 ? Math.min(100, (u / bw) * 100) : 100, hoursTxt, hoursCls;
       if (tier === 1) {                                   // Tier 1 → remaining for TODAY (incl. running session)
         const r = liveDayRemaining(cat.id);
         ovr = r.done - r.dayPlan > eps;
@@ -1262,7 +1294,6 @@ if (IS_BROWSER) (function () {
         pctV = r.dayPlan > 0 ? Math.min(100, (r.done / r.dayPlan) * 100) : 100;
         hoursTxt = ovr ? fmtHM(r.done - r.dayPlan) + " over" : satisfied ? "✓ done" : fmtHM(r.left) + " left";
         hoursCls = ovr ? "isover" : satisfied ? "isdone" : "";
-        behind = (elapsedPlanToday(cat.id) - r.done > eps) && cat.redOffDate !== todayStr;  // an elapsed plan block under-tracked
       } else if (tier === 3 && cat.noTrack) { // Tier 3 utility tasks (not tracked) → no "left" figure
         hoursTxt = ""; hoursCls = "";
       } else {                                            // Tier 2/3 → remaining for the WEEK
@@ -1270,17 +1301,16 @@ if (IS_BROWSER) (function () {
         hoursCls = isOver ? "isover" : isDone ? "isdone" : "";
       }
       const el = document.createElement("div");
-      el.className = "poolItem" + (tier === 1 ? " tier1" : (tier === 2 && !ovr) ? " tier2" : "") + (faded ? " done" : "") + (ovr ? " over" : "") + (behind ? " behind" : "") + (armedCat === cat.id ? " armed" : "");
+      el.className = "poolItem" + (shade === 1 ? " tier1" : (shade === 2 && !ovr) ? " tier2" : "") + (faded ? " done" : "") + (ovr ? " over" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
       el.style.borderLeftColor = cat.color;
       el.innerHTML =
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
-        '<div class="poolTop">' + (tier === 2 ? '<button class="prioStar ' + (cat.prio === 1 ? "o" : cat.prio === 2 ? "r" : cat.prio === 3 ? "p" : "") + '" title="Priority — click to cycle: orange, red, purple (highest), off">★</button>' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
+        '<div class="poolTop">' + (tier === 2 ? '<button class="prioStar ' + (cat.prio === 1 ? "o" : cat.prio === 2 ? "r" : cat.prio === 3 ? "p" : "") + '" title="Priority — click to cycle: yellow, red, purple (highest), off">★</button>' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
         '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtHM(u) + " of " + '<button class="hStep" data-d="-1">−</button><input class="goalVal goalInput" title="Click to set the weekly goal" value="' + fmtHM(bw) + '"><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>' + "</div>" +
-        (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })() +
-        (behind ? '<div class="behindBtns"><button class="redUndo" title="Undo the red shading (just for today)"></button><button class="tierOff" title="Remove from Today’s tasks (just for today)"></button></div>' : "");
+        (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })();
       const nameIn = el.querySelector(".nameInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe");
       for (const inp of [nameIn, stripe]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
@@ -1288,8 +1318,6 @@ if (IS_BROWSER) (function () {
       const ps = el.querySelector(".prioStar"); if (ps) { ps.addEventListener("pointerdown", (e) => e.stopPropagation()); ps.addEventListener("click", (e) => { e.stopPropagation(); snap(); cat.prio = ((cat.prio || 0) + 1) % 4; commit(); }); }
       const gset = el.querySelector(".goalSet"); if (gset) { gset.addEventListener("pointerdown", (e) => e.stopPropagation()); gset.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = used[cat.id] || 0; commit(); }); }
       const gv = el.querySelector(".goalInput"); if (gv) { gv.addEventListener("pointerdown", (e) => e.stopPropagation()); gv.addEventListener("click", (e) => e.stopPropagation()); gv.addEventListener("change", () => { snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, parseHM(gv.value)); commit(); }); gv.addEventListener("keydown", (e) => { if (e.key === "Enter") gv.blur(); }); }
-      const redUndo = el.querySelector(".redUndo"); if (redUndo) { redUndo.addEventListener("pointerdown", (e) => e.stopPropagation()); redUndo.addEventListener("click", (e) => { e.stopPropagation(); cat.redOffDate = todayStr; commit(); }); }
-      const tierOff = el.querySelector(".tierOff"); if (tierOff) { tierOff.addEventListener("pointerdown", (e) => e.stopPropagation()); tierOff.addEventListener("click", (e) => { e.stopPropagation(); cat.tier1OffDate = todayStr; commit(); }); }
       nameIn.addEventListener("change", () => {
         const v = nameIn.value.trim();
         if (!v) { nameIn.value = cat.name; return; }
@@ -1312,12 +1340,15 @@ if (IS_BROWSER) (function () {
         play.addEventListener("pointerdown", (e) => e.stopPropagation());
         play.addEventListener("click", (e) => { e.stopPropagation(); toggleTimer(cat.id); });
         el.appendChild(play);
-        if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.title = "Click to adjust the start time"; re.textContent = fmtClock(Date.now() - state.timer.startMs); re.addEventListener("pointerdown", (e) => e.stopPropagation()); re.addEventListener("click", (e) => { e.stopPropagation(); adjustTimerStart(); }); el.appendChild(re); }
+        if (isRun) { const re = document.createElement("span"); re.className = "runElapsed"; re.title = "Click to adjust the start time"; re.textContent = fmtClock(Date.now() - state.timer.startMs); re.addEventListener("pointerdown", (e) => e.stopPropagation()); re.addEventListener("click", (e) => { e.stopPropagation(); adjustTimerStart(); }); el.appendChild(re);
+          const del = document.createElement("button"); del.className = "discardBtn"; del.textContent = "✕"; del.title = "Discard the current timing (do not log it)"; del.addEventListener("pointerdown", (e) => e.stopPropagation()); del.addEventListener("click", (e) => { e.stopPropagation(); discardTimer(); }); el.appendChild(del); }
       }
       pool.appendChild(el);
     };
-    tier1.forEach((c) => renderItem(c, 1));
-    if (tier1.length && (tier2.length || tier3.length)) divider();
+    t1a.forEach((o) => renderItem(o.cat, 1, o.shade));
+    if (t1a.length && t1b.length) divider();
+    t1b.forEach((o) => renderItem(o.cat, 1, o.shade));
+    if ((t1a.length + t1b.length) && (tier2.length || tier3.length)) divider();
     tier2.forEach((c) => renderItem(c, 2));
     if (tier2.length && tier3.length) divider();
     tier3.forEach((c) => renderItem(c, 3));
@@ -1459,7 +1490,7 @@ if (IS_BROWSER) (function () {
     let lbl;
     if (viewDay >= 0) { const cl = colList(), a = cl[0], b = cl[cl.length - 1]; const da = dateOfCell(state.anchorMonday, state.currentWeek, a).getDate(); lbl = DAYS[a] + " " + da + (b !== a ? " – " + DAYS[b] + " " + dateOfCell(state.anchorMonday, state.currentWeek, b).getDate() : ""); }
     else lbl = "Week " + isoWeek(dateOfCell(state.anchorMonday, state.currentWeek, 0)) + " · " + (state.currentWeek + 1) + "/" + state.weeks.length;
-    $("weekLabel").textContent = lbl; renderDayHeaders(); renderPool(); renderBlocks(); renderNote(false);
+    $("weekLabel").textContent = lbl; renderDayHeaders(); renderPool(); renderBlocks(); renderNote(false); updateRunBar();
   }
 
   /* ── pointer ── */
@@ -1629,13 +1660,32 @@ if (IS_BROWSER) (function () {
     let weekTot = 0, dayHtml = "";
     for (const ds of dates) { const h = (rep.days[ds] && rep.days[ds].total) || 0; weekTot += h; dayHtml += "<td>" + (h > 0.0001 ? fmtHM(h) : "") + "</td>"; }
     html += '<tr class="rfoot"><td>All tasks</td>' + dayHtml + "<td>" + fmtHM(weekTot) + "</td></tr></tbody></table>";
+    const NW = state.weeks.length;
     const gW = {}, gA = {};
     for (const ds in rep.days) { const inWk = dates.indexOf(ds) >= 0; const bg = rep.days[ds].byGroup; for (const g in bg) { gA[g] = (gA[g] || 0) + bg[g]; if (inWk) gW[g] = (gW[g] || 0) + bg[g]; } }
-    let gs = "<h3>By group</h3>" + '<table class="repTable"><thead><tr><th>Group</th><th>This week</th><th>All weeks</th></tr></thead><tbody>';
-    for (const g of ["home", "fruit", "work", "none", "termin", "zug"]) { if (!(gA[g] > 0.0001)) continue; gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtHM(gW[g] || 0) + "</td><td>" + fmtHM(gA[g] || 0) + "</td></tr>"; }
-    gs += '<tr class="rfoot"><td class="rname">Work + Fruit</td><td>' + fmtHM((gW.work || 0) + (gW.fruit || 0)) + "</td><td>" + fmtHM((gA.work || 0) + (gA.fruit || 0)) + "</td></tr>";
+    let gs = "<h3>By group</h3>" + '<table class="repTable"><thead><tr><th>Group</th><th>This week</th><th>All weeks</th><th>Avg/wk</th></tr></thead><tbody>';
+    for (const g of ["home", "fruit", "work", "none", "termin", "zug"]) { if (!(gA[g] > 0.0001)) continue; gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtHM(gW[g] || 0) + "</td><td>" + fmtHM(gA[g] || 0) + "</td><td>" + fmtHM((gA[g] || 0) / NW) + "</td></tr>"; }
+    const wfW = (gW.work || 0) + (gW.fruit || 0), wfA = (gA.work || 0) + (gA.fruit || 0);
+    gs += '<tr class="rfoot"><td class="rname">Work + Fruit</td><td>' + fmtHM(wfW) + "</td><td>" + fmtHM(wfA) + "</td><td>" + fmtHM(wfA / NW) + "</td></tr>";
     gs += "</tbody></table>";
-    $("reportsBody").innerHTML = (any ? html : '<p class="muted">No tracked time in this week yet — press ▶ on a task to start the timer.</p>') + gs;
+    // ── Weekly goals (editable) + per-week over/under ──
+    const gt = state.goalTotal || 0, gwf = state.goalWF || 0;
+    const signHM = (v) => (v >= 0 ? "+" : "−") + fmtHM(Math.abs(v));
+    let goalsHtml = "<h3>Weekly goals</h3>" +
+      '<div class="goalSet2">Total: <input id="goalTotalIn" class="goalGin" value="' + fmtHM(gt) + '">  ·  Work+Fruit: <input id="goalWFIn" class="goalGin" value="' + fmtHM(gwf) + '"></div>' +
+      '<table class="repTable"><thead><tr><th>Week</th><th>Total</th><th>vs goal</th><th>Work+Fruit</th><th>vs goal</th></tr></thead><tbody>';
+    for (let i = 0; i < NW; i++) {
+      let tot = 0, wf = 0;
+      for (let d = 0; d < ND; d++) { const ds = ymd(dateOfCell(state.anchorMonday, i, d)); const dd = rep.days[ds]; if (dd) { tot += dd.total || 0; wf += (dd.byGroup.work || 0) + (dd.byGroup.fruit || 0); } }
+      const dT = gt > 0 ? '<span class="' + (tot - gt >= 0 ? "gOver" : "gUnder") + '">' + signHM(tot - gt) + "</span>" : "—";
+      const dWF = gwf > 0 ? '<span class="' + (wf - gwf >= 0 ? "gOver" : "gUnder") + '">' + signHM(wf - gwf) + "</span>" : "—";
+      goalsHtml += '<tr><td class="rname">Week ' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + (i === W ? " ★" : "") + "</td><td>" + fmtHM(tot) + "</td><td>" + dT + "</td><td>" + fmtHM(wf) + "</td><td>" + dWF + "</td></tr>";
+    }
+    goalsHtml += "</tbody></table>";
+    $("reportsBody").innerHTML = (any ? html : '<p class="muted">No tracked time in this week yet — press ▶ on a task to start the timer.</p>') + gs + goalsHtml;
+    const gi1 = $("goalTotalIn"), gi2 = $("goalWFIn");
+    if (gi1) gi1.addEventListener("change", () => { snap(); state.goalTotal = Math.max(0, parseHM(gi1.value)); commit(); renderReports(); });
+    if (gi2) gi2.addEventListener("change", () => { snap(); state.goalWF = Math.max(0, parseHM(gi2.value)); commit(); renderReports(); });
   }
   $("reportsBtn").addEventListener("click", () => { renderReports(); $("reportsDialog").showModal(); });
   $("reportsClose").addEventListener("click", () => $("reportsDialog").close());
@@ -1696,7 +1746,7 @@ if (IS_BROWSER) (function () {
     else if (nd < 0) { if (wk === 0) return; nd = 5; wk--; }
     viewDay = nd; state.currentWeek = wk; selectedId = null; commit();
   }
-  function setView() { SLOT_PX = viewDay >= 0 ? SLOT_PX_DAY : SLOT_PX_WEEK; $("viewBtn").textContent = viewDay >= 0 ? "Week" : "Day"; buildGrid(); renderAll(); $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8; }
+  function setView() { SLOT_PX = viewDay >= 0 ? SLOT_PX_DAY : SLOT_PX_WEEK; $("viewBtn").textContent = viewDay >= 0 ? "Day" : "Week"; buildGrid(); renderAll(); $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8; }
   $("viewBtn").addEventListener("click", () => {
     if (viewDay >= 0) viewDay = -1;
     else { const tc = cellForDate(state.anchorMonday, new Date()); viewDay = (tc.weekIdx === state.currentWeek && new Date().getDay() !== 0) ? tc.dayIdx : 0; }
