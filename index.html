@@ -51,16 +51,16 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 
 /* ── Layout ── */
 #body { display: flex; align-items: flex-start; }
-#pool { width: 230px; flex-shrink: 0; padding: 12px 11px; display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 60px); overflow-y: auto; }
+#pool { width: 270px; flex-shrink: 0; padding: 12px 11px; display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 60px); overflow-y: auto; }
 .poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; line-height: 1.55; }
 .poolSummary .opHead { font-weight: 400; margin-bottom: 0; }
 .poolSummary .sumSec { margin-bottom: 7px; }
 .poolSummary .sumHd { font-weight: 800; font-size: 12px; color: var(--ink); margin: 3px 0 2px; display: flex; align-items: center; gap: 5px; }
 .poolSummary .sumSec.collapsible .sumHd { cursor: pointer; }
 .sumTbl { border-collapse: collapse; width: 100%; font-family: 'Inter', sans-serif; font-size: 10.5px; }
-.sumTbl th, .sumTbl td { border: 1px solid var(--line); padding: 1px 5px; text-align: right; font-variant-numeric: tabular-nums; }
+.sumTbl th, .sumTbl td { border: 1px solid var(--line); padding: 1px 5px; text-align: center; font-variant-numeric: tabular-nums; }
 .sumTbl th { color: var(--ink3); font-weight: 600; }
-.sumTbl td.sumRowLbl { text-align: left; font-weight: 700; }
+.sumTbl td.sumRowLbl { font-weight: 700; }
 .sumTbl tr.trM td { color: #d6336c; }
 .sumTbl tr.trW td { color: #1d4ed8; }
 .sumTbl tr.trF td { color: #15803d; }
@@ -315,26 +315,23 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 </head>
 <body>
 <header>
-  <h1>Plapp</h1>
+  <span id="runBar" class="runBar" style="display:none;"></span>
+  <input id="startTimerInput" class="startTimerIn" list="taskDatalist" placeholder="▶ start a timer…" autocomplete="off">
+  <datalist id="taskDatalist"></datalist>
+  <button class="iconBtn" id="undoBtn" title="Undo">&#8630;</button>
+  <button class="iconBtn" id="budgetsBtn" title="Tasks">&#9638;</button>
+  <button class="iconBtn" id="reportsBtn" title="Reports">&#128202;</button>
+  <button class="iconBtn" id="logBtn" title="Activity">&#9776;</button>
   <div class="weekNav">
     <button id="weekPrev" title="Previous week">&#9664;</button>
     <span id="weekLabel">Week 1</span>
     <button id="weekNext" title="Next week">&#9654;</button>
-    <button id="weekAdd" title="Add a week">+</button>
-    <button id="weekDel" title="Delete this week">&#128465;</button>
   </div>
-  <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="width:auto;padding:0 9px;">Week</button>
-  <span id="runBar" class="runBar" style="display:none;"></span>
-  <input id="startTimerInput" class="startTimerIn" list="taskDatalist" placeholder="▶ start a timer…" autocomplete="off">
-  <datalist id="taskDatalist"></datalist>
   <form id="cmdForm">
     <input id="cmdInput" placeholder='Type a task or meeting… e.g. "Growth mon-sat 5–5:30am" or "Meet Fred tue 1–2:30pm"' autocomplete="off">
   </form>
-  <button class="iconBtn" id="undoBtn" title="Undo">&#8630;</button>
+  <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="width:auto;padding:0 9px;">Week</button>
   <button class="iconBtn" id="noteBtn" title="Sticky note">&#128209;</button>
-  <button class="iconBtn" id="budgetsBtn" title="Tasks &amp; weekly hours">&#9638;</button>
-  <button class="iconBtn" id="reportsBtn" title="Time reports">&#128202;</button>
-  <button class="iconBtn" id="logBtn" title="Activity log">&#9776;</button>
   <button class="iconBtn" id="settingsBtn" title="Settings">&#9881;</button>
   <div id="syncDot" title="Sync status"></div>
 </header>
@@ -428,7 +425,6 @@ create policy "planner anon access" on plans
 
 <dialog id="budgetsDialog">
   <h2>Tasks</h2>
-  <p class="muted">Set each task's <b>group</b> and its <b>hours per week</b>. Colours are picked automatically by group (Work = blue/purple, Home = yellow/orange, Fruit = green).</p>
   <div id="budgetsTableWrap"></div>
   <div class="btnRow" style="margin-top:14px;">
     <button class="btnGhost" id="budAddTask">+ Add task</button>
@@ -475,7 +471,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v69 */
+/* build v70 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1564,7 +1560,7 @@ if (IS_BROWSER) (function () {
   function renderAll() {
     let lbl;
     if (viewDay >= 0) { const cl = colList(), a = cl[0], b = cl[cl.length - 1]; const da = dateOfCell(state.anchorMonday, state.currentWeek, a).getDate(); lbl = DAYS[a] + " " + da + (b !== a ? " – " + DAYS[b] + " " + dateOfCell(state.anchorMonday, state.currentWeek, b).getDate() : ""); }
-    else lbl = "Week " + isoWeek(dateOfCell(state.anchorMonday, state.currentWeek, 0)) + " · " + (state.currentWeek + 1) + "/" + state.weeks.length;
+    else lbl = "" + isoWeek(dateOfCell(state.anchorMonday, state.currentWeek, 0));
     $("weekLabel").textContent = lbl; renderDayHeaders(); renderPool(); renderBlocks(); renderNote(false); updateRunBar();
   }
 
@@ -1846,12 +1842,6 @@ if (IS_BROWSER) (function () {
   });
   $("weekPrev").onclick = () => { if (viewDay >= 0) { stepDay(-1); return; } if (state.currentWeek > 0) { state.currentWeek--; selectedId = null; commit(); } };
   $("weekNext").onclick = () => { if (viewDay >= 0) { stepDay(1); return; } if (state.currentWeek < state.weeks.length - 1) { state.currentWeek++; selectedId = null; commit(); } else { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); } };
-  $("weekAdd").onclick = () => { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); };
-  $("weekDel").onclick = () => {
-    if (state.weeks.length === 1) { toast("Can't delete the only week — use Clear instead."); return; }
-    if (!confirm("Delete Week " + (state.currentWeek + 1) + " and its blocks?")) return;
-    snap(); state.weeks.splice(state.currentWeek, 1); if (state.currentWeek >= state.weeks.length) state.currentWeek = state.weeks.length - 1; selectedId = null; commit();
-  };
 
   /* ── undo / keys ── */
   $("undoBtn").addEventListener("click", undo);
@@ -2081,7 +2071,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v69"; } catch (e) {}
+  try { document.title = "Plapp"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v70"; } catch (e) {}
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
