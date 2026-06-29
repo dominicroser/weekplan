@@ -52,7 +52,8 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 /* ── Layout ── */
 #body { display: flex; align-items: flex-start; }
 #pool { width: 270px; flex-shrink: 0; padding: 12px 11px; display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 60px); overflow-y: auto; }
-.poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 8px; margin-bottom: 2px; flex-shrink: 0; line-height: 1.55; }
+.poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 0; margin-bottom: 0; flex-shrink: 0; line-height: 1.55; }
+.poolSummary .sumSec:last-child { margin-bottom: 0; }
 .poolSummary .opHead { font-weight: 400; margin-bottom: 0; }
 .poolSummary .sumSec { margin-bottom: 7px; }
 .poolSummary .sumHd { font-weight: 800; font-size: 12px; color: var(--ink); margin: 3px 0 2px; display: flex; align-items: center; gap: 5px; }
@@ -273,7 +274,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .poolItem.tier2 .prioStar.o { color: #e3c34a; }
 .poolItem.tier2 .prioStar.r { color: #ff7a7a; }
 .poolItem.tier2 .prioStar.p { color: #c08bf0; }
-.origPlan { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink2); padding: 4px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
+.origPlan { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink2); padding: 1px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
 .opHead { font-weight: 700; color: var(--ink); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
 .opBtn { background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; font-size: 11px; cursor: pointer; padding: 0 6px; color: var(--ink2); line-height: 1.6; }
 .opRow { line-height: 1.55; }
@@ -499,7 +500,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v75 */
+/* build v76 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1458,10 +1459,12 @@ if (IS_BROWSER) (function () {
     };
     if (t0missed.length) divider("Missed", "lbl");
     t0missed.forEach((c) => renderItem(c, 2, "miss", "missed"));  // Tier 0: behind on today's elapsed plan → black + hide button
+    /* Today tier hidden for now (can delete later):
     if (t1over.length + t1under.length + t1at.length) divider("Today", "lbl");
     t1over.forEach((c) => renderItem(c, 2, null, false));      // 1a: over this week
     t1under.forEach((c) => renderItem(c, 2, null, "today"));   // 1b: under this week → + hide button
     t1at.forEach((c) => renderItem(c, 3, null, false));        // 1c: at goal but planned today
+    */
     if (tier2under.length) divider("Open", "lbl");
     tier2under.forEach((c) => renderItem(c, 2));
     if (tier2over.length) divider("Over", "lbl");
@@ -2133,7 +2136,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v75"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v75"; } catch (e) {}
+  try { document.title = "Plapp v76"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v76"; } catch (e) {}
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
