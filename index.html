@@ -191,7 +191,9 @@ dialog input[type=text], dialog input[type=password] { width: 100%; background: 
 .muted { font-size: 11.5px; color: var(--ink2); font-family: 'Inter', sans-serif; line-height: 1.5; }
 pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 10px; font-size: 10.5px; overflow-x: auto; user-select: text; -webkit-user-select: text; white-space: pre-wrap; }
 #syncStatus, #sheetStatus { font-size: 11.5px; font-family: 'Inter', sans-serif; margin-top: 8px; min-height: 16px; }
-#budgetsDialog { max-width: 820px; }
+#tasksDialog, #masterplanDialog { max-width: 820px; }
+.budTable th.mpCur { background: #efe07a; }
+.budTable td.mpCur { background: #fdf3b8; }
 .budWrap { max-height: 62vh; overflow: auto; }
 .budTable { border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; }
 .budTable th, .budTable td { border: 1px solid var(--line); padding: 3px 5px; text-align: center; }
@@ -334,7 +336,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   <span id="runBar" class="runBar" style="display:none;"></span>
   <span class="startTimerWrap"><input id="startTimerInput" class="startTimerIn" placeholder="▶ start a timer…" autocomplete="off"><div id="taskMenu" class="taskMenu" style="display:none;"></div></span>
   <button class="iconBtn" id="undoBtn" title="Undo">&#8630;</button>
-  <button class="iconBtn" id="budgetsBtn" title="Tasks">&#9638;</button>
+  <button class="iconBtn" id="masterplanBtn" title="Masterplan">&#9638;</button>
   <button class="iconBtn" id="reportsBtn" title="Reports">&#128202;</button>
   <button class="iconBtn" id="logBtn" title="Activity">&#9776;</button>
   <div class="weekNav">
@@ -346,6 +348,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
     <input id="cmdInput" placeholder='Type a task or meeting… e.g. "Growth mon-sat 5–5:30am" or "Meet Fred tue 1–2:30pm"' autocomplete="off">
   </form>
   <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="width:auto;padding:0 9px;">Week</button>
+  <button class="iconBtn" id="tasksBtn" title="Tasks">&#128203;</button>
   <button class="iconBtn" id="noteBtn" title="Sticky note">&#128209;</button>
   <button class="iconBtn" id="settingsBtn" title="Settings">&#9881;</button>
   <div id="syncDot" title="Sync status"></div>
@@ -438,16 +441,26 @@ create policy "planner anon access" on plans
   </div>
 </dialog>
 
-<dialog id="budgetsDialog">
+<dialog id="tasksDialog">
   <h2>Tasks</h2>
-  <div id="budgetsTableWrap"></div>
+  <div id="tasksTableWrap"></div>
   <div class="btnRow" style="margin-top:14px;">
     <button class="btnGhost" id="budAddTask">+ Add task</button>
-    <button class="btnGhost" id="budAddWeek">+ Add week</button>
     <button class="btnGhost" id="budRecolour">Recolour all by group</button>
   </div>
   <div class="btnRow" style="margin-top:8px;">
-    <button class="btn" id="budClose">Done</button>
+    <button class="btn" id="tasksClose">Done</button>
+  </div>
+</dialog>
+
+<dialog id="masterplanDialog">
+  <h2>Masterplan</h2>
+  <div id="masterplanTableWrap"></div>
+  <div class="btnRow" style="margin-top:14px;">
+    <button class="btnGhost" id="budAddWeek">+ Add week</button>
+  </div>
+  <div class="btnRow" style="margin-top:8px;">
+    <button class="btn" id="mpClose">Done</button>
   </div>
 </dialog>
 
@@ -486,7 +499,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v74 */
+/* build v75 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1980,14 +1993,12 @@ if (IS_BROWSER) (function () {
   $("closeSettings").addEventListener("click", () => dlg.close());
 
   /* ── Budgets / tasks table ── */
-  const budDlg = $("budgetsDialog");
+  const tasksDlg = $("tasksDialog"), mpDlg = $("masterplanDialog");
   function renderBudgets() {
     const W = state.weeks.length;
     const gi = (g) => { const i = GROUP_ORDER.indexOf(g || "work"); return i < 0 ? 99 : i; };
     const arrow = (k) => budSort.key === k ? (budSort.dir > 0 ? " ▲" : " ▼") : "";
-    let html = '<div class="budWrap"><table class="budTable"><thead><tr><th class="name" data-sort="name">Task' + arrow("name") + '</th><th data-sort="group">Group' + arrow("group") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th data-sort="done">Done' + arrow("done") + '</th><th>Lock</th><th>Parent</th>';
-    for (let i = 0; i < W; i++) html += '<th data-sort="w' + i + '">W' + (i + 1) + arrow("w" + i) + "</th>";
-    html += '<th data-sort="total">Total' + arrow("total") + '</th><th></th></tr></thead><tbody>';
+    let fh = '<div class="budWrap"><table class="budTable"><thead><tr><th class="name" data-sort="name">Task' + arrow("name") + '</th><th data-sort="group">Group' + arrow("group") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th data-sort="done">Done' + arrow("done") + '</th><th>Lock</th><th>Parent</th><th></th></tr></thead><tbody>';
     let list = state.categories.slice();
     if (budSort.key) {
       const d = budSort.dir, nameCmp = (a, b) => (a.name || "").localeCompare(b.name || "");
@@ -2010,33 +2021,42 @@ if (IS_BROWSER) (function () {
       list.sort((a, b) => { const r = rank(a) - rank(b); if (r) return r; if (rank(a) === 0) { const g = grp(a) - grp(b); if (g) return g; } return (a.name || "").localeCompare(b.name || ""); });
     }
     for (const c of list) {
-      html += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '>';
-      html += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
-      html += '<td><select class="bgroup">' + GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
-      html += '<td><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal (weekly goal minus time already done)" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
-      html += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
-      html += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
-      html += '<td><input type="checkbox" class="barch" title="Hide from the list (finished one-off task)"' + (c.archived ? " checked" : "") + "></td>";
-      html += '<td><input type="checkbox" class="bplock" title="Keep this colour when you press Recolour all by group"' + (c.lockColor ? " checked" : "") + "></td>";
-      html += '<td><select class="bpar" title="Roll this task’s tracked time up into a parent task"><option value="">—</option>' + state.categories.filter((p) => p.id !== c.id && !p.parent).map((p) => '<option value="' + p.id + '"' + (c.parent === p.id ? " selected" : "") + ">" + (p.name || "").replace(/</g, "&lt;") + "</option>").join("") + '</select> <input class="bsplit" type="number" min="0" max="100" step="5" placeholder="%" title="Optional: share (%) of the parent timer’s time this child receives when the parent is stopped" value="' + (c.splitPct != null ? c.splitPct : "") + '" style="width:42px;"></td>';
-      for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="text" inputmode="numeric"' + (c.auto ? " readonly" : "") + ' value="' + fmtHM(weekBudget(c, i)) + '"></td>';
-      { let tsum = 0; for (let i = 0; i < W; i++) tsum += weekBudget(c, i); html += '<td class="btot">' + fmtHM(tsum) + "</td>"; }
-      html += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
+      fh += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '>';
+      fh += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
+      fh += '<td><select class="bgroup">' + GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
+      fh += '<td><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal (weekly goal minus time already done)" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
+      fh += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
+      fh += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
+      fh += '<td><input type="checkbox" class="barch" title="Hide from the list (finished one-off task)"' + (c.archived ? " checked" : "") + "></td>";
+      fh += '<td><input type="checkbox" class="bplock" title="Keep this colour when you press Recolour all by group"' + (c.lockColor ? " checked" : "") + "></td>";
+      fh += '<td><select class="bpar" title="Roll this task’s tracked time up into a parent task"><option value="">—</option>' + state.categories.filter((p) => p.id !== c.id && !p.parent).map((p) => '<option value="' + p.id + '"' + (c.parent === p.id ? " selected" : "") + ">" + (p.name || "").replace(/</g, "&lt;") + "</option>").join("") + '</select> <input class="bsplit" type="number" min="0" max="100" step="5" placeholder="%" title="Optional: share (%) of the parent timer’s time this child receives when the parent is stopped" value="' + (c.splitPct != null ? c.splitPct : "") + '" style="width:42px;"></td>';
+      fh += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
     }
-    { let gt = 0, cells = ""; for (let i = 0; i < W; i++) { let s = 0; for (const c of list) s += weekBudget(c, i); gt += s; cells += '<td class="btot">' + fmtHM(s) + "</td>"; } html += '<tr class="budFoot"><td class="name">Total</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>' + cells + '<td class="btot">' + fmtHM(gt) + "</td><td></td></tr>"; }
-    html += "</tbody></table></div>";
-    const wrap = $("budgetsTableWrap");
-    const prevSc = wrap.querySelector(".budWrap"); const keepScroll = prevSc ? prevSc.scrollTop : 0;
-    wrap.innerHTML = html;
-    const newSc = wrap.querySelector(".budWrap"); if (newSc) newSc.scrollTop = keepScroll;
-    wrap.querySelectorAll("tr[data-id]").forEach((tr) => {
+    fh += "</tbody></table></div>";
+
+    // ---- Masterplan table (weekly hours) ----
+    let mh = '<div class="budWrap"><table class="budTable"><thead><tr><th class="name" data-sort="name">Task' + arrow("name") + '</th>';
+    for (let i = 0; i < W; i++) mh += '<th data-sort="w' + i + '"' + (i === state.currentWeek ? ' class="mpCur"' : "") + '>W' + (i + 1) + arrow("w" + i) + "</th>";
+    mh += '<th data-sort="total">Total' + arrow("total") + '</th></tr></thead><tbody>';
+    for (const c of list) {
+      mh += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '>';
+      mh += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span>' + (c.name || "").replace(/</g, "&lt;") + "</td>";
+      for (let i = 0; i < W; i++) mh += '<td' + (i === state.currentWeek ? ' class="mpCur"' : "") + '><input class="bh" data-w="' + i + '" type="text" inputmode="numeric"' + (c.auto ? " readonly" : "") + ' value="' + fmtHM(weekBudget(c, i)) + '"></td>';
+      { let tsum = 0; for (let i = 0; i < W; i++) tsum += weekBudget(c, i); mh += '<td class="btot">' + fmtHM(tsum) + "</td>"; }
+      mh += "</tr>";
+    }
+    { let gt = 0, cells = ""; for (let i = 0; i < W; i++) { let s = 0; for (const c of list) s += weekBudget(c, i); gt += s; cells += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + '">' + fmtHM(s) + "</td>"; } mh += '<tr class="budFoot"><td class="name">Total</td>' + cells + '<td class="btot">' + fmtHM(gt) + "</td></tr>"; }
+    mh += "</tbody></table></div>";
+    const setWrap = (wid, h) => { const wrap = $(wid); if (!wrap) return null; const prev = wrap.querySelector(".budWrap"); const ks = prev ? prev.scrollTop : 0; wrap.innerHTML = h; const nw = wrap.querySelector(".budWrap"); if (nw) nw.scrollTop = ks; return wrap; };
+    const fwrap = setWrap("tasksTableWrap", fh);
+    const mwrap = setWrap("masterplanTableWrap", mh);
+    if (fwrap) fwrap.querySelectorAll("tr[data-id]").forEach((tr) => {
       const id = tr.dataset.id, cat = state.categories.find((c) => c.id === id);
       if (!cat) return;
       tr.querySelector(".bgroup").addEventListener("change", (e) => { snap(); cat.group = e.target.value; if (!cat.lockColor) cat.color = groupColorFor(cat.group, state.categories, cat.id); commit(); renderBudgets(); });
       tr.querySelector(".bplock").addEventListener("change", (e) => { snap(); cat.lockColor = e.target.checked; commit(); });
       const nm = tr.querySelector(".tname");
-      nm.addEventListener("change", () => { const v = nm.value.trim(); if (!v) { nm.value = cat.name; return; } if (nameTaken(v, cat.id)) { toast('A task named "' + v + '" already exists.'); nm.value = cat.name; return; } snap(); cat.name = v; commit(); });
-      tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = parseHM(inp.value); commit(); renderBudgets(); }); });
+      nm.addEventListener("change", () => { const v = nm.value.trim(); if (!v) { nm.value = cat.name; return; } if (nameTaken(v, cat.id)) { toast('A task named "' + v + '" already exists.'); nm.value = cat.name; return; } snap(); cat.name = v; commit(); renderBudgets(); });
       tr.querySelector(".bdef").addEventListener("change", (e) => { snap(); const v = e.target.value.trim(); if (v === "") delete cat.defaultMin; else cat.defaultMin = Math.max(0, +v || 0); commit(); });
       tr.querySelector(".bauto").addEventListener("change", (e) => { snap(); cat.auto = e.target.checked; commit(); renderBudgets(); });
       tr.querySelector(".bpar").addEventListener("change", (e) => { snap(); if (e.target.value) cat.parent = e.target.value; else delete cat.parent; commit(); renderBudgets(); });
@@ -2051,10 +2071,16 @@ if (IS_BROWSER) (function () {
         commit(); renderBudgets();
       });
     });
-    wrap.querySelectorAll("th[data-sort]").forEach((th) => th.addEventListener("click", () => { const k = th.dataset.sort; if (budSort.key === k) budSort.dir = -budSort.dir; else { budSort.key = k; budSort.dir = 1; } renderBudgets(); }));
+    if (mwrap) mwrap.querySelectorAll("tr[data-id]").forEach((tr) => {
+      const id = tr.dataset.id;
+      tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = parseHM(inp.value); commit(); renderBudgets(); }); });
+    });
+    [fwrap, mwrap].forEach((wr) => { if (!wr) return; wr.querySelectorAll("th[data-sort]").forEach((th) => th.addEventListener("click", () => { const k = th.dataset.sort; if (budSort.key === k) budSort.dir = -budSort.dir; else { budSort.key = k; budSort.dir = 1; } renderBudgets(); })); });
   }
-  $("budgetsBtn").addEventListener("click", () => { renderBudgets(); budDlg.showModal(); });
-  $("budClose").addEventListener("click", () => budDlg.close());
+  $("masterplanBtn").addEventListener("click", () => { renderBudgets(); mpDlg.showModal(); });
+  $("tasksBtn").addEventListener("click", () => { renderBudgets(); tasksDlg.showModal(); });
+  $("tasksClose").addEventListener("click", () => tasksDlg.close());
+  $("mpClose").addEventListener("click", () => mpDlg.close());
   $("budAddTask").addEventListener("click", () => {
     snap(); let base = "New task", name = base, n = 2; while (nameTaken(name, null)) name = base + " " + (n++);
     const g = "work"; state.categories.push({ id: "cat" + Date.now(), name, hours: 0, group: g, defaultMin: 60, color: groupColorFor(g, state.categories, null) });
@@ -2107,7 +2133,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v74"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v74"; } catch (e) {}
+  try { document.title = "Plapp v75"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v75"; } catch (e) {}
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
