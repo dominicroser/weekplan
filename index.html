@@ -460,7 +460,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v60 */
+/* build v61 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1084,7 +1084,7 @@ if (IS_BROWSER) (function () {
       let link = $("favicon"); if (!link) { link = document.createElement("link"); link.id = "favicon"; link.rel = "icon"; document.head.appendChild(link); }
       const cv = document.createElement("canvas"); cv.width = 64; cv.height = 64; const ctx = cv.getContext("2d");
       if (timing) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(32, 32, 30, 0, 2 * Math.PI); ctx.fill(); }
-      else { ctx.fillStyle = "#9aa0a8"; ctx.beginPath(); ctx.arc(32, 32, 22, 0, 2 * Math.PI); ctx.fill(); ctx.fillStyle = "#fff"; ctx.font = "bold 34px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("P", 32, 35); }
+      else { ctx.fillStyle = "#9aa0a8"; ctx.beginPath(); ctx.arc(32, 32, 22, 0, 2 * Math.PI); ctx.fill(); }
       link.href = cv.toDataURL("image/png");
     } catch (e) {}
   }
@@ -1350,7 +1350,7 @@ if (IS_BROWSER) (function () {
         pctV = r.dayPlan > 0 ? Math.min(100, (r.done / r.dayPlan) * 100) : 100;
         hoursTxt = ovr ? fmtHM(r.done - r.dayPlan) + " over" : satisfied ? "✓ done" : fmtHM(r.left) + " left";
         hoursCls = ovr ? "isover" : satisfied ? "isdone" : "";
-      } else if (tier === 3 && cat.noTrack) { // Tier 3 utility tasks (not tracked) → no "left" figure, never "over"
+      } else if (tier === 3 && (cat.auto || cat.noTrack)) { // Tier 3 utility tasks (Auto / not tracked) → no "left" figure, never "over"
         hoursTxt = ""; hoursCls = ""; ovr = false;
       } else {                                            // Tier 2/3 → remaining for the WEEK
         hoursTxt = isOver ? fmtHM(u - bw) + " over" : isDone ? "✓ done" : fmtHM(remaining) + " left";
