@@ -217,6 +217,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .poolDivider.abDiv { height: 2px; background: #9aa0a8; opacity: 0.8; border-radius: 2px; margin: 7px 2px; }
 .poolDivider.lbl { height: auto; background: none; border-radius: 0; border-top: 4px solid #e03131; padding-top: 5px; margin: 13px 2px 5px; color: #e03131; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
+.t1HideRow { margin-top: 7px; }
+.t1Hide { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); color: inherit; font-size: 10px; border-radius: 5px; padding: 1px 8px; cursor: pointer; font-family: 'Inter', sans-serif; }
+.t1Hide:hover { background: rgba(255,255,255,0.32); }
 .missStar { color: #e0a800; font-size: 12px; }
 .poolSummary .l4 { color: var(--ink); margin-top: 3px; }
 .poolSummary .l4 b { color: var(--ink); font-weight: 700; }
@@ -460,7 +463,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v65 */
+/* build v66 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1237,36 +1240,36 @@ if (IS_BROWSER) (function () {
     const effTrackToday = (id) => trackToday(id) + (childMap[id] || []).reduce((s, k) => s + trackToday(k), 0);
     const rema = (c) => Math.round((weekBudget(c, cw) - effUsed(c.id)) * 100) / 100;
     const isUtil = (c) => c.auto || c.noTrack;
-    const tier2 = [], tier3 = [];
+    const tier2under = [], tier2over = [], tier3 = [];
     for (const c of cats) {
       if (c.parent) continue;                                      // children roll up into their parent; not listed on their own
       if (isUtil(c)) { tier3.push(c); continue; }                 // not-tracked utilities → Tier 3 (kept so they stay draggable)
       const bud = weekBudget(c, cw);
       if (bud <= eps) continue;                                    // no weekly goal → not listed in Tier 2/3
-      const atGoal = Math.abs(bud - effUsed(c.id)) <= eps;
-      if (atGoal) tier3.push(c); else tier2.push(c);              // exactly at goal → Tier 3; under OR over → Tier 2
+      const u = effUsed(c.id);
+      if (Math.abs(bud - u) <= eps) tier3.push(c);                // exactly at goal → Tier 3 (Week – Done)
+      else if (u - bud > eps) tier2over.push(c);                  // over → Tier 2 (Week – Over)
+      else tier2under.push(c);                                     // under → Tier 2 (Week – Open)
     }
-    // Tier 1: today's tasks, split into 1a (still upcoming) and 1b (already passed), each in calendar order
-    const t1a = [], t1b = [];
+    // Tier 1: today's planned tasks, grouped by week status — over (1a) → under (1b) → at-goal (1c), each in calendar order
+    const t1over = [], t1under = [], t1at = [];
     if (todayIdx >= 0) {
-      const nowSlotP = (new Date().getHours() * 60 + new Date().getMinutes()) / SLOT_MIN;
-      const byCat = {};
-      for (const b of curBlocks()) { if (b.day !== DAYS[todayIdx] || b.event || b.kind === "actual") continue; const cat = cats.find((c) => c.id === b.catId); if (!cat || isUtil(cat) || cat.parent) continue; (byCat[b.catId] = byCat[b.catId] || { cat: cat, blocks: [] }).blocks.push(b); }
-      for (const cid in byCat) {
-        const o = byCat[cid]; o.blocks.sort((a, b) => a.startSlot - b.startSlot);
-        const future = o.blocks.filter((b) => (b.startSlot + b.lenSlots) > nowSlotP);
-        const bud = weekBudget(o.cat, cw), atGoal = bud > eps && Math.abs(bud - effUsed(o.cat.id)) <= eps, isT2 = bud > eps && !atGoal;
-        if (future.length) t1a.push({ cat: o.cat, key: future[0].startSlot, shade: isT2 ? 2 : 1 });   // upcoming today
-        else t1b.push({ cat: o.cat, key: o.blocks[0].startSlot, shade: isT2 ? 2 : (atGoal ? 3 : 1) }); // already passed today
+      const firstStart = {};
+      for (const b of curBlocks()) { if (b.day !== DAYS[todayIdx] || b.event || b.kind === "actual") continue; firstStart[b.catId] = firstStart[b.catId] == null ? b.startSlot : Math.min(firstStart[b.catId], b.startSlot); }
+      const tlist = Object.keys(firstStart).map((id) => cats.find((c) => c.id === id)).filter((c) => c && !isUtil(c) && !c.parent && c.t1HideDate !== todayStr);
+      for (const c of tlist) {
+        const bud = weekBudget(c, cw), u = effUsed(c.id);
+        if (bud > eps && u - bud > eps) t1over.push(c);
+        else if (bud > eps && bud - u > eps) t1under.push(c);
+        else t1at.push(c);
       }
-      t1a.sort((a, b) => a.key - b.key);
-      t1b.sort((a, b) => a.key - b.key);
+      const byStart = (a, b) => firstStart[a.id] - firstStart[b.id];
+      t1over.sort(byStart); t1under.sort(byStart); t1at.sort(byStart);
     }
-    // Tier 2 order: purple ★, red ★, yellow ★, then no-star under-budget, then no-star over-budget
+    // Tier 2 order within each group: purple ★, red ★, yellow ★, then no star
     const prioRank = (c) => c.prio === 3 ? 3 : c.prio === 2 ? 2 : c.prio === 1 ? 1 : 0;
-    const isOverC = (c) => effUsed(c.id) - weekBudget(c, cw) > eps;
-    tier2.sort((a, b) => (prioRank(b) - prioRank(a)) || ((isOverC(a) ? 1 : 0) - (isOverC(b) ? 1 : 0)));
-    // Tier 3 order: tracked tasks first, not-tracked utilities at the bottom
+    tier2under.sort((a, b) => prioRank(b) - prioRank(a));
+    tier2over.sort((a, b) => prioRank(b) - prioRank(a));
     tier3.sort((a, b) => (isUtil(a) ? 1 : 0) - (isUtil(b) ? 1 : 0));
     pool.innerHTML = "";
 
@@ -1284,7 +1287,7 @@ if (IS_BROWSER) (function () {
     const grpWeek = (g) => { let s = 0; for (const ds of wkDates) { const dd = rep.days[ds]; if (dd && dd.byGroup[g]) s += dd.byGroup[g]; } return s; };
     const grpToday = (g) => { const dd = rep.days[todayStr]; return dd && dd.byGroup[g] ? dd.byGroup[g] : 0; };
     let prioO = 0, prioR = 0, prioP = 0;
-    for (const c of tier2) { if (c.prio === 1) prioO += Math.max(0, rema(c)); else if (c.prio === 2) prioR += Math.max(0, rema(c)); else if (c.prio === 3) prioP += Math.max(0, rema(c)); }
+    for (const c of tier2under.concat(tier2over)) { if (c.prio === 1) prioO += Math.max(0, rema(c)); else if (c.prio === 2) prioR += Math.max(0, rema(c)); else if (c.prio === 3) prioP += Math.max(0, rema(c)); }
     summary.innerHTML =
       '<div class="opHead l1"><span class="triangle"></span><span><b>' + fmtHM(Math.max(0, totalBudget - thisPlaced)) + "</b> + " + fmtHM(thisPlaced) + " = " + fmtHM(totalBudget) + "</span></div>" +
       '<div class="secBody">' +
@@ -1347,7 +1350,7 @@ if (IS_BROWSER) (function () {
     }
 
     const divider = (label, cls) => { const dv = document.createElement("div"); dv.className = "poolDivider" + (cls ? " " + cls : ""); if (label) dv.textContent = label; pool.appendChild(dv); };
-    const renderItem = (cat, tier, shade) => {
+    const renderItem = (cat, tier, shade, hideBtn) => {
       if (shade == null) shade = tier;                   // tier drives the numbers; shade drives the box styling
       const bw = weekBudget(cat, cw);
       const u = effUsed(cat.id);
@@ -1379,7 +1382,8 @@ if (IS_BROWSER) (function () {
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
         '<div class="poolMeta">' + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — the goal follows the hours you schedule">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><input class="goalVal goalInput" title="Click to set the weekly goal" value="' + fmtHM(bw) + '"><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>') + "</div>" +
-        (function () { const tw = effTrackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = effTrackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })();
+        (function () { const tw = effTrackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = effTrackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })() +
+        (hideBtn ? '<div class="t1HideRow"><button class="t1Hide" title="Hide from Today until midnight (stays in the week tiers)">hide for today</button></div>' : "");
       const nameIn = el.querySelector(".nameInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe");
       for (const inp of [nameIn, stripe]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
@@ -1387,6 +1391,7 @@ if (IS_BROWSER) (function () {
       const ps = el.querySelector(".prioStar"); if (ps) { ps.addEventListener("pointerdown", (e) => e.stopPropagation()); ps.addEventListener("click", (e) => { e.stopPropagation(); snap(); cat.prio = ((cat.prio || 0) + 1) % 4; commit(); }); }
       const gset = el.querySelector(".goalSet"); if (gset) { gset.addEventListener("pointerdown", (e) => e.stopPropagation()); gset.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = effUsed(cat.id); commit(); }); }
       const gv = el.querySelector(".goalInput"); if (gv) { gv.addEventListener("pointerdown", (e) => e.stopPropagation()); gv.addEventListener("click", (e) => e.stopPropagation()); gv.addEventListener("change", () => { snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, parseHM(gv.value)); commit(); }); gv.addEventListener("keydown", (e) => { if (e.key === "Enter") gv.blur(); }); }
+      const hb = el.querySelector(".t1Hide"); if (hb) { hb.addEventListener("pointerdown", (e) => e.stopPropagation()); hb.addEventListener("click", (e) => { e.stopPropagation(); snap(); cat.t1HideDate = todayStr; commit(); }); }
       nameIn.addEventListener("change", () => {
         const v = nameIn.value.trim();
         if (!v) { nameIn.value = cat.name; return; }
@@ -1413,12 +1418,14 @@ if (IS_BROWSER) (function () {
       }
       pool.appendChild(el);
     };
-    if (t1a.length || t1b.length) divider("Today", "lbl");
-    t1a.forEach((o) => renderItem(o.cat, 1, o.shade));
-    if (t1a.length && t1b.length) divider(null, "abDiv");   // grey divider between upcoming (1a) and passed (1b)
-    t1b.forEach((o) => renderItem(o.cat, 1, o.shade));
-    if (tier2.length) divider("Week – Open", "lbl");
-    tier2.forEach((c) => renderItem(c, 2));
+    if (t1over.length + t1under.length + t1at.length) divider("Today", "lbl");
+    t1over.forEach((c) => renderItem(c, 2, null, false));      // 1a: over this week → amber
+    t1under.forEach((c) => renderItem(c, 2, null, true));      // 1b: under this week → dark grey + hide button
+    t1at.forEach((c) => renderItem(c, 3, null, false));        // 1c: at goal but planned today
+    if (tier2under.length) divider("Week – Open", "lbl");
+    tier2under.forEach((c) => renderItem(c, 2));
+    if (tier2over.length) divider("Week – Over", "lbl");
+    tier2over.forEach((c) => renderItem(c, 2));
     if (tier3.length) divider("Week – Done", "lbl");
     tier3.forEach((c) => renderItem(c, 3));
     const add = document.createElement("button");
@@ -2063,7 +2070,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v65"; } catch (e) {}
+  try { document.title = "Plapp v66"; } catch (e) {}
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
