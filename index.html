@@ -82,6 +82,10 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolItem.tier2 .barTrack { background: rgba(255,255,255,0.22); }
 .poolItem.tier2 .catX { color: rgba(255,255,255,0.45); }
 .poolItem.tier2 .nameInput:focus, .poolItem.tier2 .hoursInput:focus { color: #1f2328; }
+.poolItem.missShade { background: #1a1a1a; }
+.poolItem.missShade .nameInput, .poolItem.missShade .poolHours, .poolItem.missShade .goalVal, .poolItem.missShade .goalInput { color: #f3f5f7 !important; }
+.poolItem.missShade .poolMeta, .poolItem.missShade .poolTrack { color: #c7ccd3; }
+.poolItem.missShade .hStep, .poolItem.missShade .goalSet, .poolItem.missShade .goalInput { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.28); }
 .poolItem.over { background: #9aa1ab; border-left-style: solid; }
 .poolItem.over .poolHours.isover { color: #2a2e33; }
 .poolItem.over .barFill.isover { background: #5b626b !important; }
@@ -482,7 +486,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v73 */
+/* build v74 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1309,8 +1313,16 @@ if (IS_BROWSER) (function () {
     const allUsed = {}, allBud = {};
     for (let i = 0; i < W; i++) { const uu = weekUsage(state, i).used; for (const c of cats) { allUsed[c.id] = (allUsed[c.id] || 0) + (uu[c.id] || 0); allBud[c.id] = (allBud[c.id] || 0) + weekBudget(c, i); } }
     const trackedAll = {}; for (const ds in rep.days) { const bc = rep.days[ds].byCat; for (const k in bc) trackedAll[k] = (trackedAll[k] || 0) + bc[k]; }
-    const aheadToday = {};
-    if (todayIdx >= 0) for (const b of curBlocks()) { if (b.day !== DAYS[todayIdx] || b.event || b.kind === "actual") continue; const end = b.startSlot + b.lenSlots; aheadToday[b.catId] = (aheadToday[b.catId] || 0) + Math.max(0, end - Math.max(b.startSlot, nowSlotS)) / 4; }
+    const aheadToday = {}, elapsedToday = {};
+    if (todayIdx >= 0) for (const b of curBlocks()) { if (b.day !== DAYS[todayIdx] || b.event || b.kind === "actual") continue; const st = b.startSlot, end = b.startSlot + b.lenSlots; aheadToday[b.catId] = (aheadToday[b.catId] || 0) + Math.max(0, end - Math.max(st, nowSlotS)) / 4; elapsedToday[b.catId] = (elapsedToday[b.catId] || 0) + Math.max(0, Math.min(end, nowSlotS) - st) / 4; }
+    // Tier 0 "Missed": planned-and-elapsed-today tasks where tracked < elapsed-plan and the shortfall isn't covered by remaining plan today
+    const t0missed = [];
+    for (const cid in elapsedToday) {
+      const c = cats.find((x) => x.id === cid); if (!c || isUtil(c) || c.parent || c.missHideDate === todayStr) continue;
+      const done = trackToday(cid) + (state.timer && state.timer.catId === cid ? (Date.now() - state.timer.startMs) / 3600000 : 0);
+      if (elapsedToday[cid] - done - (aheadToday[cid] || 0) > eps) t0missed.push(c);
+    }
+    t0missed.sort((a, b) => (elapsedToday[b.id] - (trackToday(b.id))) - (elapsedToday[a.id] - (trackToday(a.id))));
     const catsG = (g) => cats.filter((c) => (c.group || "work") === g);
     const sumOf = (S, f) => S.reduce((s, c) => s + (f(c) || 0), 0);
     const rowVals = (S, scope) => {
@@ -1386,7 +1398,7 @@ if (IS_BROWSER) (function () {
         hoursCls = isOver ? "isover" : isDone ? "isdone" : "";
       }
       const el = document.createElement("div");
-      el.className = "poolItem" + (shade === 1 ? " tier1" : (shade === 2 && !ovr) ? " tier2" : "") + (faded ? " done" : "") + (ovr ? " over" : "") + (armedCat === cat.id ? " armed" : "");
+      el.className = "poolItem" + (shade === "miss" ? " missShade" : shade === 1 ? " tier1" : (shade === 2 && !ovr) ? " tier2" : "") + (faded ? " done" : "") + (ovr && shade !== "miss" ? " over" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
       el.style.borderLeftColor = cat.color;
       el.innerHTML =
@@ -1396,7 +1408,7 @@ if (IS_BROWSER) (function () {
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
         '<div class="poolMeta">' + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — the goal follows the hours you schedule">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><input class="goalVal goalInput" title="Click to set the weekly goal" value="' + fmtHM(bw) + '"><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>') + "</div>" +
         (function () { const tw = effTrackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = effTrackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })() +
-        (hideBtn ? '<div class="t1HideRow"><button class="t1Hide" title="Hide from Today until midnight (stays in the week tiers)">hide for today</button></div>' : "");
+        (hideBtn ? '<div class="t1HideRow"><button class="t1Hide" title="Hide until midnight (stays in the week tiers)">' + (hideBtn === "missed" ? "hide from Missed" : "hide for today") + "</button></div>" : "");
       const nameIn = el.querySelector(".nameInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe");
       for (const inp of [nameIn, stripe]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
@@ -1404,7 +1416,7 @@ if (IS_BROWSER) (function () {
       const ps = el.querySelector(".prioStar"); if (ps) { ps.addEventListener("pointerdown", (e) => e.stopPropagation()); ps.addEventListener("click", (e) => { e.stopPropagation(); snap(); cat.prio = ((cat.prio || 0) + 1) % 4; commit(); }); }
       const gset = el.querySelector(".goalSet"); if (gset) { gset.addEventListener("pointerdown", (e) => e.stopPropagation()); gset.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = effUsed(cat.id); commit(); }); }
       const gv = el.querySelector(".goalInput"); if (gv) { gv.addEventListener("pointerdown", (e) => e.stopPropagation()); gv.addEventListener("click", (e) => e.stopPropagation()); gv.addEventListener("change", () => { snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, parseHM(gv.value)); commit(); }); gv.addEventListener("keydown", (e) => { if (e.key === "Enter") gv.blur(); }); }
-      const hb = el.querySelector(".t1Hide"); if (hb) { hb.addEventListener("pointerdown", (e) => e.stopPropagation()); hb.addEventListener("click", (e) => { e.stopPropagation(); snap(); cat.t1HideDate = todayStr; commit(); }); }
+      const hb = el.querySelector(".t1Hide"); if (hb) { hb.addEventListener("pointerdown", (e) => e.stopPropagation()); hb.addEventListener("click", (e) => { e.stopPropagation(); snap(); cat[hideBtn === "missed" ? "missHideDate" : "t1HideDate"] = todayStr; commit(); }); }
       nameIn.addEventListener("change", () => {
         const v = nameIn.value.trim();
         if (!v) { nameIn.value = cat.name; return; }
@@ -1431,9 +1443,11 @@ if (IS_BROWSER) (function () {
       }
       pool.appendChild(el);
     };
+    if (t0missed.length) divider("Missed", "lbl");
+    t0missed.forEach((c) => renderItem(c, 2, "miss", "missed"));  // Tier 0: behind on today's elapsed plan → black + hide button
     if (t1over.length + t1under.length + t1at.length) divider("Today", "lbl");
-    t1over.forEach((c) => renderItem(c, 2, null, false));      // 1a: over this week → amber
-    t1under.forEach((c) => renderItem(c, 2, null, true));      // 1b: under this week → dark grey + hide button
+    t1over.forEach((c) => renderItem(c, 2, null, false));      // 1a: over this week
+    t1under.forEach((c) => renderItem(c, 2, null, "today"));   // 1b: under this week → + hide button
     t1at.forEach((c) => renderItem(c, 3, null, false));        // 1c: at goal but planned today
     if (tier2under.length) divider("Open", "lbl");
     tier2under.forEach((c) => renderItem(c, 2));
@@ -2093,7 +2107,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v73"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v73"; } catch (e) {}
+  try { document.title = "Plapp v74"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v74"; } catch (e) {}
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
