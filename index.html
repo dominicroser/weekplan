@@ -38,7 +38,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .weekNav { display: flex; align-items: center; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 2px; flex-shrink: 0; }
 .weekNav button { background: transparent; border: none; color: var(--ink2); width: 28px; height: 28px; border-radius: 7px; font-size: 14px; cursor: pointer; }
 .weekNav button:hover { background: var(--panel2); }
-#weekLabel { font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; color: var(--ink); min-width: 74px; text-align: center; }
+#weekLabel { font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; color: var(--ink); min-width: 26px; text-align: center; padding: 0 2px; }
 #cmdForm { flex: 1; min-width: 200px; display: flex; }
 #cmdInput { flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
 #cmdInput::placeholder { color: var(--ink3); }
@@ -52,7 +52,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 /* ── Layout ── */
 #body { display: flex; align-items: flex-start; }
 #pool { width: 270px; flex-shrink: 0; padding: 12px 11px; display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 60px); overflow-y: auto; }
-.poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; line-height: 1.55; }
+.poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 8px; margin-bottom: 2px; flex-shrink: 0; line-height: 1.55; }
 .poolSummary .opHead { font-weight: 400; margin-bottom: 0; }
 .poolSummary .sumSec { margin-bottom: 7px; }
 .poolSummary .sumHd { font-weight: 800; font-size: 12px; color: var(--ink); margin: 3px 0 2px; display: flex; align-items: center; gap: 5px; }
@@ -75,14 +75,16 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .sheetBtn:active { background: var(--panel2); }
 .poolItem { position: relative; background: var(--panel); border-radius: 0 8px 8px 0; border-left: 4px solid #888; padding: 12px 11px 13px 12px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
 .poolItem.done { opacity: 0.46; }
-.poolItem.tier2 { background: #6b7280; }
+.poolItem.tier2 { background: #7c8492; }
 .poolItem.tier2 .nameInput, .poolItem.tier2 .hoursInput { color: #f3f5f7; }
 .poolItem.tier2 .poolHours { color: #ffffff !important; }
 .poolItem.tier2 .poolMeta, .poolItem.tier2 .poolTrack { color: #c7ccd3; }
 .poolItem.tier2 .barTrack { background: rgba(255,255,255,0.22); }
 .poolItem.tier2 .catX { color: rgba(255,255,255,0.45); }
 .poolItem.tier2 .nameInput:focus, .poolItem.tier2 .hoursInput:focus { color: #1f2328; }
-.poolItem.over { background: var(--overbg); border-left-style: solid; }
+.poolItem.over { background: #9aa1ab; border-left-style: solid; }
+.poolItem.over .poolHours.isover { color: #2a2e33; }
+.poolItem.over .barFill.isover { background: #5b626b !important; }
 .poolItem.armed { outline-color: var(--accent); }
 .poolTop { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
 .nameInput { background: transparent; border: none; color: var(--ink); font-size: 13.5px; font-weight: 600; padding: 0; flex: 1; min-width: 0; border-radius: 3px; }
@@ -238,7 +240,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .poolTrack { font-size: 10px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .poolDivider.abDiv { height: 2px; background: #9aa0a8; opacity: 0.8; border-radius: 2px; margin: 7px 2px; }
-.poolDivider.lbl { height: auto; background: #fdf3d2; border-radius: 0; border-top: 5px solid #e03131; border-bottom: 5px solid #e03131; padding: 5px 0; margin: 13px 2px 6px; color: #e03131; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
+.poolDivider.lbl { height: auto; background: #16335c; border-radius: 0; border-top: 4px solid #000; border-bottom: 4px solid #000; padding: 5px 0; margin: 13px 2px 6px; color: #b6ff7a; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
 .t1HideRow { margin-top: 7px; }
 .t1Hide { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); color: inherit; font-size: 10px; border-radius: 5px; padding: 1px 8px; cursor: pointer; font-family: 'Inter', sans-serif; }
 .t1Hide:hover { background: rgba(255,255,255,0.32); }
@@ -480,7 +482,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v72 */
+/* build v73 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -916,7 +918,7 @@ function applySheetWeeks(state, parsed) {
 function migrate(s) {
   if (!s) return null;
   if (s.weeks && Array.isArray(s.weeks)) {
-    (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; if (c.group === "termin") c.color = EVENT_COLOR; if (c.group === "none") c.color = GREY; if (c.group === "zug") { c.group = "none"; c.color = GREY; } });
+    (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; if (c.group === "termin" && !c.lockColor) c.color = EVENT_COLOR; if (c.group === "none" && !c.lockColor) c.color = GREY; if (c.group === "zug") { c.group = "none"; if (!c.lockColor) c.color = GREY; } });
     s.weeks.forEach((w) => { w.blocks = (w.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0); w.blocks.forEach((b) => { if (!b.kind) b.kind = "plan"; }); if (!w.budgets) w.budgets = {}; });
     if (!s.weeks.length) s.weeks = [{ id: "w" + Date.now(), blocks: [], budgets: {} }];
     s.currentWeek = Math.max(0, Math.min(s.currentWeek || 0, s.weeks.length - 1));
@@ -1114,8 +1116,7 @@ if (IS_BROWSER) (function () {
       if (inp) inp.style.display = "";
       return;
     }
-    if (inp) inp.style.display = "none";
-    { const tm = $("taskMenu"); if (tm) tm.style.display = "none"; }
+    if (inp) inp.style.display = "";
     const c = state.categories.find((x) => x.id === state.timer.catId);
     const color = c ? c.color : "#888", ink = textOn(color);
     el.style.display = ""; el.style.background = color; el.style.color = ink;
@@ -1137,7 +1138,7 @@ if (IS_BROWSER) (function () {
     return e;
   }
   function showTaskMenu() {
-    const menu = $("taskMenu"), inp = $("startTimerInput"); if (!menu || !inp || state.timer) return;
+    const menu = $("taskMenu"), inp = $("startTimerInput"); if (!menu || !inp) return;
     const q = inp.value.trim().toLowerCase();
     const list = eligibleTasks().filter((c) => !q || (c.name || "").toLowerCase().indexOf(q) >= 0);
     if (!list.length) { menu.style.display = "none"; return; }
@@ -1255,6 +1256,7 @@ if (IS_BROWSER) (function () {
   function renderPool() {
     const cats = state.categories.filter((c) => !c.archived);
     const eps = 0.001;
+    const TOL = 0.25; // within 15 min of the goal counts as "Done"
     const cw = state.currentWeek;
     const rep = buildReport(state);
     const usage = weekUsage(state, cw);   // past actual (floored to 15) + today/future planned
@@ -1276,9 +1278,9 @@ if (IS_BROWSER) (function () {
       const bud = weekBudget(c, cw);
       if (bud <= eps) continue;                                    // no weekly goal → not listed in Tier 2/3
       const u = effUsed(c.id);
-      if (Math.abs(bud - u) <= eps) tier3.push(c);                // exactly at goal → Tier 3 (Week – Done)
-      else if (u - bud > eps) tier2over.push(c);                  // over → Tier 2 (Week – Over)
-      else tier2under.push(c);                                     // under → Tier 2 (Week – Open)
+      if (Math.abs(bud - u) <= TOL) tier3.push(c);                // within 15 min of goal → Tier 3 (Done)
+      else if (u - bud > TOL) tier2over.push(c);                  // over → Tier 2 (Over)
+      else tier2under.push(c);                                     // under → Tier 2 (Open)
     }
     // Tier 1: today's planned tasks, grouped by week status — over (1a) → under (1b) → at-goal (1c), each in calendar order
     const t1over = [], t1under = [], t1at = [];
@@ -1288,8 +1290,8 @@ if (IS_BROWSER) (function () {
       const tlist = Object.keys(firstStart).map((id) => cats.find((c) => c.id === id)).filter((c) => c && !isUtil(c) && !c.parent && c.t1HideDate !== todayStr);
       for (const c of tlist) {
         const bud = weekBudget(c, cw), u = effUsed(c.id);
-        if (bud > eps && u - bud > eps) t1over.push(c);
-        else if (bud > eps && bud - u > eps) t1under.push(c);
+        if (bud > eps && u - bud > TOL) t1over.push(c);
+        else if (bud > eps && bud - u > TOL) t1under.push(c);
         else t1at.push(c);
       }
       const byStart = (a, b) => firstStart[a.id] - firstStart[b.id];
@@ -1366,8 +1368,8 @@ if (IS_BROWSER) (function () {
       const bw = weekBudget(cat, cw);
       const u = effUsed(cat.id);
       const remaining = Math.round((bw - u) * 100) / 100;
-      const isOver = u - bw > eps;
-      const isDone = Math.abs(bw - u) <= eps;
+      const isOver = u - bw > TOL;
+      const isDone = Math.abs(bw - u) <= TOL;
       const faded = shade === 3; // Tier 3 boxes shaded equally
       let ovr = isOver, pctV = bw > 0 ? Math.min(100, (u / bw) * 100) : 100, hoursTxt, hoursCls;
       if (tier === 1) {                                   // Tier 1 → remaining for TODAY (incl. running session)
@@ -1433,11 +1435,11 @@ if (IS_BROWSER) (function () {
     t1over.forEach((c) => renderItem(c, 2, null, false));      // 1a: over this week → amber
     t1under.forEach((c) => renderItem(c, 2, null, true));      // 1b: under this week → dark grey + hide button
     t1at.forEach((c) => renderItem(c, 3, null, false));        // 1c: at goal but planned today
-    if (tier2under.length) divider("Week – Open", "lbl");
+    if (tier2under.length) divider("Open", "lbl");
     tier2under.forEach((c) => renderItem(c, 2));
-    if (tier2over.length) divider("Week – Over", "lbl");
+    if (tier2over.length) divider("Over", "lbl");
     tier2over.forEach((c) => renderItem(c, 2));
-    if (tier3.length) divider("Week – Done", "lbl");
+    if (tier3.length) divider("Done", "lbl");
     tier3.forEach((c) => renderItem(c, 3));
     const add = document.createElement("button");
     add.id = "addCat"; add.textContent = "+ Add task";
@@ -2091,7 +2093,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v72"; } catch (e) {}
+  try { document.title = "Plapp v73"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v73"; } catch (e) {}
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
