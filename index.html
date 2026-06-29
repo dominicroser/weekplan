@@ -463,7 +463,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v66 */
+/* build v67 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1647,7 +1647,17 @@ if (IS_BROWSER) (function () {
     if (!drag) return; const d = drag; drag = null; ghost.style.display = "none"; clearPreview();
     const pos = gridPos(e.clientX, e.clientY);
     if (d.mode === "new") {
-      if (pos) { snap(); const len = Math.max(1, Math.min(d.lenSlots, TOTAL_SLOTS - pos.slot)); curBlocks().push({ id: state.nextId++, catId: d.catId, day: pos.day, startSlot: pos.slot, lenSlots: len }); commit(); }
+      if (pos) {
+        snap();
+        const len = Math.max(1, Math.min(d.lenSlots, TOTAL_SLOTS - pos.slot));
+        if (e.ctrlKey || e.metaKey) {   // Ctrl/Cmd-drop → push later task blocks down to make room
+          const later = curBlocks().filter((b) => b.day === pos.day && !b.event && !b.meeting && b.kind !== "actual" && b.startSlot >= pos.slot);
+          if (later.length && later.some((b) => b.startSlot + len + b.lenSlots > TOTAL_SLOTS)) toast("Not enough room left in the day to push the others down");
+          else for (const b of later) b.startSlot += len;
+        }
+        curBlocks().push({ id: state.nextId++, catId: d.catId, day: pos.day, startSlot: pos.slot, lenSlots: len });
+        commit();
+      }
     } else if (d.mode === "move") {
       const el = $("blocksLayer").querySelector('[data-id="' + d.blockId + '"]'); if (el) el.classList.remove("dragging");
       if (!d.moved) { selectedId = selectedId === d.blockId ? null : d.blockId; renderBlocks(); }
@@ -2070,7 +2080,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v66"; } catch (e) {}
+  try { document.title = "Plapp v67"; } catch (e) {}
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
