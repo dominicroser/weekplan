@@ -207,6 +207,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .runBar .rbElapsed { font-variant-numeric: tabular-nums; opacity: 0.92; }
 .runBar .rbBtn { background: rgba(255,255,255,0.28); border: none; color: inherit; cursor: pointer; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 .runBar .rbBtn:hover { background: rgba(255,255,255,0.45); }
+.startTimerIn { width: 150px; border: 1px solid var(--line); border-radius: 15px; padding: 3px 11px; font-family: 'Inter', sans-serif; font-size: 12px; color: var(--ink); background: var(--panel); }
+.startTimerIn:focus { outline: none; border-color: rgba(43,108,176,0.5); background: #fff; }
 .goalGin { width: 58px; text-align: center; border: 1px solid var(--line); border-radius: 5px; padding: 2px 4px; font: inherit; }
 .goalSet2 { margin: 6px 0 12px; font-size: 13px; color: var(--ink); }
 .gOver { color: #2f9e44; font-weight: 600; }
@@ -308,6 +310,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   </div>
   <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="width:auto;padding:0 9px;">Week</button>
   <span id="runBar" class="runBar" style="display:none;"></span>
+  <input id="startTimerInput" class="startTimerIn" list="taskDatalist" placeholder="▶ start a timer…" autocomplete="off">
+  <datalist id="taskDatalist"></datalist>
   <form id="cmdForm">
     <input id="cmdInput" placeholder='Type a task or meeting… e.g. "Growth mon-sat 5–5:30am" or "Meet Fred tue 1–2:30pm"' autocomplete="off">
   </form>
@@ -456,7 +460,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v59 */
+/* build v60 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -894,7 +898,7 @@ function applySheetWeeks(state, parsed) {
 function migrate(s) {
   if (!s) return null;
   if (s.weeks && Array.isArray(s.weeks)) {
-    (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; if (c.group === "termin") c.color = EVENT_COLOR; if (c.group === "none") c.color = GREY; if (c.group === "zug") c.color = ZUG_COLOR; if (c.auto) { c.noTrack = true; delete c.auto; } });
+    (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; if (c.group === "termin") c.color = EVENT_COLOR; if (c.group === "none") c.color = GREY; if (c.group === "zug") c.color = ZUG_COLOR; });
     s.weeks.forEach((w) => { w.blocks = (w.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0); w.blocks.forEach((b) => { if (!b.kind) b.kind = "plan"; }); if (!w.budgets) w.budgets = {}; });
     if (!s.weeks.length) s.weeks = [{ id: "w" + Date.now(), blocks: [], budgets: {} }];
     s.currentWeek = Math.max(0, Math.min(s.currentWeek || 0, s.weeks.length - 1));
@@ -974,6 +978,7 @@ if (IS_BROWSER) (function () {
   function ensureBudgets(w) { if (!w.budgets) w.budgets = {}; return w.budgets; }
   function parseHM(v) { v = String(v).trim(); if (!v) return 0; if (v.indexOf(":") >= 0) { const p = v.split(":"); return Math.max(0, (parseInt(p[0], 10) || 0) + (parseInt(p[1], 10) || 0) / 60); } return Math.max(0, parseFloat(v.replace(",", ".")) || 0); }
   function weekBudget(cat, wIdx) {
+    if (cat.auto) { const w = state.weeks[wIdx]; let s = 0; if (w) for (const b of w.blocks) if (b.catId === cat.id && !b.event && b.kind !== "actual") s += b.lenSlots / 4; return s; } // Auto: goal follows scheduled blocks
     const w = state.weeks[wIdx]; if (w && w.budgets && w.budgets[cat.id] != null) return w.budgets[cat.id]; return cat.hours;
   }
 
@@ -1085,8 +1090,22 @@ if (IS_BROWSER) (function () {
   }
   function updateRunBar() {
     updateFavicon();
-    const el = $("runBar"); if (!el) return;
-    if (!state.timer) { el.innerHTML = ""; el.style.display = "none"; el.style.background = "transparent"; return; }
+    const el = $("runBar"), inp = $("startTimerInput"); if (!el) return;
+    if (!state.timer) {
+      el.innerHTML = ""; el.style.display = "none"; el.style.background = "transparent";
+      if (inp) {
+        inp.style.display = "";
+        const dl = $("taskDatalist");
+        if (dl) {
+          const cw = state.currentWeek, grp = (c) => c.group === "work" ? 0 : c.group === "fruit" ? 1 : c.group === "home" ? 2 : 3;
+          const elig = state.categories.filter((c) => !c.archived && !c.noTrack && (c.auto || weekBudget(c, cw) > 0.001 || c.parent));
+          elig.sort((a, b) => (grp(a) - grp(b)) || (a.name || "").localeCompare(b.name || ""));
+          dl.innerHTML = elig.map((c) => '<option value="' + (c.name || "").replace(/"/g, "&quot;") + '">').join("");
+        }
+      }
+      return;
+    }
+    if (inp) inp.style.display = "none";
     const c = state.categories.find((x) => x.id === state.timer.catId);
     const color = c ? c.color : "#888", ink = textOn(color);
     el.style.display = ""; el.style.background = color; el.style.color = ink;
@@ -1205,7 +1224,7 @@ if (IS_BROWSER) (function () {
     const trackWeek = (id) => { let s = 0; for (const ds of wkDates) { const dd = rep.days[ds]; if (dd && dd.byCat[id]) s += dd.byCat[id]; } return s; };
     const trackToday = (id) => { const dd = rep.days[todayStr]; return dd && dd.byCat[id] ? dd.byCat[id] : 0; };
     const rema = (c) => Math.round((weekBudget(c, cw) - (used[c.id] || 0)) * 100) / 100;
-    const isUtil = (c) => c.noTrack;
+    const isUtil = (c) => c.auto || c.noTrack;
     const tier2 = [], tier3 = [];
     for (const c of cats) {
       if (isUtil(c)) { tier3.push(c); continue; }                 // not-tracked utilities → Tier 3 (kept so they stay draggable)
@@ -1346,7 +1365,7 @@ if (IS_BROWSER) (function () {
         '<div class="poolTop">' + (tier === 2 ? '<button class="prioStar ' + (cat.prio === 1 ? "o" : cat.prio === 2 ? "r" : cat.prio === 3 ? "p" : "") + '" title="Priority — click to cycle: yellow, red, purple (highest), off">★</button>' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + fmtHM(u) + " of " + '<button class="hStep" data-d="-1">−</button><input class="goalVal goalInput" title="Click to set the weekly goal" value="' + fmtHM(bw) + '"><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>' + "</div>" +
+        '<div class="poolMeta">' + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — the goal follows the hours you schedule">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><input class="goalVal goalInput" title="Click to set the weekly goal" value="' + fmtHM(bw) + '"><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>') + "</div>" +
         (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })();
       const nameIn = el.querySelector(".nameInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe");
@@ -1789,6 +1808,13 @@ if (IS_BROWSER) (function () {
     else { const tc = cellForDate(state.anchorMonday, new Date()); viewDay = (tc.weekIdx === state.currentWeek && new Date().getDay() !== 0) ? tc.dayIdx : 0; }
     setView();
   });
+  $("startTimerInput").addEventListener("change", (e) => {
+    const v = e.target.value.trim(); e.target.value = ""; if (!v) return;
+    const c = state.categories.find((x) => (x.name || "").toLowerCase() === v.toLowerCase()) || state.categories.find((x) => (x.name || "").toLowerCase().startsWith(v.toLowerCase()));
+    if (!c) { toast("No task called “" + v + "”"); return; }
+    if (c.noTrack) { toast("“" + c.name + "” is set to not-tracked."); return; }
+    toggleTimer(c.id);
+  });
   $("weekPrev").onclick = () => { if (viewDay >= 0) { stepDay(-1); return; } if (state.currentWeek > 0) { state.currentWeek--; selectedId = null; commit(); } };
   $("weekNext").onclick = () => { if (viewDay >= 0) { stepDay(1); return; } if (state.currentWeek < state.weeks.length - 1) { state.currentWeek++; selectedId = null; commit(); } else { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); } };
   $("weekAdd").onclick = () => { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); };
@@ -1906,7 +1932,7 @@ if (IS_BROWSER) (function () {
     const arrow = (k) => budSort.key === k ? (budSort.dir > 0 ? " ▲" : " ▼") : "";
     let html = '<div class="budWrap"><table class="budTable"><thead><tr><th data-sort="group">Group' + arrow("group") + '</th><th data-sort="name">Task' + arrow("name") + "</th>";
     for (let i = 0; i < W; i++) html += '<th data-sort="w' + i + '">W' + (i + 1) + arrow("w" + i) + "</th>";
-    html += '<th data-sort="total">Total' + arrow("total") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th data-sort="done">Done' + arrow("done") + "</th><th></th></tr></thead><tbody>";
+    html += '<th data-sort="total">Total' + arrow("total") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th data-sort="done">Done' + arrow("done") + "</th><th></th></tr></thead><tbody>";
     let list = state.categories.slice();
     if (budSort.key) {
       const d = budSort.dir, nameCmp = (a, b) => (a.name || "").localeCompare(b.name || "");
@@ -1917,6 +1943,7 @@ if (IS_BROWSER) (function () {
         else if (k === "def") p = (a.defaultMin || 0) - (b.defaultMin || 0);
         else if (k === "track") p = (a.noTrack ? 1 : 0) - (b.noTrack ? 1 : 0);
         else if (k === "done") p = (a.archived ? 1 : 0) - (b.archived ? 1 : 0);
+        else if (k === "auto") p = (a.auto ? 1 : 0) - (b.auto ? 1 : 0);
         else if (k === "total") { let sa = 0, sb = 0; for (let i = 0; i < W; i++) { sa += weekBudget(a, i); sb += weekBudget(b, i); } p = sa - sb; }
         else if (k[0] === "w") { const wi = +k.slice(1); p = weekBudget(a, wi) - weekBudget(b, wi); }
         return p ? p * d : nameCmp(a, b); // secondary sort: always alphabetical
@@ -1931,14 +1958,15 @@ if (IS_BROWSER) (function () {
       html += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '><td><select class="bgroup">' +
         GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") +
         '</select></td><td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
-      for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="text" inputmode="numeric" value="' + fmtHM(weekBudget(c, i)) + '"></td>';
+      for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="text" inputmode="numeric"' + (c.auto ? " readonly" : "") + ' value="' + fmtHM(weekBudget(c, i)) + '"></td>';
       { let tsum = 0; for (let i = 0; i < W; i++) tsum += weekBudget(c, i); html += '<td class="btot">' + fmtHM(tsum) + "</td>"; }
       html += '<td><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal (weekly goal minus time already done)" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
+      html += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
       html += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
       html += '<td><input type="checkbox" class="barch" title="Hide from the list (finished one-off task)"' + (c.archived ? " checked" : "") + "></td>";
       html += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
     }
-    { let gt = 0, cells = ""; for (let i = 0; i < W; i++) { let s = 0; for (const c of list) s += weekBudget(c, i); gt += s; cells += '<td class="btot">' + fmtHM(s) + "</td>"; } html += '<tr class="budFoot"><td></td><td class="name">Total</td>' + cells + '<td class="btot">' + fmtHM(gt) + "</td><td></td><td></td><td></td><td></td></tr>"; }
+    { let gt = 0, cells = ""; for (let i = 0; i < W; i++) { let s = 0; for (const c of list) s += weekBudget(c, i); gt += s; cells += '<td class="btot">' + fmtHM(s) + "</td>"; } html += '<tr class="budFoot"><td></td><td class="name">Total</td>' + cells + '<td class="btot">' + fmtHM(gt) + "</td><td></td><td></td><td></td><td></td><td></td></tr>"; }
     html += "</tbody></table></div>";
     const wrap = $("budgetsTableWrap");
     const prevSc = wrap.querySelector(".budWrap"); const keepScroll = prevSc ? prevSc.scrollTop : 0;
@@ -1952,6 +1980,7 @@ if (IS_BROWSER) (function () {
       nm.addEventListener("change", () => { const v = nm.value.trim(); if (!v) { nm.value = cat.name; return; } if (nameTaken(v, cat.id)) { toast('A task named "' + v + '" already exists.'); nm.value = cat.name; return; } snap(); cat.name = v; commit(); });
       tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = parseHM(inp.value); commit(); renderBudgets(); }); });
       tr.querySelector(".bdef").addEventListener("change", (e) => { snap(); const v = e.target.value.trim(); if (v === "") delete cat.defaultMin; else cat.defaultMin = Math.max(0, +v || 0); commit(); });
+      tr.querySelector(".bauto").addEventListener("change", (e) => { snap(); cat.auto = e.target.checked; commit(); renderBudgets(); });
       tr.querySelector(".btrack").addEventListener("change", (e) => { snap(); cat.noTrack = !e.target.checked; if (cat.noTrack && state.timer && state.timer.catId === cat.id) stopTimer(); commit(); renderBudgets(); });
       tr.querySelector(".barch").addEventListener("change", (e) => { snap(); cat.archived = e.target.checked; if (cat.archived && state.timer && state.timer.catId === id) stopTimer(); commit(); renderBudgets(); });
       tr.querySelector(".budDel").addEventListener("click", () => {
