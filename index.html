@@ -191,6 +191,12 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .budTable th, .budTable td { border: 1px solid var(--line); padding: 3px 5px; text-align: center; }
 .budTable th { background: var(--panel); font-weight: 600; color: var(--ink2); position: sticky; top: 0; z-index: 1; }
 .budTable th[data-sort] { cursor: pointer; user-select: none; white-space: nowrap; }
+.budTable .name { position: sticky; left: 0; background: var(--bg); }
+.budTable td.name { z-index: 1; }
+.budTable th.name { z-index: 3; background: var(--panel); }
+.budTable tr.budFoot td.name { background: var(--panel); }
+.budTable th[data-sort^="w"], .budTable td.btot { min-width: 56px; }
+.budTable input.bh { width: 56px; }
 .budTable th[data-sort]:hover { background: var(--panel2); }
 .budTable td.name { text-align: left; white-space: nowrap; }
 .budSwatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: middle; margin-right: 5px; }
@@ -471,7 +477,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v70 */
+/* build v71 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1949,9 +1955,9 @@ if (IS_BROWSER) (function () {
     const W = state.weeks.length;
     const gi = (g) => { const i = GROUP_ORDER.indexOf(g || "work"); return i < 0 ? 99 : i; };
     const arrow = (k) => budSort.key === k ? (budSort.dir > 0 ? " ▲" : " ▼") : "";
-    let html = '<div class="budWrap"><table class="budTable"><thead><tr><th data-sort="group">Group' + arrow("group") + '</th><th data-sort="name">Task' + arrow("name") + "</th>";
+    let html = '<div class="budWrap"><table class="budTable"><thead><tr><th class="name" data-sort="name">Task' + arrow("name") + '</th><th data-sort="group">Group' + arrow("group") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th data-sort="done">Done' + arrow("done") + '</th><th>Lock</th><th>Parent</th>';
     for (let i = 0; i < W; i++) html += '<th data-sort="w' + i + '">W' + (i + 1) + arrow("w" + i) + "</th>";
-    html += '<th data-sort="total">Total' + arrow("total") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th data-sort="done">Done' + arrow("done") + '</th><th>Lock</th><th>Parent</th><th></th></tr></thead><tbody>';
+    html += '<th data-sort="total">Total' + arrow("total") + '</th><th></th></tr></thead><tbody>';
     let list = state.categories.slice();
     if (budSort.key) {
       const d = budSort.dir, nameCmp = (a, b) => (a.name || "").localeCompare(b.name || "");
@@ -1974,20 +1980,20 @@ if (IS_BROWSER) (function () {
       list.sort((a, b) => { const r = rank(a) - rank(b); if (r) return r; if (rank(a) === 0) { const g = grp(a) - grp(b); if (g) return g; } return (a.name || "").localeCompare(b.name || ""); });
     }
     for (const c of list) {
-      html += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '><td><select class="bgroup">' +
-        GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") +
-        '</select></td><td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
-      for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="text" inputmode="numeric"' + (c.auto ? " readonly" : "") + ' value="' + fmtHM(weekBudget(c, i)) + '"></td>';
-      { let tsum = 0; for (let i = 0; i < W; i++) tsum += weekBudget(c, i); html += '<td class="btot">' + fmtHM(tsum) + "</td>"; }
+      html += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '>';
+      html += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
+      html += '<td><select class="bgroup">' + GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
       html += '<td><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal (weekly goal minus time already done)" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
       html += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
       html += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
       html += '<td><input type="checkbox" class="barch" title="Hide from the list (finished one-off task)"' + (c.archived ? " checked" : "") + "></td>";
       html += '<td><input type="checkbox" class="bplock" title="Keep this colour when you press Recolour all by group"' + (c.lockColor ? " checked" : "") + "></td>";
       html += '<td><select class="bpar" title="Roll this task’s tracked time up into a parent task"><option value="">—</option>' + state.categories.filter((p) => p.id !== c.id && !p.parent).map((p) => '<option value="' + p.id + '"' + (c.parent === p.id ? " selected" : "") + ">" + (p.name || "").replace(/</g, "&lt;") + "</option>").join("") + '</select> <input class="bsplit" type="number" min="0" max="100" step="5" placeholder="%" title="Optional: share (%) of the parent timer’s time this child receives when the parent is stopped" value="' + (c.splitPct != null ? c.splitPct : "") + '" style="width:42px;"></td>';
+      for (let i = 0; i < W; i++) html += '<td><input class="bh" data-w="' + i + '" type="text" inputmode="numeric"' + (c.auto ? " readonly" : "") + ' value="' + fmtHM(weekBudget(c, i)) + '"></td>';
+      { let tsum = 0; for (let i = 0; i < W; i++) tsum += weekBudget(c, i); html += '<td class="btot">' + fmtHM(tsum) + "</td>"; }
       html += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
     }
-    { let gt = 0, cells = ""; for (let i = 0; i < W; i++) { let s = 0; for (const c of list) s += weekBudget(c, i); gt += s; cells += '<td class="btot">' + fmtHM(s) + "</td>"; } html += '<tr class="budFoot"><td></td><td class="name">Total</td>' + cells + '<td class="btot">' + fmtHM(gt) + "</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"; }
+    { let gt = 0, cells = ""; for (let i = 0; i < W; i++) { let s = 0; for (const c of list) s += weekBudget(c, i); gt += s; cells += '<td class="btot">' + fmtHM(s) + "</td>"; } html += '<tr class="budFoot"><td class="name">Total</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>' + cells + '<td class="btot">' + fmtHM(gt) + "</td><td></td></tr>"; }
     html += "</tbody></table></div>";
     const wrap = $("budgetsTableWrap");
     const prevSc = wrap.querySelector(".budWrap"); const keepScroll = prevSc ? prevSc.scrollTop : 0;
@@ -2071,7 +2077,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v70"; } catch (e) {}
+  try { document.title = "Plapp"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v71"; } catch (e) {}
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
