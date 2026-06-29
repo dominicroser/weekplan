@@ -460,7 +460,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v64 */
+/* build v65 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2063,6 +2063,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
+  try { document.title = "Plapp v65"; } catch (e) {}
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
