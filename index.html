@@ -216,7 +216,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .poolTrack { font-size: 10px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .poolDivider.abDiv { height: 2px; background: #9aa0a8; opacity: 0.8; border-radius: 2px; margin: 7px 2px; }
-.poolDivider.lbl { height: auto; background: none; border-radius: 0; border-top: 4px solid #e03131; padding-top: 5px; margin: 13px 2px 5px; color: #e03131; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
+.poolDivider.lbl { height: auto; background: #fdf3d2; border-radius: 0; border-top: 5px solid #e03131; border-bottom: 5px solid #e03131; padding: 5px 0; margin: 13px 2px 6px; color: #e03131; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
 .t1HideRow { margin-top: 7px; }
 .t1Hide { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); color: inherit; font-size: 10px; border-radius: 5px; padding: 1px 8px; cursor: pointer; font-family: 'Inter', sans-serif; }
 .t1Hide:hover { background: rgba(255,255,255,0.32); }
@@ -362,7 +362,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 </div>
 
 <dialog id="settingsDialog">
-  <h2>Settings</h2>
+  <h2>Settings <span id="buildInfo" style="font-size:11px;font-weight:400;color:var(--ink3);"></span></h2>
 
   <h3>Import from Google Sheet</h3>
   <p class="muted"><b>Task</b> in the first column, then one column per week headed <b>Week 1</b>, <b>Week 2</b>, … with that week's hours. (A single <b>Hours</b> column also works — same budget every week.) An optional <b>Color</b> column is honoured. Publish via <b>File → Share → Publish to web</b> as <b>Comma-separated values (.csv)</b>, paste the link below. Import sets each week's budget, adds new tasks, and creates extra weeks if your sheet has more — it never deletes.</p>
@@ -415,7 +415,7 @@ create policy "planner anon access" on plans
 </dialog>
 
 <dialog id="budgetsDialog">
-  <h2>Tasks &amp; weekly hours</h2>
+  <h2>Tasks</h2>
   <p class="muted">Set each task's <b>group</b> and its <b>hours per week</b>. Colours are picked automatically by group (Work = blue/purple, Home = yellow/orange, Fruit = green).</p>
   <div id="budgetsTableWrap"></div>
   <div class="btnRow" style="margin-top:14px;">
@@ -444,7 +444,7 @@ create policy "planner anon access" on plans
 </dialog>
 
 <dialog id="reportsDialog">
-  <h2>Time reports</h2>
+  <h2>Reports</h2>
   <p class="muted">Tracked time (from the ▶ timer) for the week you're viewing, plus group totals across all weeks. Hours are exact.</p>
   <div id="reportsBody"></div>
   <div class="btnRow" style="margin-top:14px;">
@@ -453,7 +453,7 @@ create policy "planner anon access" on plans
 </dialog>
 
 <dialog id="logDialog">
-  <h2>Activity log</h2>
+  <h2>Activity</h2>
   <p class="muted">Your tracked sessions for the week you're viewing, day by day.</p>
   <div id="logBody"></div>
   <div class="btnRow" style="margin-top:14px;">
@@ -463,7 +463,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v67 */
+/* build v68 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -547,15 +547,13 @@ const GROUPS = {
   fruit: { label: "Fruit", palette: ["#1e7a46","#52b35e","#2b8a3e","#74c365","#157f4a","#43a047","#6abf69","#2f9e44","#3f7d3a","#86c97a"] },
   none:  { label: "None",  palette: [GREY] },
   termin:{ label: "Termin", palette: [EVENT_COLOR] },
-  zug:   { label: "Zug",   palette: [ZUG_COLOR] },
 };
-const GROUP_ORDER = ["work", "home", "fruit", "none", "termin", "zug"];
+const GROUP_ORDER = ["work", "home", "fruit", "none", "termin"];
 const GROUP_HUE = { work: 225, home: 42, fruit: 135 };
 function groupColorFor(group, cats, exceptId) {
   const g = GROUPS[group] ? group : "work";
   if (g === "none") return GREY;          // light grey
   if (g === "termin") return EVENT_COLOR; // muted red (same as meetings)
-  if (g === "zug") return ZUG_COLOR;      // neon yellow
   const used = new Set(cats.filter((c) => c.id !== exceptId && (c.group || "work") === g).map((c) => (c.color || "").toLowerCase()));
   for (const col of GROUPS[g].palette) if (!used.has(col.toLowerCase())) return col;
   const L = 40 + (used.size * 9) % 32;
@@ -901,7 +899,7 @@ function applySheetWeeks(state, parsed) {
 function migrate(s) {
   if (!s) return null;
   if (s.weeks && Array.isArray(s.weeks)) {
-    (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; if (c.group === "termin") c.color = EVENT_COLOR; if (c.group === "none") c.color = GREY; if (c.group === "zug") c.color = ZUG_COLOR; });
+    (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; if (c.group === "termin") c.color = EVENT_COLOR; if (c.group === "none") c.color = GREY; if (c.group === "zug") { c.group = "none"; c.color = GREY; } });
     s.weeks.forEach((w) => { w.blocks = (w.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0); w.blocks.forEach((b) => { if (!b.kind) b.kind = "plan"; }); if (!w.budgets) w.budgets = {}; });
     if (!s.weeks.length) s.weeks = [{ id: "w" + Date.now(), blocks: [], budgets: {} }];
     s.currentWeek = Math.max(0, Math.min(s.currentWeek || 0, s.weeks.length - 1));
@@ -1168,6 +1166,13 @@ if (IS_BROWSER) (function () {
     const dateStr = ymd(dateOfCell(state.anchorMonday, wi, cell.dayIdx));
     const ss = actualSlots(startMs, endMs);
     state.weeks[wi].blocks.push({ id: state.nextId++, kind: "actual", catId: catId, day: DAYS[cell.dayIdx], date: dateStr, startMs: startMs, endMs: endMs, startSlot: ss.startSlot, lenSlots: ss.lenSlots });
+  }
+  function syncActualMs(b) {   // after a tracked block is dragged/resized, recompute its real start/end so reports & Activity update
+    if (!b || b.kind !== "actual") return;
+    const ds = ymd(dateOfCell(state.anchorMonday, state.currentWeek, DAYS.indexOf(b.day)));
+    b.date = ds;
+    b.startMs = msAt(ds, b.startSlot * SLOT_MIN);
+    b.endMs = msAt(ds, (b.startSlot + b.lenSlots) * SLOT_MIN);
   }
 
   /* ── sticky note ── */
@@ -1661,9 +1666,9 @@ if (IS_BROWSER) (function () {
     } else if (d.mode === "move") {
       const el = $("blocksLayer").querySelector('[data-id="' + d.blockId + '"]'); if (el) el.classList.remove("dragging");
       if (!d.moved) { selectedId = selectedId === d.blockId ? null : d.blockId; renderBlocks(); }
-      else if (pos) { snap(); const b = findBlock(d.blockId); if (b) { b.day = pos.day; b.startSlot = Math.max(0, Math.min(pos.slot - d.grabOffset, TOTAL_SLOTS - b.lenSlots)); } commit(); }
+      else if (pos) { snap(); const b = findBlock(d.blockId); if (b) { b.day = pos.day; b.startSlot = Math.max(0, Math.min(pos.slot - d.grabOffset, TOTAL_SLOTS - b.lenSlots)); syncActualMs(b); } commit(); }
       else renderBlocks();
-    } else if (d.mode === "resize" || d.mode === "resizeTop") { if (d.snapped) commit(); }
+    } else if (d.mode === "resize" || d.mode === "resizeTop") { if (d.snapped) { const rb = findBlock(d.blockId); if (rb) syncActualMs(rb); commit(); } }
   });
   document.addEventListener("pointercancel", () => { if (!drag) return; drag = null; ghost.style.display = "none"; clearPreview(); renderAll(); });
 
@@ -1750,7 +1755,7 @@ if (IS_BROWSER) (function () {
     const gW = {}, gA = {};
     for (const ds in rep.days) { const inWk = dates.indexOf(ds) >= 0; const bg = rep.days[ds].byGroup; for (const g in bg) { gA[g] = (gA[g] || 0) + bg[g]; if (inWk) gW[g] = (gW[g] || 0) + bg[g]; } }
     let gs = "<h3>By group</h3>" + '<table class="repTable"><thead><tr><th>Group</th><th>This week</th><th>All weeks</th><th>Avg/wk</th></tr></thead><tbody>';
-    for (const g of ["home", "fruit", "work", "none", "termin", "zug"]) { if (!(gA[g] > 0.0001)) continue; gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtHM(gW[g] || 0) + "</td><td>" + fmtHM(gA[g] || 0) + "</td><td>" + fmtHM((gA[g] || 0) / NW) + "</td></tr>"; }
+    for (const g of ["home", "fruit", "work", "none", "termin"]) { if (!(gA[g] > 0.0001)) continue; gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtHM(gW[g] || 0) + "</td><td>" + fmtHM(gA[g] || 0) + "</td><td>" + fmtHM((gA[g] || 0) / NW) + "</td></tr>"; }
     const wfW = (gW.work || 0) + (gW.fruit || 0), wfA = (gA.work || 0) + (gA.fruit || 0);
     gs += '<tr class="rfoot"><td class="rname">Work + Fruit</td><td>' + fmtHM(wfW) + "</td><td>" + fmtHM(wfA) + "</td><td>" + fmtHM(wfA / NW) + "</td></tr>";
     gs += "</tbody></table>";
@@ -1962,7 +1967,7 @@ if (IS_BROWSER) (function () {
     const arrow = (k) => budSort.key === k ? (budSort.dir > 0 ? " ▲" : " ▼") : "";
     let html = '<div class="budWrap"><table class="budTable"><thead><tr><th data-sort="group">Group' + arrow("group") + '</th><th data-sort="name">Task' + arrow("name") + "</th>";
     for (let i = 0; i < W; i++) html += '<th data-sort="w' + i + '">W' + (i + 1) + arrow("w" + i) + "</th>";
-    html += '<th data-sort="total">Total' + arrow("total") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th data-sort="done">Done' + arrow("done") + '</th><th>Parent</th><th></th></tr></thead><tbody>';
+    html += '<th data-sort="total">Total' + arrow("total") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th data-sort="done">Done' + arrow("done") + '</th><th>Lock</th><th>Parent</th><th></th></tr></thead><tbody>';
     let list = state.categories.slice();
     if (budSort.key) {
       const d = budSort.dir, nameCmp = (a, b) => (a.name || "").localeCompare(b.name || "");
@@ -1994,10 +1999,11 @@ if (IS_BROWSER) (function () {
       html += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
       html += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
       html += '<td><input type="checkbox" class="barch" title="Hide from the list (finished one-off task)"' + (c.archived ? " checked" : "") + "></td>";
+      html += '<td><input type="checkbox" class="bplock" title="Keep this colour when you press Recolour all by group"' + (c.lockColor ? " checked" : "") + "></td>";
       html += '<td><select class="bpar" title="Roll this task’s tracked time up into a parent task"><option value="">—</option>' + state.categories.filter((p) => p.id !== c.id && !p.parent).map((p) => '<option value="' + p.id + '"' + (c.parent === p.id ? " selected" : "") + ">" + (p.name || "").replace(/</g, "&lt;") + "</option>").join("") + '</select> <input class="bsplit" type="number" min="0" max="100" step="5" placeholder="%" title="Optional: share (%) of the parent timer’s time this child receives when the parent is stopped" value="' + (c.splitPct != null ? c.splitPct : "") + '" style="width:42px;"></td>';
       html += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
     }
-    { let gt = 0, cells = ""; for (let i = 0; i < W; i++) { let s = 0; for (const c of list) s += weekBudget(c, i); gt += s; cells += '<td class="btot">' + fmtHM(s) + "</td>"; } html += '<tr class="budFoot"><td></td><td class="name">Total</td>' + cells + '<td class="btot">' + fmtHM(gt) + "</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"; }
+    { let gt = 0, cells = ""; for (let i = 0; i < W; i++) { let s = 0; for (const c of list) s += weekBudget(c, i); gt += s; cells += '<td class="btot">' + fmtHM(s) + "</td>"; } html += '<tr class="budFoot"><td></td><td class="name">Total</td>' + cells + '<td class="btot">' + fmtHM(gt) + "</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"; }
     html += "</tbody></table></div>";
     const wrap = $("budgetsTableWrap");
     const prevSc = wrap.querySelector(".budWrap"); const keepScroll = prevSc ? prevSc.scrollTop : 0;
@@ -2006,7 +2012,8 @@ if (IS_BROWSER) (function () {
     wrap.querySelectorAll("tr[data-id]").forEach((tr) => {
       const id = tr.dataset.id, cat = state.categories.find((c) => c.id === id);
       if (!cat) return;
-      tr.querySelector(".bgroup").addEventListener("change", (e) => { snap(); cat.group = e.target.value; cat.color = groupColorFor(cat.group, state.categories, cat.id); commit(); renderBudgets(); });
+      tr.querySelector(".bgroup").addEventListener("change", (e) => { snap(); cat.group = e.target.value; if (!cat.lockColor) cat.color = groupColorFor(cat.group, state.categories, cat.id); commit(); renderBudgets(); });
+      tr.querySelector(".bplock").addEventListener("change", (e) => { snap(); cat.lockColor = e.target.checked; commit(); });
       const nm = tr.querySelector(".tname");
       nm.addEventListener("change", () => { const v = nm.value.trim(); if (!v) { nm.value = cat.name; return; } if (nameTaken(v, cat.id)) { toast('A task named "' + v + '" already exists.'); nm.value = cat.name; return; } snap(); cat.name = v; commit(); });
       tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = parseHM(inp.value); commit(); renderBudgets(); }); });
@@ -2034,7 +2041,7 @@ if (IS_BROWSER) (function () {
     commit(); renderBudgets();
   });
   $("budAddWeek").addEventListener("click", () => { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); commit(); renderBudgets(); });
-  $("budRecolour").addEventListener("click", () => { snap(); for (const c of state.categories) c.color = groupColorFor(c.group || "work", state.categories, c.id); commit(); renderBudgets(); });
+  $("budRecolour").addEventListener("click", () => { snap(); for (const c of state.categories) if (!c.lockColor) c.color = groupColorFor(c.group || "work", state.categories, c.id); commit(); renderBudgets(); });
   $("sheetImport").addEventListener("click", () => { sheetUrl = $("sheetUrl").value.trim(); saveCfg(); doSheetImport(); });
   $("sbSave").addEventListener("click", async () => {
     cfg = { url: $("sbUrl").value.trim(), key: $("sbKey").value.trim(), pid: $("sbPid").value.trim(), sheet: sheetUrl };
@@ -2080,7 +2087,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v67"; } catch (e) {}
+  try { document.title = "Plapp"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v68"; } catch (e) {}
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
