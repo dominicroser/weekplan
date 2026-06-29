@@ -10,14 +10,14 @@
 <meta name="apple-mobile-web-app-title" content="Plapp">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" href="icon-192.png">
+<link rel="icon" id="favicon" href="icon-192.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Inter:wght@400;500;600;700&display=swap');
 :root{
   --bg:#ffffff; --panel:#f5f6f8; --panel2:#eceef1; --ink:#1f2328; --ink2:#5b626b;
   --ink3:#8b919a; --line:rgba(0,0,0,0.09); --line2:rgba(0,0,0,0.05);
   --accent:#2b6cb0; --grid:#ffffff; --gridLine:rgba(0,0,0,0.07); --gridHour:rgba(0,0,0,0.14);
-  --good:#2f855a; --over:#c05621; --overbg:#fff4ec; --pink:#d6336c;
+  --good:#2f855a; --over:#c05621; --overbg:#ffdcb0; --pink:#d6336c;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; }
@@ -214,7 +214,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .poolTrack { font-size: 10px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .poolDivider.abDiv { height: 2px; background: #9aa0a8; opacity: 0.8; border-radius: 2px; margin: 7px 2px; }
-.poolDivider.lbl { height: auto; background: none; border-radius: 0; border-top: 3px solid #e03131; padding-top: 4px; margin: 12px 2px 5px; color: #e03131; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
+.poolDivider.lbl { height: auto; background: none; border-radius: 0; border-top: 4px solid #e03131; padding-top: 5px; margin: 13px 2px 5px; color: #e03131; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
 .missStar { color: #e0a800; font-size: 12px; }
 .poolSummary .l4 { color: var(--ink); margin-top: 3px; }
 .poolSummary .l4 b { color: var(--ink); font-weight: 700; }
@@ -222,6 +222,10 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .poolSummary .lWork b { color: #1d4ed8; font-weight: 700; }
 .poolSummary .lFruit { color: #15803d; margin-top: 1px; }
 .poolSummary .lFruit b { color: #15803d; font-weight: 700; }
+.poolSummary .lHome { color: #b8860b; margin-top: 1px; }
+.poolSummary .lHome b { color: #b8860b; font-weight: 700; }
+.poolSummary .lTotal { color: var(--ink); margin-top: 1px; font-weight: 700; }
+.poolSummary .lTotal b { color: var(--ink); font-weight: 800; }
 .poolSummary .l5 { margin-top: 3px; }
 .pOrange { color: #b8860b; font-weight: 700; }
 .pRed { color: #e03131; font-weight: 700; }
@@ -452,7 +456,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v58 */
+/* build v59 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1066,7 +1070,21 @@ if (IS_BROWSER) (function () {
     if (lb) { const sd = new Date(state.timer.startMs), nw = new Date(); const sSlot = (sd.getHours() * 60 + sd.getMinutes() + sd.getSeconds() / 60) / SLOT_MIN, eSlot = (nw.getHours() * 60 + nw.getMinutes() + nw.getSeconds() / 60) / SLOT_MIN; lb.style.height = Math.max(3, (eSlot - sSlot) * SLOT_PX - 2) + "px"; const t = lb.querySelector(".blockTime"); if (t) t.textContent = clock(state.timer.startMs) + "–" + clock(Date.now()); }
     const rbe = $("rbElapsed"); if (rbe) rbe.textContent = fmtClock(Date.now() - state.timer.startMs);
   }
+  let _favColor = "";
+  function updateFavicon() {
+    try {
+      const timing = !!state.timer; let color = "";
+      if (timing) { const c = state.categories.find((x) => x.id === state.timer.catId); color = c ? c.color : "#2b6cb0"; }
+      const key = timing ? color : "idle"; if (key === _favColor) return; _favColor = key;
+      let link = $("favicon"); if (!link) { link = document.createElement("link"); link.id = "favicon"; link.rel = "icon"; document.head.appendChild(link); }
+      const cv = document.createElement("canvas"); cv.width = 64; cv.height = 64; const ctx = cv.getContext("2d");
+      if (timing) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(32, 32, 30, 0, 2 * Math.PI); ctx.fill(); }
+      else { ctx.fillStyle = "#9aa0a8"; ctx.beginPath(); ctx.arc(32, 32, 22, 0, 2 * Math.PI); ctx.fill(); ctx.fillStyle = "#fff"; ctx.font = "bold 34px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("P", 32, 35); }
+      link.href = cv.toDataURL("image/png");
+    } catch (e) {}
+  }
   function updateRunBar() {
+    updateFavicon();
     const el = $("runBar"); if (!el) return;
     if (!state.timer) { el.innerHTML = ""; el.style.display = "none"; el.style.background = "transparent"; return; }
     const c = state.categories.find((x) => x.id === state.timer.catId);
@@ -1244,6 +1262,8 @@ if (IS_BROWSER) (function () {
       '<div class="l4">Mails <b>' + fmtHM(mailsSum) + "</b> · Tasks <b>" + fmtHM(tasksSum) + "</b></div>" +
       '<div class="lWork">Work — D: <b>' + fmtHM(grpToday("work")) + "</b> · W: <b>" + fmtHM(grpWeek("work")) + "</b></div>" +
       '<div class="lFruit">Fruit — D: <b>' + fmtHM(grpToday("fruit")) + "</b> · W: <b>" + fmtHM(grpWeek("fruit")) + "</b></div>" +
+      '<div class="lHome">Home — D: <b>' + fmtHM(grpToday("home")) + "</b> · W: <b>" + fmtHM(grpWeek("home")) + "</b></div>" +
+      '<div class="lTotal">Total — D: <b>' + fmtHM(grpToday("work") + grpToday("fruit") + grpToday("home")) + "</b> · W: <b>" + fmtHM(grpWeek("work") + grpWeek("fruit") + grpWeek("home")) + "</b></div>" +
       ((prioP > 0.0001 || prioR > 0.0001 || prioO > 0.0001) ? '<div class="l5">' + [
         prioP > 0.0001 ? '<span class="pPurple">★ ' + fmtHM(prioP) + "</span>" : "",
         prioR > 0.0001 ? '<span class="pRed">★ ' + fmtHM(prioR) + "</span>" : "",
@@ -1311,8 +1331,8 @@ if (IS_BROWSER) (function () {
         pctV = r.dayPlan > 0 ? Math.min(100, (r.done / r.dayPlan) * 100) : 100;
         hoursTxt = ovr ? fmtHM(r.done - r.dayPlan) + " over" : satisfied ? "✓ done" : fmtHM(r.left) + " left";
         hoursCls = ovr ? "isover" : satisfied ? "isdone" : "";
-      } else if (tier === 3 && cat.noTrack) { // Tier 3 utility tasks (not tracked) → no "left" figure
-        hoursTxt = ""; hoursCls = "";
+      } else if (tier === 3 && cat.noTrack) { // Tier 3 utility tasks (not tracked) → no "left" figure, never "over"
+        hoursTxt = ""; hoursCls = ""; ovr = false;
       } else {                                            // Tier 2/3 → remaining for the WEEK
         hoursTxt = isOver ? fmtHM(u - bw) + " over" : isDone ? "✓ done" : fmtHM(remaining) + " left";
         hoursCls = isOver ? "isover" : isDone ? "isdone" : "";
@@ -1326,7 +1346,7 @@ if (IS_BROWSER) (function () {
         '<div class="poolTop">' + (tier === 2 ? '<button class="prioStar ' + (cat.prio === 1 ? "o" : cat.prio === 2 ? "r" : cat.prio === 3 ? "p" : "") + '" title="Priority — click to cycle: yellow, red, purple (highest), off">★</button>' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + (ovr ? '<span class="warn">⚠</span>' : "") + fmtHM(u) + " of " + '<button class="hStep" data-d="-1">−</button><input class="goalVal goalInput" title="Click to set the weekly goal" value="' + fmtHM(bw) + '"><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>' + "</div>" +
+        '<div class="poolMeta">' + fmtHM(u) + " of " + '<button class="hStep" data-d="-1">−</button><input class="goalVal goalInput" title="Click to set the weekly goal" value="' + fmtHM(bw) + '"><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>' + "</div>" +
         (function () { const tw = trackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = trackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })();
       const nameIn = el.querySelector(".nameInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe");
@@ -1361,12 +1381,13 @@ if (IS_BROWSER) (function () {
       }
       pool.appendChild(el);
     };
+    if (t1a.length || t1b.length) divider("Today", "lbl");
     t1a.forEach((o) => renderItem(o.cat, 1, o.shade));
-    if (t1a.length && t1b.length) divider(null, "abDiv");   // red thin divider between upcoming (1a) and passed (1b)
+    if (t1a.length && t1b.length) divider(null, "abDiv");   // grey divider between upcoming (1a) and passed (1b)
     t1b.forEach((o) => renderItem(o.cat, 1, o.shade));
-    if (tier2.length) divider("Open", "lbl");
+    if (tier2.length) divider("Week – Open", "lbl");
     tier2.forEach((c) => renderItem(c, 2));
-    if (tier3.length) divider("Done", "lbl");
+    if (tier3.length) divider("Week – Done", "lbl");
     tier3.forEach((c) => renderItem(c, 3));
     const add = document.createElement("button");
     add.id = "addCat"; add.textContent = "+ Add task";
@@ -1900,6 +1921,11 @@ if (IS_BROWSER) (function () {
         else if (k[0] === "w") { const wi = +k.slice(1); p = weekBudget(a, wi) - weekBudget(b, wi); }
         return p ? p * d : nameCmp(a, b); // secondary sort: always alphabetical
       });
+    } else {
+      // default order: open+tracked (Work, Fruit, Home, alpha within) → open+untracked → done
+      const grp = (c) => c.group === "work" ? 0 : c.group === "fruit" ? 1 : c.group === "home" ? 2 : 3;
+      const rank = (c) => c.archived ? 2 : (c.noTrack ? 1 : 0);
+      list.sort((a, b) => { const r = rank(a) - rank(b); if (r) return r; if (rank(a) === 0) { const g = grp(a) - grp(b); if (g) return g; } return (a.name || "").localeCompare(b.name || ""); });
     }
     for (const c of list) {
       html += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '><td><select class="bgroup">' +
