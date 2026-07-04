@@ -500,7 +500,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v76 */
+/* build v78 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -750,7 +750,8 @@ function parseTimeRange(text) {
     start = h1 * 60 + min1; end = h2 * 60 + min2;
     if (end <= start && h2 < 12) end += 720;
   }
-  if (end <= start || start < 0 || end > 1440) return { error: true, raw: m[0] };
+  if (end <= start && end + 1440 - start <= 720) end += 1440; // crosses midnight (span ≤ 12h) → end lands on the next day
+  if (end <= start || start < 0 || end > 2880) return { error: true, raw: m[0] };
   return { startMin: start, endMin: end, raw: m[0] };
 }
 
@@ -805,9 +806,10 @@ function parseCommand(text, categories) {
   rest = rest.replace(/\b(assign|add|plan|put|schedule|block|task|meeting|meet w|every|each|from|at|on|and|the)\b/gi, " ")
     .replace(/[,.;:!]+/g, " ").replace(/\s+/g, " ").trim();
   const startSlot = Math.round(tr.startMin / SLOT_MIN);
-  const endSlot = Math.min(TOTAL_SLOTS, Math.round(tr.endMin / SLOT_MIN));
-  const lenSlots = Math.max(1, endSlot - startSlot);
-  if (prefixCat) return { kind: "meeting", cat: prefixCat, name: rest || prefixCat.name, days: pd.days, startSlot, lenSlots };
+  const endSlotRaw = Math.round(tr.endMin / SLOT_MIN);
+  const lenSlots = Math.max(1, Math.min(TOTAL_SLOTS, endSlotRaw) - startSlot);
+  const nextLen = Math.max(0, endSlotRaw - TOTAL_SLOTS); // slots spilling past midnight → placed on the next day
+  if (prefixCat) return { kind: "meeting", cat: prefixCat, name: rest || prefixCat.name, days: pd.days, startSlot, lenSlots, nextLen };
   if (!rest) return { error: "Which task or meeting? Include a name in the command." };
   const q = rest.toLowerCase();
   const cat =
@@ -815,8 +817,8 @@ function parseCommand(text, categories) {
     categories.find((c) => c.name.toLowerCase().startsWith(q)) ||
     categories.find((c) => c.name.toLowerCase().includes(q)) ||
     categories.find((c) => q.includes(c.name.toLowerCase())) || null;
-  if (cat) return { kind: "task", cat, name: rest, days: pd.days, startSlot, lenSlots };
-  return { kind: "event", name: rest, days: pd.days, startSlot, lenSlots };
+  if (cat) return { kind: "task", cat, name: rest, days: pd.days, startSlot, lenSlots, nextLen };
+  return { kind: "event", name: rest, days: pd.days, startSlot, lenSlots, nextLen };
 }
 
 /* ── CSV ── */
@@ -1203,6 +1205,16 @@ if (IS_BROWSER) (function () {
     state.timer.startMs = ms; saveLocal(); schedulePush(); updateTimerDisplay();
   }
   function createActualBlock(catId, startMs, endMs) {
+    const sd = new Date(startMs);
+    const midnight = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate() + 1, 0, 0, 0, 0).getTime();
+    if (endMs - midnight > 1000) {            // session runs past midnight → log up to midnight, then continue on the next day
+      pushActualBlock(catId, startMs, midnight);
+      createActualBlock(catId, midnight, endMs);
+      return;
+    }
+    pushActualBlock(catId, startMs, endMs);
+  }
+  function pushActualBlock(catId, startMs, endMs) {
     const cell = cellForDate(state.anchorMonday, new Date(startMs));
     let wi = cell.weekIdx; if (wi < 0) wi = 0;
     while (state.weeks.length <= wi) state.weeks.push({ id: "w" + Date.now() + state.weeks.length, blocks: [], budgets: {} });
@@ -1271,7 +1283,14 @@ if (IS_BROWSER) (function () {
     const todayStr = ymd(new Date());
     if (!state.snapshot || state.snapshot.date !== todayStr) { state.snapshot = { date: todayStr, plan: planForToday() }; saveLocal(); schedulePush(); }
   }
+  // While you tap the pool +/− buttons the goal can cross the ±15-min line and the task would jump to another tier
+  // (moving the button out from under your cursor). We persist each tap immediately but hold the tier re-sort until
+  // you pause (~1s) or the pointer leaves the box.
+  let poolReflowTimer = null, poolDirty = false;
+  function schedulePoolReflow() { if (poolReflowTimer) clearTimeout(poolReflowTimer); poolReflowTimer = setTimeout(() => { poolReflowTimer = null; if (poolDirty) { poolDirty = false; renderPool(); } }, 1000); }
+  function flushPoolReflow() { if (!poolDirty) return; poolDirty = false; if (poolReflowTimer) { clearTimeout(poolReflowTimer); poolReflowTimer = null; } renderPool(); }
   function renderPool() {
+    if (poolReflowTimer) { clearTimeout(poolReflowTimer); poolReflowTimer = null; } poolDirty = false;
     const cats = state.categories.filter((c) => !c.archived);
     const eps = 0.001;
     const TOL = 0.25; // within 15 min of the goal counts as "Done"
@@ -1426,7 +1445,15 @@ if (IS_BROWSER) (function () {
       const nameIn = el.querySelector(".nameInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe");
       for (const inp of [nameIn, stripe]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
-      el.querySelectorAll(".hStep").forEach((b) => { b.addEventListener("pointerdown", (e) => e.stopPropagation()); b.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, Math.round((weekBudget(cat, cw) + (+b.dataset.d) * 0.25) * 100) / 100); commit(); }); });
+      el.querySelectorAll(".hStep").forEach((b) => { b.addEventListener("pointerdown", (e) => e.stopPropagation()); b.addEventListener("click", (e) => {
+        e.stopPropagation(); snap();
+        const nb = Math.max(0, Math.round((weekBudget(cat, cw) + (+b.dataset.d) * 0.25) * 100) / 100);
+        ensureBudgets(state.weeks[cw])[cat.id] = nb;
+        localUpdatedAt = Date.now(); saveLocal(); schedulePush();   // persist now, but hold the tier re-sort so the button stays under your cursor
+        const gvi = el.querySelector(".goalInput"); if (gvi) gvi.value = fmtHM(nb);
+        poolDirty = true; schedulePoolReflow();
+      }); });
+      el.addEventListener("mouseleave", flushPoolReflow);   // re-sort as soon as you move off the box
       const ps = el.querySelector(".prioStar"); if (ps) { ps.addEventListener("pointerdown", (e) => e.stopPropagation()); ps.addEventListener("click", (e) => { e.stopPropagation(); snap(); cat.prio = ((cat.prio || 0) + 1) % 4; commit(); }); }
       const gset = el.querySelector(".goalSet"); if (gset) { gset.addEventListener("pointerdown", (e) => e.stopPropagation()); gset.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = effUsed(cat.id); commit(); }); }
       const gv = el.querySelector(".goalInput"); if (gv) { gv.addEventListener("pointerdown", (e) => e.stopPropagation()); gv.addEventListener("click", (e) => e.stopPropagation()); gv.addEventListener("change", () => { snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, parseHM(gv.value)); commit(); }); gv.addEventListener("keydown", (e) => { if (e.key === "Enter") gv.blur(); }); }
@@ -1855,14 +1882,24 @@ if (IS_BROWSER) (function () {
     const r = parseCommand(text, state.categories);
     if (r.error) { toast(r.error); return; }
     snap();
+    const spill = r.nextLen > 0;   // block runs past midnight → also drop the remainder on the next day
     if (r.kind === "task") {
-      for (const di of r.days) curBlocks().push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
-      toast("Placed " + r.days.length + " × " + fmtH(r.lenSlots / SPH) + "h of “" + r.cat.name + "”");
+      for (const di of r.days) {
+        curBlocks().push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
+        if (spill && di + 1 < ND) curBlocks().push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
+      }
+      toast("Placed " + r.days.length + " × " + fmtH((r.lenSlots + r.nextLen) / SPH) + "h of “" + r.cat.name + "”" + (spill ? " (over midnight)" : ""));
     } else if (r.kind === "meeting") {
-      for (const di of r.days) { addSwitchBefore(DAYS[di], r.startSlot); curBlocks().push({ id: state.nextId++, catId: r.cat.id, meeting: true, name: r.name, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" }); }
+      for (const di of r.days) {
+        addSwitchBefore(DAYS[di], r.startSlot); curBlocks().push({ id: state.nextId++, catId: r.cat.id, meeting: true, name: r.name, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
+        if (spill && di + 1 < ND) curBlocks().push({ id: state.nextId++, catId: r.cat.id, meeting: true, name: r.name, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
+      }
       toast("Meeting “" + r.name + "” → " + r.cat.name + " (+ switch)");
     } else {
-      for (const di of r.days) { addSwitchBefore(DAYS[di], r.startSlot); curBlocks().push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" }); }
+      for (const di of r.days) {
+        addSwitchBefore(DAYS[di], r.startSlot); curBlocks().push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
+        if (spill && di + 1 < ND) curBlocks().push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
+      }
       toast("Added meeting “" + r.name + "” (+ switch)");
     }
     $("cmdInput").value = ""; $("cmdInput").blur(); commit();
@@ -2136,7 +2173,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v76"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v76"; } catch (e) {}
+  try { document.title = "Plapp v78"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v78"; } catch (e) {}
   loadLocal(); buildGrid(); renderAll(); renderNote(true);
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
