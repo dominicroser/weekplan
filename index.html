@@ -336,7 +336,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 #rightBar { width: 264px; flex-shrink: 0; padding: 10px 10px 24px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 60px); overflow-y: auto; border-left: 1px solid var(--line); }
 #rightBar.closed { display: none; }
 .rbPanel { display: flex; flex-direction: column; gap: 6px; }
-.rbHd { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--ink2); display: flex; align-items: center; justify-content: space-between; }
+.rbHd { display: flex; align-items: center; justify-content: flex-end; min-height: 20px; margin-bottom: 2px; }
 .rbHd .rbAdd { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; width: 20px; height: 20px; line-height: 1; cursor: pointer; font-size: 14px; }
 .rbHd .rbAdd:hover { background: var(--panel2); }
 /* Deadlines */
@@ -361,10 +361,10 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .stGrid th { font-size: 9.5px; font-weight: 700; color: var(--ink3); padding: 1px 0; text-align: center; }
 .stGrid th.stNameH { text-align: left; width: 84px; }
 .stGrid td.stName { font-size: 11px; color: var(--ink); padding: 1px 4px 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 84px; }
-.stCell { height: 18px; border: 1px solid var(--bg); border-radius: 3px; cursor: pointer; text-align: center; font-size: 9px; color: #7a6a20; user-select: none; }
-.stCell.ach { background: #fff2ab; }
-.stCell.na  { background: #f0cf4d; }
-.stCell.miss { background: #f2795f; color: #fff; }
+.stCell { height: 18px; border: 1px solid var(--bg); border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: #7a6a20; user-select: none; }
+.stCell.ach { background: #fff2ab; color: #9c7a00; }
+.stCell.na  { background: #f0cf4d; color: #6f5a12; }
+.stCell.miss { background: #f2795f; color: #ffdcd4; }
 .stCell.blank { background: var(--panel); }
 .stCell.today { box-shadow: inset 0 0 0 2px #1d4ed8; }
 .stCell.future { opacity: .78; }
@@ -438,16 +438,15 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   </div>
   <aside id="rightBar">
     <div class="rbPanel" id="streakPanel">
-      <div class="rbHd">Streak <button class="rbAdd" id="streakCfg" title="Manage habits & history">&#9881;</button></div>
+      <div class="rbHd"><button class="rbAdd" id="streakCfg" title="Manage habits &amp; history">&#9881;</button></div>
       <div id="streakBody"></div>
     </div>
-    <div class="rbPanel" id="deadlinePanel">
-      <div class="rbHd">Deadlines <button class="rbAdd" id="dlAdd" title="Add deadline">+</button></div>
-      <div id="deadlineBody"></div>
-    </div>
     <div class="rbPanel" id="notePanel">
-      <div class="rbHd">Notes</div>
       <div id="noteDock"></div>
+    </div>
+    <div class="rbPanel" id="deadlinePanel">
+      <div class="rbHd"><button class="rbAdd" id="dlAdd" title="Add deadline">+</button></div>
+      <div id="deadlineBody"></div>
     </div>
   </aside>
 </div>
@@ -608,7 +607,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v83 */
+/* build v85 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2286,7 +2285,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v83"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v83"; } catch (e) {}
+  try { document.title = "Plapp v85"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v85"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -2363,10 +2362,35 @@ if (IS_BROWSER) (function () {
     if (type === "hours") { if (raw === "ach" || raw === "miss") return raw; if (date > today) return null; const r = evalHabitRule(h, date, null); return r == null ? null : (r ? "ach" : "miss"); }
     return null;
   }
+  function distributeFill(h, startDate, amount) {   // spread `amount` from startDate forward, filling each Mon–Sat up to h.fill, across as many weeks as needed
+    const T = +h.fill || 0;
+    snap(); if (!h.entries) h.entries = {};
+    if (T <= 0) { h.entries[startDate] = amount; commit(); return; }
+    let pool = amount, d = parseYMD(startDate), guard = 0;
+    while (pool > 0.0001 && guard < 400) {
+      guard++;
+      if (d.getDay() !== 0) {   // skip Sundays — the grid runs Mon–Sat
+        const ds = ymd(d), raw = h.entries[ds];
+        if (raw !== "na") { const cur = typeof raw === "number" ? raw : 0; const room = T - cur; if (room > 0) { const add = Math.min(pool, room); h.entries[ds] = Math.round((cur + add) * 100) / 100; pool -= add; } }
+      }
+      d = addDays(d, 1);
+    }
+    if (pool > 0.0001) { const raw = h.entries[startDate], cur = typeof raw === "number" ? raw : 0; h.entries[startDate] = Math.round((cur + pool) * 100) / 100; }   // safety net for an implausibly large entry
+    commit();
+  }
   function editHabitCell(h, date) {
     const def = defFor(h.id, date) || {}; const type = def.type || h.type || "binary";
     if (type === "binary") { cycleHabit(h, date); return; }
     if (type === "hours") { const cur = h.entries ? h.entries[date] : undefined; const next = cur === "ach" ? "miss" : cur === "miss" ? "na" : cur === "na" ? null : "ach"; snap(); if (!h.entries) h.entries = {}; if (next === null) delete h.entries[date]; else h.entries[date] = next; commit(); return; }
+    if (+h.fill > 0) {   // fill-forward habit: entered minutes fill each day up to the target, from this day onward
+      const v = prompt("Minutes done for “" + h.name + "”, from " + fmtDeadline(date) + " onward.\nThey fill each day up to " + h.fill + ". ('na' or blank to clear this day.)", "");
+      if (v === null) return;
+      const t = v.trim().toLowerCase();
+      if (t === "") { snap(); if (!h.entries) h.entries = {}; delete h.entries[date]; commit(); return; }
+      if (t === "na") { snap(); if (!h.entries) h.entries = {}; h.entries[date] = "na"; commit(); return; }
+      const num = parseFloat(v.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, 'na', or blank."); return; }
+      distributeFill(h, date, num); return;
+    }
     const cur = h.entries && h.entries[date] != null ? h.entries[date] : "";
     const v = prompt("Value for “" + h.name + "” on " + date + "\n(a number, 'na', or leave blank to clear):", cur === "na" ? "na" : String(cur));
     if (v === null) return;
@@ -2469,7 +2493,7 @@ if (IS_BROWSER) (function () {
       const txt = tr.querySelector(".dlDateTxt"), dinp = tr.querySelector(".dlDate");
       txt.addEventListener("click", () => { txt.style.display = "none"; dinp.style.display = ""; dinp.focus(); if (dinp.showPicker) { try { dinp.showPicker(); } catch (e) {} } });
       dinp.addEventListener("change", () => { snap(); dl.date = dinp.value; commit(); });
-      dinp.addEventListener("blur", () => renderDeadlines());
+      dinp.addEventListener("blur", () => { dinp.style.display = "none"; txt.style.display = ""; });   // swap back without re-rendering (avoids a re-entrant innerHTML)
       tr.querySelector(".dlName").addEventListener("change", (e) => { snap(); dl.name = e.target.value; commit(); });
       tr.querySelector(".dlDel").addEventListener("click", () => { snap(); state.deadlines = (state.deadlines || []).filter((x) => x.id !== id); commit(); });
     });
@@ -2482,7 +2506,7 @@ if (IS_BROWSER) (function () {
     const help = '<p class="muted" style="margin-top:8px;line-height:1.6;">Types — <b>Click</b>: tap the cell (achieved→missed→NA). An optional rule acts as a guard — if you tap achieved but the rule is false, the day flips to missed. <b>Number</b>: you type a number each day and the rule decides. <b>Hours</b>: read automatically from your logged time; tap a cell to override it (auto→achieved→missed→NA→auto). A day is achieved when the rule is true; if the rule returns <code>null</code> the cell stays blank so you can click it. Variables: <code>value</code> (today’s number), <code>prev</code> (yesterday’s), <code>avg(n)</code>, <code>sum(n)</code>, <code>avgSince("YYYY-MM-DD")</code>, <code>hours("Task", n)</code> = hours logged for a task over the last n days, <code>dow</code> (0=Mon … 5=Sat), <code>firstHours("Task", h)</code> = true if the first h logged hours today are that task. Examples: <code>value &gt;= 15</code> · <code>value &gt; 100 + (prev &lt; 100 ? (100-prev)/2 : 0)</code> · <code>avgSince("2026-06-01") &lt; 30</code> · <code>hours("Mails", 6) &lt;= 6</code> · <code>dow &lt;= 3 ? firstHours("Growth", 2) : null</code></p>';
     const effNote = '<p class="muted" style="margin:2px 0 8px;">Edits take effect <b>' + esc(fmtDeadline(nextMondayYmd())) + '</b> — the current week keeps version v' + (versionForWeek(state.currentWeek) || 1) + '.</p>';
     if (!list.length) { host.innerHTML = '<p class="muted">No habits yet — add your first below.</p>' + help; return; }
-    let h = effNote + '<table class="hbTable"><thead><tr><th>Habit</th><th>Type</th><th>Rule (achieved when true)</th><th>Note (plain language)</th><th></th><th></th></tr></thead><tbody>';
+    let h = effNote + '<table class="hbTable"><thead><tr><th>Habit</th><th>Type</th><th>Rule (achieved when true)</th><th>Note (plain language)</th><th title="Fill-forward target: a value entered here overflows to fill later days up to this number/day">Fill/day</th><th></th><th></th></tr></thead><tbody>';
     for (const hb of list) {
       const ty = hb.type || "binary";
       h += '<tr data-id="' + hb.id + '"><td><input class="hbName" value="' + esc(hb.name) + '"></td>';
@@ -2490,6 +2514,7 @@ if (IS_BROWSER) (function () {
       const ph = ty === "hours" ? 'hours(&quot;Mails&quot;, 6) &lt;= 6' : ty === "numeric" ? 'value &gt;= 15' : 'optional guard, e.g. hours(&quot;Mails&quot;,1) &lt;= 1';
       h += '<td><input class="hbRule" placeholder="' + ph + '" value="' + esc(hb.rule || "") + '"></td>';
       h += '<td><input class="hbDesc" placeholder="what it means" value="' + esc(hb.desc || "") + '"></td>';
+      h += '<td><input class="hbFill" type="number" min="0" step="5" placeholder="—" value="' + (hb.fill ? hb.fill : "") + '" style="width:56px;"></td>';
       h += '<td><button class="hbArch">' + (hb.archived ? "archived" : "active") + '</button></td><td><button class="hbDel">Delete</button></td></tr>';
     }
     host.innerHTML = h + "</tbody></table>" + help;
@@ -2499,6 +2524,7 @@ if (IS_BROWSER) (function () {
       tr.querySelector(".hbType").addEventListener("change", (e) => { snap(); hb.type = e.target.value; commitDefs(); renderHabitsTable(); });
       const rl = tr.querySelector(".hbRule"); if (rl) rl.addEventListener("change", (e) => { snap(); hb.rule = e.target.value; commitDefs(); });
       const ds = tr.querySelector(".hbDesc"); if (ds) ds.addEventListener("change", (e) => { snap(); hb.desc = e.target.value; commitDefs(); });
+      const fl = tr.querySelector(".hbFill"); if (fl) fl.addEventListener("change", (e) => { snap(); const n = parseFloat(e.target.value); if (isNaN(n) || n <= 0) delete hb.fill; else hb.fill = n; commit(); });
       tr.querySelector(".hbArch").addEventListener("click", () => { snap(); hb.archived = !hb.archived; commitDefs(); renderHabitsTable(); });
       tr.querySelector(".hbDel").addEventListener("click", () => { if (!confirm('Delete "' + hb.name + '" and all its history? (Archiving instead keeps the history.)')) return; snap(); state.habits = (state.habits || []).filter((x) => x.id !== id); commitDefs(); renderHabitsTable(); renderHistory(); });
     });
@@ -2560,7 +2586,7 @@ if (IS_BROWSER) (function () {
   $("dlAdd").addEventListener("click", () => { if (!Array.isArray(state.deadlines)) state.deadlines = []; snap(); state.deadlines.push({ id: "dl" + Date.now(), date: ymd(new Date()), name: "" }); commit(); });
 
   function seedHabits() {
-    const SEED_V = 3;
+    const SEED_V = 4;
     const cur = state.habitsSeedV || (state.habitsSeeded ? 1 : 0);
     if (cur >= SEED_V) return;
     const since = ymd(mondayOf(new Date()));
@@ -2595,6 +2621,8 @@ if (IS_BROWSER) (function () {
       for (const hb of (state.habits || [])) { const u = up[hb.name]; if (u) { hb.name = u.name; if (u.rule) hb.rule = u.rule; } }
       for (const hb of (state.habits || [])) { if ((hb.desc == null || hb.desc === "") && D[hb.name]) hb.desc = D[hb.name]; }
     }
+    const fills = { "🏃": 20, "🏠": 60 };   // fill-forward daily targets
+    for (const hb of (state.habits || [])) { if (hb.fill == null && fills[hb.name]) hb.fill = fills[hb.name]; }
     state.habitsSeedV = SEED_V; state.habitsSeeded = true;
     if (!Array.isArray(state.habitVersions)) state.habitVersions = [];
     if (!state.habitVersions.length && (state.habits || []).length) state.habitVersions.push({ v: 1, from: ymd(mondayOf(new Date())), defs: defsSnapshot() });
