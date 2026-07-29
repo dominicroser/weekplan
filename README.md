@@ -80,7 +80,41 @@ The grid runs **Monday to Saturday, midnight to midnight** (Sunday is omitted).
 - Editing a task's hours number changes the budget **for the week you're viewing**. A newly added week starts from the task's default and you can tune it.
 - The summary at the top shows **this week** free/planned, **all weeks** free/planned, and an **"other weeks" pace line**: given the hours you've assigned to the current week, how much work is left per remaining week on average — i.e. `(total planned across all weeks − hours placed this week) ÷ (number of other weeks)`. Hours already placed in future weeks don't reduce it; it's a target pace, not a count of what's done.
 
-### Import per-week budgets from a Google Sheet
+### Time tracking (timer · actual vs planned · reports)
+
+- Weeks are now anchored to the **real calendar**. Day headers show the date, today's column is tinted, and a line marks the current time. "Week 1" is the week that contains today.
+- **Timer:** each task in the left list has a **▶** button. Press to start timing, press again (⏸) to stop — it logs an **actual** block at the real time, on today's day. The timer keeps running even if you close the tab (it counts from the clock), and only one runs at a time. Sessions under a minute aren't logged.
+- **Planned vs actual:** planned blocks show a dashed inner outline; tracked (actual) blocks are solid. **Past days show what you actually did; future days show your plan; today shows both.**
+- **Edit a block precisely:** tap a block, then the **✎** button to set its **day, start and end** by typing. For tracked sessions the time is exact to the minute (handy after an interruption, or to move a Sunday session onto Saturday/Monday); for plans it snaps to 15 minutes.
+- Tracked time is exact (to the second) and tracked blocks render at their **real length** — not snapped to 15 minutes (the 15-minute grid is only for planning).
+- The running timer shows elapsed time on the task; **click the elapsed time to adjust the start** (e.g. "I actually started 7:35," or after an interruption).
+- Each task in the list shows its **live tracked totals**: ⏱ this week, and today (when you're viewing the current week).
+- **Reports** (📊 button): for the week you're viewing, hours per task per day with weekly totals, plus a **by-group** summary for this week and across all weeks. Times are shown as **h:mm** (e.g. 5:31).
+
+### The task list (left side) — three tiers
+
+The list now orders itself automatically, with a divider between tiers:
+
+1. **Today's tasks** — anything you've planned for the current day.
+2. **Not enough assigned yet** — tasks still under their weekly goal.
+3. **Enough / over assigned** — the rest (tasks with 0 hours this week aren't listed).
+
+"Enough assigned?" is judged as: **weekly goal − (time actually done on past + today, floored to 15 min) − (planned hours still ahead: today's not-yet-passed blocks + future days).**
+
+A small **★** appears on a task when **today's** planned block has already passed with nothing tracked for it — a nudge about what you've missed so far today. (Only today; past days don't star, since you re-plan each evening.)
+
+### Groups, colours & finishing tasks
+
+- Five groups: **Work** (blue/purple), **Home** (yellow/orange), **Fruit** (green), **None** (light grey), and **Termin** (muted red). Typed-in meetings are the same muted red as Termin.
+- **Default block length:** in the ▦ table, each task has a **Def min** value — when you drag that task onto the grid it starts at that length (e.g. 15 for a quick switch, 30 for mails). You can still stretch/shrink it after.
+- Tick **Done** in the ▦ table to retire a finished one-off task: it leaves the left-hand list (and stops counting toward budgets) but stays in the table so you can bring it back by un-ticking.
+
+### Tasks, groups & colours
+
+- The **▦ button** (top bar) opens a **Tasks & weekly hours** table — edit every task's group, name, and hours-per-week in one place, add/delete tasks, add weeks. This is the in-app alternative to the Google Sheet below; use whichever you prefer.
+- Every task belongs to a **group**: **Work**, **Home**, or **Fruit**. Colours are assigned **automatically by group** — Work in blues/purples, Home in yellows/oranges, Fruit in greens — so the three are easy to tell apart at a glance, with a different shade per task within each group. Changing a task's group re-colours it; **Recolour all by group** re-shades everything at once. (You can still override a single colour via its stripe in the left list.)
+
+### Import per-week budgets from a Google Sheet (optional)
 
 Lay the sheet out with **Task** in the first column and **one column per week**:
 
