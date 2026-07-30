@@ -195,6 +195,21 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 #tasksDialog, #masterplanDialog { max-width: 820px; }
 .mpBar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
 .mpBar select { flex: 1; min-width: 180px; padding: 6px 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 7px; font-size: 13px; }
+.mpBar .mpIPtog { font-size: 12px; color: var(--ink2); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+/* Masterplan table: frozen Total (next to name) + frozen footer + Goal + grey IP columns */
+.mpTable td.name, .mpTable th.name { min-width: 92px; max-width: 92px; width: 92px; }
+.mpTable .stot { position: sticky; left: 92px; min-width: 52px; }
+.mpTable td.stot { background: var(--bg); z-index: 2; }
+.mpTable th.stot { background: var(--panel); top: 0; z-index: 4; }
+.mpTable tr.budFoot td { position: sticky; bottom: 0; z-index: 2; }
+.mpTable tr.budFoot td.name { z-index: 5; }
+.mpTable tr.budFoot td.stot { z-index: 5; }
+.mpTable td.stot.over { color: #d64545; }
+.mpTable .gcol { min-width: 46px; }
+.mpTable .ipCol { background: #f4f4f5; }
+.mpTable th.ipCol { color: var(--ink3); font-weight: 500; }
+.mpTable td.ipCol input, .mpTable td.ipCol { color: var(--ink3); }
+.mpTable.hideIP .ipCol { display: none; }
 .budTable th.mpCur { background: #efe07a; }
 .budTable td.mpCur { background: #fdf3b8; }
 .budWrap { max-height: 62vh; overflow: auto; }
@@ -597,6 +612,7 @@ create policy "planner anon access" on plans
     <button class="btnGhost" id="mpNew">+ New</button>
     <button class="btnGhost" id="mpEditRange">Edit range</button>
     <button class="btnGhost" id="mpDel">Delete</button>
+    <label class="mpIPtog"><input type="checkbox" id="mpHideIP"> Hide IP</label>
   </div>
   <div id="masterplanTableWrap"></div>
   <div class="btnRow" style="margin-top:12px;">
@@ -633,7 +649,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v92 */
+/* build v93 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2186,7 +2202,7 @@ if (IS_BROWSER) (function () {
   function ensureWeeksForMP(mp) { const idx = mpWeekIndices(mp); if (!idx.length) return; const hi = idx[idx.length - 1]; while (state.weeks.length <= hi) state.weeks.push({ id: "w" + Date.now() + "_" + state.weeks.length, blocks: [], budgets: {} }); }
   function activeMasterplan() { const mps = state.masterplans || []; if (!mps.length) return null; let mp = mps.find((m) => m.id === state.currentMasterplan); if (!mp) { const tm = ymd(mondayOf(new Date())); mp = mps.find((m) => m.from <= tm && tm <= m.to) || mps[0]; state.currentMasterplan = mp.id; } return mp; }
   function mpRangeLabel(m) { const ya = parseYMD(m.from).getFullYear(), yb = parseYMD(m.to).getFullYear(), wa = isoWeek(parseYMD(m.from)), wb = isoWeek(parseYMD(m.to)); return ya === yb ? (ya + " · W" + wa + "–W" + wb) : ("W" + wa + "/" + ya + " – W" + wb + "/" + yb); }
-  function renderMPBar() { const sel = $("mpSelect"); if (!sel) return; const mp = activeMasterplan(); sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
+  function renderMPBar() { const cb = $("mpHideIP"); if (cb) cb.checked = !!ui.mpHideIP; const sel = $("mpSelect"); if (!sel) return; const mp = activeMasterplan(); sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
   function promptRange(mp) {
     const fy = mp ? parseYMD(mp.from).getFullYear() : new Date().getFullYear(), fw = mp ? isoWeek(parseYMD(mp.from)) : isoWeek(new Date());
     const ty = mp ? parseYMD(mp.to).getFullYear() : new Date().getFullYear(), tw = mp ? isoWeek(parseYMD(mp.to)) : isoWeek(new Date());
@@ -2241,18 +2257,33 @@ if (IS_BROWSER) (function () {
     // ---- Masterplan table (weekly hours for the selected masterplan) ----
     const mp = activeMasterplan();
     { const before = state.weeks.length; ensureWeeksForMP(mp); if (state.weeks.length !== before) { saveLocal(); schedulePush(); } }
+    if (mp) { mp.goal = mp.goal || {}; mp.goalIP = mp.goalIP || {}; mp.ip = mp.ip || {}; }
     const mpIdx = mpWeekIndices(mp);
-    let mh = '<div class="budWrap"><table class="budTable"><thead><tr><th class="name" data-sort="name">Task' + arrow("name") + '</th>';
-    for (const i of mpIdx) mh += '<th data-sort="w' + i + '"' + (i === state.currentWeek ? ' class="mpCur"' : "") + '>W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + "</th>";
-    mh += '<th data-sort="total">Total' + arrow("total") + '</th></tr></thead><tbody>';
+    const gGet = (o, id) => (mp && mp[o] && mp[o][id] != null) ? mp[o][id] : 0;
+    const ipGet = (id, i) => (mp && mp.ip && mp.ip[id] && mp.ip[id][i] != null) ? mp.ip[id][i] : 0;
+    let mh = '<div class="budWrap"><table class="budTable mpTable' + (ui.mpHideIP ? " hideIP" : "") + '"><thead><tr>';
+    mh += '<th class="name" data-sort="name">Task' + arrow("name") + '</th><th class="stot" data-sort="total">Total' + arrow("total") + '</th><th class="gcol">Goal</th><th class="gcol ipCol">IP</th>';
+    for (const i of mpIdx) { mh += '<th class="' + (i === state.currentWeek ? "mpCur" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + "</th><th class=\"ipCol\">IP</th>"; }
+    mh += "</tr></thead><tbody>";
     for (const c of list) {
+      let tsum = 0; for (const i of mpIdx) tsum += weekBudget(c, i);
+      const goal = gGet("goal", c.id), over = goal > 0.0001 && tsum > goal + 0.0001;
       mh += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '>';
       mh += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span>' + (c.name || "").replace(/</g, "&lt;") + "</td>";
-      for (const i of mpIdx) mh += '<td' + (i === state.currentWeek ? ' class="mpCur"' : "") + '><input class="bh" data-w="' + i + '" type="text" inputmode="numeric"' + (c.auto ? " readonly" : "") + ' value="' + fmtHM(weekBudget(c, i)) + '"></td>';
-      { let tsum = 0; for (const i of mpIdx) tsum += weekBudget(c, i); mh += '<td class="btot">' + fmtHM(tsum) + "</td>"; }
+      mh += '<td class="stot btot' + (over ? " over" : "") + '">' + fmtHM(tsum) + "</td>";
+      mh += '<td class="gcol"><input class="bgoal" type="text" inputmode="numeric" value="' + (goal ? fmtHM(goal) : "") + '"></td>';
+      mh += '<td class="gcol ipCol"><input class="bgoalip" type="text" inputmode="numeric" value="' + (gGet("goalIP", c.id) ? fmtHM(gGet("goalIP", c.id)) : "") + '"></td>';
+      for (const i of mpIdx) {
+        mh += '<td class="' + (i === state.currentWeek ? "mpCur" : "") + '"><input class="bh" data-w="' + i + '" type="text" inputmode="numeric"' + (c.auto ? " readonly" : "") + ' value="' + fmtHM(weekBudget(c, i)) + '"></td>';
+        mh += '<td class="ipCol"><input class="bhip" data-w="' + i + '" type="text" inputmode="numeric" value="' + (ipGet(c.id, i) ? fmtHM(ipGet(c.id, i)) : "") + '"></td>';
+      }
       mh += "</tr>";
     }
-    { let gt = 0, cells = ""; for (const i of mpIdx) { let s = 0; for (const c of list) s += weekBudget(c, i); gt += s; cells += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + '">' + fmtHM(s) + "</td>"; } mh += '<tr class="budFoot"><td class="name">Total</td>' + cells + '<td class="btot">' + fmtHM(gt) + "</td></tr>"; }
+    { let gt = 0, gIP = 0, cells = ""; for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { s += weekBudget(c, i); sip += ipGet(c.id, i); } gt += s; cells += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + '">' + fmtHM(s) + '</td><td class="btot ipCol">' + (sip ? fmtHM(sip) : "") + "</td>"; }
+      for (const c of list) gIP += gGet("goalIP", c.id);
+      const gGoal = (mp && mp.goalTotal) ? mp.goalTotal : 0, gover = gGoal > 0.0001 && gt > gGoal + 0.0001;
+      mh += '<tr class="budFoot"><td class="name">Total</td><td class="stot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="gcol"><input class="bgoaltot" type="text" inputmode="numeric" value="' + (gGoal ? fmtHM(gGoal) : "") + '"></td><td class="gcol ipCol btot">' + (gIP ? fmtHM(gIP) : "") + "</td>" + cells + "</tr>";
+    }
     mh += "</tbody></table></div>";
     renderMPBar();
     const setWrap = (wid, h) => { const wrap = $(wid); if (!wrap) return null; const prev = wrap.querySelector(".budWrap"); const ks = prev ? prev.scrollTop : 0; wrap.innerHTML = h; const nw = wrap.querySelector(".budWrap"); if (nw) nw.scrollTop = ks; return wrap; };
@@ -2279,10 +2310,16 @@ if (IS_BROWSER) (function () {
         commit(); renderBudgets();
       });
     });
-    if (mwrap) mwrap.querySelectorAll("tr[data-id]").forEach((tr) => {
-      const id = tr.dataset.id;
-      tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = parseHM(inp.value); commit(); renderBudgets(); }); });
-    });
+    if (mwrap) {
+      mwrap.querySelectorAll("tr[data-id]").forEach((tr) => {
+        const id = tr.dataset.id;
+        tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); ensureBudgets(state.weeks[w])[id] = parseHM(inp.value); commit(); renderBudgets(); }); });
+        tr.querySelectorAll(".bhip").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w, m = activeMasterplan(); if (!m) return; snap(); m.ip = m.ip || {}; m.ip[id] = m.ip[id] || {}; const v = parseHM(inp.value); if (v > 0) m.ip[id][w] = v; else delete m.ip[id][w]; commit(); renderBudgets(); }); });
+        const bg = tr.querySelector(".bgoal"); if (bg) bg.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.goal = m.goal || {}; const v = parseHM(bg.value); if (v > 0) m.goal[id] = v; else delete m.goal[id]; commit(); renderBudgets(); });
+        const bgi = tr.querySelector(".bgoalip"); if (bgi) bgi.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.goalIP = m.goalIP || {}; const v = parseHM(bgi.value); if (v > 0) m.goalIP[id] = v; else delete m.goalIP[id]; commit(); renderBudgets(); });
+      });
+      const bgt = mwrap.querySelector(".bgoaltot"); if (bgt) bgt.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); const v = parseHM(bgt.value); if (v > 0) m.goalTotal = v; else delete m.goalTotal; commit(); renderBudgets(); });
+    }
     [fwrap, mwrap].forEach((wr) => { if (!wr) return; wr.querySelectorAll("th[data-sort]").forEach((th) => th.addEventListener("click", () => { const k = th.dataset.sort; if (budSort.key === k) budSort.dir = -budSort.dir; else { budSort.key = k; budSort.dir = 1; } renderBudgets(); })); });
   }
   $("masterplanBtn").addEventListener("click", () => { renderBudgets(); mpDlg.showModal(); });
@@ -2304,6 +2341,7 @@ if (IS_BROWSER) (function () {
     state.currentMasterplan = id; ensureWeeksForMP(state.masterplans[state.masterplans.length - 1]); commit(); renderBudgets();
   });
   $("mpEditRange").addEventListener("click", () => { const mp = activeMasterplan(); if (!mp) return; const r = promptRange(mp); if (!r) return; snap(); mp.from = r.from; mp.to = r.to; ensureWeeksForMP(mp); commit(); renderBudgets(); });
+  $("mpHideIP").addEventListener("change", (e) => { ui.mpHideIP = e.target.checked; saveUI(); renderBudgets(); });
   $("mpDel").addEventListener("click", () => {
     const mp = activeMasterplan(); if (!mp) return;
     if ((state.masterplans || []).length <= 1) { toast("Keep at least one masterplan."); return; }
@@ -2356,7 +2394,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v92"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v92"; } catch (e) {}
+  try { document.title = "Plapp v93"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v93"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
