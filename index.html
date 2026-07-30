@@ -22,7 +22,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; }
 body {
-  font-family: 'Spectral', Georgia, serif; background: var(--bg); color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--ink);
   min-height: 100vh; user-select: none; -webkit-user-select: none; overscroll-behavior: none;
 }
 button { font-family: 'Inter', system-ui, sans-serif; }
@@ -559,15 +559,6 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 <dialog id="settingsDialog">
   <h2>Settings <span id="buildInfo" style="font-size:11px;font-weight:400;color:var(--ink3);"></span></h2>
 
-  <h3>Import from Google Sheet</h3>
-  <p class="muted"><b>Task</b> in the first column, then one column per week headed <b>Week 1</b>, <b>Week 2</b>, … with that week's hours. (A single <b>Hours</b> column also works — same budget every week.) An optional <b>Color</b> column is honoured. Publish via <b>File → Share → Publish to web</b> as <b>Comma-separated values (.csv)</b>, paste the link below. Import sets each week's budget, adds new tasks, and creates extra weeks if your sheet has more — it never deletes.</p>
-  <label>Published CSV link</label>
-  <input type="text" id="sheetUrl" placeholder="https://docs.google.com/.../pub?output=csv" autocomplete="off">
-  <div class="btnRow">
-    <button class="btn" id="sheetImport">Save &amp; import now</button>
-  </div>
-  <div id="sheetStatus"></div>
-
   <h3>Sync (Supabase)</h3>
   <p class="muted">Enter the same three values on every device, or use the setup link.</p>
   <label>Project URL</label>
@@ -666,7 +657,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v105 */
+/* build v106 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2237,10 +2228,9 @@ if (IS_BROWSER) (function () {
   /* ── settings ── */
   const dlg = $("settingsDialog");
   $("settingsBtn").addEventListener("click", () => {
-    $("sheetUrl").value = sheetUrl || "";
     $("sbUrl").value = (cfg && cfg.url) || ""; $("sbKey").value = (cfg && cfg.key) || "";
     $("sbPid").value = (cfg && cfg.pid) || "wp-" + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 12);
-    $("syncStatus").textContent = ""; $("sheetStatus").textContent = ""; dlg.showModal();
+    $("syncStatus").textContent = ""; dlg.showModal();
   });
   $("syncDot").addEventListener("click", () => $("settingsBtn").click());
   $("closeSettings").addEventListener("click", () => dlg.close());
@@ -2412,7 +2402,6 @@ if (IS_BROWSER) (function () {
   $("commentSave").addEventListener("click", () => { const c = state.categories.find((x) => x.id === commentEditId); if (c) { snap(); const v = $("commentText").value; if (v.trim()) c.comment = v; else delete c.comment; commit(); renderBudgets(); } $("commentDialog").close(); });
   $("commentCancel").addEventListener("click", () => $("commentDialog").close());
   function editLink(id) { const c = state.categories.find((x) => x.id === id); if (!c) return; const v = prompt("Link for this task (leave blank to remove):", c.link || ""); if (v === null) return; const t = v.trim(); snap(); if (!t) delete c.link; else c.link = /^https?:\/\//i.test(t) ? t : ("https://" + t); commit(); renderBudgets(); }
-  $("sheetImport").addEventListener("click", () => { sheetUrl = $("sheetUrl").value.trim(); saveCfg(); doSheetImport(); });
   $("sbSave").addEventListener("click", async () => {
     cfg = { url: $("sbUrl").value.trim(), key: $("sbKey").value.trim(), pid: $("sbPid").value.trim(), sheet: sheetUrl };
     saveCfg(); $("syncStatus").textContent = "Testing…";
@@ -2457,7 +2446,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v105"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v105"; } catch (e) {}
+  try { document.title = "Plapp v106"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v106"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
