@@ -200,8 +200,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable th, .mpTable td { box-sizing: border-box; }
 .mpTable td.stot, .mpTable th.stot { position: sticky; left: 0; width: 54px; min-width: 54px; }
 .mpTable td.gcolF, .mpTable th.gcolF { position: sticky; left: 54px; width: 54px; min-width: 54px; }
-.mpTable td.name, .mpTable th.name { position: sticky; left: 108px; width: 132px; min-width: 132px; max-width: 132px; text-align: left; }
-.mpTable input.tname { width: 96px; }
+.mpTable td.name, .mpTable th.name { position: sticky; left: 108px; width: 132px; min-width: 132px; max-width: 132px; text-align: left; overflow: hidden; white-space: nowrap; }
+.mpTable td.name input.tname { width: 96px; max-width: 96px; }
+.mpTable.hideFeat td:nth-child(n+4):nth-child(-n+16), .mpTable.hideFeat th:nth-child(n+4):nth-child(-n+16) { display: none; }
 .mpTable td.stot, .mpTable td.gcolF, .mpTable td.name { background: var(--bg); z-index: 2; }
 .mpTable th.stot, .mpTable th.gcolF, .mpTable th.name { background: var(--panel); top: 0; z-index: 4; }
 .mpTable tr.budFoot td { position: sticky; bottom: 0; z-index: 1; }
@@ -459,8 +460,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   <span class="startTimerWrap"><input id="startTimerInput" class="startTimerIn" placeholder="▶ start a timer…" autocomplete="off"><div id="taskMenu" class="taskMenu" style="display:none;"></div></span>
   <button class="iconBtn" id="undoBtn" title="Undo">&#8630;</button>
   <button class="iconBtn" id="reportsBtn" title="Reports &amp; activity">&#128202;</button>
-  <button class="iconBtn" id="tasksBtn" title="Tasks">&#128203;</button>
-  <button class="iconBtn" id="masterplanBtn" title="Masterplan">&#9638;</button>
+  <button class="iconBtn" id="tasksBtn" title="Masterplan &amp; tasks">&#128029;</button>
   <div class="weekNav">
     <button id="weekPrev" title="Previous week">&#9664;</button>
     <span id="weekLabel">Week 1</span>
@@ -616,12 +616,13 @@ create policy "planner anon access" on plans
 </dialog>
 
 <dialog id="masterplanDialog">
-  <h2>Masterplan &amp; tasks</h2>
+  <h2>Masterplan</h2>
   <div class="mpBar">
     <select id="mpSelect" title="Which masterplan to view/edit"></select>
     <button class="btnGhost" id="mpNew">+ New</button>
     <button class="btnGhost" id="mpEditRange">Edit range</button>
     <button class="btnGhost" id="mpDel">Delete</button>
+    <label class="mpIPtog"><input type="checkbox" id="mpFeat"> Features</label>
     <label class="mpIPtog"><input type="checkbox" id="mpHideIP"> Hide IP</label>
   </div>
   <div class="btnRow" style="margin-bottom:10px;">
@@ -638,6 +639,7 @@ create policy "planner anon access" on plans
   <h2 id="editTitle">Edit block</h2>
   <p class="muted" id="editHint"></p>
   <div id="editRow">
+    <label id="editTaskWrap">Task <select id="editTask"></select></label>
     <label>Day <select id="editDay"></select></label>
     <label>Start <input type="time" id="editStart"></label>
     <label>End <input type="time" id="editEnd"></label>
@@ -663,7 +665,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v102 */
+/* build v104 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1949,6 +1951,9 @@ if (IS_BROWSER) (function () {
     else { sMin = b.startSlot * SLOT_MIN; eMin = (b.startSlot + b.lenSlots) * SLOT_MIN; }
     $("editStart").value = hhmm(sMin); $("editEnd").value = hhmm(eMin);
     const cat = state.categories.find((c) => c.id === b.catId);
+    const tw = $("editTaskWrap");
+    if (b.event) { tw.style.display = "none"; }
+    else { tw.style.display = ""; $("editTask").innerHTML = state.categories.slice().sort((a, x) => (a.name || "").localeCompare(x.name || "")).map((c) => '<option value="' + c.id + '"' + (c.id === b.catId ? " selected" : "") + ">" + (c.name || "").replace(/</g, "&lt;") + "</option>").join(""); }
     $("editTitle").textContent = "Edit " + (b.event ? "“" + (b.name || "Meeting") + "”" : "“" + (cat ? cat.name : "?") + "”");
     $("editHint").textContent = b.kind === "actual" ? "Tracked session — times are exact to the minute." : "Planned block — times snap to 15-minute steps.";
     $("editDialog").showModal();
@@ -1961,6 +1966,7 @@ if (IS_BROWSER) (function () {
     const di = +$("editDay").value, sMin = parseHHMM($("editStart").value), eMin = parseHHMM($("editEnd").value);
     if (sMin == null || eMin == null) { toast("Enter start and end times"); return; }
     snap();
+    if (!b.event) { const tv = $("editTask").value; if (tv) b.catId = tv; }
     b.day = DAYS[di];
     if (b.kind === "actual") {
       const dateStr = ymd(dateOfCell(state.anchorMonday, state.currentWeek, di));
@@ -2231,7 +2237,7 @@ if (IS_BROWSER) (function () {
   function ensureWeeksForMP(mp) { const idx = mpWeekIndices(mp); if (!idx.length) return; const hi = idx[idx.length - 1]; while (state.weeks.length <= hi) state.weeks.push({ id: "w" + Date.now() + "_" + state.weeks.length, blocks: [], budgets: {} }); }
   function activeMasterplan() { const mps = state.masterplans || []; if (!mps.length) return null; let mp = mps.find((m) => m.id === state.currentMasterplan); if (!mp) { const tm = ymd(mondayOf(new Date())); mp = mps.find((m) => m.from <= tm && tm <= m.to) || mps[0]; state.currentMasterplan = mp.id; } return mp; }
   function mpRangeLabel(m) { const ya = parseYMD(m.from).getFullYear(), yb = parseYMD(m.to).getFullYear(), wa = isoWeek(parseYMD(m.from)), wb = isoWeek(parseYMD(m.to)); return ya === yb ? (ya + " · W" + wa + "–W" + wb) : ("W" + wa + "/" + ya + " – W" + wb + "/" + yb); }
-  function renderMPBar() { const cb = $("mpHideIP"); if (cb) cb.checked = !!ui.mpHideIP; const sel = $("mpSelect"); if (!sel) return; const mp = activeMasterplan(); sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
+  function renderMPBar() { const cb = $("mpHideIP"); if (cb) cb.checked = !!ui.mpHideIP; const fb = $("mpFeat"); if (fb) fb.checked = !ui.mpHideFeat; const sel = $("mpSelect"); if (!sel) return; const mp = activeMasterplan(); sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
   function promptRange(mp) {
     const fy = mp ? parseYMD(mp.from).getFullYear() : new Date().getFullYear(), fw = mp ? isoWeek(parseYMD(mp.from)) : isoWeek(new Date());
     const ty = mp ? parseYMD(mp.to).getFullYear() : new Date().getFullYear(), tw = mp ? isoWeek(parseYMD(mp.to)) : isoWeek(new Date());
@@ -2314,7 +2320,7 @@ if (IS_BROWSER) (function () {
       for (let k = 0; k < 13; k++) f += "<td></td>";
       return f + '<td class="gcol ipCol btot">' + (gIP ? fmtHM(gIP) : "") + "</td>" + cells + "</tr>";
     })();
-    const mCls = "budTable mpTable" + (ui.mpHideIP ? " hideIP" : "");
+    const mCls = "budTable mpTable" + (ui.mpHideIP ? " hideIP" : "") + (ui.mpHideFeat ? " hideFeat" : "");
     let fh = '<div class="budWrap"><table class="' + mCls + '"><thead>' + mHead + '</thead><tbody>' + activeList.map(taskRow).join("") + mFoot + "</tbody></table></div>";
     if (inactiveList.length) fh += '<div class="inactiveHd">Inactive tasks</div><div class="budWrap"><table class="' + mCls + '"><thead>' + mHead + '</thead><tbody>' + inactiveList.map(taskRow).join("") + "</tbody></table></div>";
 
@@ -2357,7 +2363,6 @@ if (IS_BROWSER) (function () {
       wrap.querySelectorAll("th[data-sort]").forEach((th) => th.addEventListener("click", () => { const k = th.dataset.sort; if (budSort.key === k) budSort.dir = -budSort.dir; else { budSort.key = k; budSort.dir = 1; } renderBudgets(); }));
     }
   }
-  $("masterplanBtn").addEventListener("click", () => { renderBudgets(); mpDlg.showModal(); });
   $("tasksBtn").addEventListener("click", () => { renderBudgets(); mpDlg.showModal(); });
   $("mpClose").addEventListener("click", () => mpDlg.close());
   $("budAddTask").addEventListener("click", () => {
@@ -2376,6 +2381,7 @@ if (IS_BROWSER) (function () {
   });
   $("mpEditRange").addEventListener("click", () => { const mp = activeMasterplan(); if (!mp) return; const r = promptRange(mp); if (!r) return; snap(); mp.from = r.from; mp.to = r.to; ensureWeeksForMP(mp); commit(); renderBudgets(); });
   $("mpHideIP").addEventListener("change", (e) => { ui.mpHideIP = e.target.checked; saveUI(); renderBudgets(); });
+  $("mpFeat").addEventListener("change", (e) => { ui.mpHideFeat = !e.target.checked; saveUI(); renderBudgets(); });
   $("mpDel").addEventListener("click", () => {
     const mp = activeMasterplan(); if (!mp) return;
     if ((state.masterplans || []).length <= 1) { toast("Keep at least one masterplan."); return; }
@@ -2433,7 +2439,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v102"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v102"; } catch (e) {}
+  try { document.title = "Plapp v104"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v104"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
