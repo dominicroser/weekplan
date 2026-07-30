@@ -393,6 +393,10 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .hbTable .hbRule { width: 100%; min-width: 200px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace; }
 .hbTable .hbRule:disabled { opacity: .4; }
 #habitsDialog code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--panel2); padding: 0 3px; border-radius: 3px; font-size: 11.5px; }
+#bulkDialog { max-width: 420px; }
+.bulkRow { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.bulkRow label { width: 66px; color: var(--ink2); font-size: 13px; }
+.bulkRow select, .bulkRow input { flex: 1; padding: 6px 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 7px; font-size: 13px; }
 .hbTable .hbDel, .hbTable .hbArch { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 12px; }
 .histTable { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12.5px; }
 .histTable th { text-align: left; font-size: 11px; color: var(--ink2); padding: 4px 6px; border-bottom: 1px solid var(--line); }
@@ -453,7 +457,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
         <div id="noteDock"></div>
       </div>
       <div class="rbPanel" id="streakPanel">
-        <div class="rbHd"><button class="rbAdd" id="streakCfg" title="Manage habits &amp; history">&#9881;</button></div>
+        <div class="rbHd"><button class="rbAdd" id="streakBulk" title="Bulk-mark a range of days (holiday, illness…)">&#8943;</button><button class="rbAdd" id="streakCfg" title="Manage habits &amp; history">&#9881;</button></div>
         <div id="streakBody"></div>
       </div>
       <div class="rbPanel" id="deadlinePanel">
@@ -475,6 +479,16 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   <h3 style="margin-top:18px;">Change log</h3>
   <div id="changelogWrap"></div>
   <div class="btnRow" style="margin-top:14px;"><button class="btn" id="hbClose">Done</button></div>
+</dialog>
+
+<dialog id="bulkDialog">
+  <h2>Bulk-mark days</h2>
+  <p class="muted">Set the same status across a range of days — e.g. a whole week NA for a holiday, or the next few days NA for one habit while you’re ill. Sundays are skipped.</p>
+  <div class="bulkRow"><label>Habit</label><select id="bulkHabit"></select></div>
+  <div class="bulkRow"><label>From</label><input type="date" id="bulkFrom"></div>
+  <div class="bulkRow"><label>To</label><input type="date" id="bulkTo"></div>
+  <div class="bulkRow"><label>Set to</label><select id="bulkStatus"><option value="na">NA</option><option value="ach">Achieved</option><option value="miss">Missed</option><option value="clear">Clear (blank)</option></select></div>
+  <div class="btnRow" style="margin-top:14px;"><button class="btn" id="bulkApply">Apply</button><button class="btnGhost" id="bulkCancel">Cancel</button></div>
 </dialog>
 
 <dialog id="remindDialog">
@@ -621,7 +635,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v89 */
+/* build v90 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1259,10 +1273,10 @@ if (IS_BROWSER) (function () {
     const el = $("runBar"), inp = $("startTimerInput"); if (!el) return;
     if (!state.timer) {
       el.innerHTML = ""; el.style.display = "none"; el.style.background = "transparent";
-      if (inp) inp.style.display = "";
+      if (inp) { inp.style.display = ""; inp.placeholder = "▶ start a timer…"; }
       return;
     }
-    if (inp) inp.style.display = "";
+    if (inp) { inp.style.display = ""; inp.placeholder = "▶ switch timer…"; }   // starting one while another runs logs the running one and switches
     const c = state.categories.find((x) => x.id === state.timer.catId);
     const color = c ? c.color : "#888", ink = textOn(color);
     el.style.display = ""; el.style.background = color; el.style.color = ink;
@@ -2305,7 +2319,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v89"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v89"; } catch (e) {}
+  try { document.title = "Plapp v90"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v90"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -2628,6 +2642,32 @@ if (IS_BROWSER) (function () {
   }
   $("habitsBtn").addEventListener("click", openHabits);
   $("streakCfg").addEventListener("click", openHabits);
+  const bulkDlg = $("bulkDialog");
+  function openBulk() {
+    const sel = $("bulkHabit"); if (sel) sel.innerHTML = '<option value="__all">All habits</option>' + (state.habits || []).map((h) => '<option value="' + h.id + '">' + esc(h.name) + "</option>").join("");
+    const today = ymd(new Date());
+    if ($("bulkFrom")) $("bulkFrom").value = today;
+    if ($("bulkTo")) $("bulkTo").value = today;
+    if ($("bulkStatus")) $("bulkStatus").value = "na";
+    bulkDlg.showModal();
+  }
+  $("streakBulk").addEventListener("click", openBulk);
+  $("bulkCancel").addEventListener("click", () => bulkDlg.close());
+  $("bulkApply").addEventListener("click", () => {
+    let a = $("bulkFrom").value, b = $("bulkTo").value; const st = $("bulkStatus").value, hid = $("bulkHabit").value;
+    if (!a || !b) { toast("Pick a date range."); return; }
+    if (a > b) { const t = a; a = b; b = t; }
+    const habits = hid === "__all" ? (state.habits || []) : (state.habits || []).filter((h) => h.id === hid);
+    if (!habits.length) { toast("No habit selected."); return; }
+    snap();
+    let d = parseYMD(a); const end = parseYMD(b); let n = 0, guard = 0;
+    while (d <= end && guard < 800) {
+      guard++;
+      if (d.getDay() !== 0) { const ds = ymd(d); for (const h of habits) { if (!h.entries) h.entries = {}; if (st === "clear") delete h.entries[ds]; else h.entries[ds] = st; n++; } }
+      d = addDays(d, 1);
+    }
+    commit(); renderHistory && renderHistory(); bulkDlg.close(); toast("Updated " + n + " cell" + (n === 1 ? "" : "s") + ".");
+  });
   $("hbClose").addEventListener("click", () => habitsDlg.close());
   $("hbAdd").addEventListener("click", () => { if (!Array.isArray(state.habits)) state.habits = []; snap(); state.habits.push({ id: "hb" + Date.now(), name: "New habit", type: "binary", rule: "", desc: "", since: ymd(mondayOf(new Date())), entries: {} }); commitDefs(); renderHabitsTable(); renderHistory(); });
   $("hbCsv").addEventListener("click", exportHabitsCSV);
