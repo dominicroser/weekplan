@@ -160,7 +160,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteTools button:active { background: #fff; }
 #noteTools button[data-cmd=pink] { color: var(--pink); font-weight: 700; }
 #noteClose { width: 22px; height: 22px; border: none; background: transparent; cursor: pointer; font-size: 15px; line-height: 1; color: #8a7c2e; padding: 0; }
-#noteBody { position: absolute; inset: 7px; padding: 5px 7px; overflow: auto; background: #fffef7; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04); font-family: 'Inter', sans-serif; font-size: 12.5px; line-height: 1.45; color: #3a3320; outline: none; -webkit-user-select: text; user-select: text; cursor: text; }
+#noteBody { position: absolute; inset: 7px; padding: 5px 7px; overflow: auto; background: #f0e39c; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); font-family: 'Inter', sans-serif; font-size: 12.5px; line-height: 1.45; color: #3a3320; outline: none; -webkit-user-select: text; user-select: text; cursor: text; }
 #noteBody:empty:before { content: 'Quick notes…'; color: #b3a86a; }
 #noteBody ul { margin: 2px 0 2px 18px; padding: 0; }
 #noteBody ul ul { margin-left: 16px; }
@@ -366,15 +366,22 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .stCell.na  { background: #f0cf4d; color: #6f5a12; }
 .stCell.miss { background: #f2795f; color: #ffdcd4; }
 .stCell.blank { background: var(--panel); }
-.stCell.today { box-shadow: inset 0 0 0 2px #1d4ed8; }
+.stCell.today { box-shadow: inset 0 0 0 1px #555; }
 .stCell.future { opacity: .78; }
 .stMore { align-self: flex-start; border: 1px solid var(--line); background: var(--panel); color: var(--ink2); border-radius: 6px; padding: 2px 8px; font-size: 11px; cursor: pointer; }
 .stMore:hover { background: var(--panel2); }
-/* Docked note */
+/* Docked note (drag the bottom-right corner to resize; the bar follows its width) */
 #stickyNote { display: none !important; }
-#noteDock #noteBody { position: static; inset: auto; width: 100%; height: 150px; resize: vertical; display: block; }
+#noteDock { display: flex; }
+#noteDock #noteBody { position: static; inset: auto; width: 240px; height: 150px; min-width: 170px; max-width: 640px; min-height: 80px; resize: both; display: block; }
+#rightBar { transition: width .12s ease; }
+.rbCollapse { align-self: flex-end; border: 1px solid var(--line); background: var(--panel); color: var(--ink2); border-radius: 6px; width: 24px; height: 20px; cursor: pointer; font-size: 13px; line-height: 1; padding: 0; }
+.rbCollapse:hover { background: var(--panel2); }
+.rbReopen { position: fixed; top: 88px; right: 0; z-index: 30; border: 1px solid var(--line); border-right: none; background: var(--panel); color: var(--ink2); border-radius: 8px 0 0 8px; width: 20px; height: 44px; cursor: pointer; display: none; font-size: 13px; }
+.rbReopen:hover { background: var(--panel2); }
 /* Habits modal */
 #habitsDialog { max-width: 720px; }
+#habitsTableWrap { overflow-x: auto; }
 .hbTable { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 13px; }
 .hbTable th { text-align: left; font-size: 11px; color: var(--ink2); padding: 4px 6px; border-bottom: 1px solid var(--line); }
 .hbTable td { padding: 3px 6px; border-bottom: 1px solid var(--line); }
@@ -425,7 +432,6 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="width:auto;padding:0 9px;">Week</button>
   <button class="iconBtn" id="tasksBtn" title="Tasks">&#128203;</button>
   <button class="iconBtn" id="habitsBtn" title="Habits &amp; streaks">&#128293;</button>
-  <button class="iconBtn" id="noteBtn" title="Show/hide the side bar">&#128209;</button>
   <button class="iconBtn" id="settingsBtn" title="Settings">&#9881;</button>
   <div id="syncDot" title="Sync status"></div>
 </header>
@@ -437,25 +443,27 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
     <div id="gridScroll"><div id="gridInner"><div id="grid"></div></div></div>
   </div>
   <aside id="rightBar">
+    <button class="rbCollapse" id="rbCollapse" title="Hide side bar">&raquo;</button>
+    <div class="rbPanel" id="notePanel">
+      <div id="noteDock"></div>
+    </div>
     <div class="rbPanel" id="streakPanel">
       <div class="rbHd"><button class="rbAdd" id="streakCfg" title="Manage habits &amp; history">&#9881;</button></div>
       <div id="streakBody"></div>
-    </div>
-    <div class="rbPanel" id="notePanel">
-      <div id="noteDock"></div>
     </div>
     <div class="rbPanel" id="deadlinePanel">
       <div class="rbHd"><button class="rbAdd" id="dlAdd" title="Add deadline">+</button></div>
       <div id="deadlineBody"></div>
     </div>
   </aside>
+  <button class="rbReopen" id="rbReopen" title="Show side bar">&laquo;</button>
 </div>
 
 <dialog id="habitsDialog">
   <h2>Habits &amp; streaks</h2>
   <p class="muted">Each day a habit is <b>Achieved</b> (light yellow), <b>Missed</b> (coral) or <b>NA</b> (deep yellow). Click a cell in the side bar to cycle it. A week is <b>achieved</b> when missed cells ≤ Joker, where Joker = habits × (6·habits − NA) ⁄ (6·habits).</p>
   <div id="habitsTableWrap"></div>
-  <div class="btnRow" style="margin-top:12px;"><button class="btnGhost" id="hbAdd">+ Add habit</button><button class="btnGhost" id="hbCsv">&darr; Download all values (CSV)</button></div>
+  <div class="btnRow" style="margin-top:12px;"><button class="btnGhost" id="hbAdd">+ Add habit</button><button class="btnGhost" id="hbCsv">&darr; Download all values (CSV)</button><button class="btnGhost" id="hbClearWk">Clear this week</button></div>
   <h3 style="margin-top:18px;">Past weeks</h3>
   <div id="histWrap"></div>
   <h3 style="margin-top:18px;">Change log</h3>
@@ -607,7 +615,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v85 */
+/* build v88 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1490,12 +1498,13 @@ if (IS_BROWSER) (function () {
     const summary = document.createElement("div");
     summary.className = "poolSummary";
     summary.innerHTML =
-      '<div class="sumSec"><div class="sumHd">Day</div>' + buildTable("day") + "</div>" +
+      '<div class="sumSec collapsible' + (ui.dayCollapsed ? "" : " open") + '"><div class="opHead sumHd"><span class="triangle"></span>Day</div><div class="secBody">' + buildTable("day") + "</div></div>" +
       '<div class="sumSec collapsible' + (ui.wkCollapsed ? "" : " open") + '"><div class="opHead sumHd"><span class="triangle"></span>Week</div><div class="secBody">' + buildTable("week") + "</div></div>" +
       '<div class="sumSec collapsible' + (ui.allCollapsed ? "" : " open") + '"><div class="opHead sumHd"><span class="triangle"></span>All weeks</div><div class="secBody">' + buildTable("all") + "</div></div>";
     const sumHeads = summary.querySelectorAll(".opHead");
-    if (sumHeads[0]) sumHeads[0].addEventListener("click", () => { ui.wkCollapsed = !ui.wkCollapsed; saveUI(); summary.children[1].classList.toggle("open"); });
-    if (sumHeads[1]) sumHeads[1].addEventListener("click", () => { ui.allCollapsed = !ui.allCollapsed; saveUI(); summary.children[2].classList.toggle("open"); });
+    if (sumHeads[0]) sumHeads[0].addEventListener("click", () => { ui.dayCollapsed = !ui.dayCollapsed; saveUI(); summary.children[0].classList.toggle("open"); });
+    if (sumHeads[1]) sumHeads[1].addEventListener("click", () => { ui.wkCollapsed = !ui.wkCollapsed; saveUI(); summary.children[1].classList.toggle("open"); });
+    if (sumHeads[2]) sumHeads[2].addEventListener("click", () => { ui.allCollapsed = !ui.allCollapsed; saveUI(); summary.children[2].classList.toggle("open"); });
     pool.appendChild(summary);
 
     // ── Original plan (today's plan as captured at the start of the day) ──
@@ -2065,7 +2074,9 @@ if (IS_BROWSER) (function () {
     else if (cmd === "outdent") document.execCommand("outdent");
     state.note.html = $("noteBody").innerHTML; saveNoteSoon();
   }
-  $("noteBtn").addEventListener("click", () => { ui.rightBarClosed = !ui.rightBarClosed; saveUI(); applyRightBar(); });
+  { const c = $("rbCollapse"), r = $("rbReopen");
+    if (c) c.addEventListener("click", () => { ui.rightBarClosed = true; saveUI(); applyRightBar(); });
+    if (r) r.addEventListener("click", () => { ui.rightBarClosed = false; saveUI(); applyRightBar(); }); }
   $("noteBody").addEventListener("input", () => { state.note.html = $("noteBody").innerHTML; saveNoteSoon(); });
   $("noteBody").addEventListener("keydown", (e) => {
     if (e.key === "Tab") { e.preventDefault(); noteCmd(e.shiftKey ? "outdent" : "indent"); return; }
@@ -2170,12 +2181,14 @@ if (IS_BROWSER) (function () {
       // default order: open+tracked (Work, Fruit, Home, alpha within) → open+untracked → done
       const grp = (c) => c.group === "work" ? 0 : c.group === "fruit" ? 1 : c.group === "home" ? 2 : 3;
       const rank = (c) => c.archived ? 2 : (c.noTrack ? 1 : 0);
-      list.sort((a, b) => { const r = rank(a) - rank(b); if (r) return r; if (rank(a) === 0) { const g = grp(a) - grp(b); if (g) return g; } return (a.name || "").localeCompare(b.name || ""); });
+      const unas = (c) => (!c.group || GROUP_ORDER.indexOf(c.group) < 0) ? 1 : 0;   // new/unassigned tasks stay at the bottom until given a group
+      list.sort((a, b) => { const u = unas(a) - unas(b); if (u) return u; const r = rank(a) - rank(b); if (r) return r; if (rank(a) === 0) { const g = grp(a) - grp(b); if (g) return g; } return (a.name || "").localeCompare(b.name || ""); });
     }
     for (const c of list) {
+      const unassigned = !c.group || GROUP_ORDER.indexOf(c.group) < 0;
       fh += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '>';
-      fh += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" value="' + c.name.replace(/"/g, "&quot;") + '"></td>';
-      fh += '<td><select class="bgroup">' + GROUP_ORDER.map((g) => '<option value="' + g + '"' + ((c.group || "work") === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
+      fh += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" placeholder="name…" value="' + (c.name || "").replace(/"/g, "&quot;") + '"></td>';
+      fh += '<td><select class="bgroup">' + (unassigned ? '<option value="" selected>—</option>' : "") + GROUP_ORDER.map((g) => '<option value="' + g + '"' + (c.group === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
       fh += '<td><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal (weekly goal minus time already done)" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
       fh += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
       fh += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
@@ -2234,9 +2247,10 @@ if (IS_BROWSER) (function () {
   $("tasksClose").addEventListener("click", () => tasksDlg.close());
   $("mpClose").addEventListener("click", () => mpDlg.close());
   $("budAddTask").addEventListener("click", () => {
-    snap(); let base = "New task", name = base, n = 2; while (nameTaken(name, null)) name = base + " " + (n++);
-    const g = "work"; state.categories.push({ id: "cat" + Date.now(), name, hours: 0, group: g, defaultMin: 60, color: groupColorFor(g, state.categories, null) });
+    snap(); const id = "cat" + Date.now();
+    state.categories.push({ id: id, name: "", hours: 0, group: "", defaultMin: 60, color: GREY });   // no name, no group → stays at the bottom until you assign one
     commit(); renderBudgets();
+    const w = $("tasksTableWrap"); if (w) { const inp = w.querySelector('tr[data-id="' + id + '"] .tname'); if (inp) { inp.scrollIntoView({ block: "nearest" }); inp.focus(); } }
   });
   $("budAddWeek").addEventListener("click", () => { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); commit(); renderBudgets(); });
   $("budRecolour").addEventListener("click", () => { snap(); for (const c of state.categories) if (!c.lockColor) c.color = groupColorFor(c.group || "work", state.categories, c.id); commit(); renderBudgets(); });
@@ -2285,7 +2299,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v85"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v85"; } catch (e) {}
+  try { document.title = "Plapp v88"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v88"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -2358,24 +2372,32 @@ if (IS_BROWSER) (function () {
     if (raw === "na") return "na";
     if (type === "binary") { if (raw === "ach") { const r = (def.rule || "").trim() ? evalHabitRule(h, date, null) : null; return r === false ? "miss" : "ach"; } return raw === "miss" ? "miss" : null; }
     const today = ymd(new Date());
-    if (type === "numeric") { if (typeof raw !== "number") return null; const r = evalHabitRule(h, date, raw); return r == null ? null : (r ? "ach" : "miss"); }
-    if (type === "hours") { if (raw === "ach" || raw === "miss") return raw; if (date > today) return null; const r = evalHabitRule(h, date, null); return r == null ? null : (r ? "ach" : "miss"); }
+    if (type === "numeric") { if (raw === "ach" || raw === "miss") return raw; if (typeof raw !== "number") return null; const r = evalHabitRule(h, date, raw); if (r == null) return null; if (r) return "ach"; return date < today ? "miss" : null; }   // manual ach/miss overrides the rule; else only a past day counts as missed
+    if (type === "hours") { if (raw === "ach" || raw === "miss") return raw; if (date > today) return null; const r = evalHabitRule(h, date, null); if (r == null) return null; if (r) return "ach"; return date < today ? "miss" : null; }   // today can still be met by logging more, so it isn't "missed" until it's past
     return null;
   }
-  function distributeFill(h, startDate, amount) {   // spread `amount` from startDate forward, filling each Mon–Sat up to h.fill, across as many weeks as needed
+  function distributeFill(h, startDate, amount) {   // spread `amount` from startDate forward, filling each Mon–Sat up to h.fill
     const T = +h.fill || 0;
     snap(); if (!h.entries) h.entries = {};
     if (T <= 0) { h.entries[startDate] = amount; commit(); return; }
-    let pool = amount, d = parseYMD(startDate), guard = 0;
+    const maxRaw = String(h.fillMax == null ? "" : h.fillMax).trim().toLowerCase();
+    const weekLimit = (maxRaw === "week" || maxRaw === "w");
+    const maxDays = (!weekLimit && maxRaw !== "" && !isNaN(parseFloat(maxRaw))) ? Math.max(1, Math.floor(parseFloat(maxRaw))) : 0;   // 0 = no day-count limit
+    const satOfWeek = ymd(addDays(mondayOf(parseYMD(startDate)), 5));
+    let pool = amount, d = parseYMD(startDate), guard = 0, spanned = 0;
     while (pool > 0.0001 && guard < 400) {
       guard++;
-      if (d.getDay() !== 0) {   // skip Sundays — the grid runs Mon–Sat
-        const ds = ymd(d), raw = h.entries[ds];
+      if (d.getDay() !== 0) {   // Mon–Sat only
+        const ds = ymd(d);
+        if (weekLimit && ds > satOfWeek) break;
+        if (maxDays && spanned >= maxDays) break;
+        spanned++;
+        const raw = h.entries[ds];
         if (raw !== "na") { const cur = typeof raw === "number" ? raw : 0; const room = T - cur; if (room > 0) { const add = Math.min(pool, room); h.entries[ds] = Math.round((cur + add) * 100) / 100; pool -= add; } }
       }
       d = addDays(d, 1);
     }
-    if (pool > 0.0001) { const raw = h.entries[startDate], cur = typeof raw === "number" ? raw : 0; h.entries[startDate] = Math.round((cur + pool) * 100) / 100; }   // safety net for an implausibly large entry
+    if (pool > 0.0001 && !weekLimit && !maxDays) { const raw = h.entries[startDate], cur = typeof raw === "number" ? raw : 0; h.entries[startDate] = Math.round((cur + pool) * 100) / 100; }   // no limit + implausibly large entry → keep the remainder on the entry day
     commit();
   }
   function editHabitCell(h, date) {
@@ -2383,22 +2405,22 @@ if (IS_BROWSER) (function () {
     if (type === "binary") { cycleHabit(h, date); return; }
     if (type === "hours") { const cur = h.entries ? h.entries[date] : undefined; const next = cur === "ach" ? "miss" : cur === "miss" ? "na" : cur === "na" ? null : "ach"; snap(); if (!h.entries) h.entries = {}; if (next === null) delete h.entries[date]; else h.entries[date] = next; commit(); return; }
     if (+h.fill > 0) {   // fill-forward habit: entered minutes fill each day up to the target, from this day onward
-      const v = prompt("Minutes done for “" + h.name + "”, from " + fmtDeadline(date) + " onward.\nThey fill each day up to " + h.fill + ". ('na' or blank to clear this day.)", "");
+      const v = prompt("Minutes done for “" + h.name + "”, from " + fmtDeadline(date) + " onward (fills each day up to " + h.fill + ").\nOr force with 'ach' / 'miss'; 'na'; or blank to clear this day.", "");
       if (v === null) return;
       const t = v.trim().toLowerCase();
       if (t === "") { snap(); if (!h.entries) h.entries = {}; delete h.entries[date]; commit(); return; }
-      if (t === "na") { snap(); if (!h.entries) h.entries = {}; h.entries[date] = "na"; commit(); return; }
-      const num = parseFloat(v.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, 'na', or blank."); return; }
+      if (t === "na" || t === "ach" || t === "miss") { snap(); if (!h.entries) h.entries = {}; h.entries[date] = t; commit(); return; }
+      const num = parseFloat(v.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, 'ach'/'miss', 'na', or blank."); return; }
       distributeFill(h, date, num); return;
     }
     const cur = h.entries && h.entries[date] != null ? h.entries[date] : "";
-    const v = prompt("Value for “" + h.name + "” on " + date + "\n(a number, 'na', or leave blank to clear):", cur === "na" ? "na" : String(cur));
+    const v = prompt("Value for “" + h.name + "” on " + date + "\n(a number; or force with 'ach' / 'miss'; 'na'; or blank to clear):", cur === "na" ? "na" : String(cur));
     if (v === null) return;
     const t = v.trim().toLowerCase();
     snap(); if (!h.entries) h.entries = {};
     if (t === "") delete h.entries[date];
-    else if (t === "na") h.entries[date] = "na";
-    else { const num = parseFloat(v.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, 'na', or blank."); return; } h.entries[date] = num; }
+    else if (t === "na" || t === "ach" || t === "miss") h.entries[date] = t;
+    else { const num = parseFloat(v.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, 'ach'/'miss', 'na', or blank."); return; } h.entries[date] = num; }
     commit();
   }
   function weekHabitsFor(weekIdx) {
@@ -2426,7 +2448,27 @@ if (IS_BROWSER) (function () {
     if (next === null) delete h.entries[date]; else h.entries[date] = next;
     commit();
   }
-  function applyRightBar() { const rb = $("rightBar"); if (rb) rb.classList.toggle("closed", !!ui.rightBarClosed); }
+  function applyRightBar() {
+    const rb = $("rightBar"), ro = $("rbReopen"); if (!rb) return;
+    const closed = !!ui.rightBarClosed;
+    rb.classList.toggle("closed", closed);
+    rb.style.width = closed ? "" : (ui.noteW ? (ui.noteW + 20) + "px" : "");
+    if (ro) ro.style.display = closed ? "" : "none";
+  }
+  function setupNoteResize() {
+    const body = $("noteBody"), bar = $("rightBar"); if (!body || !bar) return;
+    if (ui.noteW) body.style.width = ui.noteW + "px";
+    if (ui.noteH) body.style.height = ui.noteH + "px";
+    if (window.ResizeObserver) {
+      let t = null;
+      new ResizeObserver(() => {
+        const w = body.offsetWidth, h = body.offsetHeight; if (!w) return;
+        ui.noteW = w; ui.noteH = h;
+        if (!ui.rightBarClosed) bar.style.width = (w + 20) + "px";
+        if (t) clearTimeout(t); t = setTimeout(saveUI, 400);
+      }).observe(body);
+    }
+  }
   function renderRightBar() { applyRightBar(); renderStreak(); renderDeadlines(); }
   function dockNote() { const dock = $("noteDock"), body = $("noteBody"); if (dock && body && body.parentElement !== dock) dock.appendChild(body); }
 
@@ -2506,7 +2548,7 @@ if (IS_BROWSER) (function () {
     const help = '<p class="muted" style="margin-top:8px;line-height:1.6;">Types — <b>Click</b>: tap the cell (achieved→missed→NA). An optional rule acts as a guard — if you tap achieved but the rule is false, the day flips to missed. <b>Number</b>: you type a number each day and the rule decides. <b>Hours</b>: read automatically from your logged time; tap a cell to override it (auto→achieved→missed→NA→auto). A day is achieved when the rule is true; if the rule returns <code>null</code> the cell stays blank so you can click it. Variables: <code>value</code> (today’s number), <code>prev</code> (yesterday’s), <code>avg(n)</code>, <code>sum(n)</code>, <code>avgSince("YYYY-MM-DD")</code>, <code>hours("Task", n)</code> = hours logged for a task over the last n days, <code>dow</code> (0=Mon … 5=Sat), <code>firstHours("Task", h)</code> = true if the first h logged hours today are that task. Examples: <code>value &gt;= 15</code> · <code>value &gt; 100 + (prev &lt; 100 ? (100-prev)/2 : 0)</code> · <code>avgSince("2026-06-01") &lt; 30</code> · <code>hours("Mails", 6) &lt;= 6</code> · <code>dow &lt;= 3 ? firstHours("Growth", 2) : null</code></p>';
     const effNote = '<p class="muted" style="margin:2px 0 8px;">Edits take effect <b>' + esc(fmtDeadline(nextMondayYmd())) + '</b> — the current week keeps version v' + (versionForWeek(state.currentWeek) || 1) + '.</p>';
     if (!list.length) { host.innerHTML = '<p class="muted">No habits yet — add your first below.</p>' + help; return; }
-    let h = effNote + '<table class="hbTable"><thead><tr><th>Habit</th><th>Type</th><th>Rule (achieved when true)</th><th>Note (plain language)</th><th title="Fill-forward target: a value entered here overflows to fill later days up to this number/day">Fill/day</th><th></th><th></th></tr></thead><tbody>';
+    let h = effNote + '<table class="hbTable"><thead><tr><th>Habit</th><th>Type</th><th>Rule (achieved when true)</th><th>Note (plain language)</th><th title="Fill-forward: left = target per day; right = how far it may reach (a number of days, the word week, or blank = no limit)">Fill /day · max</th><th></th><th></th></tr></thead><tbody>';
     for (const hb of list) {
       const ty = hb.type || "binary";
       h += '<tr data-id="' + hb.id + '"><td><input class="hbName" value="' + esc(hb.name) + '"></td>';
@@ -2514,7 +2556,7 @@ if (IS_BROWSER) (function () {
       const ph = ty === "hours" ? 'hours(&quot;Mails&quot;, 6) &lt;= 6' : ty === "numeric" ? 'value &gt;= 15' : 'optional guard, e.g. hours(&quot;Mails&quot;,1) &lt;= 1';
       h += '<td><input class="hbRule" placeholder="' + ph + '" value="' + esc(hb.rule || "") + '"></td>';
       h += '<td><input class="hbDesc" placeholder="what it means" value="' + esc(hb.desc || "") + '"></td>';
-      h += '<td><input class="hbFill" type="number" min="0" step="5" placeholder="—" value="' + (hb.fill ? hb.fill : "") + '" style="width:56px;"></td>';
+      h += '<td style="white-space:nowrap;"><input class="hbFill" type="number" min="0" step="5" placeholder="/day" value="' + (hb.fill ? hb.fill : "") + '" style="width:52px;" title="Target per day"> <input class="hbFillMax" type="text" placeholder="max" value="' + esc(hb.fillMax || "") + '" style="width:48px;" title="Max reach: a number of days, the word week, or blank = no limit"></td>';
       h += '<td><button class="hbArch">' + (hb.archived ? "archived" : "active") + '</button></td><td><button class="hbDel">Delete</button></td></tr>';
     }
     host.innerHTML = h + "</tbody></table>" + help;
@@ -2525,6 +2567,7 @@ if (IS_BROWSER) (function () {
       const rl = tr.querySelector(".hbRule"); if (rl) rl.addEventListener("change", (e) => { snap(); hb.rule = e.target.value; commitDefs(); });
       const ds = tr.querySelector(".hbDesc"); if (ds) ds.addEventListener("change", (e) => { snap(); hb.desc = e.target.value; commitDefs(); });
       const fl = tr.querySelector(".hbFill"); if (fl) fl.addEventListener("change", (e) => { snap(); const n = parseFloat(e.target.value); if (isNaN(n) || n <= 0) delete hb.fill; else hb.fill = n; commit(); });
+      const fm = tr.querySelector(".hbFillMax"); if (fm) fm.addEventListener("change", (e) => { snap(); const v = e.target.value.trim(); if (v === "") delete hb.fillMax; else hb.fillMax = v; commit(); });
       tr.querySelector(".hbArch").addEventListener("click", () => { snap(); hb.archived = !hb.archived; commitDefs(); renderHabitsTable(); });
       tr.querySelector(".hbDel").addEventListener("click", () => { if (!confirm('Delete "' + hb.name + '" and all its history? (Archiving instead keeps the history.)')) return; snap(); state.habits = (state.habits || []).filter((x) => x.id !== id); commitDefs(); renderHabitsTable(); renderHistory(); });
     });
@@ -2582,6 +2625,14 @@ if (IS_BROWSER) (function () {
   $("hbClose").addEventListener("click", () => habitsDlg.close());
   $("hbAdd").addEventListener("click", () => { if (!Array.isArray(state.habits)) state.habits = []; snap(); state.habits.push({ id: "hb" + Date.now(), name: "New habit", type: "binary", rule: "", desc: "", since: ymd(mondayOf(new Date())), entries: {} }); commitDefs(); renderHabitsTable(); renderHistory(); });
   $("hbCsv").addEventListener("click", exportHabitsCSV);
+  $("hbClearWk").addEventListener("click", () => {
+    const mon = thisMondayYmd(), sat = ymd(addDays(parseYMD(mon), 5));
+    if (!confirm("Clear all habit marks for this week (" + fmtDeadline(mon) + " – " + fmtDeadline(sat) + ")?\nYour habits and rules stay; only this week’s cells are wiped.")) return;
+    snap();
+    for (const hb of (state.habits || [])) { if (hb.entries) for (const d of Object.keys(hb.entries)) { if (d >= mon && d <= sat) delete hb.entries[d]; } }
+    if (state.weekNotes) delete state.weekNotes[mon];
+    commit(); renderHistory();
+  });
   $("remindClose").addEventListener("click", () => remindDlg.close());
   $("dlAdd").addEventListener("click", () => { if (!Array.isArray(state.deadlines)) state.deadlines = []; snap(); state.deadlines.push({ id: "dl" + Date.now(), date: ymd(new Date()), name: "" }); commit(); });
 
@@ -2628,7 +2679,7 @@ if (IS_BROWSER) (function () {
     if (!state.habitVersions.length && (state.habits || []).length) state.habitVersions.push({ v: 1, from: ymd(mondayOf(new Date())), defs: defsSnapshot() });
     saveLocal(); schedulePush();
   }
-  loadLocal(); seedHabits(); buildGrid(); dockNote(); renderAll(); renderNote(true); applyRightBar(); checkReminder();
+  loadLocal(); seedHabits(); buildGrid(); dockNote(); renderAll(); renderNote(true); applyRightBar(); setupNoteResize(); checkReminder();
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
   setInterval(() => { if (document.visibilityState === "visible" && !drag && !noteAct) renderBlocks(); }, 15000); // advance now-line, slide plans & drop elapsed plans
