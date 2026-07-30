@@ -644,6 +644,7 @@ create policy "planner anon access" on plans
     <label>Start <input type="time" id="editStart"></label>
     <label>End <input type="time" id="editEnd"></label>
   </div>
+  <div id="editSplit" style="margin-top:8px;display:none;"></div>
   <div class="btnRow" style="margin-top:14px;">
     <button class="btn" id="editSave">Save</button>
     <button class="btnGhost" id="editCancel">Cancel</button>
@@ -665,7 +666,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v104 */
+/* build v105 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -859,9 +860,13 @@ function buildReport(state) {
     const hrs = Math.max(0, (b.endMs - b.startMs)) / 3600000;
     const day = days[b.date] || (days[b.date] = { total: 0, byCat: {}, byGroup: {} });
     day.total += hrs;
-    day.byCat[b.catId] = (day.byCat[b.catId] || 0) + hrs;
-    const g = catGroup[b.catId] || "work";
-    day.byGroup[g] = (day.byGroup[g] || 0) + hrs;
+    if (b.split) {   // parent block: attribute its time to the child tasks by their stored fractions
+      for (const k in b.split) { const kh = hrs * b.split[k]; day.byCat[k] = (day.byCat[k] || 0) + kh; const gg = catGroup[k] || "work"; day.byGroup[gg] = (day.byGroup[gg] || 0) + kh; }
+    } else {
+      day.byCat[b.catId] = (day.byCat[b.catId] || 0) + hrs;
+      const g = catGroup[b.catId] || "work";
+      day.byGroup[g] = (day.byGroup[g] || 0) + hrs;
+    }
   }
   return { days, catName, catGroup };
 }
@@ -1361,10 +1366,11 @@ if (IS_BROWSER) (function () {
     if (dur >= 60000) {
       snap();
       const kids = state.categories.filter((c) => c.parent === t.catId && (c.splitPct || 0) > 0);
-      if (kids.length) {
-        const tot = kids.reduce((s, k) => s + (k.splitPct || 0), 0); let acc = t.startMs;
-        for (let i = 0; i < kids.length; i++) { const segEnd = (i === kids.length - 1) ? endMs : acc + Math.round((endMs - t.startMs) * ((kids[i].splitPct || 0) / tot)); if (segEnd > acc) createActualBlock(kids[i].id, acc, segEnd); acc = segEnd; }
-        commit(); toast("Logged " + fmtDur(dur) + " → split across " + kids.length);
+      if (kids.length) {   // one parent block that stores the child breakdown as fractions
+        const tot = kids.reduce((s, k) => s + (k.splitPct || 0), 0) || 1, split = {};
+        for (const k of kids) split[k.id] = (k.splitPct || 0) / tot;
+        createActualBlock(t.catId, t.startMs, endMs, split);
+        commit(); toast("Logged " + fmtDur(dur) + " → " + kids.length + " sub-tasks");
       } else { createActualBlock(t.catId, t.startMs, endMs); commit(); toast("Logged " + fmtDur(dur)); }
     }
     else { saveLocal(); schedulePush(); renderAll(); toast("Too short (under 1 min) — not logged"); }
@@ -1379,23 +1385,25 @@ if (IS_BROWSER) (function () {
     let ms = d.getTime(); if (ms > Date.now()) ms = Date.now();
     state.timer.startMs = ms; saveLocal(); schedulePush(); updateTimerDisplay();
   }
-  function createActualBlock(catId, startMs, endMs) {
+  function createActualBlock(catId, startMs, endMs, split) {
     const sd = new Date(startMs);
     const midnight = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate() + 1, 0, 0, 0, 0).getTime();
     if (endMs - midnight > 1000) {            // session runs past midnight → log up to midnight, then continue on the next day
-      pushActualBlock(catId, startMs, midnight);
-      createActualBlock(catId, midnight, endMs);
+      pushActualBlock(catId, startMs, midnight, split);
+      createActualBlock(catId, midnight, endMs, split);
       return;
     }
-    pushActualBlock(catId, startMs, endMs);
+    pushActualBlock(catId, startMs, endMs, split);
   }
-  function pushActualBlock(catId, startMs, endMs) {
+  function pushActualBlock(catId, startMs, endMs, split) {
     const cell = cellForDate(state.anchorMonday, new Date(startMs));
     let wi = cell.weekIdx; if (wi < 0) wi = 0;
     while (state.weeks.length <= wi) state.weeks.push({ id: "w" + Date.now() + state.weeks.length, blocks: [], budgets: {} });
     const dateStr = ymd(dateOfCell(state.anchorMonday, wi, cell.dayIdx));
     const ss = actualSlots(startMs, endMs);
-    state.weeks[wi].blocks.push({ id: state.nextId++, kind: "actual", catId: catId, day: DAYS[cell.dayIdx], date: dateStr, startMs: startMs, endMs: endMs, startSlot: ss.startSlot, lenSlots: ss.lenSlots });
+    const blk = { id: state.nextId++, kind: "actual", catId: catId, day: DAYS[cell.dayIdx], date: dateStr, startMs: startMs, endMs: endMs, startSlot: ss.startSlot, lenSlots: ss.lenSlots };
+    if (split && Object.keys(split).length) blk.split = split;
+    state.weeks[wi].blocks.push(blk);
   }
   function syncActualMs(b) {   // after a tracked block is dragged/resized, recompute its real start/end so reports & Activity update
     if (!b || b.kind !== "actual") return;
@@ -1951,9 +1959,18 @@ if (IS_BROWSER) (function () {
     else { sMin = b.startSlot * SLOT_MIN; eMin = (b.startSlot + b.lenSlots) * SLOT_MIN; }
     $("editStart").value = hhmm(sMin); $("editEnd").value = hhmm(eMin);
     const cat = state.categories.find((c) => c.id === b.catId);
-    const tw = $("editTaskWrap");
-    if (b.event) { tw.style.display = "none"; }
-    else { tw.style.display = ""; $("editTask").innerHTML = state.categories.slice().sort((a, x) => (a.name || "").localeCompare(x.name || "")).map((c) => '<option value="' + c.id + '"' + (c.id === b.catId ? " selected" : "") + ">" + (c.name || "").replace(/</g, "&lt;") + "</option>").join(""); }
+    const tw = $("editTaskWrap"), sp = $("editSplit");
+    if (b.split) {   // parent block: hide task-reassign, show child allocation
+      tw.style.display = "none";
+      const durMin = Math.max(1, Math.round((b.endMs - b.startMs) / 60000));
+      let sh = '<div class="muted" style="margin-bottom:4px;">Split across sub-tasks (minutes):</div>';
+      for (const k in b.split) { const kc = state.categories.find((c) => c.id === k); sh += '<label style="display:inline-flex;align-items:center;gap:5px;margin:0 10px 6px 0;">' + ((kc ? kc.name : k) || "").replace(/</g, "&lt;") + ' <input type="number" min="0" step="1" class="splitMin" data-k="' + k + '" value="' + Math.round(durMin * b.split[k]) + '" style="width:58px;"></label>'; }
+      sp.innerHTML = sh; sp.style.display = "";
+    } else {
+      sp.style.display = "none"; sp.innerHTML = "";
+      if (b.event) { tw.style.display = "none"; }
+      else { tw.style.display = ""; $("editTask").innerHTML = state.categories.slice().sort((a, x) => (a.name || "").localeCompare(x.name || "")).map((c) => '<option value="' + c.id + '"' + (c.id === b.catId ? " selected" : "") + ">" + (c.name || "").replace(/</g, "&lt;") + "</option>").join(""); }
+    }
     $("editTitle").textContent = "Edit " + (b.event ? "“" + (b.name || "Meeting") + "”" : "“" + (cat ? cat.name : "?") + "”");
     $("editHint").textContent = b.kind === "actual" ? "Tracked session — times are exact to the minute." : "Planned block — times snap to 15-minute steps.";
     $("editDialog").showModal();
@@ -1966,7 +1983,8 @@ if (IS_BROWSER) (function () {
     const di = +$("editDay").value, sMin = parseHHMM($("editStart").value), eMin = parseHHMM($("editEnd").value);
     if (sMin == null || eMin == null) { toast("Enter start and end times"); return; }
     snap();
-    if (!b.event) { const tv = $("editTask").value; if (tv) b.catId = tv; }
+    if (b.split) { const mins = {}; let tot = 0; document.querySelectorAll("#editSplit .splitMin").forEach((inp) => { const v = Math.max(0, +inp.value || 0); mins[inp.dataset.k] = v; tot += v; }); if (tot > 0) { const ns = {}; for (const k in mins) if (mins[k] > 0) ns[k] = mins[k] / tot; b.split = ns; } }
+    else if (!b.event) { const tv = $("editTask").value; if (tv) b.catId = tv; }
     b.day = DAYS[di];
     if (b.kind === "actual") {
       const dateStr = ymd(dateOfCell(state.anchorMonday, state.currentWeek, di));
@@ -2439,7 +2457,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v104"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v104"; } catch (e) {}
+  try { document.title = "Plapp v105"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v105"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -2455,8 +2473,11 @@ if (IS_BROWSER) (function () {
     const e0 = parseYMD(endStr).getTime() + 86400000; // through the end of endStr
     let sum = 0;
     for (const w of state.weeks) for (const b of w.blocks) {
-      if (b.kind !== "actual" || b.startMs == null || !ids.has(b.catId)) continue;
-      if (b.startMs >= s0 && b.startMs < e0) sum += (b.endMs - b.startMs) / 3600000;
+      if (b.kind !== "actual" || b.startMs == null) continue;
+      if (!(b.startMs >= s0 && b.startMs < e0)) continue;
+      const hrs = (b.endMs - b.startMs) / 3600000;
+      if (b.split) { for (const k in b.split) if (ids.has(k)) sum += hrs * b.split[k]; }   // parent block → count each child's share
+      else if (ids.has(b.catId)) sum += hrs;
     }
     return sum;
   }
@@ -2850,7 +2871,37 @@ if (IS_BROWSER) (function () {
     for (const c of state.categories) { const n = (c.name || "").toLowerCase(); if (n === "plan") c.color = "#ecc9a5"; else if (n === "mails") c.color = "#f3b4ac"; }
     state.colorSeedV = 4; saveLocal(); schedulePush();
   }
-  loadLocal(); seedHabits(); seedColors(); buildGrid(); dockNote(); renderAll(); renderNote(true); applyRightBar(); setupNoteResize(); checkReminder();
+  function mergeSplitBlocks() {   // one-time: fold existing adjacent child actual-blocks (from old timer splits) into single parent blocks with a stored split
+    if (state.splitMergeV) return;
+    const parentOf = {}; for (const c of (state.categories || [])) if (c.parent) parentOf[c.id] = c.parent;
+    let changed = false;
+    for (const w of state.weeks) {
+      const blocks = w.blocks || []; const byDate = {};
+      for (const b of blocks) if (b.kind === "actual" && b.startMs != null && !b.split && parentOf[b.catId]) (byDate[b.date] = byDate[b.date] || []).push(b);
+      const toRemove = new Set(), toAdd = [];
+      for (const ds in byDate) {
+        const arr = byDate[ds].sort((a, b) => a.startMs - b.startMs);
+        let i = 0;
+        while (i < arr.length) {
+          let j = i; const par = parentOf[arr[i].catId];
+          while (j + 1 < arr.length && parentOf[arr[j + 1].catId] === par && Math.abs(arr[j + 1].startMs - arr[j].endMs) < 60000) j++;
+          if (j > i) {
+            const run = arr.slice(i, j + 1), startMs = run[0].startMs, endMs = run[run.length - 1].endMs;
+            const mins = {}; let tot = 0; for (const b of run) { const h = (b.endMs - b.startMs) / 3600000; mins[b.catId] = (mins[b.catId] || 0) + h; tot += h; }
+            const split = {}; for (const k in mins) split[k] = mins[k] / (tot || 1);
+            run.forEach((b) => toRemove.add(b.id));
+            const ss = actualSlots(startMs, endMs);
+            toAdd.push({ id: state.nextId++, kind: "actual", catId: par, day: run[0].day, date: ds, startMs: startMs, endMs: endMs, startSlot: ss.startSlot, lenSlots: ss.lenSlots, split: split });
+            changed = true;
+          }
+          i = j + 1;
+        }
+      }
+      if (toRemove.size) w.blocks = blocks.filter((b) => !toRemove.has(b.id)).concat(toAdd);
+    }
+    state.splitMergeV = 1; saveLocal(); if (changed) schedulePush();
+  }
+  loadLocal(); seedHabits(); seedColors(); mergeSplitBlocks(); buildGrid(); dockNote(); renderAll(); renderNote(true); applyRightBar(); setupNoteResize(); checkReminder();
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
   setInterval(() => { if (document.visibilityState === "visible" && !drag && !noteAct) renderBlocks(); }, 15000); // advance now-line, slide plans & drop elapsed plans
