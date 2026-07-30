@@ -198,6 +198,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpBar .mpIPtog { font-size: 12px; color: var(--ink2); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 /* Masterplan table: frozen Total (next to name) + frozen footer + Goal + grey IP columns */
 .mpTable td.name, .mpTable th.name { min-width: 92px; max-width: 92px; width: 92px; }
+.mpTable td.name { overflow: hidden; text-overflow: ellipsis; }
 .mpTable .stot { position: sticky; left: 92px; min-width: 52px; }
 .mpTable td.stot { background: var(--bg); z-index: 2; }
 .mpTable th.stot { background: var(--panel); top: 0; z-index: 4; }
@@ -213,6 +214,12 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .budTable th.mpCur { background: #efe07a; }
 .budTable td.mpCur { background: #fdf3b8; }
 .budWrap { max-height: 62vh; overflow: auto; }
+.budGap { height: 22px; }
+.budTable td.cmtCol, .budTable th.cmtCol { width: 26px; min-width: 26px; padding: 2px; }
+.bcmt { background: transparent; border: none; cursor: pointer; font-size: 14px; line-height: 1; opacity: .3; padding: 0; }
+.bcmt.has { opacity: 1; }
+#commentDialog { max-width: 480px; }
+#commentText { width: 100%; box-sizing: border-box; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; resize: vertical; }
 .budTable { border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; }
 .budTable th, .budTable td { border: 1px solid var(--line); padding: 3px 5px; text-align: center; }
 .budTable th { background: var(--panel); font-weight: 600; color: var(--ink2); position: sticky; top: 0; z-index: 1; }
@@ -595,14 +602,18 @@ create policy "planner anon access" on plans
 
 <dialog id="tasksDialog">
   <h2>Tasks</h2>
-  <div id="tasksTableWrap"></div>
-  <div class="btnRow" style="margin-top:14px;">
+  <div class="btnRow" style="margin-bottom:12px;">
     <button class="btnGhost" id="budAddTask">+ Add task</button>
     <button class="btnGhost" id="budRecolour">Recolour all by group</button>
-  </div>
-  <div class="btnRow" style="margin-top:8px;">
     <button class="btn" id="tasksClose">Done</button>
   </div>
+  <div id="tasksTableWrap"></div>
+</dialog>
+
+<dialog id="commentDialog">
+  <h2>Comment</h2>
+  <textarea id="commentText" rows="9" placeholder="A quick note for this task…"></textarea>
+  <div class="btnRow" style="margin-top:12px;"><button class="btn" id="commentSave">Save</button><button class="btnGhost" id="commentCancel">Cancel</button></div>
 </dialog>
 
 <dialog id="masterplanDialog">
@@ -649,7 +660,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v93 */
+/* build v95 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1502,9 +1513,11 @@ if (IS_BROWSER) (function () {
 
     const W = state.weeks.length;
     const nowSlotS = (new Date().getHours() * 60 + new Date().getMinutes()) / SLOT_MIN;
+    const scopeIdx = currentMPweeks() || (function () { const a = []; for (let i = 0; i < W; i++) a.push(i); return a; })();   // "All weeks" summary is scoped to the current masterplan
     const allUsed = {}, allBud = {};
-    for (let i = 0; i < W; i++) { const uu = weekUsage(state, i).used; for (const c of cats) { allUsed[c.id] = (allUsed[c.id] || 0) + (uu[c.id] || 0); allBud[c.id] = (allBud[c.id] || 0) + weekBudget(c, i); } }
-    const trackedAll = {}; for (const ds in rep.days) { const bc = rep.days[ds].byCat; for (const k in bc) trackedAll[k] = (trackedAll[k] || 0) + bc[k]; }
+    for (const i of scopeIdx) { const uu = weekUsage(state, i).used; for (const c of cats) { allUsed[c.id] = (allUsed[c.id] || 0) + (uu[c.id] || 0); allBud[c.id] = (allBud[c.id] || 0) + weekBudget(c, i); } }
+    const scopeDates = new Set(); for (const i of scopeIdx) for (let d = 0; d < ND; d++) scopeDates.add(ymd(dateOfCell(state.anchorMonday, i, d)));
+    const trackedAll = {}; for (const ds in rep.days) { if (!scopeDates.has(ds)) continue; const bc = rep.days[ds].byCat; for (const k in bc) trackedAll[k] = (trackedAll[k] || 0) + bc[k]; }
     const aheadToday = {}, elapsedToday = {};
     if (todayIdx >= 0) for (const b of curBlocks()) { if (b.day !== DAYS[todayIdx] || b.event || b.kind === "actual") continue; const st = b.startSlot, end = b.startSlot + b.lenSlots; aheadToday[b.catId] = (aheadToday[b.catId] || 0) + Math.max(0, end - Math.max(st, nowSlotS)) / 4; elapsedToday[b.catId] = (elapsedToday[b.catId] || 0) + Math.max(0, Math.min(end, nowSlotS) - st) / 4; }
     // Tier 0 "Missed": planned-and-elapsed-today tasks where tracked < elapsed-plan and the shortfall isn't covered by remaining plan today
@@ -1539,7 +1552,7 @@ if (IS_BROWSER) (function () {
     summary.innerHTML =
       '<div class="sumSec collapsible' + (ui.dayCollapsed ? "" : " open") + '"><div class="opHead sumHd"><span class="triangle"></span>Day</div><div class="secBody">' + buildTable("day") + "</div></div>" +
       '<div class="sumSec collapsible' + (ui.wkCollapsed ? "" : " open") + '"><div class="opHead sumHd"><span class="triangle"></span>Week</div><div class="secBody">' + buildTable("week") + "</div></div>" +
-      '<div class="sumSec collapsible' + (ui.allCollapsed ? "" : " open") + '"><div class="opHead sumHd"><span class="triangle"></span>All weeks</div><div class="secBody">' + buildTable("all") + "</div></div>";
+      '<div class="sumSec collapsible' + (ui.allCollapsed ? "" : " open") + '"><div class="opHead sumHd"><span class="triangle"></span>Masterplan</div><div class="secBody">' + buildTable("all") + "</div></div>";
     const sumHeads = summary.querySelectorAll(".opHead");
     if (sumHeads[0]) sumHeads[0].addEventListener("click", () => { ui.dayCollapsed = !ui.dayCollapsed; saveUI(); summary.children[0].classList.toggle("open"); });
     if (sumHeads[1]) sumHeads[1].addEventListener("click", () => { ui.wkCollapsed = !ui.wkCollapsed; saveUI(); summary.children[1].classList.toggle("open"); });
@@ -1673,8 +1686,9 @@ if (IS_BROWSER) (function () {
   }
 
   /* ── blocks ── */
-  function blockName(b, catById) { return (b.event || b.meeting) ? (b.name || "Meeting") : (catById[b.catId] ? catById[b.catId].name : "?"); }
-  function blockColor(b, catById) { return (b.event || b.meeting) ? EVENT_COLOR : (catById[b.catId] ? catById[b.catId].color : "#888"); }
+  function dispCat(b, catById) { const c = catById[b.catId]; if (!c) return null; return (c.parent && catById[c.parent]) ? catById[c.parent] : c; }   // child blocks show as their parent on the grid
+  function blockName(b, catById) { if (b.event || b.meeting) return b.name || "Meeting"; const c = dispCat(b, catById); return c ? c.name : "?"; }
+  function blockColor(b, catById) { if (b.event || b.meeting) return EVENT_COLOR; const c = dispCat(b, catById); return c ? c.color : "#888"; }
 
   function renderBlocks() {
     const layer = $("blocksLayer"); if (!layer) return;
@@ -1748,7 +1762,7 @@ if (IS_BROWSER) (function () {
           ";top:" + (vs * SLOT_PX + 1) + "px;height:" + hPx + "px" +
           ";left:calc(" + LABEL_W + "px + " + frac + " * (100% - " + LABEL_W + "px) + 1px)" +
           ";width:calc((100% - " + LABEL_W + "px) / " + (NC * p.nCols) + " - 3px);";
-        if (b.meeting && catById[b.catId]) el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.18), inset -8px 0 0 0 " + catById[b.catId].color; // red meeting with task-coloured band on the right
+        if (b.meeting && dispCat(b, catById)) el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.18), inset -8px 0 0 0 " + dispCat(b, catById).color; // red meeting with task-coloured band on the right
         const nm = blockName(b, catById);
         const tLabel = isAct && b.startMs ? (clock(b.startMs) + "–" + clock(b.endMs)) : (minLabel(vs) + "–" + minLabel(vs + vl));
         let inner = '<span class="blockLabel">' + nm.replace(/</g, "&lt;") + "</span>";
@@ -1976,10 +1990,12 @@ if (IS_BROWSER) (function () {
     let weekTot = 0, dayHtml = "";
     for (const ds of dates) { const h = (rep.days[ds] && rep.days[ds].total) || 0; weekTot += h; dayHtml += "<td>" + (h > 0.0001 ? fmtHM(h) : "") + "</td>"; }
     html += '<tr class="rfoot"><td>All tasks</td>' + dayHtml + "<td>" + fmtHM(weekTot) + "</td></tr></tbody></table>";
-    const NW = state.weeks.length;
+    const mpIdx = currentMPweeks() || (function () { const a = []; for (let i = 0; i < state.weeks.length; i++) a.push(i); return a; })();   // scope totals to the current masterplan
+    const NW = Math.max(1, mpIdx.length);
+    const mpDates = new Set(); for (const i of mpIdx) for (let d = 0; d < ND; d++) mpDates.add(ymd(dateOfCell(state.anchorMonday, i, d)));
     const gW = {}, gA = {};
-    for (const ds in rep.days) { const inWk = dates.indexOf(ds) >= 0; const bg = rep.days[ds].byGroup; for (const g in bg) { gA[g] = (gA[g] || 0) + bg[g]; if (inWk) gW[g] = (gW[g] || 0) + bg[g]; } }
-    let gs = "<h3>By group</h3>" + '<table class="repTable"><thead><tr><th>Group</th><th>This week</th><th>All weeks</th><th>Avg/wk</th></tr></thead><tbody>';
+    for (const ds in rep.days) { const bg = rep.days[ds].byGroup, inWk = dates.indexOf(ds) >= 0, inMP = mpDates.has(ds); for (const g in bg) { if (inMP) gA[g] = (gA[g] || 0) + bg[g]; if (inWk) gW[g] = (gW[g] || 0) + bg[g]; } }
+    let gs = "<h3>By group</h3>" + '<table class="repTable"><thead><tr><th>Group</th><th>This week</th><th>Masterplan</th><th>Avg/wk</th></tr></thead><tbody>';
     for (const g of ["home", "fruit", "work", "none", "termin"]) { if (!(gA[g] > 0.0001)) continue; gs += '<tr><td class="rname">' + GROUPS[g].label + "</td><td>" + fmtHM(gW[g] || 0) + "</td><td>" + fmtHM(gA[g] || 0) + "</td><td>" + fmtHM((gA[g] || 0) / NW) + "</td></tr>"; }
     const wfW = (gW.work || 0) + (gW.fruit || 0), wfA = (gA.work || 0) + (gA.fruit || 0);
     gs += '<tr class="rfoot"><td class="rname">Work + Fruit</td><td>' + fmtHM(wfW) + "</td><td>" + fmtHM(wfA) + "</td><td>" + fmtHM(wfA / NW) + "</td></tr>";
@@ -1990,7 +2006,7 @@ if (IS_BROWSER) (function () {
     let goalsHtml = "<h3>Weekly goals</h3>" +
       '<div class="goalSet2">Total: <input id="goalTotalIn" class="goalGin" value="' + fmtHM(gt) + '">  ·  Work+Fruit: <input id="goalWFIn" class="goalGin" value="' + fmtHM(gwf) + '"></div>' +
       '<table class="repTable"><thead><tr><th>Week</th><th>Total</th><th>vs goal</th><th>Work+Fruit</th><th>vs goal</th></tr></thead><tbody>';
-    for (let i = 0; i < NW; i++) {
+    for (const i of mpIdx) {
       let tot = 0, wf = 0;
       for (let d = 0; d < ND; d++) { const ds = ymd(dateOfCell(state.anchorMonday, i, d)); const dd = rep.days[ds]; if (dd) { tot += dd.total || 0; wf += (dd.byGroup.work || 0) + (dd.byGroup.fruit || 0); } }
       const dT = gt > 0 ? '<span class="' + (tot - gt >= 0 ? "gOver" : "gUnder") + '">' + signHM(tot - gt) + "</span>" : "—";
@@ -2199,6 +2215,7 @@ if (IS_BROWSER) (function () {
   function isoWeekMonday(year, week) { const jan4 = new Date(year, 0, 4); const dow = (jan4.getDay() + 6) % 7; const w1 = new Date(jan4); w1.setDate(jan4.getDate() - dow); const m = new Date(w1); m.setDate(w1.getDate() + (week - 1) * 7); return m; }
   function weekIdxForMonday(mondayYmd) { return Math.round((parseYMD(mondayYmd) - mondayOf(parseYMD(state.anchorMonday))) / (7 * 86400000)); }
   function mpWeekIndices(mp) { if (!mp) return []; const a = weekIdxForMonday(mp.from), b = weekIdxForMonday(mp.to); const lo = Math.max(0, Math.min(a, b)), hi = Math.max(a, b); const out = []; for (let i = lo; i <= hi; i++) out.push(i); return out; }
+  function currentMPweeks() { const mps = state.masterplans || []; if (!mps.length) return null; const cwMon = ymd(dateOfCell(state.anchorMonday, state.currentWeek, 0)); const mp = mps.find((m) => m.from <= cwMon && cwMon <= m.to); return mp ? mpWeekIndices(mp) : null; }   // weeks of the masterplan containing the current week
   function ensureWeeksForMP(mp) { const idx = mpWeekIndices(mp); if (!idx.length) return; const hi = idx[idx.length - 1]; while (state.weeks.length <= hi) state.weeks.push({ id: "w" + Date.now() + "_" + state.weeks.length, blocks: [], budgets: {} }); }
   function activeMasterplan() { const mps = state.masterplans || []; if (!mps.length) return null; let mp = mps.find((m) => m.id === state.currentMasterplan); if (!mp) { const tm = ymd(mondayOf(new Date())); mp = mps.find((m) => m.from <= tm && tm <= m.to) || mps[0]; state.currentMasterplan = mp.id; } return mp; }
   function mpRangeLabel(m) { const ya = parseYMD(m.from).getFullYear(), yb = parseYMD(m.to).getFullYear(), wa = isoWeek(parseYMD(m.from)), wb = isoWeek(parseYMD(m.to)); return ya === yb ? (ya + " · W" + wa + "–W" + wb) : ("W" + wa + "/" + ya + " – W" + wb + "/" + yb); }
@@ -2216,7 +2233,6 @@ if (IS_BROWSER) (function () {
     const W = state.weeks.length;
     const gi = (g) => { const i = GROUP_ORDER.indexOf(g || "work"); return i < 0 ? 99 : i; };
     const arrow = (k) => budSort.key === k ? (budSort.dir > 0 ? " ▲" : " ▼") : "";
-    let fh = '<div class="budWrap"><table class="budTable"><thead><tr><th class="name" data-sort="name">Task' + arrow("name") + '</th><th data-sort="group">Group' + arrow("group") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th data-sort="done">Done' + arrow("done") + '</th><th>Lock</th><th>Parent</th><th></th></tr></thead><tbody>';
     let list = state.categories.slice();
     if (budSort.key) {
       const d = budSort.dir, nameCmp = (a, b) => (a.name || "").localeCompare(b.name || "");
@@ -2237,22 +2253,32 @@ if (IS_BROWSER) (function () {
       const grp = (c) => c.group === "work" ? 0 : c.group === "fruit" ? 1 : c.group === "home" ? 2 : 3;
       const rank = (c) => c.archived ? 2 : (c.noTrack ? 1 : 0);
       const unas = (c) => (!c.group || GROUP_ORDER.indexOf(c.group) < 0) ? 1 : 0;   // new/unassigned tasks stay at the bottom until given a group
-      list.sort((a, b) => { const u = unas(a) - unas(b); if (u) return u; const r = rank(a) - rank(b); if (r) return r; if (rank(a) === 0) { const g = grp(a) - grp(b); if (g) return g; } return (a.name || "").localeCompare(b.name || ""); });
+      list.sort((a, b) => { const u = unas(b) - unas(a); if (u) return u; const r = rank(a) - rank(b); if (r) return r; if (rank(a) === 0) { const g = grp(a) - grp(b); if (g) return g; } return (a.name || "").localeCompare(b.name || ""); });   // unassigned/new tasks at the top
     }
-    for (const c of list) {
-      const unassigned = !c.group || GROUP_ORDER.indexOf(c.group) < 0;
-      fh += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '>';
-      fh += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" placeholder="name…" value="' + (c.name || "").replace(/"/g, "&quot;") + '"></td>';
-      fh += '<td><select class="bgroup">' + (unassigned ? '<option value="" selected>—</option>' : "") + GROUP_ORDER.map((g) => '<option value="' + g + '"' + (c.group === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
-      fh += '<td><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal (weekly goal minus time already done)" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
-      fh += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
-      fh += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
-      fh += '<td><input type="checkbox" class="barch" title="Hide from the list (finished one-off task)"' + (c.archived ? " checked" : "") + "></td>";
-      fh += '<td><input type="checkbox" class="bplock" title="Keep this colour when you press Recolour all by group"' + (c.lockColor ? " checked" : "") + "></td>";
-      fh += '<td><select class="bpar" title="Roll this task’s tracked time up into a parent task"><option value="">—</option>' + state.categories.filter((p) => p.id !== c.id && !p.parent).map((p) => '<option value="' + p.id + '"' + (c.parent === p.id ? " selected" : "") + ">" + (p.name || "").replace(/</g, "&lt;") + "</option>").join("") + '</select> <input class="bsplit" type="number" min="0" max="100" step="5" placeholder="%" title="Optional: share (%) of the parent timer’s time this child receives when the parent is stopped" value="' + (c.splitPct != null ? c.splitPct : "") + '" style="width:42px;"></td>';
-      fh += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
-    }
-    fh += "</tbody></table></div>";
+    const kindOf = (c) => c.archived ? (c.inactiveKind || "later") : "";
+    const taskRow = (c) => {
+      const unassigned = !c.group || GROUP_ORDER.indexOf(c.group) < 0, kind = kindOf(c);
+      let r = '<tr data-id="' + c.id + '">';
+      r += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" placeholder="name…" value="' + (c.name || "").replace(/"/g, "&quot;") + '"></td>';
+      r += '<td class="cmtCol"><button class="bcmt' + (c.comment ? " has" : "") + '" title="' + (c.comment ? c.comment.replace(/"/g, "&quot;").slice(0, 400) : "Add a comment") + '">🗒</button></td>';
+      r += '<td><select class="bgroup">' + (unassigned ? '<option value="" selected>—</option>' : "") + GROUP_ORDER.map((g) => '<option value="' + g + '"' + (c.group === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
+      r += '<td><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
+      r += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
+      r += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
+      r += '<td><input type="checkbox" class="blater" title="Later — done for now, but may become active again"' + (kind === "later" ? " checked" : "") + "></td>";
+      r += '<td><input type="checkbox" class="bdone" title="Done — finished for good"' + (kind === "done" ? " checked" : "") + "></td>";
+      r += '<td><input type="checkbox" class="bnth" title="NTH — nice to have, but no time for it now"' + (kind === "nth" ? " checked" : "") + "></td>";
+      r += '<td><input type="checkbox" class="bplock" title="Keep this colour when you press Recolour all by group"' + (c.lockColor ? " checked" : "") + "></td>";
+      r += '<td><select class="bpar" title="Roll this task’s tracked time up into a parent task"><option value="">—</option>' + state.categories.filter((p) => p.id !== c.id && !p.parent).map((p) => '<option value="' + p.id + '"' + (c.parent === p.id ? " selected" : "") + ">" + (p.name || "").replace(/</g, "&lt;") + "</option>").join("") + '</select> <input class="bsplit" type="number" min="0" max="100" step="5" placeholder="%" title="Optional: share (%) of the parent timer’s time this child receives when the parent is stopped" value="' + (c.splitPct != null ? c.splitPct : "") + '" style="width:42px;"></td>';
+      r += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
+      return r;
+    };
+    const headRow = '<tr><th class="name" data-sort="name">Task' + arrow("name") + '</th><th class="cmtCol" title="Comment">🗒</th><th data-sort="group">Group' + arrow("group") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th title="Done for now — may return">Later</th><th title="Finished for good">Done</th><th title="Nice to have — no time now">NTH</th><th>Lock</th><th>Parent</th><th></th></tr>';
+    const activeList = list.filter((c) => !c.archived);
+    const kindRank = (c) => { const k = kindOf(c); return k === "later" ? 0 : k === "nth" ? 1 : 2; };   // second table order: Later → NTH → Done
+    const inactiveList = state.categories.filter((c) => c.archived).sort((a, b) => (kindRank(a) - kindRank(b)) || (a.name || "").localeCompare(b.name || ""));
+    let fh = '<div class="budWrap"><table class="budTable"><thead>' + headRow + '</thead><tbody>' + activeList.map(taskRow).join("") + '</tbody></table></div>';
+    if (inactiveList.length) fh += '<div class="budGap"></div><div class="budWrap"><table class="budTable"><thead>' + headRow + '</thead><tbody>' + inactiveList.map(taskRow).join("") + '</tbody></table></div>';
 
     // ---- Masterplan table (weekly hours for the selected masterplan) ----
     const mp = activeMasterplan();
@@ -2269,7 +2295,7 @@ if (IS_BROWSER) (function () {
       let tsum = 0; for (const i of mpIdx) tsum += weekBudget(c, i);
       const goal = gGet("goal", c.id), over = goal > 0.0001 && tsum > goal + 0.0001;
       mh += '<tr data-id="' + c.id + '"' + (c.archived ? ' class="arch"' : "") + '>';
-      mh += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span>' + (c.name || "").replace(/</g, "&lt;") + "</td>";
+      mh += '<td class="name" title="' + (c.name || "").replace(/"/g, "&quot;") + '"><span class="budSwatch" style="background:' + c.color + '"></span>' + (c.name || "").replace(/</g, "&lt;") + "</td>";
       mh += '<td class="stot btot' + (over ? " over" : "") + '">' + fmtHM(tsum) + "</td>";
       mh += '<td class="gcol"><input class="bgoal" type="text" inputmode="numeric" value="' + (goal ? fmtHM(goal) : "") + '"></td>';
       mh += '<td class="gcol ipCol"><input class="bgoalip" type="text" inputmode="numeric" value="' + (gGet("goalIP", c.id) ? fmtHM(gGet("goalIP", c.id)) : "") + '"></td>';
@@ -2301,7 +2327,11 @@ if (IS_BROWSER) (function () {
       tr.querySelector(".bpar").addEventListener("change", (e) => { snap(); if (e.target.value) cat.parent = e.target.value; else delete cat.parent; commit(); renderBudgets(); });
       tr.querySelector(".bsplit").addEventListener("change", (e) => { snap(); const v = e.target.value.trim(); if (v === "") delete cat.splitPct; else cat.splitPct = Math.max(0, Math.min(100, +v || 0)); commit(); renderBudgets(); });
       tr.querySelector(".btrack").addEventListener("change", (e) => { snap(); cat.noTrack = !e.target.checked; if (cat.noTrack && state.timer && state.timer.catId === cat.id) stopTimer(); commit(); renderBudgets(); });
-      tr.querySelector(".barch").addEventListener("change", (e) => { snap(); cat.archived = e.target.checked; if (cat.archived && state.timer && state.timer.catId === id) stopTimer(); commit(); renderBudgets(); });
+      { const bc = tr.querySelector(".bcmt"); if (bc) bc.addEventListener("click", () => openComment(id)); }
+      const setInactive = (kind, checked) => { snap(); if (checked) { cat.archived = true; cat.inactiveKind = kind; if (state.timer && state.timer.catId === id) stopTimer(); } else { cat.archived = false; delete cat.inactiveKind; } commit(); renderBudgets(); };
+      { const bl = tr.querySelector(".blater"); if (bl) bl.addEventListener("change", (e) => setInactive("later", e.target.checked)); }
+      { const bd = tr.querySelector(".bdone"); if (bd) bd.addEventListener("change", (e) => setInactive("done", e.target.checked)); }
+      { const bn = tr.querySelector(".bnth"); if (bn) bn.addEventListener("change", (e) => setInactive("nth", e.target.checked)); }
       tr.querySelector(".budDel").addEventListener("click", () => {
         const has = state.weeks.some((w) => w.blocks.some((b) => b.catId === id));
         if (has && !confirm('Delete "' + cat.name + '" and its placed blocks in all weeks?')) return;
@@ -2328,7 +2358,7 @@ if (IS_BROWSER) (function () {
   $("mpClose").addEventListener("click", () => mpDlg.close());
   $("budAddTask").addEventListener("click", () => {
     snap(); const id = "cat" + Date.now();
-    state.categories.push({ id: id, name: "", hours: 0, group: "", defaultMin: 60, color: GREY });   // no name, no group → stays at the bottom until you assign one
+    state.categories.unshift({ id: id, name: "", hours: 0, group: "", defaultMin: 60, color: GREY });   // no name, no group → appears at the top until you assign a group
     commit(); renderBudgets();
     const w = $("tasksTableWrap"); if (w) { const inp = w.querySelector('tr[data-id="' + id + '"] .tname'); if (inp) { inp.scrollIntoView({ block: "nearest" }); inp.focus(); } }
   });
@@ -2349,6 +2379,10 @@ if (IS_BROWSER) (function () {
     snap(); state.masterplans = state.masterplans.filter((m) => m.id !== mp.id); state.currentMasterplan = state.masterplans[0].id; commit(); renderBudgets();
   });
   $("budRecolour").addEventListener("click", () => { snap(); for (const c of state.categories) if (!c.lockColor) c.color = groupColorFor(c.group || "work", state.categories, c.id); commit(); renderBudgets(); });
+  let commentEditId = null;
+  function openComment(id) { const c = state.categories.find((x) => x.id === id); if (!c) return; commentEditId = id; const ta = $("commentText"); if (ta) ta.value = c.comment || ""; $("commentDialog").showModal(); if (ta) ta.focus(); }
+  $("commentSave").addEventListener("click", () => { const c = state.categories.find((x) => x.id === commentEditId); if (c) { snap(); const v = $("commentText").value; if (v.trim()) c.comment = v; else delete c.comment; commit(); renderBudgets(); } $("commentDialog").close(); });
+  $("commentCancel").addEventListener("click", () => $("commentDialog").close());
   $("sheetImport").addEventListener("click", () => { sheetUrl = $("sheetUrl").value.trim(); saveCfg(); doSheetImport(); });
   $("sbSave").addEventListener("click", async () => {
     cfg = { url: $("sbUrl").value.trim(), key: $("sbKey").value.trim(), pid: $("sbPid").value.trim(), sheet: sheetUrl };
@@ -2394,7 +2428,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v93"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v93"; } catch (e) {}
+  try { document.title = "Plapp v95"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v95"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
