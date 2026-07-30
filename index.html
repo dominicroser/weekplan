@@ -329,12 +329,16 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   #gridScroll { max-height: calc(100vh - 232px); }
   #gridInner { min-width: 540px; }
   #dayHeaderRow { min-width: 540px; }
-  #rightBar { width: 100%; max-height: none; border-left: none; border-top: 1px solid var(--line); }
+  #rightBar { width: 100% !important; max-height: none; border-left: none; border-top: 1px solid var(--line); }
+  #rbGrip { display: none; }
 }
 
 /* ── Right bar ── */
-#rightBar { width: 264px; flex-shrink: 0; padding: 10px 10px 24px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 60px); overflow-y: auto; border-left: 1px solid var(--line); }
+#rightBar { position: relative; width: 264px; flex-shrink: 0; display: flex; max-height: calc(100vh - 60px); border-left: 1px solid var(--line); }
 #rightBar.closed { display: none; }
+#rbGrip { width: 7px; flex-shrink: 0; cursor: col-resize; touch-action: none; }
+#rbGrip:hover { background: var(--line); }
+#rbInner { flex: 1; min-width: 0; overflow-y: auto; padding: 10px 10px 24px; display: flex; flex-direction: column; gap: 12px; }
 .rbPanel { display: flex; flex-direction: column; gap: 6px; }
 .rbHd { display: flex; align-items: center; justify-content: flex-end; min-height: 20px; margin-bottom: 2px; }
 .rbHd .rbAdd { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; width: 20px; height: 20px; line-height: 1; cursor: pointer; font-size: 14px; }
@@ -372,9 +376,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .stMore:hover { background: var(--panel2); }
 /* Docked note (drag the bottom-right corner to resize; the bar follows its width) */
 #stickyNote { display: none !important; }
-#noteDock { display: flex; }
-#noteDock #noteBody { position: static; inset: auto; width: 240px; height: 150px; min-width: 170px; max-width: 640px; min-height: 80px; resize: both; display: block; }
-#rightBar { transition: width .12s ease; }
+#noteDock { display: block; }
+#noteDock #noteBody { position: static; inset: auto; width: 100%; height: 150px; min-height: 80px; resize: vertical; display: block; }
 .rbCollapse { align-self: flex-end; border: 1px solid var(--line); background: var(--panel); color: var(--ink2); border-radius: 6px; width: 24px; height: 20px; cursor: pointer; font-size: 13px; line-height: 1; padding: 0; }
 .rbCollapse:hover { background: var(--panel2); }
 .rbReopen { position: fixed; top: 88px; right: 0; z-index: 30; border: 1px solid var(--line); border-right: none; background: var(--panel); color: var(--ink2); border-radius: 8px 0 0 8px; width: 20px; height: 44px; cursor: pointer; display: none; font-size: 13px; }
@@ -443,17 +446,20 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
     <div id="gridScroll"><div id="gridInner"><div id="grid"></div></div></div>
   </div>
   <aside id="rightBar">
-    <button class="rbCollapse" id="rbCollapse" title="Hide side bar">&raquo;</button>
-    <div class="rbPanel" id="notePanel">
-      <div id="noteDock"></div>
-    </div>
-    <div class="rbPanel" id="streakPanel">
-      <div class="rbHd"><button class="rbAdd" id="streakCfg" title="Manage habits &amp; history">&#9881;</button></div>
-      <div id="streakBody"></div>
-    </div>
-    <div class="rbPanel" id="deadlinePanel">
-      <div class="rbHd"><button class="rbAdd" id="dlAdd" title="Add deadline">+</button></div>
-      <div id="deadlineBody"></div>
+    <div id="rbGrip" title="Drag to change the side-bar width"></div>
+    <div id="rbInner">
+      <button class="rbCollapse" id="rbCollapse" title="Hide side bar">&raquo;</button>
+      <div class="rbPanel" id="notePanel">
+        <div id="noteDock"></div>
+      </div>
+      <div class="rbPanel" id="streakPanel">
+        <div class="rbHd"><button class="rbAdd" id="streakCfg" title="Manage habits &amp; history">&#9881;</button></div>
+        <div id="streakBody"></div>
+      </div>
+      <div class="rbPanel" id="deadlinePanel">
+        <div class="rbHd"><button class="rbAdd" id="dlAdd" title="Add deadline">+</button></div>
+        <div id="deadlineBody"></div>
+      </div>
     </div>
   </aside>
   <button class="rbReopen" id="rbReopen" title="Show side bar">&laquo;</button>
@@ -615,7 +621,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v88 */
+/* build v89 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2299,7 +2305,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v88"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v88"; } catch (e) {}
+  try { document.title = "Plapp v89"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v89"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -2452,22 +2458,22 @@ if (IS_BROWSER) (function () {
     const rb = $("rightBar"), ro = $("rbReopen"); if (!rb) return;
     const closed = !!ui.rightBarClosed;
     rb.classList.toggle("closed", closed);
-    rb.style.width = closed ? "" : (ui.noteW ? (ui.noteW + 20) + "px" : "");
-    if (ro) ro.style.display = closed ? "" : "none";
+    if (!closed && ui.rightBarW) rb.style.width = ui.rightBarW + "px";
+    if (ro) ro.style.display = closed ? "block" : "none";
   }
   function setupNoteResize() {
-    const body = $("noteBody"), bar = $("rightBar"); if (!body || !bar) return;
-    if (ui.noteW) body.style.width = ui.noteW + "px";
-    if (ui.noteH) body.style.height = ui.noteH + "px";
-    if (window.ResizeObserver) {
-      let t = null;
-      new ResizeObserver(() => {
-        const w = body.offsetWidth, h = body.offsetHeight; if (!w) return;
-        ui.noteW = w; ui.noteH = h;
-        if (!ui.rightBarClosed) bar.style.width = (w + 20) + "px";
-        if (t) clearTimeout(t); t = setTimeout(saveUI, 400);
-      }).observe(body);
+    const body = $("noteBody");
+    if (body) {
+      if (ui.noteH) body.style.height = ui.noteH + "px";
+      if (window.ResizeObserver) { let t = null; new ResizeObserver(() => { const h = body.offsetHeight; if (!h) return; ui.noteH = h; if (t) clearTimeout(t); t = setTimeout(saveUI, 400); }).observe(body); }
     }
+    const grip = $("rbGrip"), bar = $("rightBar");
+    if (grip && bar) grip.addEventListener("pointerdown", (e) => {
+      e.preventDefault(); try { grip.setPointerCapture(e.pointerId); } catch (er) {}
+      const move = (ev) => { let w = window.innerWidth - ev.clientX; w = Math.max(170, Math.min(720, w)); bar.style.width = w + "px"; ui.rightBarW = w; };
+      const up = () => { grip.removeEventListener("pointermove", move); grip.removeEventListener("pointerup", up); saveUI(); };
+      grip.addEventListener("pointermove", move); grip.addEventListener("pointerup", up);
+    });
   }
   function renderRightBar() { applyRightBar(); renderStreak(); renderDeadlines(); }
   function dockNote() { const dock = $("noteDock"), body = $("noteBody"); if (dock && body && body.parentElement !== dock) dock.appendChild(body); }
