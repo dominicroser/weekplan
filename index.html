@@ -215,9 +215,10 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .budTable td.mpCur { background: #fdf3b8; }
 .budWrap { max-height: 62vh; overflow: auto; }
 .budGap { height: 22px; }
-.budTable td.cmtCol, .budTable th.cmtCol { width: 26px; min-width: 26px; padding: 2px; }
-.bcmt { background: transparent; border: none; cursor: pointer; font-size: 14px; line-height: 1; opacity: .3; padding: 0; }
-.bcmt.has { opacity: 1; }
+.inactiveHd { margin: 34px 0 8px; font-weight: 800; font-size: 14px; color: var(--ink); }
+.budTable td.cmtCol, .budTable th.cmtCol, .budTable td.lnkCol, .budTable th.lnkCol { width: 26px; min-width: 26px; padding: 2px; }
+.bcmt, .blnk { background: transparent; border: none; cursor: pointer; font-size: 14px; line-height: 1; opacity: .3; padding: 0; text-decoration: none; }
+.bcmt.has, .blnk.has { opacity: 1; }
 #commentDialog { max-width: 480px; }
 #commentText { width: 100%; box-sizing: border-box; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; resize: vertical; }
 .budTable { border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; }
@@ -660,7 +661,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v95 */
+/* build v96 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2261,6 +2262,7 @@ if (IS_BROWSER) (function () {
       let r = '<tr data-id="' + c.id + '">';
       r += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" placeholder="name…" value="' + (c.name || "").replace(/"/g, "&quot;") + '"></td>';
       r += '<td class="cmtCol"><button class="bcmt' + (c.comment ? " has" : "") + '" title="' + (c.comment ? c.comment.replace(/"/g, "&quot;").slice(0, 400) : "Add a comment") + '">🗒</button></td>';
+      r += '<td class="lnkCol">' + (c.link ? '<a class="blnk has" href="' + c.link.replace(/"/g, "&quot;") + '" target="_blank" rel="noopener" title="Open link (right-click to edit)">🔗</a>' : '<button class="blnk" title="Add a link">🔗</button>') + "</td>";
       r += '<td><select class="bgroup">' + (unassigned ? '<option value="" selected>—</option>' : "") + GROUP_ORDER.map((g) => '<option value="' + g + '"' + (c.group === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
       r += '<td><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
       r += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
@@ -2273,12 +2275,12 @@ if (IS_BROWSER) (function () {
       r += '<td><button class="budDel" title="Delete task">&times;</button></td></tr>';
       return r;
     };
-    const headRow = '<tr><th class="name" data-sort="name">Task' + arrow("name") + '</th><th class="cmtCol" title="Comment">🗒</th><th data-sort="group">Group' + arrow("group") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th title="Done for now — may return">Later</th><th title="Finished for good">Done</th><th title="Nice to have — no time now">NTH</th><th>Lock</th><th>Parent</th><th></th></tr>';
+    const headRow = '<tr><th class="name" data-sort="name">Task' + arrow("name") + '</th><th class="cmtCol" title="Comment">🗒</th><th class="lnkCol" title="Link">🔗</th><th data-sort="group">Group' + arrow("group") + '</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th title="Done for now — may return">Later</th><th title="Finished for good">Done</th><th title="Nice to have — no time now">NTH</th><th>Lock</th><th>Parent</th><th></th></tr>';
     const activeList = list.filter((c) => !c.archived);
     const kindRank = (c) => { const k = kindOf(c); return k === "later" ? 0 : k === "nth" ? 1 : 2; };   // second table order: Later → NTH → Done
     const inactiveList = state.categories.filter((c) => c.archived).sort((a, b) => (kindRank(a) - kindRank(b)) || (a.name || "").localeCompare(b.name || ""));
     let fh = '<div class="budWrap"><table class="budTable"><thead>' + headRow + '</thead><tbody>' + activeList.map(taskRow).join("") + '</tbody></table></div>';
-    if (inactiveList.length) fh += '<div class="budGap"></div><div class="budWrap"><table class="budTable"><thead>' + headRow + '</thead><tbody>' + inactiveList.map(taskRow).join("") + '</tbody></table></div>';
+    if (inactiveList.length) fh += '<div class="inactiveHd">Inactive tasks</div><div class="budWrap"><table class="budTable"><thead>' + headRow + '</thead><tbody>' + inactiveList.map(taskRow).join("") + '</tbody></table></div>';
 
     // ---- Masterplan table (weekly hours for the selected masterplan) ----
     const mp = activeMasterplan();
@@ -2328,6 +2330,7 @@ if (IS_BROWSER) (function () {
       tr.querySelector(".bsplit").addEventListener("change", (e) => { snap(); const v = e.target.value.trim(); if (v === "") delete cat.splitPct; else cat.splitPct = Math.max(0, Math.min(100, +v || 0)); commit(); renderBudgets(); });
       tr.querySelector(".btrack").addEventListener("change", (e) => { snap(); cat.noTrack = !e.target.checked; if (cat.noTrack && state.timer && state.timer.catId === cat.id) stopTimer(); commit(); renderBudgets(); });
       { const bc = tr.querySelector(".bcmt"); if (bc) bc.addEventListener("click", () => openComment(id)); }
+      { const bl = tr.querySelector(".blnk"); if (bl) { if (bl.tagName === "A") bl.addEventListener("contextmenu", (e) => { e.preventDefault(); editLink(id); }); else bl.addEventListener("click", () => editLink(id)); } }
       const setInactive = (kind, checked) => { snap(); if (checked) { cat.archived = true; cat.inactiveKind = kind; if (state.timer && state.timer.catId === id) stopTimer(); } else { cat.archived = false; delete cat.inactiveKind; } commit(); renderBudgets(); };
       { const bl = tr.querySelector(".blater"); if (bl) bl.addEventListener("change", (e) => setInactive("later", e.target.checked)); }
       { const bd = tr.querySelector(".bdone"); if (bd) bd.addEventListener("change", (e) => setInactive("done", e.target.checked)); }
@@ -2383,6 +2386,7 @@ if (IS_BROWSER) (function () {
   function openComment(id) { const c = state.categories.find((x) => x.id === id); if (!c) return; commentEditId = id; const ta = $("commentText"); if (ta) ta.value = c.comment || ""; $("commentDialog").showModal(); if (ta) ta.focus(); }
   $("commentSave").addEventListener("click", () => { const c = state.categories.find((x) => x.id === commentEditId); if (c) { snap(); const v = $("commentText").value; if (v.trim()) c.comment = v; else delete c.comment; commit(); renderBudgets(); } $("commentDialog").close(); });
   $("commentCancel").addEventListener("click", () => $("commentDialog").close());
+  function editLink(id) { const c = state.categories.find((x) => x.id === id); if (!c) return; const v = prompt("Link for this task (leave blank to remove):", c.link || ""); if (v === null) return; const t = v.trim(); snap(); if (!t) delete c.link; else c.link = /^https?:\/\//i.test(t) ? t : ("https://" + t); commit(); renderBudgets(); }
   $("sheetImport").addEventListener("click", () => { sheetUrl = $("sheetUrl").value.trim(); saveCfg(); doSheetImport(); });
   $("sbSave").addEventListener("click", async () => {
     cfg = { url: $("sbUrl").value.trim(), key: $("sbKey").value.trim(), pid: $("sbPid").value.trim(), sheet: sheetUrl };
@@ -2428,7 +2432,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v95"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v95"; } catch (e) {}
+  try { document.title = "Plapp v96"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v96"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
