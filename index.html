@@ -510,7 +510,6 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   <div id="histWrap"></div>
   <h3 style="margin-top:18px;">Change log</h3>
   <div id="changelogWrap"></div>
-  <div class="btnRow" style="margin-top:14px;"><button class="btn" id="hbClose">Done</button></div>
 </dialog>
 
 <dialog id="bulkDialog">
@@ -621,9 +620,6 @@ create policy "planner anon access" on plans
     <button class="btnGhost" id="budRecolour">Recolour all by group</button>
   </div>
   <div id="masterplanTableWrap"></div>
-  <div class="btnRow" style="margin-top:12px;">
-    <button class="btn" id="mpClose">Done</button>
-  </div>
 </dialog>
 
 <dialog id="editDialog">
@@ -650,14 +646,11 @@ create policy "planner anon access" on plans
   <h3 style="margin-top:20px;">Activity</h3>
   <p class="muted">Your tracked sessions, day by day (newest first).</p>
   <div id="logBody"></div>
-  <div class="btnRow" style="margin-top:14px;">
-    <button class="btn" id="reportsClose">Done</button>
-  </div>
 </dialog>
 
 <script>
 "use strict";
-/* build v106 */
+/* build v107 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2039,7 +2032,6 @@ if (IS_BROWSER) (function () {
     renderLog();   // Activity now lives at the bottom of the Reports modal
   }
   $("reportsBtn").addEventListener("click", () => { renderReports(); $("reportsDialog").showModal(); });
-  $("reportsClose").addEventListener("click", () => $("reportsDialog").close());
 
   function renderLog() {
     const catById = {}; for (const c of state.categories) catById[c.id] = c;
@@ -2372,7 +2364,6 @@ if (IS_BROWSER) (function () {
     }
   }
   $("tasksBtn").addEventListener("click", () => { renderBudgets(); mpDlg.showModal(); });
-  $("mpClose").addEventListener("click", () => mpDlg.close());
   $("budAddTask").addEventListener("click", () => {
     snap(); const id = "cat" + Date.now();
     state.categories.unshift({ id: id, name: "", hours: 0, group: "", defaultMin: 60, color: GREY });   // no name, no group → appears at the top until you assign a group
@@ -2446,7 +2437,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v106"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v106"; } catch (e) {}
+  try { document.title = "Plapp v107"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v107"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -2798,7 +2789,6 @@ if (IS_BROWSER) (function () {
     }
     commit(); renderHistory && renderHistory(); bulkDlg.close(); toast("Updated " + n + " cell" + (n === 1 ? "" : "s") + ".");
   });
-  $("hbClose").addEventListener("click", () => habitsDlg.close());
   $("hbAdd").addEventListener("click", () => { if (!Array.isArray(state.habits)) state.habits = []; snap(); state.habits.push({ id: "hb" + Date.now(), name: "New habit", type: "binary", rule: "", desc: "", since: ymd(mondayOf(new Date())), entries: {} }); commitDefs(); renderHabitsTable(); renderHistory(); });
   $("hbCsv").addEventListener("click", exportHabitsCSV);
   $("hbClearWk").addEventListener("click", () => {
