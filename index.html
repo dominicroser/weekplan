@@ -198,30 +198,61 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpBar .mpIPtog { font-size: 12px; color: var(--ink2); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 /* Masterplan table: frozen Total (next to name) + frozen footer + Goal + grey IP columns */
 .mpTable th, .mpTable td { box-sizing: border-box; }
-.mpTable td.dcol, .mpTable th.dcol { position: sticky; left: 0; width: 64px; min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
-.mpTable td.stot, .mpTable th.stot { position: sticky; left: 64px; width: 64px; min-width: 64px; font-variant-numeric: tabular-nums; }
-.mpTable td.gcolF, .mpTable th.gcolF { position: sticky; left: 128px; width: 64px; min-width: 64px; }
-.mpTable td.gcolFip, .mpTable th.gcolFip { position: sticky; left: 192px; width: 52px; min-width: 52px; }
-.mpTable td.name, .mpTable th.name { position: sticky; left: 244px; width: 132px; min-width: 132px; max-width: 132px; text-align: left; overflow: hidden; white-space: nowrap; }
-.mpTable.hideIP td.gcolFip, .mpTable.hideIP th.gcolFip { display: none; }
-.mpTable.hideIP td.name, .mpTable.hideIP th.name { left: 192px; }
+.mpTable td.paceD, .mpTable th.paceD { position: sticky; left: 0; width: 50px; min-width: 50px; }
+.mpTable td.paceT, .mpTable th.paceT { position: sticky; left: 50px; width: 50px; min-width: 50px; }
+.mpTable td.paceG, .mpTable th.paceG { position: sticky; left: 100px; width: 50px; min-width: 50px; }
+.mpTable td.dcol, .mpTable th.dcol { position: sticky; left: 150px; width: 64px; min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
+.mpTable td.stot, .mpTable th.stot { position: sticky; left: 214px; width: 64px; min-width: 64px; font-variant-numeric: tabular-nums; }
+.mpTable td.gcolF, .mpTable th.gcolF { position: sticky; left: 278px; width: 64px; min-width: 64px; }
+.mpTable td.gcolPrio, .mpTable th.gcolPrio { position: sticky; left: 342px; width: 46px; min-width: 46px; }
+.mpTable td.gcolFip, .mpTable th.gcolFip { position: sticky; left: 388px; width: 52px; min-width: 52px; }
+.mpTable td.name, .mpTable th.name { position: sticky; left: 440px; width: 132px; min-width: 132px; max-width: 132px; text-align: left; overflow: hidden; white-space: nowrap; }
+.mpTable .paceD, .mpTable .paceT, .mpTable .paceG { background: #eef0f2; text-align: center; font-variant-numeric: tabular-nums; color: var(--ink2); font-size: 11px; }
+.mpTable th.paceD, .mpTable th.paceT, .mpTable th.paceG { background: #e5e8eb; color: var(--ink3); font-weight: 500; }
+.mpTable.hidePace .paceD, .mpTable.hidePace .paceT, .mpTable.hidePace .paceG { display: none; }
+.mpTable.hidePace td.dcol, .mpTable.hidePace th.dcol { left: 0; }
+.mpTable.hidePace td.stot, .mpTable.hidePace th.stot { left: 64px; }
+.mpTable.hidePace td.gcolF, .mpTable.hidePace th.gcolF { left: 128px; }
+.mpTable.hidePace td.gcolPrio, .mpTable.hidePace th.gcolPrio { left: 192px; }
+.mpTable.hidePace td.gcolFip, .mpTable.hidePace th.gcolFip { left: 238px; }
+.mpTable.hidePace td.name, .mpTable.hidePace th.name { left: 290px; }
+.mpTable.hidePace.hideIP td.name, .mpTable.hidePace.hideIP th.name { left: 192px; }
+.mpTable.hideIP td.gcolFip, .mpTable.hideIP th.gcolFip, .mpTable.hideIP td.gcolPrio, .mpTable.hideIP th.gcolPrio { display: none; }
+.mpTable.hideIP td.name, .mpTable.hideIP th.name { left: 342px; }
 .mpTable td.name input.tname { width: 96px; max-width: 96px; }
 .mpTable input.bgoal, .mpTable input.bgoalip { width: 56px; }
-.mpTable.hideFeat td:nth-child(n+6):nth-child(-n+18), .mpTable.hideFeat th:nth-child(n+6):nth-child(-n+18) { display: none; }
+.mpTable input.bprio { width: 34px; }
+.mpTable .wkHol { cursor: pointer; font-size: 9.5px; color: var(--ink3); margin-left: 3px; padding: 0 1px; border-radius: 3px; }
+.mpTable .wkHol.on { color: #b4690e; font-weight: 700; }
+.mpTable .wkHol:hover { background: rgba(0,0,0,0.08); }
+.mpTable.hideFeat td:nth-child(n+10):nth-child(-n+22), .mpTable.hideFeat th:nth-child(n+10):nth-child(-n+22) { display: none; }
 .fillHandle { position: fixed; width: 11px; height: 11px; background: #1d4ed8; border: 1.5px solid #fff; box-shadow: 0 0 0 1px #1d4ed8; cursor: crosshair; z-index: 10000; display: none; }
 .mpTable .bh.fillHi { outline: 2px solid #1d4ed8; outline-offset: -2px; background: #e8efff; }
-.mpTable td.stot, .mpTable td.gcolF, .mpTable td.name, .mpTable td.dcol { background: var(--bg); z-index: 2; }
-.mpTable th.stot, .mpTable th.gcolF, .mpTable th.name, .mpTable th.dcol { background: var(--panel); top: 0; z-index: 4; }
+.mpTable td.stot, .mpTable td.gcolF, .mpTable td.name, .mpTable td.dcol, .mpTable td.gcolPrio { background: var(--bg); z-index: 2; }
+.mpTable th.stot, .mpTable th.gcolF, .mpTable th.name, .mpTable th.dcol, .mpTable th.gcolPrio { background: var(--panel); top: 0; z-index: 4; }
+.mpTable td.paceD, .mpTable td.paceT, .mpTable td.paceG { z-index: 2; }
+.mpTable th.paceD, .mpTable th.paceT, .mpTable th.paceG { top: 0; z-index: 4; }
+.mpTable tr.budFoot td.paceD, .mpTable tr.budFoot td.paceT, .mpTable tr.budFoot td.paceG { z-index: 5; }
+.mpTable .gcolPrio { text-align: center; }
+.mpTable td.gcolPrio input { text-align: center; }
 .mpTable td.gcolFip { background: #f4f4f5; z-index: 2; color: var(--ink3); }
 .mpTable th.gcolFip { background: #ececee; top: 0; z-index: 4; color: var(--ink3); font-weight: 500; }
 .mpTable td.gcolFip input { color: var(--ink3); }
 .mpTable tr.budFoot td { position: sticky; bottom: 0; z-index: 1; }
-.mpTable tr.budFoot td.stot, .mpTable tr.budFoot td.gcolF, .mpTable tr.budFoot td.name, .mpTable tr.budFoot td.dcol { z-index: 5; }
+.mpTable tr.budFoot td.stot, .mpTable tr.budFoot td.gcolF, .mpTable tr.budFoot td.name, .mpTable tr.budFoot td.dcol, .mpTable tr.budFoot td.gcolPrio { z-index: 5; }
 .mpTable tr.budFoot td.gcolFip { z-index: 5; background: #f4f4f5; }
+.mpTable tr.budGrp td { color: var(--ink2); font-weight: 500; background: var(--panel); }
+.mpTable tr.budGrp td.gcolFip { background: #eef0f1; }
+.mpTable tr.budGrp td.name { font-weight: 600; }
 .mpTable td.stot.over { color: #d64545; }
 .mpTable td.dcol.dfNeg { color: #e2725b; font-weight: 600; }
 .mpTable td.dcol.dfPos { color: #2563eb; font-weight: 600; }
 .mpTable td.dcol.dfZero { color: #16a34a; font-weight: 600; }
+.mpTable td.paceD.dfNeg { color: #e2725b; }
+.mpTable td.paceD.dfPos { color: #2563eb; }
+.mpTable td.paceD.dfZero { color: #16a34a; }
+.mpTable input.bhPast { color: var(--ink3); }
+.mpTable td.pastCol { background: #f7f7f8; }
 .mpTable .gcol { min-width: 46px; }
 .mpTable .ipCol { background: #f4f4f5; }
 .mpTable th.ipCol { color: var(--ink3); font-weight: 500; }
@@ -243,7 +274,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .budTable td.adCol, .budTable th.adCol { width: 26px; min-width: 26px; padding: 2px; }
 .budTable tr.adRow td.name, .budTable tr.adRow .tname { color: #1d4ed8; }
 #commentDialog { max-width: 480px; }
-#commentText { width: 100%; box-sizing: border-box; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; resize: vertical; }
+#mpNoteDialog { max-width: 540px; }
+#commentText, #mpNoteText { width: 100%; box-sizing: border-box; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; resize: vertical; }
 .budTable { border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; }
 .budTable th, .budTable td { border: 1px solid var(--line); padding: 3px 5px; text-align: center; }
 .budTable th { background: var(--panel); font-weight: 600; color: var(--ink2); position: sticky; top: 0; z-index: 1; }
@@ -629,15 +661,23 @@ create policy "planner anon access" on plans
   <div class="btnRow" style="margin-top:12px;"><button class="btn" id="commentSave">Save</button><button class="btnGhost" id="commentCancel">Cancel</button></div>
 </dialog>
 
+<dialog id="mpNoteDialog">
+  <h2>Masterplan notes</h2>
+  <textarea id="mpNoteText" rows="10" placeholder="Thoughts on this masterplan…"></textarea>
+  <div class="btnRow" style="margin-top:12px;"><button class="btn" id="mpNoteSave">Save</button><button class="btnGhost" id="mpNoteCancel">Cancel</button></div>
+</dialog>
+
 <dialog id="masterplanDialog">
   <h2>Masterplan</h2>
   <div class="mpBar">
     <select id="mpSelect" title="Which masterplan to view/edit"></select>
     <button class="btnGhost" id="mpNew">+ New</button>
     <button class="btnGhost" id="mpEditRange">Edit range</button>
+    <button class="btnGhost" id="mpNotes" title="Notes for this masterplan">📝 Notes</button>
     <button class="btnGhost" id="mpDel">Delete</button>
     <label class="mpIPtog"><input type="checkbox" id="mpFeat"> Features</label>
     <label class="mpIPtog"><input type="checkbox" id="mpHideIP"> IP</label>
+    <label class="mpIPtog" title="Show the three grey per-remaining-week pacing columns"><input type="checkbox" id="mpPace"> Pace</label>
   </div>
   <div class="btnRow" style="margin-bottom:10px;">
     <button class="btnGhost" id="budAddTask">+ Add task</button>
@@ -675,7 +715,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v116 */
+/* build v119 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -988,6 +1028,12 @@ function parseCommand(text, categories) {
       if (m) { prefixCat = m; src = text.slice(ci + 1); }
     }
   }
+  // week scope: "whole masterplan"/"all weeks" → every week of the active masterplan; default = current week only
+  let scope = "week";
+  const mpRe = /\b(whole masterplan|entire masterplan|all weeks|every week|across the masterplan|for the masterplan|the masterplan|masterplan)\b/i;
+  const twRe = /\b(this week|current week)\b/i;
+  if (mpRe.test(src)) { scope = "all"; src = src.replace(mpRe, " "); }
+  else if (twRe.test(src)) { scope = "week"; src = src.replace(twRe, " "); }
   const tr = parseTimeRange(src);
   if (!tr) return { error: "No time range found. Try e.g. “Growth mon-sat 5–5:30am”." };
   if (tr.error) return { error: "That time range looks off (end must be after start)." };
@@ -995,13 +1041,13 @@ function parseCommand(text, categories) {
   if (!pd.days.length) return { error: "Which days? Try “every day”, “mon–fri”, or “tue and thu” (Mon–Sat only)." };
   let rest = src.replace(tr.raw, " ");
   for (const s of pd.matches) rest = rest.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), " ");
-  rest = rest.replace(/\b(assign|add|plan|put|schedule|block|task|meeting|meet w|every|each|from|at|on|and|the)\b/gi, " ")
+  rest = rest.replace(/\b(assign|add|plan|put|schedule|block|task|meeting|meet w|every|each|from|at|on|and|the|for|whole|masterplan|weeks?)\b/gi, " ")
     .replace(/[,.;:!]+/g, " ").replace(/\s+/g, " ").trim();
   const startSlot = Math.round(tr.startMin / SLOT_MIN);
   const endSlotRaw = Math.round(tr.endMin / SLOT_MIN);
   const lenSlots = Math.max(1, Math.min(TOTAL_SLOTS, endSlotRaw) - startSlot);
   const nextLen = Math.max(0, endSlotRaw - TOTAL_SLOTS); // slots spilling past midnight → placed on the next day
-  if (prefixCat) return { kind: "meeting", cat: prefixCat, name: rest || prefixCat.name, days: pd.days, startSlot, lenSlots, nextLen };
+  if (prefixCat) return { kind: "meeting", cat: prefixCat, name: rest || prefixCat.name, days: pd.days, startSlot, lenSlots, nextLen, scope };
   if (!rest) return { error: "Which task or meeting? Include a name in the command." };
   const q = rest.toLowerCase();
   const cat =
@@ -1009,8 +1055,8 @@ function parseCommand(text, categories) {
     categories.find((c) => c.name.toLowerCase().startsWith(q)) ||
     categories.find((c) => c.name.toLowerCase().includes(q)) ||
     categories.find((c) => q.includes(c.name.toLowerCase())) || null;
-  if (cat) return { kind: "task", cat, name: rest, days: pd.days, startSlot, lenSlots, nextLen };
-  return { kind: "event", name: rest, days: pd.days, startSlot, lenSlots, nextLen };
+  if (cat) return { kind: "task", cat, name: rest, days: pd.days, startSlot, lenSlots, nextLen, scope };
+  return { kind: "event", name: rest, days: pd.days, startSlot, lenSlots, nextLen, scope };
 }
 
 /* ── CSV ── */
@@ -2124,25 +2170,38 @@ if (IS_BROWSER) (function () {
     if (r.error) { toast(r.error); return; }
     snap();
     const spill = r.nextLen > 0;   // block runs past midnight → also drop the remainder on the next day
-    if (r.kind === "task") {
-      for (const di of r.days) {
-        curBlocks().push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
-        if (spill && di + 1 < ND) curBlocks().push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
+    const activeMP = activeMasterplan();
+    if (r.scope === "all" && activeMP) ensureWeeksForMP(activeMP);
+    const targetWeeks = (r.scope === "all" && activeMP) ? mpWeekIndices(activeMP) : [state.currentWeek];
+    const addSw = (wi, dayLabel, startSlot) => {
+      if (startSlot <= 0) return;
+      let sw = state.categories.find((c) => c.name.trim().toLowerCase() === "switch");
+      if (!sw) { sw = { id: "cat" + Date.now() + "s", name: "Switch", hours: 0, group: "work", defaultMin: 15, noTrack: true, color: groupColorFor("work", state.categories, null) }; state.categories.push(sw); }
+      state.weeks[wi].blocks.push({ id: state.nextId++, catId: sw.id, day: dayLabel, startSlot: startSlot - 1, lenSlots: 1, kind: "plan" });
+    };
+    for (const wi of targetWeeks) {
+      const B = state.weeks[wi].blocks;
+      if (r.kind === "task") {
+        for (const di of r.days) {
+          B.push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
+          if (spill && di + 1 < ND) B.push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
+        }
+      } else if (r.kind === "meeting") {
+        for (const di of r.days) {
+          addSw(wi, DAYS[di], r.startSlot); B.push({ id: state.nextId++, catId: r.cat.id, meeting: true, name: r.name, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
+          if (spill && di + 1 < ND) B.push({ id: state.nextId++, catId: r.cat.id, meeting: true, name: r.name, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
+        }
+      } else {
+        for (const di of r.days) {
+          addSw(wi, DAYS[di], r.startSlot); B.push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
+          if (spill && di + 1 < ND) B.push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
+        }
       }
-      toast("Placed " + r.days.length + " × " + fmtH((r.lenSlots + r.nextLen) / SPH) + "h of “" + r.cat.name + "”" + (spill ? " (over midnight)" : ""));
-    } else if (r.kind === "meeting") {
-      for (const di of r.days) {
-        addSwitchBefore(DAYS[di], r.startSlot); curBlocks().push({ id: state.nextId++, catId: r.cat.id, meeting: true, name: r.name, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
-        if (spill && di + 1 < ND) curBlocks().push({ id: state.nextId++, catId: r.cat.id, meeting: true, name: r.name, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
-      }
-      toast("Meeting “" + r.name + "” → " + r.cat.name + " (+ switch)");
-    } else {
-      for (const di of r.days) {
-        addSwitchBefore(DAYS[di], r.startSlot); curBlocks().push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
-        if (spill && di + 1 < ND) curBlocks().push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
-      }
-      toast("Added meeting “" + r.name + "” (+ switch)");
     }
+    const nW = targetWeeks.length, scopeTxt = (r.scope === "all" && nW > 1) ? " across " + nW + " weeks" : "";
+    if (r.kind === "task") toast("Placed " + (r.days.length * nW) + " × " + fmtH((r.lenSlots + r.nextLen) / SPH) + "h of “" + r.cat.name + "”" + scopeTxt + (spill ? " (over midnight)" : ""));
+    else if (r.kind === "meeting") toast("Meeting “" + r.name + "” → " + r.cat.name + scopeTxt + " (+ switch)");
+    else toast("Added meeting “" + r.name + "”" + scopeTxt + " (+ switch)");
     $("cmdInput").value = ""; $("cmdInput").blur(); commit();
   });
 
@@ -2284,7 +2343,7 @@ if (IS_BROWSER) (function () {
   function ensureWeeksForMP(mp) { const idx = mpWeekIndices(mp); if (!idx.length) return; const hi = idx[idx.length - 1]; while (state.weeks.length <= hi) state.weeks.push({ id: "w" + Date.now() + "_" + state.weeks.length, blocks: [], budgets: {} }); }
   function activeMasterplan() { const mps = state.masterplans || []; if (!mps.length) return null; let mp = mps.find((m) => m.id === state.currentMasterplan); if (!mp) { const tm = ymd(mondayOf(new Date())); mp = mps.find((m) => m.from <= tm && tm <= m.to) || mps[0]; state.currentMasterplan = mp.id; } return mp; }
   function mpRangeLabel(m) { const ya = parseYMD(m.from).getFullYear(), yb = parseYMD(m.to).getFullYear(), wa = isoWeek(parseYMD(m.from)), wb = isoWeek(parseYMD(m.to)); return ya === yb ? (ya + " · W" + wa + "–W" + wb) : ("W" + wa + "/" + ya + " – W" + wb + "/" + yb); }
-  function renderMPBar() { const cb = $("mpHideIP"); if (cb) cb.checked = !ui.mpHideIP; const fb = $("mpFeat"); if (fb) fb.checked = !ui.mpHideFeat; const sel = $("mpSelect"); if (!sel) return; const mp = activeMasterplan(); sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
+  function renderMPBar() { const cb = $("mpHideIP"); if (cb) cb.checked = !ui.mpHideIP; const fb = $("mpFeat"); if (fb) fb.checked = !ui.mpHideFeat; const pb = $("mpPace"); if (pb) pb.checked = !ui.mpHidePace; const mp0 = activeMasterplan(); const nb = $("mpNotes"); if (nb) nb.textContent = (mp0 && mp0.note && mp0.note.trim()) ? "📝 Notes •" : "📝 Notes"; const sel = $("mpSelect"); if (!sel) return; const mp = mp0; sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
   function promptRange(mp) {
     const fy = mp ? parseYMD(mp.from).getFullYear() : new Date().getFullYear(), fw = mp ? isoWeek(parseYMD(mp.from)) : isoWeek(new Date());
     const ty = mp ? parseYMD(mp.to).getFullYear() : new Date().getFullYear(), tw = mp ? isoWeek(parseYMD(mp.to)) : isoWeek(new Date());
@@ -2301,10 +2360,10 @@ if (IS_BROWSER) (function () {
     if (!handle) { handle = document.createElement("div"); handle.id = "fillHandle"; handle.className = "fillHandle"; $("masterplanDialog").appendChild(handle); }
     let fillSource = null, fillDrag = null;
     const clearHi = () => wrap.querySelectorAll(".bh.fillHi").forEach((c) => c.classList.remove("fillHi"));
-    wrap.addEventListener("focusin", (e) => { const t = e.target; if (t && t.matches && t.matches("input.bh, input.bhip, input.bgoal, input.bgoalip")) setTimeout(() => { try { t.select(); } catch (_) {} }, 0); if (t && t.classList && t.classList.contains("bh")) { const r = t.getBoundingClientRect(); handle.style.left = (r.right - 5.5) + "px"; handle.style.top = (r.bottom - 5.5) + "px"; handle.style.display = "block"; fillSource = t; } else if (t !== handle) handle.style.display = "none"; });
+    wrap.addEventListener("focusin", (e) => { const t = e.target; if (t && t.matches && t.matches("input.bh, input.bhip, input.bgoal, input.bgoalip, input.bprio")) setTimeout(() => { try { t.select(); } catch (_) {} }, 0); if (t && t.classList && t.classList.contains("bh")) { const r = t.getBoundingClientRect(); handle.style.left = (r.right - 5.5) + "px"; handle.style.top = (r.bottom - 5.5) + "px"; handle.style.display = "block"; fillSource = t; } else if (t !== handle) handle.style.display = "none"; });
     wrap.addEventListener("keydown", (e) => {   // Tab: down the Goal column; across the week columns (skipping IP)
       if (e.key !== "Tab") return; const t = e.target, dir = e.shiftKey ? -1 : 1;
-      if (t.classList && (t.classList.contains("bgoal") || t.classList.contains("bgoalip"))) { const sel = t.classList.contains("bgoalip") ? ".bgoalip" : ".bgoal", rows = Array.from(wrap.querySelectorAll("tr[data-id]")), tr = t.closest("tr"), nx = rows[rows.indexOf(tr) + dir]; if (nx) { const nb = nx.querySelector(sel); if (nb) { e.preventDefault(); nb.focus(); } } }
+      if (t.classList && (t.classList.contains("bgoal") || t.classList.contains("bgoalip") || t.classList.contains("bprio"))) { const sel = t.classList.contains("bgoalip") ? ".bgoalip" : t.classList.contains("bprio") ? ".bprio" : ".bgoal", rows = Array.from(wrap.querySelectorAll("tr[data-id]")), tr = t.closest("tr"), nx = rows[rows.indexOf(tr) + dir]; if (nx) { const nb = nx.querySelector(sel); if (nb) { e.preventDefault(); nb.focus(); } } }
       else if (t.classList && t.classList.contains("bh")) { const tr = t.closest("tr"), cells = Array.from(tr.querySelectorAll(".bh")), nx = cells[cells.indexOf(t) + dir]; if (nx) { e.preventDefault(); nx.focus(); } }
     });
     wrap.addEventListener("scroll", () => { handle.style.display = "none"; }, true);
@@ -2342,6 +2401,27 @@ if (IS_BROWSER) (function () {
     const W = state.weeks.length;
     const gi = (g) => { const i = GROUP_ORDER.indexOf(g || "work"); return i < 0 ? 99 : i; };
     const arrow = (k) => budSort.key === k ? (budSort.dir > 0 ? " ▲" : " ▼") : "";
+    const mp = activeMasterplan();
+    { const before = state.weeks.length; ensureWeeksForMP(mp); if (state.weeks.length !== before) { saveLocal(); schedulePush(); } }
+    if (mp) { mp.goal = mp.goal || {}; mp.goalIP = mp.goalIP || {}; mp.ip = mp.ip || {}; mp.prio = mp.prio || {}; }
+    const mpIdx = mpWeekIndices(mp);
+    const gGet = (o, id) => (mp && mp[o] && mp[o][id] != null) ? mp[o][id] : 0;
+    const ipGet = (id, i) => (mp && mp.ip && mp.ip[id] && mp.ip[id][i] != null) ? mp.ip[id][i] : 0;
+    // Past weeks show timed (tracked) hours; present + future show committed. Total/Δ blend the two.
+    const repB = buildReport(state);
+    const wkDatesOf = (i) => { const a = []; for (let d = 0; d < ND; d++) a.push(ymd(dateOfCell(state.anchorMonday, i, d))); return a; };
+    const mpChildIds = {}; for (const k of state.categories) if (k.parent) (mpChildIds[k.parent] = mpChildIds[k.parent] || []).push(k.id);
+    const trackedById = (id, i) => { let s = 0; for (const ds of wkDatesOf(i)) { const dd = repB.days[ds]; if (dd && dd.byCat[id]) s += dd.byCat[id]; } return s; };
+    const weekTracked = (c, i) => { let s = trackedById(c.id, i); for (const kid of (mpChildIds[c.id] || [])) s += trackedById(kid, i); return s; };   // parent past cell = own + children timed
+    const isPast = (i) => i < state.currentWeek;
+    const weekEffort = (c, i) => isPast(i) ? weekTracked(c, i) : weekBudget(c, i);           // per-row (parent rolls up children for past weeks)
+    const weekEffortAgg = (c, i) => isPast(i) ? trackedById(c.id, i) : weekBudget(c, i);      // footer/group totals: own-only so each block is counted exactly once
+    // Pacing divisor: remaining weeks (current week onward) minus vacation-equivalent within them (6 holiday days = 1 week)
+    const remIdx = mpIdx.filter((i) => i >= state.currentWeek);
+    let vacEq = 0; for (const i of remIdx) { const wk = state.weeks[i]; const hd = wk && wk.holidays ? Math.max(0, Math.min(6, wk.holidays)) : 0; vacEq += hd / 6; }
+    const paceDiv = remIdx.length - vacEq;
+    const pace = (v) => (paceDiv > 0.0001 && Math.abs(v) > 0.0001) ? fmtHM(v / paceDiv) : "";
+    const paceSigned = (v) => { if (paceDiv <= 0.0001 || Math.abs(v) <= 0.0001) return ""; const q = v / paceDiv; return (q < 0 ? "-" : "+") + fmtHM(Math.abs(q)); };
     let list = state.categories.slice();
     if (budSort.key) {
       const d = budSort.dir, nameCmp = (a, b) => (a.name || "").localeCompare(b.name || "");
@@ -2353,8 +2433,12 @@ if (IS_BROWSER) (function () {
         else if (k === "track") p = (a.noTrack ? 1 : 0) - (b.noTrack ? 1 : 0);
         else if (k === "done") p = (a.archived ? 1 : 0) - (b.archived ? 1 : 0);
         else if (k === "auto") p = (a.auto ? 1 : 0) - (b.auto ? 1 : 0);
-        else if (k === "total") { let sa = 0, sb = 0; for (let i = 0; i < W; i++) { sa += weekBudget(a, i); sb += weekBudget(b, i); } p = sa - sb; }
-        else if (k[0] === "w") { const wi = +k.slice(1); p = weekBudget(a, wi) - weekBudget(b, wi); }
+        else if (k === "total") { let sa = 0, sb = 0; for (const i of mpIdx) { sa += weekEffort(a, i); sb += weekEffort(b, i); } p = sa - sb; }
+        else if (k === "goal") p = gGet("goal", a.id) - gGet("goal", b.id);
+        else if (k === "goalip") p = gGet("goalIP", a.id) - gGet("goalIP", b.id);
+        else if (k === "prio") p = (gGet("prio", a.id) || 0) - (gGet("prio", b.id) || 0);
+        else if (k === "diff") { let sa = 0, sb = 0; for (const i of mpIdx) { sa += weekEffort(a, i); sb += weekEffort(b, i); } p = (sa - gGet("goal", a.id)) - (sb - gGet("goal", b.id)); }
+        else if (k[0] === "w") { const wi = +k.slice(1); p = weekEffort(a, wi) - weekEffort(b, wi); }
         return p ? p * d : nameCmp(a, b); // secondary sort: always alphabetical
       });
     } else {
@@ -2364,21 +2448,19 @@ if (IS_BROWSER) (function () {
       const unas = (c) => (!c.group || GROUP_ORDER.indexOf(c.group) < 0) ? 1 : 0;   // new/unassigned tasks stay at the bottom until given a group
       list.sort((a, b) => { const u = unas(b) - unas(a); if (u) return u; const r = rank(a) - rank(b); if (r) return r; if (rank(a) === 0) { const g = grp(a) - grp(b); if (g) return g; } return (a.name || "").localeCompare(b.name || ""); });   // unassigned/new tasks at the top
     }
-    const mp = activeMasterplan();
-    { const before = state.weeks.length; ensureWeeksForMP(mp); if (state.weeks.length !== before) { saveLocal(); schedulePush(); } }
-    if (mp) { mp.goal = mp.goal || {}; mp.goalIP = mp.goalIP || {}; mp.ip = mp.ip || {}; }
-    const mpIdx = mpWeekIndices(mp);
-    const gGet = (o, id) => (mp && mp[o] && mp[o][id] != null) ? mp[o][id] : 0;
-    const ipGet = (id, i) => (mp && mp.ip && mp.ip[id] && mp.ip[id][i] != null) ? mp.ip[id][i] : 0;
     const kindOf = (c) => c.archived ? (c.inactiveKind || "later") : "";
     const taskRow = (c) => {
       const unassigned = !c.group || GROUP_ORDER.indexOf(c.group) < 0, kind = kindOf(c);
-      let tsum = 0; for (const i of mpIdx) tsum += weekBudget(c, i);
-      const goal = gGet("goal", c.id), over = goal > 0.0001 && tsum > goal + 0.0001;
+      let tsum = 0; for (const i of mpIdx) tsum += weekEffort(c, i);
+      const goal = gGet("goal", c.id), over = goal > 0.0001 && tsum > goal + 0.0001, hasGoal = goal > 0.0001, df = tsum - goal, dcls = df < -0.0001 ? "dfNeg" : df > 0.0001 ? "dfPos" : "dfZero";
       let r = '<tr data-id="' + c.id + '"' + (c.ad ? ' class="adRow"' : "") + ">";
-      { let dC = '<td class="dcol"></td>'; if (goal > 0.0001) { const df = tsum - goal, dcls = df < -0.0001 ? "dfNeg" : df > 0.0001 ? "dfPos" : "dfZero", dtxt = df < -0.0001 ? "-" + fmtHM(-df) : df > 0.0001 ? "+" + fmtHM(df) : "0:00"; dC = '<td class="dcol ' + dcls + '">' + dtxt + "</td>"; } r += dC; }
+      r += '<td class="paceD ' + (hasGoal ? dcls : "") + '">' + (hasGoal ? paceSigned(df) : "") + '</td>';
+      r += '<td class="paceT">' + pace(tsum) + '</td>';
+      r += '<td class="paceG">' + (hasGoal ? pace(goal) : "") + '</td>';
+      r += '<td class="dcol' + (hasGoal ? " " + dcls : "") + '">' + (hasGoal ? (df < -0.0001 ? "-" + fmtHM(-df) : df > 0.0001 ? "+" + fmtHM(df) : "0:00") : "") + "</td>";
       r += '<td class="stot btot' + (over ? " over" : "") + '">' + fmtHM(tsum) + "</td>";
       r += '<td class="gcol gcolF"><input class="bgoal" type="text" inputmode="numeric" value="' + (goal ? fmtHM(goal) : "") + '"></td>';
+      r += '<td class="gcol gcolPrio"><input class="bprio" type="number" min="1" max="10" step="1" value="' + (gGet("prio", c.id) ? gGet("prio", c.id) : "") + '"></td>';
       r += '<td class="gcol gcolFip"><input class="bgoalip" type="text" inputmode="numeric" value="' + (gGet("goalIP", c.id) ? fmtHM(gGet("goalIP", c.id)) : "") + '"></td>';
       r += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" placeholder="name…" value="' + (c.name || "").replace(/"/g, "&quot;") + '"></td>';
       r += '<td><select class="bgroup">' + (unassigned ? '<option value="" selected>—</option>' : "") + GROUP_ORDER.map((g) => '<option value="' + g + '"' + (c.group === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
@@ -2394,7 +2476,12 @@ if (IS_BROWSER) (function () {
       r += '<td><input type="checkbox" class="bnth" title="NTH — nice to have, but no time for it now"' + (kind === "nth" ? " checked" : "") + "></td>";
       r += '<td><input type="checkbox" class="bdone" title="Done — finished for good"' + (kind === "done" ? " checked" : "") + "></td>";
       r += '<td><button class="budDel" title="Delete task">&times;</button></td>';
-      for (const i of mpIdx) { r += '<td class="' + (i === state.currentWeek ? "mpCur" : "") + '"><input class="bh" data-w="' + i + '" type="text" inputmode="numeric"' + (c.auto ? " readonly" : "") + ' value="' + fmtHM(weekBudget(c, i)) + '"></td><td class="ipCol"><input class="bhip" data-w="' + i + '" type="text" inputmode="numeric" value="' + (ipGet(c.id, i) ? fmtHM(ipGet(c.id, i)) : "") + '"></td>'; }
+      for (const i of mpIdx) {
+        const past = isPast(i), cellVal = past ? weekTracked(c, i) : weekBudget(c, i), ro = (past || c.auto) ? " readonly" : "";
+        const tdCls = (i === state.currentWeek ? "mpCur" : "") + (past ? " pastCol" : "");
+        const val = past ? (cellVal > 0.0001 ? fmtHM(cellVal) : "") : fmtHM(cellVal);
+        r += '<td class="' + tdCls + '"><input class="bh' + (past ? " bhPast" : "") + '" data-w="' + i + '" type="text" inputmode="numeric"' + ro + (past ? ' title="timed hours (past week)"' : "") + ' value="' + val + '"></td><td class="ipCol"><input class="bhip" data-w="' + i + '" type="text" inputmode="numeric" value="' + (ipGet(c.id, i) ? fmtHM(ipGet(c.id, i)) : "") + '"></td>';
+      }
       r += "</tr>";
       return r;
     };
@@ -2402,18 +2489,30 @@ if (IS_BROWSER) (function () {
     const activeList = list.filter((c) => !c.archived);
     const kindRank = (c) => { const k = kindOf(c); return k === "later" ? 0 : k === "nth" ? 1 : 2; };   // second table order: Later → NTH → Done
     const inactiveList = state.categories.filter((c) => c.archived).sort((a, b) => (kindRank(a) - kindRank(b)) || (a.name || "").localeCompare(b.name || ""));
-    const mHead = '<tr><th class="dcol" title="Goal vs Total — coral = under goal, blue = over, green = on target">&Delta;</th><th class="stot" data-sort="total">Total' + arrow("total") + '</th><th class="gcol gcolF">Goal</th><th class="gcol gcolFip" title="If-possible goal — overall stretch target">IP</th><th class="name" data-sort="name">Task' + arrow("name") + '</th><th data-sort="group">Group' + arrow("group") + '</th><th class="cmtCol" title="Comment">🗒</th><th class="lnkCol" title="Link">🔗</th><th class="adCol" title="Amnesty deal">AD</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th>Lock</th><th>Parent</th><th title="Done for now">Later</th><th title="Nice to have">NTH</th><th title="Finished for good">Done</th><th></th>' + mpIdx.map((i) => '<th class="' + (i === state.currentWeek ? "mpCur" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '</th><th class="ipCol">IP</th>').join("") + "</tr>";
+    const mHead = '<tr><th class="paceD" title="Δ ÷ remaining effective weeks (weeks left − vacation)">Δ/w</th><th class="paceT" title="Total ÷ remaining effective weeks">T/w</th><th class="paceG" title="Goal ÷ remaining effective weeks">G/w</th><th class="dcol" data-sort="diff" title="Goal vs Total — coral = under goal, blue = over, green = on target">&Delta;' + arrow("diff") + '</th><th class="stot" data-sort="total">Total' + arrow("total") + '</th><th class="gcol gcolF" data-sort="goal" title="Goal">Goal' + arrow("goal") + '</th><th class="gcol gcolPrio" data-sort="prio" title="Prio — priority to do more on this task if time opens up (1–10)">Prio' + arrow("prio") + '</th><th class="gcol gcolFip" data-sort="goalip" title="If-possible goal — overall stretch target">IP' + arrow("goalip") + '</th><th class="name" data-sort="name">Task' + arrow("name") + '</th><th data-sort="group">Group' + arrow("group") + '</th><th class="cmtCol" title="Comment">🗒</th><th class="lnkCol" title="Link">🔗</th><th class="adCol" title="Amnesty deal">AD</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th>Lock</th><th>Parent</th><th title="Done for now">Later</th><th title="Nice to have">NTH</th><th title="Finished for good">Done</th><th></th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0; return '<th class="' + (i === state.currentWeek ? "mpCur" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="ipCol">IP</th>'; }).join("") + "</tr>";
     const mFoot = (function () {
+      const grpW = (c, g) => groupContribs(state, c.id)[g] || 0;
       let gt = 0, gIP = 0, goalSum = 0, cells = "";
-      for (const i of mpIdx) { let s = 0, sip = 0; for (const c of activeList) { s += weekBudget(c, i); sip += ipGet(c.id, i); } gt += s; cells += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + '">' + fmtHM(s) + '</td><td class="btot ipCol">' + (sip ? fmtHM(sip) : "") + "</td>"; }
+      for (const i of mpIdx) { let s = 0, sip = 0; for (const c of activeList) { s += weekEffortAgg(c, i); sip += ipGet(c.id, i); } gt += s; cells += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + fmtHM(s) + '</td><td class="btot ipCol">' + (sip ? fmtHM(sip) : "") + "</td>"; }
       for (const c of activeList) { gIP += gGet("goalIP", c.id); goalSum += gGet("goal", c.id); }
       const gover = goalSum > 0.0001 && gt > goalSum + 0.0001;
       const gdf = gt - goalSum, gCls = goalSum <= 0.0001 ? "" : (gdf < -0.0001 ? "dfNeg" : gdf > 0.0001 ? "dfPos" : "dfZero"), gTxt = goalSum <= 0.0001 ? "" : (gdf < -0.0001 ? "-" + fmtHM(-gdf) : gdf > 0.0001 ? "+" + fmtHM(gdf) : "0:00");
-      let f = '<tr class="budFoot"><td class="dcol btot ' + gCls + '">' + gTxt + '</td><td class="stot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="gcol gcolF btot">' + (goalSum > 0.0001 ? fmtHM(goalSum) : "") + '</td><td class="gcol gcolFip btot">' + (gIP ? fmtHM(gIP) : "") + '</td><td class="name">Total</td>';
+      let f = '<tr class="budFoot"><td class="paceD btot ' + gCls + '">' + (goalSum > 0.0001 ? paceSigned(gdf) : "") + '</td><td class="paceT btot">' + pace(gt) + '</td><td class="paceG btot">' + (goalSum > 0.0001 ? pace(goalSum) : "") + '</td><td class="dcol btot ' + gCls + '">' + gTxt + '</td><td class="stot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="gcol gcolF btot">' + (goalSum > 0.0001 ? fmtHM(goalSum) : "") + '</td><td class="gcol gcolPrio btot"></td><td class="gcol gcolFip btot">' + (gIP ? fmtHM(gIP) : "") + '</td><td class="name">Total</td>';
       for (let k = 0; k < 13; k++) f += "<td></td>";
-      return f + cells + "</tr>";
+      f += cells + "</tr>";
+      // Work / Fruit / Home totals — a parent's time fans out to its children's groups
+      const groupRow = (g, label) => {
+        let tot = 0, goalS = 0, ipS = 0, cc = "";
+        for (const i of mpIdx) { let s = 0, sip = 0; for (const c of activeList) { const w = grpW(c, g); s += weekEffortAgg(c, i) * w; sip += ipGet(c.id, i) * w; } tot += s; cc += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + (s > 0.0001 ? fmtHM(s) : "") + '</td><td class="btot ipCol">' + (sip > 0.0001 ? fmtHM(sip) : "") + "</td>"; }
+        for (const c of activeList) { const w = grpW(c, g); goalS += gGet("goal", c.id) * w; ipS += gGet("goalIP", c.id) * w; }
+        const df = tot - goalS, cls = goalS <= 0.0001 ? "" : (df < -0.0001 ? "dfNeg" : df > 0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (df < -0.0001 ? "-" + fmtHM(-df) : df > 0.0001 ? "+" + fmtHM(df) : "0:00");
+        let g2 = '<tr class="budFoot budGrp"><td class="paceD btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(df) : "") + '</td><td class="paceT btot">' + pace(tot) + '</td><td class="paceG btot">' + (goalS > 0.0001 ? pace(goalS) : "") + '</td><td class="dcol btot ' + cls + '">' + dtxt + '</td><td class="stot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="gcol gcolF btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td><td class="gcol gcolPrio btot"></td><td class="gcol gcolFip btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td><td class="name">' + label + '</td>';
+        for (let k = 0; k < 13; k++) g2 += "<td></td>";
+        return g2 + cc + "</tr>";
+      };
+      return f + groupRow("work", "Work") + groupRow("fruit", "Fruit") + groupRow("home", "Home");
     })();
-    const mCls = "budTable mpTable" + (ui.mpHideIP ? " hideIP" : "") + (ui.mpHideFeat ? " hideFeat" : "");
+    const mCls = "budTable mpTable" + (ui.mpHideIP ? " hideIP" : "") + (ui.mpHideFeat ? " hideFeat" : "") + (ui.mpHidePace ? " hidePace" : "");
     let fh = '<div class="budWrap"><table class="' + mCls + '"><thead>' + mHead + '</thead><tbody>' + activeList.map(taskRow).join("") + mFoot + "</tbody></table></div>";
     if (inactiveList.length) fh += '<div class="inactiveHd">Inactive tasks</div><div class="budWrap"><table class="' + mCls + '"><thead>' + mHead + '</thead><tbody>' + inactiveList.map(taskRow).join("") + "</tbody></table></div>";
 
@@ -2451,12 +2550,30 @@ if (IS_BROWSER) (function () {
         tr.querySelectorAll(".bhip").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w, m = activeMasterplan(); if (!m) return; snap(); m.ip = m.ip || {}; m.ip[id] = m.ip[id] || {}; const v = parseHM(inp.value); if (v > 0) m.ip[id][w] = v; else delete m.ip[id][w]; commit(); renderBudgets(); }); });
         { const bg = tr.querySelector(".bgoal"); if (bg) bg.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.goal = m.goal || {}; const v = parseHM(bg.value); if (v > 0) m.goal[id] = v; else delete m.goal[id]; commit(); renderBudgets(); }); }
         { const bgi = tr.querySelector(".bgoalip"); if (bgi) bgi.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.goalIP = m.goalIP || {}; const v = parseHM(bgi.value); if (v > 0) m.goalIP[id] = v; else delete m.goalIP[id]; commit(); renderBudgets(); }); }
+        { const bp = tr.querySelector(".bprio"); if (bp) bp.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.prio = m.prio || {}; const v = Math.round(+bp.value); if (v >= 1 && v <= 10) m.prio[id] = v; else delete m.prio[id]; commit(); renderBudgets(); }); }
       });
+      // Stack the sticky footer rows (Total + Work/Fruit/Home) so they don't overlap at the bottom edge.
+      const stackFoot = () => {
+        const footRows = wrap.querySelectorAll("tr.budFoot");
+        if (footRows.length <= 1) return;
+        const h = Math.round(footRows[0].getBoundingClientRect().height);
+        if (h > 0) footRows.forEach((fr, i) => { const bottom = (footRows.length - 1 - i) * h; fr.querySelectorAll("td").forEach((td) => { td.style.bottom = bottom + "px"; }); });
+      };
+      stackFoot();
+      requestAnimationFrame(stackFoot);   // re-measure once laid out (e.g. right after the dialog opens)
       const bgt = wrap.querySelector(".bgoaltot"); if (bgt) bgt.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); const v = parseHM(bgt.value); if (v > 0) m.goalTotal = v; else delete m.goalTotal; commit(); renderBudgets(); });
       wrap.querySelectorAll("th[data-sort]").forEach((th) => th.addEventListener("click", () => { const k = th.dataset.sort; if (budSort.key === k) budSort.dir = -budSort.dir; else { budSort.key = k; budSort.dir = 1; } renderBudgets(); }));
+      wrap.querySelectorAll(".wkHol").forEach((el) => el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const wi = +el.dataset.wi, w = state.weeks[wi]; if (!w) return;
+        const cur = w.holidays || 0, v = prompt("Holiday days this week (0–6): a week with 6 counts as a full vacation week in the pacing columns.", cur || "");
+        if (v === null) return;
+        const n = Math.max(0, Math.min(6, Math.round(+v || 0)));
+        snap(); if (n > 0) w.holidays = n; else delete w.holidays; commit(); renderBudgets();
+      }));
     }
   }
-  $("tasksBtn").addEventListener("click", () => { renderBudgets(); mpDlg.showModal(); });
+  $("tasksBtn").addEventListener("click", () => { mpDlg.showModal(); renderBudgets(); });
   $("budAddTask").addEventListener("click", () => {
     snap(); const id = "cat" + Date.now();
     state.categories.unshift({ id: id, name: "", hours: 0, group: "", defaultMin: 60, color: GREY });   // no name, no group → appears at the top until you assign a group
@@ -2474,6 +2591,7 @@ if (IS_BROWSER) (function () {
   $("mpEditRange").addEventListener("click", () => { const mp = activeMasterplan(); if (!mp) return; const r = promptRange(mp); if (!r) return; snap(); mp.from = r.from; mp.to = r.to; ensureWeeksForMP(mp); commit(); renderBudgets(); });
   $("mpHideIP").addEventListener("change", (e) => { ui.mpHideIP = !e.target.checked; saveUI(); renderBudgets(); });
   $("mpFeat").addEventListener("change", (e) => { ui.mpHideFeat = !e.target.checked; saveUI(); renderBudgets(); });
+  $("mpPace").addEventListener("change", (e) => { ui.mpHidePace = !e.target.checked; saveUI(); renderBudgets(); });
   const mpBulkDlg = $("mpBulkDialog");
   $("mpBulk").addEventListener("click", () => {
     const mp = activeMasterplan(); if (!mp) return; const idx = mpWeekIndices(mp);
@@ -2499,6 +2617,9 @@ if (IS_BROWSER) (function () {
     snap(); state.masterplans = state.masterplans.filter((m) => m.id !== mp.id); state.currentMasterplan = state.masterplans[0].id; commit(); renderBudgets();
   });
   $("budRecolour").addEventListener("click", () => { snap(); for (const c of state.categories) if (!c.lockColor) c.color = groupColorFor(c.group || "work", state.categories, c.id); commit(); renderBudgets(); });
+  $("mpNotes").addEventListener("click", () => { const mp = activeMasterplan(); if (!mp) return; const ta = $("mpNoteText"); if (ta) ta.value = mp.note || ""; $("mpNoteDialog").showModal(); if (ta) ta.focus(); });
+  $("mpNoteSave").addEventListener("click", () => { const mp = activeMasterplan(); if (mp) { snap(); const v = $("mpNoteText").value; if (v.trim()) mp.note = v; else delete mp.note; commit(); renderMPBar(); } $("mpNoteDialog").close(); });
+  $("mpNoteCancel").addEventListener("click", () => $("mpNoteDialog").close());
   let commentEditId = null;
   function openComment(id) { const c = state.categories.find((x) => x.id === id); if (!c) return; commentEditId = id; const ta = $("commentText"); if (ta) ta.value = c.comment || ""; $("commentDialog").showModal(); if (ta) ta.focus(); }
   $("commentSave").addEventListener("click", () => { const c = state.categories.find((x) => x.id === commentEditId); if (c) { snap(); const v = $("commentText").value; if (v.trim()) c.comment = v; else delete c.comment; commit(); renderBudgets(); } $("commentDialog").close(); });
@@ -2548,7 +2669,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v116"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v116"; } catch (e) {}
+  try { document.title = "Plapp v119"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v119"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
