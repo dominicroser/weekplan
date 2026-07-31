@@ -203,6 +203,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable td.name, .mpTable th.name { position: sticky; left: 108px; width: 132px; min-width: 132px; max-width: 132px; text-align: left; overflow: hidden; white-space: nowrap; }
 .mpTable td.name input.tname { width: 96px; max-width: 96px; }
 .mpTable.hideFeat td:nth-child(n+4):nth-child(-n+16), .mpTable.hideFeat th:nth-child(n+4):nth-child(-n+16) { display: none; }
+.fillHandle { position: fixed; width: 11px; height: 11px; background: #1d4ed8; border: 1.5px solid #fff; box-shadow: 0 0 0 1px #1d4ed8; cursor: crosshair; z-index: 10000; display: none; }
+.mpTable .bh.fillHi { outline: 2px solid #1d4ed8; outline-offset: -2px; background: #e8efff; }
 .mpTable td.stot, .mpTable td.gcolF, .mpTable td.name { background: var(--bg); z-index: 2; }
 .mpTable th.stot, .mpTable th.gcolF, .mpTable th.name { background: var(--panel); top: 0; z-index: 4; }
 .mpTable tr.budFoot td { position: sticky; bottom: 0; z-index: 1; }
@@ -427,7 +429,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .hbTable .hbRule { width: 100%; min-width: 200px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace; }
 .hbTable .hbRule:disabled { opacity: .4; }
 #habitsDialog code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--panel2); padding: 0 3px; border-radius: 3px; font-size: 11.5px; }
-#bulkDialog { max-width: 420px; }
+#bulkDialog, #mpBulkDialog { max-width: 440px; }
 .bulkRow { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
 .bulkRow label { width: 66px; color: var(--ink2); font-size: 13px; }
 .bulkRow select, .bulkRow input { flex: 1; padding: 6px 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 7px; font-size: 13px; }
@@ -599,6 +601,16 @@ create policy "planner anon access" on plans
   </div>
 </dialog>
 
+<dialog id="mpBulkDialog">
+  <h2>Bulk-fill weekly hours</h2>
+  <p class="muted">Set the same weekly goal for one task across a range of weeks in this masterplan. (You can still place the actual blocks on the grid whenever you like.)</p>
+  <div class="bulkRow"><label>Task</label><select id="mpbTask"></select></div>
+  <div class="bulkRow"><label>Hours/wk</label><input type="text" id="mpbHours" placeholder="e.g. 2 or 1:30"></div>
+  <div class="bulkRow"><label>From</label><select id="mpbFrom"></select></div>
+  <div class="bulkRow"><label>To</label><select id="mpbTo"></select></div>
+  <div class="btnRow" style="margin-top:14px;"><button class="btn" id="mpbApply">Apply</button><button class="btnGhost" id="mpbCancel">Cancel</button></div>
+</dialog>
+
 <dialog id="commentDialog">
   <h2>Comment</h2>
   <textarea id="commentText" rows="9" placeholder="A quick note for this task…"></textarea>
@@ -613,11 +625,12 @@ create policy "planner anon access" on plans
     <button class="btnGhost" id="mpEditRange">Edit range</button>
     <button class="btnGhost" id="mpDel">Delete</button>
     <label class="mpIPtog"><input type="checkbox" id="mpFeat"> Features</label>
-    <label class="mpIPtog"><input type="checkbox" id="mpHideIP"> Hide IP</label>
+    <label class="mpIPtog"><input type="checkbox" id="mpHideIP"> IP</label>
   </div>
   <div class="btnRow" style="margin-bottom:10px;">
     <button class="btnGhost" id="budAddTask">+ Add task</button>
     <button class="btnGhost" id="budRecolour">Recolour all by group</button>
+    <button class="btnGhost" id="mpBulk">Bulk-fill hours</button>
   </div>
   <div id="masterplanTableWrap"></div>
 </dialog>
@@ -650,7 +663,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v107 */
+/* build v110 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1183,7 +1196,7 @@ if (IS_BROWSER) (function () {
   function parseHM(v) { v = String(v).trim(); if (!v) return 0; if (v.indexOf(":") >= 0) { const p = v.split(":"); return Math.max(0, (parseInt(p[0], 10) || 0) + (parseInt(p[1], 10) || 0) / 60); } return Math.max(0, parseFloat(v.replace(",", ".")) || 0); }
   function weekBudget(cat, wIdx) {
     if (cat.auto) { const w = state.weeks[wIdx]; let s = 0; if (w) for (const b of w.blocks) if (b.catId === cat.id && !b.event && b.kind !== "actual") s += b.lenSlots / 4; return s; } // Auto: goal follows scheduled blocks
-    const w = state.weeks[wIdx]; if (w && w.budgets && w.budgets[cat.id] != null) return w.budgets[cat.id]; return cat.hours;
+    const w = state.weeks[wIdx]; if (w && w.budgets && w.budgets[cat.id] != null) return w.budgets[cat.id]; return 0;   // no hidden baseline: a week's goal is only what's explicitly set
   }
 
   /* ── persistence ── */
@@ -2237,7 +2250,7 @@ if (IS_BROWSER) (function () {
   function ensureWeeksForMP(mp) { const idx = mpWeekIndices(mp); if (!idx.length) return; const hi = idx[idx.length - 1]; while (state.weeks.length <= hi) state.weeks.push({ id: "w" + Date.now() + "_" + state.weeks.length, blocks: [], budgets: {} }); }
   function activeMasterplan() { const mps = state.masterplans || []; if (!mps.length) return null; let mp = mps.find((m) => m.id === state.currentMasterplan); if (!mp) { const tm = ymd(mondayOf(new Date())); mp = mps.find((m) => m.from <= tm && tm <= m.to) || mps[0]; state.currentMasterplan = mp.id; } return mp; }
   function mpRangeLabel(m) { const ya = parseYMD(m.from).getFullYear(), yb = parseYMD(m.to).getFullYear(), wa = isoWeek(parseYMD(m.from)), wb = isoWeek(parseYMD(m.to)); return ya === yb ? (ya + " · W" + wa + "–W" + wb) : ("W" + wa + "/" + ya + " – W" + wb + "/" + yb); }
-  function renderMPBar() { const cb = $("mpHideIP"); if (cb) cb.checked = !!ui.mpHideIP; const fb = $("mpFeat"); if (fb) fb.checked = !ui.mpHideFeat; const sel = $("mpSelect"); if (!sel) return; const mp = activeMasterplan(); sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
+  function renderMPBar() { const cb = $("mpHideIP"); if (cb) cb.checked = !ui.mpHideIP; const fb = $("mpFeat"); if (fb) fb.checked = !ui.mpHideFeat; const sel = $("mpSelect"); if (!sel) return; const mp = activeMasterplan(); sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
   function promptRange(mp) {
     const fy = mp ? parseYMD(mp.from).getFullYear() : new Date().getFullYear(), fw = mp ? isoWeek(parseYMD(mp.from)) : isoWeek(new Date());
     const ty = mp ? parseYMD(mp.to).getFullYear() : new Date().getFullYear(), tw = mp ? isoWeek(parseYMD(mp.to)) : isoWeek(new Date());
@@ -2246,6 +2259,43 @@ if (IS_BROWSER) (function () {
     const ps = s.trim().split(/[\s\-\/wW]+/).filter(Boolean).map(Number), pe = e.trim().split(/[\s\-\/wW]+/).filter(Boolean).map(Number);
     if (ps.length < 2 || pe.length < 2 || ps.some(isNaN) || pe.some(isNaN)) { toast("Use: year week, e.g. 2026 32"); return null; }
     return { from: ymd(isoWeekMonday(ps[0], ps[1])), to: ymd(isoWeekMonday(pe[0], pe[1])) };
+  }
+  function setupFillHandle() {   // Excel-style drag-fill for the masterplan week cells (.bh)
+    const wrap = $("masterplanTableWrap"); if (!wrap) return;
+    let handle = $("fillHandle");
+    if (!handle) { handle = document.createElement("div"); handle.id = "fillHandle"; handle.className = "fillHandle"; $("masterplanDialog").appendChild(handle); }
+    let fillSource = null, fillDrag = null;
+    const clearHi = () => wrap.querySelectorAll(".bh.fillHi").forEach((c) => c.classList.remove("fillHi"));
+    wrap.addEventListener("focusin", (e) => { const t = e.target; if (t && t.classList && t.classList.contains("bh")) { const r = t.getBoundingClientRect(); handle.style.left = (r.right - 5.5) + "px"; handle.style.top = (r.bottom - 5.5) + "px"; handle.style.display = "block"; fillSource = t; } else if (t !== handle) handle.style.display = "none"; });
+    wrap.addEventListener("scroll", () => { handle.style.display = "none"; }, true);
+    handle.addEventListener("pointerdown", (e) => {
+      if (!fillSource) return; e.preventDefault();
+      const srcRow = fillSource.closest("tr"), rowCells = Array.from(srcRow.querySelectorAll(".bh")), allRows = Array.from(wrap.querySelectorAll("tr[data-id]"));
+      fillDrag = { val: fillSource.value, srcRow: srcRow, srcWeekPos: rowCells.indexOf(fillSource), srcRowIdx: allRows.indexOf(srcRow), allRows: allRows, range: [] };
+      handle.style.pointerEvents = "none"; document.body.style.cursor = "crosshair";
+    });
+    document.addEventListener("pointermove", (ev) => {
+      if (!fillDrag) return;
+      const el = document.elementFromPoint(ev.clientX, ev.clientY), tgt = el && el.closest ? el.closest(".bh") : null;
+      clearHi(); fillDrag.range = [];
+      if (!tgt || !wrap.contains(tgt)) return;
+      const tgtRow = tgt.closest("tr"), tgtRowIdx = fillDrag.allRows.indexOf(tgtRow), tgtWeekPos = Array.from(tgtRow.querySelectorAll(".bh")).indexOf(tgt);
+      const dCol = tgtWeekPos - fillDrag.srcWeekPos, dRow = tgtRowIdx - fillDrag.srcRowIdx, cells = [];
+      if (Math.abs(dCol) >= Math.abs(dRow)) {
+        const rc = Array.from(fillDrag.srcRow.querySelectorAll(".bh")), lo = Math.min(fillDrag.srcWeekPos, tgtWeekPos), hi = Math.max(fillDrag.srcWeekPos, tgtWeekPos);
+        for (let i = lo; i <= hi; i++) if (rc[i]) cells.push(rc[i]);
+      } else {
+        const lo = Math.min(fillDrag.srcRowIdx, tgtRowIdx), hi = Math.max(fillDrag.srcRowIdx, tgtRowIdx);
+        for (let i = lo; i <= hi; i++) { const row = fillDrag.allRows[i]; if (!row) continue; const c = Array.from(row.querySelectorAll(".bh"))[fillDrag.srcWeekPos]; if (c) cells.push(c); }
+      }
+      fillDrag.range = cells; cells.forEach((c) => c.classList.add("fillHi"));
+    });
+    document.addEventListener("pointerup", () => {
+      if (!fillDrag) { handle.style.pointerEvents = ""; return; }
+      const cells = fillDrag.range, val = fillDrag.val; fillDrag = null; clearHi();
+      handle.style.pointerEvents = ""; handle.style.display = "none"; document.body.style.cursor = "";
+      if (cells.length > 1) { snap(); for (const c of cells) { const w = +c.dataset.w, tr = c.closest("tr"), id = tr && tr.dataset.id; if (id != null && state.weeks[w]) ensureBudgets(state.weeks[w])[id] = parseHM(val); } commit(); renderBudgets(); }
+    });
   }
   function renderBudgets() {
     const W = state.weeks.length;
@@ -2379,8 +2429,26 @@ if (IS_BROWSER) (function () {
     state.currentMasterplan = id; ensureWeeksForMP(state.masterplans[state.masterplans.length - 1]); commit(); renderBudgets();
   });
   $("mpEditRange").addEventListener("click", () => { const mp = activeMasterplan(); if (!mp) return; const r = promptRange(mp); if (!r) return; snap(); mp.from = r.from; mp.to = r.to; ensureWeeksForMP(mp); commit(); renderBudgets(); });
-  $("mpHideIP").addEventListener("change", (e) => { ui.mpHideIP = e.target.checked; saveUI(); renderBudgets(); });
+  $("mpHideIP").addEventListener("change", (e) => { ui.mpHideIP = !e.target.checked; saveUI(); renderBudgets(); });
   $("mpFeat").addEventListener("change", (e) => { ui.mpHideFeat = !e.target.checked; saveUI(); renderBudgets(); });
+  const mpBulkDlg = $("mpBulkDialog");
+  $("mpBulk").addEventListener("click", () => {
+    const mp = activeMasterplan(); if (!mp) return; const idx = mpWeekIndices(mp);
+    $("mpbTask").innerHTML = state.categories.slice().sort((a, b) => (a.name || "").localeCompare(b.name || "")).map((c) => '<option value="' + c.id + '">' + (c.name || "").replace(/</g, "&lt;") + "</option>").join("");
+    const wkOpts = idx.map((i) => '<option value="' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + "</option>").join("");
+    $("mpbFrom").innerHTML = wkOpts; $("mpbTo").innerHTML = wkOpts;
+    if (idx.length) { $("mpbFrom").value = idx[0]; $("mpbTo").value = idx[idx.length - 1]; }
+    $("mpbHours").value = ""; mpBulkDlg.showModal();
+  });
+  $("mpbCancel").addEventListener("click", () => mpBulkDlg.close());
+  $("mpbApply").addEventListener("click", () => {
+    const tid = $("mpbTask").value, hrs = parseHM($("mpbHours").value); let a = +$("mpbFrom").value, b = +$("mpbTo").value;
+    if (!tid) { toast("Pick a task."); return; }
+    if (a > b) { const t = a; a = b; b = t; }
+    snap();
+    for (let i = a; i <= b; i++) { while (state.weeks.length <= i) state.weeks.push({ id: "w" + Date.now() + "_" + state.weeks.length, blocks: [], budgets: {} }); ensureBudgets(state.weeks[i])[tid] = hrs; }
+    commit(); renderBudgets(); mpBulkDlg.close(); toast("Set " + fmtHM(hrs) + "/week across " + (b - a + 1) + " week" + (b - a ? "s" : "") + ".");
+  });
   $("mpDel").addEventListener("click", () => {
     const mp = activeMasterplan(); if (!mp) return;
     if ((state.masterplans || []).length <= 1) { toast("Keep at least one masterplan."); return; }
@@ -2437,7 +2505,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v107"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v107"; } catch (e) {}
+  try { document.title = "Plapp v110"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v110"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -2880,7 +2948,7 @@ if (IS_BROWSER) (function () {
     }
     state.splitMergeV = 1; saveLocal(); if (changed) schedulePush();
   }
-  loadLocal(); seedHabits(); seedColors(); mergeSplitBlocks(); buildGrid(); dockNote(); renderAll(); renderNote(true); applyRightBar(); setupNoteResize(); checkReminder();
+  loadLocal(); seedHabits(); seedColors(); mergeSplitBlocks(); buildGrid(); dockNote(); renderAll(); renderNote(true); applyRightBar(); setupNoteResize(); checkReminder(); setupFillHandle();
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); })); // click outside to close
   if (state.timer) startTimerLoop();
   setInterval(() => { if (document.visibilityState === "visible" && !drag && !noteAct) renderBlocks(); }, 15000); // advance now-line, slide plans & drop elapsed plans
