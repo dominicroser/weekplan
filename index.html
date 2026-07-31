@@ -244,6 +244,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable tr.budGrp td { color: var(--ink2); font-weight: 500; background: var(--panel); }
 .mpTable tr.budGrp td.gcolFip { background: #eef0f1; }
 .mpTable tr.budGrp td.name { font-weight: 600; }
+.mpTable tr.budGrp-work td { background: #e8f0f9 !important; color: #1c4e80; }
+.mpTable tr.budGrp-fruit td { background: #e7f3ea !important; color: #1e7a46; }
+.mpTable tr.budGrp-home td { background: #fbf1d3 !important; color: #8a6d00; }
 .mpTable td.stot.over { color: #d64545; }
 .mpTable td.dcol.dfNeg { color: #e2725b; font-weight: 600; }
 .mpTable td.dcol.dfPos { color: #2563eb; font-weight: 600; }
@@ -715,7 +718,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v119 */
+/* build v120 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -924,10 +927,13 @@ function buildReport(state) {
 // Returns { group: fraction } summing to 1. A normal task returns { ownGroup: 1 }.
 function groupContribs(state, catId) {
   const cat = (state.categories || []).find((c) => c.id === catId);
-  const kids = (state.categories || []).filter((c) => c.parent === catId && (c.splitPct || 0) > 0 && !c.archived);
+  const kids = (state.categories || []).filter((c) => c.parent === catId && !c.archived);
   if (kids.length) {
-    const tot = kids.reduce((s, k) => s + (k.splitPct || 0), 0) || 1, w = {};
-    for (const k of kids) { const g = k.group || "work"; w[g] = (w[g] || 0) + (k.splitPct || 0) / tot; }
+    // Weight by split % if any child has one; otherwise split the parent equally across its children.
+    const anyPct = kids.some((k) => (k.splitPct || 0) > 0);
+    const wt = (k) => anyPct ? (k.splitPct || 0) : 1;
+    const tot = kids.reduce((s, k) => s + wt(k), 0) || 1, w = {};
+    for (const k of kids) { const g = k.group || "work"; w[g] = (w[g] || 0) + wt(k) / tot; }
     return w;
   }
   return { [(cat && cat.group) || "work"]: 1 };
@@ -2506,7 +2512,7 @@ if (IS_BROWSER) (function () {
         for (const i of mpIdx) { let s = 0, sip = 0; for (const c of activeList) { const w = grpW(c, g); s += weekEffortAgg(c, i) * w; sip += ipGet(c.id, i) * w; } tot += s; cc += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + (s > 0.0001 ? fmtHM(s) : "") + '</td><td class="btot ipCol">' + (sip > 0.0001 ? fmtHM(sip) : "") + "</td>"; }
         for (const c of activeList) { const w = grpW(c, g); goalS += gGet("goal", c.id) * w; ipS += gGet("goalIP", c.id) * w; }
         const df = tot - goalS, cls = goalS <= 0.0001 ? "" : (df < -0.0001 ? "dfNeg" : df > 0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (df < -0.0001 ? "-" + fmtHM(-df) : df > 0.0001 ? "+" + fmtHM(df) : "0:00");
-        let g2 = '<tr class="budFoot budGrp"><td class="paceD btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(df) : "") + '</td><td class="paceT btot">' + pace(tot) + '</td><td class="paceG btot">' + (goalS > 0.0001 ? pace(goalS) : "") + '</td><td class="dcol btot ' + cls + '">' + dtxt + '</td><td class="stot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="gcol gcolF btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td><td class="gcol gcolPrio btot"></td><td class="gcol gcolFip btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td><td class="name">' + label + '</td>';
+        let g2 = '<tr class="budFoot budGrp budGrp-' + g + '"><td class="paceD btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(df) : "") + '</td><td class="paceT btot">' + pace(tot) + '</td><td class="paceG btot">' + (goalS > 0.0001 ? pace(goalS) : "") + '</td><td class="dcol btot ' + cls + '">' + dtxt + '</td><td class="stot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="gcol gcolF btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td><td class="gcol gcolPrio btot"></td><td class="gcol gcolFip btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td><td class="name">' + label + '</td>';
         for (let k = 0; k < 13; k++) g2 += "<td></td>";
         return g2 + cc + "</tr>";
       };
@@ -2669,7 +2675,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v119"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v119"; } catch (e) {}
+  try { document.title = "Plapp v120"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v120"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
