@@ -198,18 +198,30 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpBar .mpIPtog { font-size: 12px; color: var(--ink2); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 /* Masterplan table: frozen Total (next to name) + frozen footer + Goal + grey IP columns */
 .mpTable th, .mpTable td { box-sizing: border-box; }
-.mpTable td.stot, .mpTable th.stot { position: sticky; left: 0; width: 54px; min-width: 54px; }
-.mpTable td.gcolF, .mpTable th.gcolF { position: sticky; left: 54px; width: 54px; min-width: 54px; }
-.mpTable td.name, .mpTable th.name { position: sticky; left: 108px; width: 132px; min-width: 132px; max-width: 132px; text-align: left; overflow: hidden; white-space: nowrap; }
+.mpTable td.dcol, .mpTable th.dcol { position: sticky; left: 0; width: 64px; min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
+.mpTable td.stot, .mpTable th.stot { position: sticky; left: 64px; width: 64px; min-width: 64px; font-variant-numeric: tabular-nums; }
+.mpTable td.gcolF, .mpTable th.gcolF { position: sticky; left: 128px; width: 64px; min-width: 64px; }
+.mpTable td.gcolFip, .mpTable th.gcolFip { position: sticky; left: 192px; width: 52px; min-width: 52px; }
+.mpTable td.name, .mpTable th.name { position: sticky; left: 244px; width: 132px; min-width: 132px; max-width: 132px; text-align: left; overflow: hidden; white-space: nowrap; }
+.mpTable.hideIP td.gcolFip, .mpTable.hideIP th.gcolFip { display: none; }
+.mpTable.hideIP td.name, .mpTable.hideIP th.name { left: 192px; }
 .mpTable td.name input.tname { width: 96px; max-width: 96px; }
-.mpTable.hideFeat td:nth-child(n+4):nth-child(-n+16), .mpTable.hideFeat th:nth-child(n+4):nth-child(-n+16) { display: none; }
+.mpTable input.bgoal, .mpTable input.bgoalip { width: 56px; }
+.mpTable.hideFeat td:nth-child(n+6):nth-child(-n+18), .mpTable.hideFeat th:nth-child(n+6):nth-child(-n+18) { display: none; }
 .fillHandle { position: fixed; width: 11px; height: 11px; background: #1d4ed8; border: 1.5px solid #fff; box-shadow: 0 0 0 1px #1d4ed8; cursor: crosshair; z-index: 10000; display: none; }
 .mpTable .bh.fillHi { outline: 2px solid #1d4ed8; outline-offset: -2px; background: #e8efff; }
-.mpTable td.stot, .mpTable td.gcolF, .mpTable td.name { background: var(--bg); z-index: 2; }
-.mpTable th.stot, .mpTable th.gcolF, .mpTable th.name { background: var(--panel); top: 0; z-index: 4; }
+.mpTable td.stot, .mpTable td.gcolF, .mpTable td.name, .mpTable td.dcol { background: var(--bg); z-index: 2; }
+.mpTable th.stot, .mpTable th.gcolF, .mpTable th.name, .mpTable th.dcol { background: var(--panel); top: 0; z-index: 4; }
+.mpTable td.gcolFip { background: #f4f4f5; z-index: 2; color: var(--ink3); }
+.mpTable th.gcolFip { background: #ececee; top: 0; z-index: 4; color: var(--ink3); font-weight: 500; }
+.mpTable td.gcolFip input { color: var(--ink3); }
 .mpTable tr.budFoot td { position: sticky; bottom: 0; z-index: 1; }
-.mpTable tr.budFoot td.stot, .mpTable tr.budFoot td.gcolF, .mpTable tr.budFoot td.name { z-index: 5; }
+.mpTable tr.budFoot td.stot, .mpTable tr.budFoot td.gcolF, .mpTable tr.budFoot td.name, .mpTable tr.budFoot td.dcol { z-index: 5; }
+.mpTable tr.budFoot td.gcolFip { z-index: 5; background: #f4f4f5; }
 .mpTable td.stot.over { color: #d64545; }
+.mpTable td.dcol.dfNeg { color: #e2725b; font-weight: 600; }
+.mpTable td.dcol.dfPos { color: #2563eb; font-weight: 600; }
+.mpTable td.dcol.dfZero { color: #16a34a; font-weight: 600; }
 .mpTable .gcol { min-width: 46px; }
 .mpTable .ipCol { background: #f4f4f5; }
 .mpTable th.ipCol { color: var(--ink3); font-weight: 500; }
@@ -663,7 +675,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v112 */
+/* build v115 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2267,7 +2279,12 @@ if (IS_BROWSER) (function () {
     if (!handle) { handle = document.createElement("div"); handle.id = "fillHandle"; handle.className = "fillHandle"; $("masterplanDialog").appendChild(handle); }
     let fillSource = null, fillDrag = null;
     const clearHi = () => wrap.querySelectorAll(".bh.fillHi").forEach((c) => c.classList.remove("fillHi"));
-    wrap.addEventListener("focusin", (e) => { const t = e.target; if (t && t.classList && t.classList.contains("bh")) { const r = t.getBoundingClientRect(); handle.style.left = (r.right - 5.5) + "px"; handle.style.top = (r.bottom - 5.5) + "px"; handle.style.display = "block"; fillSource = t; } else if (t !== handle) handle.style.display = "none"; });
+    wrap.addEventListener("focusin", (e) => { const t = e.target; if (t && t.matches && t.matches("input.bh, input.bhip, input.bgoal, input.bgoalip")) setTimeout(() => { try { t.select(); } catch (_) {} }, 0); if (t && t.classList && t.classList.contains("bh")) { const r = t.getBoundingClientRect(); handle.style.left = (r.right - 5.5) + "px"; handle.style.top = (r.bottom - 5.5) + "px"; handle.style.display = "block"; fillSource = t; } else if (t !== handle) handle.style.display = "none"; });
+    wrap.addEventListener("keydown", (e) => {   // Tab: down the Goal column; across the week columns (skipping IP)
+      if (e.key !== "Tab") return; const t = e.target, dir = e.shiftKey ? -1 : 1;
+      if (t.classList && (t.classList.contains("bgoal") || t.classList.contains("bgoalip"))) { const sel = t.classList.contains("bgoalip") ? ".bgoalip" : ".bgoal", rows = Array.from(wrap.querySelectorAll("tr[data-id]")), tr = t.closest("tr"), nx = rows[rows.indexOf(tr) + dir]; if (nx) { const nb = nx.querySelector(sel); if (nb) { e.preventDefault(); nb.focus(); } } }
+      else if (t.classList && t.classList.contains("bh")) { const tr = t.closest("tr"), cells = Array.from(tr.querySelectorAll(".bh")), nx = cells[cells.indexOf(t) + dir]; if (nx) { e.preventDefault(); nx.focus(); } }
+    });
     wrap.addEventListener("scroll", () => { handle.style.display = "none"; }, true);
     handle.addEventListener("pointerdown", (e) => {
       if (!fillSource) return; e.preventDefault();
@@ -2337,8 +2354,10 @@ if (IS_BROWSER) (function () {
       let tsum = 0; for (const i of mpIdx) tsum += weekBudget(c, i);
       const goal = gGet("goal", c.id), over = goal > 0.0001 && tsum > goal + 0.0001;
       let r = '<tr data-id="' + c.id + '"' + (c.ad ? ' class="adRow"' : "") + ">";
+      { let dC = '<td class="dcol"></td>'; if (goal > 0.0001) { const df = tsum - goal, dcls = df < -0.0001 ? "dfNeg" : df > 0.0001 ? "dfPos" : "dfZero", dtxt = df < -0.0001 ? "-" + fmtHM(-df) : df > 0.0001 ? "+" + fmtHM(df) : "0:00"; dC = '<td class="dcol ' + dcls + '">' + dtxt + "</td>"; } r += dC; }
       r += '<td class="stot btot' + (over ? " over" : "") + '">' + fmtHM(tsum) + "</td>";
       r += '<td class="gcol gcolF"><input class="bgoal" type="text" inputmode="numeric" value="' + (goal ? fmtHM(goal) : "") + '"></td>';
+      r += '<td class="gcol gcolFip"><input class="bgoalip" type="text" inputmode="numeric" value="' + (gGet("goalIP", c.id) ? fmtHM(gGet("goalIP", c.id)) : "") + '"></td>';
       r += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" placeholder="name…" value="' + (c.name || "").replace(/"/g, "&quot;") + '"></td>';
       r += '<td><select class="bgroup">' + (unassigned ? '<option value="" selected>—</option>' : "") + GROUP_ORDER.map((g) => '<option value="' + g + '"' + (c.group === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
       r += '<td class="cmtCol"><button class="bcmt' + (c.comment ? " has" : "") + '" title="' + (c.comment ? c.comment.replace(/"/g, "&quot;").slice(0, 400) : "Add a comment") + '">🗒</button></td>';
@@ -2353,7 +2372,6 @@ if (IS_BROWSER) (function () {
       r += '<td><input type="checkbox" class="bnth" title="NTH — nice to have, but no time for it now"' + (kind === "nth" ? " checked" : "") + "></td>";
       r += '<td><input type="checkbox" class="bdone" title="Done — finished for good"' + (kind === "done" ? " checked" : "") + "></td>";
       r += '<td><button class="budDel" title="Delete task">&times;</button></td>';
-      r += '<td class="gcol ipCol"><input class="bgoalip" type="text" inputmode="numeric" value="' + (gGet("goalIP", c.id) ? fmtHM(gGet("goalIP", c.id)) : "") + '"></td>';
       for (const i of mpIdx) { r += '<td class="' + (i === state.currentWeek ? "mpCur" : "") + '"><input class="bh" data-w="' + i + '" type="text" inputmode="numeric"' + (c.auto ? " readonly" : "") + ' value="' + fmtHM(weekBudget(c, i)) + '"></td><td class="ipCol"><input class="bhip" data-w="' + i + '" type="text" inputmode="numeric" value="' + (ipGet(c.id, i) ? fmtHM(ipGet(c.id, i)) : "") + '"></td>'; }
       r += "</tr>";
       return r;
@@ -2362,15 +2380,16 @@ if (IS_BROWSER) (function () {
     const activeList = list.filter((c) => !c.archived);
     const kindRank = (c) => { const k = kindOf(c); return k === "later" ? 0 : k === "nth" ? 1 : 2; };   // second table order: Later → NTH → Done
     const inactiveList = state.categories.filter((c) => c.archived).sort((a, b) => (kindRank(a) - kindRank(b)) || (a.name || "").localeCompare(b.name || ""));
-    const mHead = '<tr><th class="stot" data-sort="total">Total' + arrow("total") + '</th><th class="gcol gcolF">Goal</th><th class="name" data-sort="name">Task' + arrow("name") + '</th><th data-sort="group">Group' + arrow("group") + '</th><th class="cmtCol" title="Comment">🗒</th><th class="lnkCol" title="Link">🔗</th><th class="adCol" title="Amnesty deal">AD</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th>Lock</th><th>Parent</th><th title="Done for now">Later</th><th title="Nice to have">NTH</th><th title="Finished for good">Done</th><th></th><th class="gcol ipCol" title="If-possible goal">IP</th>' + mpIdx.map((i) => '<th class="' + (i === state.currentWeek ? "mpCur" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '</th><th class="ipCol">IP</th>').join("") + "</tr>";
+    const mHead = '<tr><th class="dcol" title="Goal vs Total — coral = under goal, blue = over, green = on target">&Delta;</th><th class="stot" data-sort="total">Total' + arrow("total") + '</th><th class="gcol gcolF">Goal</th><th class="gcol gcolFip" title="If-possible goal — overall stretch target">IP</th><th class="name" data-sort="name">Task' + arrow("name") + '</th><th data-sort="group">Group' + arrow("group") + '</th><th class="cmtCol" title="Comment">🗒</th><th class="lnkCol" title="Link">🔗</th><th class="adCol" title="Amnesty deal">AD</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th>Lock</th><th>Parent</th><th title="Done for now">Later</th><th title="Nice to have">NTH</th><th title="Finished for good">Done</th><th></th>' + mpIdx.map((i) => '<th class="' + (i === state.currentWeek ? "mpCur" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '</th><th class="ipCol">IP</th>').join("") + "</tr>";
     const mFoot = (function () {
-      let gt = 0, gIP = 0, cells = "";
+      let gt = 0, gIP = 0, goalSum = 0, cells = "";
       for (const i of mpIdx) { let s = 0, sip = 0; for (const c of activeList) { s += weekBudget(c, i); sip += ipGet(c.id, i); } gt += s; cells += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + '">' + fmtHM(s) + '</td><td class="btot ipCol">' + (sip ? fmtHM(sip) : "") + "</td>"; }
-      for (const c of activeList) gIP += gGet("goalIP", c.id);
-      const gGoal = (mp && mp.goalTotal) ? mp.goalTotal : 0, gover = gGoal > 0.0001 && gt > gGoal + 0.0001;
-      let f = '<tr class="budFoot"><td class="stot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="gcol gcolF"><input class="bgoaltot" type="text" inputmode="numeric" value="' + (gGoal ? fmtHM(gGoal) : "") + '"></td><td class="name">Total</td>';
+      for (const c of activeList) { gIP += gGet("goalIP", c.id); goalSum += gGet("goal", c.id); }
+      const gover = goalSum > 0.0001 && gt > goalSum + 0.0001;
+      const gdf = gt - goalSum, gCls = goalSum <= 0.0001 ? "" : (gdf < -0.0001 ? "dfNeg" : gdf > 0.0001 ? "dfPos" : "dfZero"), gTxt = goalSum <= 0.0001 ? "" : (gdf < -0.0001 ? "-" + fmtHM(-gdf) : gdf > 0.0001 ? "+" + fmtHM(gdf) : "0:00");
+      let f = '<tr class="budFoot"><td class="dcol btot ' + gCls + '">' + gTxt + '</td><td class="stot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="gcol gcolF btot">' + (goalSum > 0.0001 ? fmtHM(goalSum) : "") + '</td><td class="gcol gcolFip btot">' + (gIP ? fmtHM(gIP) : "") + '</td><td class="name">Total</td>';
       for (let k = 0; k < 13; k++) f += "<td></td>";
-      return f + '<td class="gcol ipCol btot">' + (gIP ? fmtHM(gIP) : "") + "</td>" + cells + "</tr>";
+      return f + cells + "</tr>";
     })();
     const mCls = "budTable mpTable" + (ui.mpHideIP ? " hideIP" : "") + (ui.mpHideFeat ? " hideFeat" : "");
     let fh = '<div class="budWrap"><table class="' + mCls + '"><thead>' + mHead + '</thead><tbody>' + activeList.map(taskRow).join("") + mFoot + "</tbody></table></div>";
@@ -2507,7 +2526,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v112"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v112"; } catch (e) {}
+  try { document.title = "Plapp v115"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v115"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
