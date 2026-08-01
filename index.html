@@ -489,6 +489,14 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .hbTable .hbRule { width: 100%; min-width: 200px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace; }
 .hbTable .hbRule:disabled { opacity: .4; }
 #habitsDialog code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--panel2); padding: 0 3px; border-radius: 3px; font-size: 11.5px; }
+#habitReviewDialog { max-width: 660px; }
+.hbReview { max-height: 60vh; overflow: auto; margin-top: 6px; }
+.hbrItem { border-top: 1px solid var(--line); padding: 9px 0; }
+.hbrItem:first-child { border-top: none; }
+.hbrName { font-weight: 700; font-size: 14px; }
+.hbrType { font-size: 11px; color: var(--ink3); font-weight: 500; margin-left: 6px; }
+.hbrDesc { margin: 4px 0 5px; font-size: 13px; line-height: 1.5; color: var(--ink); }
+.hbrRule { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; background: var(--panel2); border-radius: 5px; padding: 4px 7px; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
 #bulkDialog, #mpBulkDialog { max-width: 440px; }
 .bulkRow { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
 .bulkRow label { width: 66px; color: var(--ink2); font-size: 13px; }
@@ -567,11 +575,18 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   <h2>Habits &amp; streaks</h2>
   <p class="muted">Each day a habit is <b>Achieved</b> (light yellow), <b>Missed</b> (coral) or <b>NA</b> (deep yellow). Click a cell in the side bar to cycle it. A week is <b>achieved</b> when missed cells ≤ Joker, where Joker = habits × (6·habits − NA) ⁄ (6·habits).</p>
   <div id="habitsTableWrap"></div>
-  <div class="btnRow" style="margin-top:12px;"><button class="btnGhost" id="hbAdd">+ Add habit</button><button class="btnGhost" id="hbCsv">&darr; Download all values (CSV)</button><button class="btnGhost" id="hbClearWk">Clear this week</button></div>
+  <div class="btnRow" style="margin-top:12px;"><button class="btnGhost" id="hbAdd">+ Add habit</button><button class="btnGhost" id="hbReview">📖 Review rules</button><button class="btnGhost" id="hbCsv">&darr; Download all values (CSV)</button><button class="btnGhost" id="hbClearWk">Clear this week</button></div>
   <h3 style="margin-top:18px;">Past weeks</h3>
   <div id="histWrap"></div>
   <h3 style="margin-top:18px;">Change log</h3>
   <div id="changelogWrap"></div>
+</dialog>
+
+<dialog id="habitReviewDialog">
+  <h2>Habit rules — review</h2>
+  <p class="muted">Each habit's plain-language note beside its formula, so they're easy to read and compare. Use “Copy for review” to grab the text and paste it to Claude for a formula ↔ wording check.</p>
+  <div id="habitReviewBody" class="hbReview"></div>
+  <div class="btnRow" style="margin-top:12px;"><button class="btn" id="hbReviewCopy">Copy for review</button><button class="btnGhost" id="hbReviewClose">Close</button></div>
 </dialog>
 
 <dialog id="bulkDialog">
@@ -734,7 +749,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v121 */
+/* build v122 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2708,7 +2723,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v121"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v121"; } catch (e) {}
+  try { document.title = "Plapp v122"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v122"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -2954,6 +2969,23 @@ if (IS_BROWSER) (function () {
   }
 
   function openHabits() { renderHabitsTable(); renderHistory(); renderChangelog(); habitsDlg.showModal(); }
+  function renderHabitReview() {
+    const host = $("habitReviewBody"); if (!host) return;
+    const list = (state.habits || []).filter((h) => !h.archived);
+    if (!list.length) { host.innerHTML = '<p class="muted">No active habits.</p>'; return; }
+    let h = "";
+    for (const hb of list) {
+      const ty = hb.type || "binary";
+      h += '<div class="hbrItem"><div class="hbrName">' + esc(hb.name) + '<span class="hbrType">' + ty + '</span></div>' +
+           '<div class="hbrDesc">' + (hb.desc ? esc(hb.desc) : '<span class="muted">— no note —</span>') + '</div>' +
+           '<div class="hbrRule">' + (hb.rule ? esc(hb.rule) : '<span class="muted">' + (ty === "binary" ? "click — no formula" : "—") + "</span>") + "</div></div>";
+    }
+    host.innerHTML = h;
+  }
+  function habitReviewText() {
+    const list = (state.habits || []).filter((h) => !h.archived);
+    return list.map((hb) => { const ty = hb.type || "binary"; return "HABIT: " + hb.name + " (" + ty + ")\nNote: " + (hb.desc || "—") + "\nFormula: " + (hb.rule || (ty === "binary" ? "click — no formula" : "—")); }).join("\n\n----------------------------------------\n\n");
+  }
   function renderHabitsTable() {
     const host = $("habitsTableWrap"); if (!host) return;
     const list = state.habits || [];
@@ -3062,6 +3094,9 @@ if (IS_BROWSER) (function () {
   });
   $("hbAdd").addEventListener("click", () => { if (!Array.isArray(state.habits)) state.habits = []; snap(); state.habits.push({ id: "hb" + Date.now(), name: "New habit", type: "binary", rule: "", desc: "", since: ymd(mondayOf(new Date())), entries: {} }); commitDefs(); renderHabitsTable(); renderHistory(); });
   $("hbCsv").addEventListener("click", exportHabitsCSV);
+  $("hbReview").addEventListener("click", () => { renderHabitReview(); $("habitReviewDialog").showModal(); });
+  $("hbReviewClose").addEventListener("click", () => $("habitReviewDialog").close());
+  $("hbReviewCopy").addEventListener("click", () => { const txt = habitReviewText(); const done = () => toast("Copied — paste it to Claude for a formula check"); if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(txt).then(done).catch(() => { window.prompt("Copy the habit rules below:", txt); }); } else { window.prompt("Copy the habit rules below:", txt); } });
   $("hbClearWk").addEventListener("click", () => {
     const mon = thisMondayYmd(), sat = ymd(addDays(parseYMD(mon), 5));
     if (!confirm("Clear all habit marks for this week (" + fmtDeadline(mon) + " – " + fmtDeadline(sat) + ")?\nYour habits and rules stay; only this week’s cells are wiped.")) return;
