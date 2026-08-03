@@ -153,6 +153,12 @@ if (P.parseCommand) {
   check("'all weeks' → scope all (+ day parsed)", d.scope === "all" && d.days && d.days[0] === 1);
   const e = P.parseCommand("KGB whole masterplan 5-6", cats);
   check("no weekday still errors (weekday required)", !!e.error);
+  // a task literally named with a filler word ("Plan") should still resolve
+  const catsP = [{ id: "p", name: "Plan" }, { id: "g", name: "Growth" }];
+  const rp = P.parseCommand("Plan Mon 17:30-17:45", catsP);
+  check("task named 'Plan' resolves", rp.kind === "task" && rp.cat && rp.cat.id === "p");
+  const rpg = P.parseCommand("plan Growth mon 5-6", catsP);
+  check("'plan Growth' still resolves to Growth", rpg.kind === "task" && rpg.cat && rpg.cat.id === "g");
 }
 
 /* ── report ── */

@@ -757,7 +757,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v131 */
+/* build v132 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2582,7 +2582,7 @@ if (IS_BROWSER) (function () {
     if (ui.mpF0all || ui.mpF0cur || ui.mpF0next) {
       const nextW = state.currentWeek + 1;
       activeList = activeList.filter((c) => {
-        if (ui.mpF0all && (gGet("goal", c.id) <= 0.0001 || isDoneTask(c))) return false;   // hide tasks with 0 in the Committed column, and Done tasks
+        if (ui.mpF0all && !c.noTrack && (gGet("goal", c.id) <= 0.0001 || isDoneTask(c))) return false;   // hide tasks with 0 in the Committed column, and Done tasks — but never untracked (Track unticked) tasks
         if (ui.mpF0cur && !(weekBudget(c, state.currentWeek) > 0.0001)) return false;   // hide zero-committed this week
         if (ui.mpF0next && !(weekBudget(c, nextW) > 0.0001)) return false;              // hide zero-committed next week
         return true;
@@ -2777,7 +2777,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v131"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v131"; } catch (e) {}
+  try { document.title = "Plapp v132"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v132"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
