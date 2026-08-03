@@ -757,7 +757,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v128 */
+/* build v129 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1086,6 +1086,7 @@ function parseCommand(text, categories) {
   if (!pd.days.length) return { error: "Which days? Try “every day”, “mon–fri”, or “tue and thu” (Mon–Sat only)." };
   let rest = src.replace(tr.raw, " ");
   for (const s of pd.matches) rest = rest.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), " ");
+  const rawRest = rest.replace(/[,.;:!]+/g, " ").replace(/\s+/g, " ").trim();   // name before filler-word stripping (so a task literally named "Plan"/"Add" survives)
   rest = rest.replace(/\b(assign|add|plan|put|schedule|block|task|meeting|meet w|every|each|from|at|on|and|the|for|whole|masterplan|weeks?)\b/gi, " ")
     .replace(/[,.;:!]+/g, " ").replace(/\s+/g, " ").trim();
   const startSlot = Math.round(tr.startMin / SLOT_MIN);
@@ -1093,6 +1094,7 @@ function parseCommand(text, categories) {
   const lenSlots = Math.max(1, Math.min(TOTAL_SLOTS, endSlotRaw) - startSlot);
   const nextLen = Math.max(0, endSlotRaw - TOTAL_SLOTS); // slots spilling past midnight → placed on the next day
   if (prefixCat) return { kind: "meeting", cat: prefixCat, name: rest || prefixCat.name, days: pd.days, startSlot, lenSlots, nextLen, scope };
+  { const exactRaw = rawRest && categories.find((c) => (c.name || "").toLowerCase() === rawRest.toLowerCase()); if (exactRaw) return { kind: "task", cat: exactRaw, name: rawRest, days: pd.days, startSlot, lenSlots, nextLen, scope }; }
   if (!rest) return { error: "Which task or meeting? Include a name in the command." };
   const q = rest.toLowerCase();
   const wordIn = (name, hay) => { if (!name) return false; const n = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); return new RegExp("(^|[^a-z0-9])" + n + "([^a-z0-9]|$)", "i").test(hay); };   // whole-word match, so "On" won't match inside "Fionn"
@@ -2775,7 +2777,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v128"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v128"; } catch (e) {}
+  try { document.title = "Plapp v129"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v129"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
