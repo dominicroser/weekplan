@@ -665,7 +665,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type a known task name to place it as a budgeted block; type any other name to drop in a one-off <b>meeting</b> (no hour budget). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Drag either end of a block to resize; tap a block for nudge buttons. The 🗒 button shows/hides a sticky note you can drag anywhere (Ctrl+B bold, Ctrl+I italic, Ctrl+H pink).</p>
+  <p class="muted">Type a known task name to place it as a budgeted block; type any other name to drop in a one-off <b>meeting</b> (no hour budget). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: add <b>this week</b>, <b>whole masterplan</b>, or a range like <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks (e.g. <i>delete EGE:EGE-Teaching tue weeks 38-51 3pm-6pm</i>). Drag either end of a block to resize; tap a block for nudge buttons. The 🗒 button shows/hides a sticky note you can drag anywhere (Ctrl+B bold, Ctrl+I italic, Ctrl+H pink).</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -757,7 +757,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v132 */
+/* build v134 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1063,6 +1063,8 @@ function parseDays(text) {
 }
 
 function parseCommand(text, categories) {
+  let del = false;
+  { const dm = text.match(/^\s*(delete|del|remove|clear)\b\s*/i); if (dm) { del = true; text = text.slice(dm[0].length); } }
   // optional "Task:" prefix → an assigned meeting (counts toward that task; shown red with a task-coloured band)
   let prefixCat = null, src = text;
   const ci = text.indexOf(":");
@@ -1073,28 +1075,32 @@ function parseCommand(text, categories) {
       if (m) { prefixCat = m; src = text.slice(ci + 1); }
     }
   }
-  // week scope: "whole masterplan"/"all weeks" → every week of the active masterplan; default = current week only
-  let scope = "week";
+  // week scope: "weeks 38-51" → that ISO-week range; "whole masterplan"/"all weeks" → every week of the active masterplan; default = current week only
+  let scope = "week", wkFrom = 0, wkTo = 0;
+  const wkRe = /\b(?:weeks?|wk|w)\s*(\d{1,2})\s*(?:-|–|—|to|through|thru|till|until)\s*(\d{1,2})\b/i;
   const mpRe = /\b(whole masterplan|entire masterplan|all weeks|every week|across the masterplan|for the masterplan|the masterplan|masterplan)\b/i;
   const twRe = /\b(this week|current week)\b/i;
-  if (mpRe.test(src)) { scope = "all"; src = src.replace(mpRe, " "); }
+  if (mpRe.test(src)) { scope = "all"; src = src.replace(mpRe, " "); }               // scope phrases first, so "all weeks 9-10" keeps 9-10 as the time
   else if (twRe.test(src)) { scope = "week"; src = src.replace(twRe, " "); }
+  else { const wkm = src.match(wkRe); if (wkm) { scope = "range"; wkFrom = +wkm[1]; wkTo = +wkm[2]; src = src.replace(wkm[0], " "); } }
   const tr = parseTimeRange(src);
-  if (!tr) return { error: "No time range found. Try e.g. “Growth mon-sat 5–5:30am”." };
-  if (tr.error) return { error: "That time range looks off (end must be after start)." };
-  const pd = parseDays(src.replace(tr.raw, " "));
+  if (!tr && !del) return { error: "No time range found. Try e.g. “Growth mon-sat 5–5:30am”." };
+  if (tr && tr.error) return { error: "That time range looks off (end must be after start)." };
+  const dayStr = tr ? src.replace(tr.raw, " ") : src;
+  const pd = parseDays(dayStr);
   if (!pd.days.length) return { error: "Which days? Try “every day”, “mon–fri”, or “tue and thu” (Mon–Sat only)." };
-  let rest = src.replace(tr.raw, " ");
+  let rest = dayStr;
   for (const s of pd.matches) rest = rest.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), " ");
   const rawRest = rest.replace(/[,.;:!]+/g, " ").replace(/\s+/g, " ").trim();   // name before filler-word stripping (so a task literally named "Plan"/"Add" survives)
-  rest = rest.replace(/\b(assign|add|plan|put|schedule|block|task|meeting|meet w|every|each|from|at|on|and|the|for|whole|masterplan|weeks?)\b/gi, " ")
+  rest = rest.replace(/\b(delete|del|remove|clear|assign|add|plan|put|schedule|block|task|meeting|meet w|every|each|from|at|on|and|the|for|whole|masterplan|weeks?)\b/gi, " ")
     .replace(/[,.;:!]+/g, " ").replace(/\s+/g, " ").trim();
-  const startSlot = Math.round(tr.startMin / SLOT_MIN);
-  const endSlotRaw = Math.round(tr.endMin / SLOT_MIN);
-  const lenSlots = Math.max(1, Math.min(TOTAL_SLOTS, endSlotRaw) - startSlot);
-  const nextLen = Math.max(0, endSlotRaw - TOTAL_SLOTS); // slots spilling past midnight → placed on the next day
-  if (prefixCat) return { kind: "meeting", cat: prefixCat, name: rest || prefixCat.name, days: pd.days, startSlot, lenSlots, nextLen, scope };
-  { const exactRaw = rawRest && categories.find((c) => (c.name || "").toLowerCase() === rawRest.toLowerCase()); if (exactRaw) return { kind: "task", cat: exactRaw, name: rawRest, days: pd.days, startSlot, lenSlots, nextLen, scope }; }
+  const startSlot = tr ? Math.round(tr.startMin / SLOT_MIN) : 0;
+  const endSlotRaw = tr ? Math.round(tr.endMin / SLOT_MIN) : 0;
+  const lenSlots = tr ? Math.max(1, Math.min(TOTAL_SLOTS, endSlotRaw) - startSlot) : 0;
+  const nextLen = tr ? Math.max(0, endSlotRaw - TOTAL_SLOTS) : 0; // slots spilling past midnight → placed on the next day
+  const ext = { del, scope, wkFrom, wkTo, hasTime: !!tr };
+  if (prefixCat) return Object.assign({ kind: "meeting", cat: prefixCat, name: rest || prefixCat.name, days: pd.days, startSlot, lenSlots, nextLen }, ext);
+  { const exactRaw = rawRest && categories.find((c) => (c.name || "").toLowerCase() === rawRest.toLowerCase()); if (exactRaw) return Object.assign({ kind: "task", cat: exactRaw, name: rawRest, days: pd.days, startSlot, lenSlots, nextLen }, ext); }
   if (!rest) return { error: "Which task or meeting? Include a name in the command." };
   const q = rest.toLowerCase();
   const wordIn = (name, hay) => { if (!name) return false; const n = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); return new RegExp("(^|[^a-z0-9])" + n + "([^a-z0-9]|$)", "i").test(hay); };   // whole-word match, so "On" won't match inside "Fionn"
@@ -1103,8 +1109,8 @@ function parseCommand(text, categories) {
     categories.find((c) => c.name.toLowerCase().startsWith(q)) ||
     categories.find((c) => c.name.toLowerCase().includes(q)) ||
     categories.find((c) => wordIn(c.name.toLowerCase(), q)) || null;
-  if (cat) return { kind: "task", cat, name: rest, days: pd.days, startSlot, lenSlots, nextLen, scope };
-  return { kind: "event", name: rest, days: pd.days, startSlot, lenSlots, nextLen, scope };
+  if (cat) return Object.assign({ kind: "task", cat, name: rest, days: pd.days, startSlot, lenSlots, nextLen }, ext);
+  return Object.assign({ kind: "event", name: rest, days: pd.days, startSlot, lenSlots, nextLen }, ext);
 }
 
 /* ── CSV ── */
@@ -1816,7 +1822,7 @@ if (IS_BROWSER) (function () {
     t1under.forEach((c) => renderItem(c, 2, null, "today"));   // 1b: under this week → + hide button
     t1at.forEach((c) => renderItem(c, 3, null, false));        // 1c: at goal but planned today
     */
-    if (tier2under.length) divider("Open", "lbl");
+    if (tier2under.length) { const openTot = tier2under.reduce((s, c) => s + Math.max(0, rema(c)), 0); divider("Open · " + fmtHM(openTot), "lbl"); }
     tier2under.forEach((c) => renderItem(c, 2));
     if (tier2over.length) divider("Over", "lbl");
     tier2over.forEach((c) => renderItem(c, 2));
@@ -2239,8 +2245,39 @@ if (IS_BROWSER) (function () {
     snap();
     const spill = r.nextLen > 0;   // block runs past midnight → also drop the remainder on the next day
     const activeMP = activeMasterplan();
-    if (r.scope === "all" && activeMP) ensureWeeksForMP(activeMP);
-    const targetWeeks = (r.scope === "all" && activeMP) ? mpWeekIndices(activeMP) : [state.currentWeek];
+    let targetWeeks;
+    if (r.scope === "all" && activeMP) { ensureWeeksForMP(activeMP); targetWeeks = mpWeekIndices(activeMP); }
+    else if (r.scope === "range") {
+      const lo = Math.min(r.wkFrom, r.wkTo), hi = Math.max(r.wkFrom, r.wkTo);
+      const anchorIso = isoWeek(dateOfCell(state.anchorMonday, 0, 0));
+      if (hi >= anchorIso && (hi - anchorIso) < 70) { const maxIdx = hi - anchorIso; while (state.weeks.length <= maxIdx) state.weeks.push({ id: "w" + Date.now() + "_" + state.weeks.length, blocks: [], budgets: {} }); }
+      targetWeeks = [];
+      for (let i = 0; i < state.weeks.length; i++) { const wk = isoWeek(dateOfCell(state.anchorMonday, i, 0)); if (wk >= lo && wk <= hi) targetWeeks.push(i); }
+      if (!targetWeeks.length) { toast("No weeks " + lo + "–" + hi + " found in this plan."); $("cmdInput").value = ""; $("cmdInput").blur(); return; }
+    }
+    else targetWeeks = [state.currentWeek];
+    if (r.del) {   // bulk delete: remove matching task/meeting/event blocks (+ their Switch) on the given days/time across the target weeks
+      const dayLabels = r.days.map((di) => DAYS[di]);
+      const swCat = state.categories.find((c) => (c.name || "").trim().toLowerCase() === "switch");
+      const overlaps = (b) => !r.hasTime || (b.startSlot < (r.startSlot + r.lenSlots) && r.startSlot < (b.startSlot + b.lenSlots));
+      const isTarget = (b) => {
+        if (!dayLabels.includes(b.day) || b.kind === "actual") return false;
+        if (r.kind === "task") return b.catId === r.cat.id && !b.meeting && !b.event && overlaps(b);
+        if (r.kind === "meeting") return b.meeting && b.catId === r.cat.id && (!r.name || (b.name || "").toLowerCase() === r.name.toLowerCase()) && overlaps(b);
+        return b.event && (b.name || "").toLowerCase() === (r.name || "").toLowerCase() && overlaps(b);
+      };
+      let removed = 0;
+      for (const wi of targetWeeks) {
+        const B = state.weeks[wi].blocks, gone = [];
+        let keep = B.filter((b) => { if (isTarget(b)) { gone.push(b); return false; } return true; });
+        removed += gone.length;
+        if (swCat && gone.some((b) => b.meeting)) keep = keep.filter((b) => !(b.catId === swCat.id && gone.some((g) => g.meeting && g.day === b.day && g.startSlot === b.startSlot + b.lenSlots)));
+        state.weeks[wi].blocks = keep;
+      }
+      const nWk = targetWeeks.length;
+      toast(removed ? ("Deleted " + removed + " block(s)" + (nWk > 1 ? " across " + nWk + " weeks" : "")) : "No matching blocks found to delete");
+      $("cmdInput").value = ""; $("cmdInput").blur(); commit(); return;
+    }
     const addSw = (wi, dayLabel, startSlot) => {
       if (startSlot <= 0) return;
       let sw = state.categories.find((c) => c.name.trim().toLowerCase() === "switch");
@@ -2266,7 +2303,7 @@ if (IS_BROWSER) (function () {
         }
       }
     }
-    const nW = targetWeeks.length, scopeTxt = (r.scope === "all" && nW > 1) ? " across " + nW + " weeks" : "";
+    const nW = targetWeeks.length, scopeTxt = (nW > 1) ? " across " + nW + " weeks" : "";
     if (r.kind === "task") toast("Placed " + (r.days.length * nW) + " × " + fmtH((r.lenSlots + r.nextLen) / SPH) + "h of “" + r.cat.name + "”" + scopeTxt + (spill ? " (over midnight)" : ""));
     else if (r.kind === "meeting") toast("Meeting “" + r.name + "” → " + r.cat.name + scopeTxt + " (+ switch)");
     else toast("Added meeting “" + r.name + "”" + scopeTxt + " (+ switch)");
@@ -2777,7 +2814,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v132"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v132"; } catch (e) {}
+  try { document.title = "Plapp v134"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v134"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
