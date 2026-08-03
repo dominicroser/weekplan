@@ -757,7 +757,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v126 */
+/* build v127 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2607,7 +2607,10 @@ if (IS_BROWSER) (function () {
       return f + groupRow("work", "Work") + groupRow("fruit", "Fruit") + groupRow("home", "Home");
     })();
     const mCls = "budTable mpTable" + (ui.mpHideIP ? " hideIP" : "") + (ui.mpHideFeat ? " hideFeat" : "") + (ui.mpHidePace ? " hidePace" : "") + (ui.mpHideImp ? " hideImp" : "") + (ui.mpHidePast ? " hidePast" : "");
-    let fh = '<div class="budWrap"><table class="' + mCls + '"><thead>' + mHead + '</thead><tbody>' + activeList.map(taskRow).join("") + mFoot + "</tbody></table></div>";
+    const tsumOf = (c) => { let s = 0; for (const i of mpIdx) s += weekEffort(c, i); return s; };
+    const activeWith = activeList.filter((c) => tsumOf(c) > 0.0001), activeZero = activeList.filter((c) => tsumOf(c) <= 0.0001);
+    let fh = '<div class="budWrap"><table class="' + mCls + '"><thead>' + mHead + '</thead><tbody>' + activeWith.map(taskRow).join("") + mFoot + "</tbody></table></div>";
+    if (activeZero.length) fh += '<div class="inactiveHd">No hours assigned in this masterplan</div><div class="budWrap"><table class="' + mCls + '"><thead>' + mHead + '</thead><tbody>' + activeZero.map(taskRow).join("") + "</tbody></table></div>";
     if (inactiveList.length) fh += '<div class="inactiveHd">Inactive tasks</div><div class="budWrap"><table class="' + mCls + '"><thead>' + mHead + '</thead><tbody>' + inactiveList.map(taskRow).join("") + "</tbody></table></div>";
 
     renderMPBar();
@@ -2770,7 +2773,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v126"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v126"; } catch (e) {}
+  try { document.title = "Plapp v127"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v127"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
