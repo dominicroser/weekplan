@@ -514,6 +514,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .wkBadge { display: inline-block; padding: 1px 7px; border-radius: 5px; font-weight: 700; color: #111; }
 .wkBadge.ok { background: #b8ecc4; }
 .wkBadge.bad { background: #f4b0a6; }
+.histTable .histDel { background: transparent; border: none; color: rgba(0,0,0,0.3); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 5px; }
+.histTable .histDel:hover { color: #c53030; }
 .stVer { font-size: 9px; font-weight: 700; color: var(--ink3); }
 .stNote { border: none; background: transparent; cursor: pointer; font-size: 12px; padding: 0 4px; opacity: .45; }
 .stNote.has { opacity: 1; }
@@ -757,7 +759,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v134 */
+/* build v135 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2814,7 +2816,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v134"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v134"; } catch (e) {}
+  try { document.title = "Plapp v135"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v135"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3141,12 +3143,21 @@ if (IS_BROWSER) (function () {
     wset.add(state.currentWeek);
     const weeks = [...wset].sort((a, b) => b - a);
     if (!weeks.length) { host.innerHTML = '<p class="muted">No weeks recorded yet.</p>'; return; }
-    let h = '<table class="histTable"><thead><tr><th>Week</th><th>Dates</th><th>Missed / Joker</th><th>Version</th></tr></thead><tbody>';
+    let h = '<table class="histTable"><thead><tr><th>Week</th><th>Dates</th><th>Missed / Joker</th><th>Version</th><th></th></tr></thead><tbody>';
     for (const wi of weeks) {
       const s = computeWeekStats(wi), d0 = dateOfCell(state.anchorMonday, wi, 0), d5 = dateOfCell(state.anchorMonday, wi, 5), ver = versionForWeek(wi);
-      h += '<tr><td><span class="wkBadge ' + (s.achieved ? "ok" : "bad") + '">Week ' + isoWeek(d0) + "</span></td><td>" + shortD(d0) + "–" + shortD(d5) + "</td><td>" + s.miss + " / " + fmtJoker(s.joker) + "</td><td>" + (ver ? "v" + ver : "—") + "</td></tr>";
+      const delBtn = wi === state.currentWeek ? "" : '<button class="histDel" data-wi="' + wi + '" title="Delete this week from the tracker">&times;</button>';
+      h += '<tr><td><span class="wkBadge ' + (s.achieved ? "ok" : "bad") + '">Week ' + isoWeek(d0) + "</span></td><td>" + shortD(d0) + "–" + shortD(d5) + "</td><td>" + s.miss + " / " + fmtJoker(s.joker) + "</td><td>" + (ver ? "v" + ver : "—") + "</td><td>" + delBtn + "</td></tr>";
     }
     host.innerHTML = h + "</tbody></table>";
+    host.querySelectorAll(".histDel").forEach((btn) => btn.addEventListener("click", () => {
+      const wi = +btn.dataset.wi, dates = habitWeekDates(wi), mon = ymd(dateOfCell(state.anchorMonday, wi, 0));
+      if (!confirm("Delete Week " + isoWeek(dateOfCell(state.anchorMonday, wi, 0)) + " from the streak tracker? Its habit marks for that week will be removed and the week will disappear.")) return;
+      snap();
+      for (const hb of (state.habits || [])) { if (hb.entries) for (const d of dates) delete hb.entries[d]; }
+      if (state.weekNotes) delete state.weekNotes[mon];
+      commit(); renderHistory(); renderStreak();
+    }));
   }
   function checkReminder() {
     if (!(state.habits || []).length) return;
