@@ -239,7 +239,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable .wkHol { cursor: pointer; font-size: 9.5px; color: var(--ink3); margin-left: 3px; padding: 0 1px; border-radius: 3px; }
 .mpTable .wkHol.on { color: #b4690e; font-weight: 700; }
 .mpTable .wkHol:hover { background: rgba(0,0,0,0.08); }
-.mpTable.hideFeat td:nth-child(n+10):nth-child(-n+23), .mpTable.hideFeat th:nth-child(n+10):nth-child(-n+23) { display: none; }
+.mpTable.hideFeat td:nth-child(n+10):nth-child(-n+24), .mpTable.hideFeat th:nth-child(n+10):nth-child(-n+24) { display: none; }
 .fillHandle { position: fixed; width: 11px; height: 11px; background: #1d4ed8; border: 1.5px solid #fff; box-shadow: 0 0 0 1px #1d4ed8; cursor: crosshair; z-index: 10000; display: none; }
 .mpTable .bh.fillHi { outline: 2px solid #1d4ed8; outline-offset: -2px; background: #e8efff; }
 .mpTable td.stot, .mpTable td.gcolF, .mpTable td.name, .mpTable td.dcol { background: var(--bg); z-index: 2; }
@@ -344,6 +344,11 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .gOver { color: #2f9e44; font-weight: 600; }
 .gUnder { color: #e03131; font-weight: 600; }
 .poolTrack { font-size: 10px; color: var(--ink3); font-family: 'Inter', sans-serif; margin-top: 2px; }
+.checkList { display: flex; flex-direction: column; gap: 1px; margin: 1px 2px 4px; }
+.checkRow { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink2); cursor: pointer; padding: 1px 3px; border-radius: 4px; }
+.checkRow:hover { background: var(--panel2); }
+.checkRow input { flex-shrink: 0; margin: 0; }
+.checkRow .checkName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .poolDivider.abDiv { height: 2px; background: #9aa0a8; opacity: 0.8; border-radius: 2px; margin: 7px 2px; }
 .poolDivider.lbl { height: auto; background: #16335c; border-radius: 0; border-top: 4px solid #000; border-bottom: 4px solid #000; padding: 5px 0; margin: 13px 2px 6px; color: #b6ff7a; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
@@ -759,7 +764,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v135 */
+/* build v138 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1670,14 +1675,27 @@ if (IS_BROWSER) (function () {
     const trackedAll = {}; for (const ds in rep.days) { if (!scopeDates.has(ds)) continue; const bc = rep.days[ds].byCat; for (const k in bc) trackedAll[k] = (trackedAll[k] || 0) + bc[k]; }
     const aheadToday = {}, elapsedToday = {};
     if (todayIdx >= 0) for (const b of curBlocks()) { if (b.day !== DAYS[todayIdx] || b.event || b.kind === "actual") continue; const st = b.startSlot, end = b.startSlot + b.lenSlots; aheadToday[b.catId] = (aheadToday[b.catId] || 0) + Math.max(0, end - Math.max(st, nowSlotS)) / 4; elapsedToday[b.catId] = (elapsedToday[b.catId] || 0) + Math.max(0, Math.min(end, nowSlotS) - st) / 4; }
-    // Tier 0 "Missed": planned-and-elapsed-today tasks where tracked < elapsed-plan and the shortfall isn't covered by remaining plan today
-    const t0missed = [];
-    for (const cid in elapsedToday) {
-      const c = cats.find((x) => x.id === cid); if (!c || isUtil(c) || c.parent || c.missHideDate === todayStr) continue;
-      const done = trackToday(cid) + (state.timer && state.timer.catId === cid ? (Date.now() - state.timer.startMs) / 3600000 : 0);
-      if (elapsedToday[cid] - done - (aheadToday[cid] || 0) > eps) t0missed.push(c);
+    // Check list (replaces the old "Missed" tier): a task appears if it has a plan block today that has fully ended and you tracked less than you assigned; plus untracked tasks ticked "check". Tick to dismiss for today.
+    // Check list — per assigned BLOCK. A block shows if its end is in the past and (untracked+check) OR (tracked less than the block, crediting sessions that started within the block). A running timer that started in the block keeps it off the list until you stop.
+    const chkDates = []; for (let d = 0; d < ND; d++) chkDates.push(ymd(dateOfCell(state.anchorMonday, cw, d)));
+    const chkById = {}; for (const c of state.categories) chkById[c.id] = c;
+    const timerStartSlot = state.timer ? (new Date(state.timer.startMs).getHours() * 60 + new Date(state.timer.startMs).getMinutes()) / SLOT_MIN : -1;
+    const timerStartDate = state.timer ? ymd(new Date(state.timer.startMs)) : null;
+    const checkBlocks = [];
+    if (todayIdx >= 0) for (const b of curBlocks()) {
+      if (b.event || b.kind === "actual" || b.chkAck) continue;
+      const di = DAYS.indexOf(b.day); if (di < 0 || di > todayIdx) continue;
+      const bEnd = b.startSlot + b.lenSlots;
+      if (!(di < todayIdx || bEnd <= nowSlotS)) continue;            // block hasn't ended yet
+      const c = chkById[b.catId]; if (!c || c.archived || c.parent) continue;
+      const ds = chkDates[di];
+      if (c.noTrack) { if (c.check) checkBlocks.push({ b, c }); continue; }
+      if (c.auto) continue;
+      if (state.timer && state.timer.catId === c.id && timerStartDate === ds && timerStartSlot < bEnd - 1e-4) continue;   // timer still running, overlapping this block
+      let credit = 0; for (const a of curBlocks()) { if (a.kind === "actual" && a.catId === c.id && a.date === ds && a.startSlot < bEnd - 1e-4 && (a.startSlot + a.lenSlots) > b.startSlot + 1e-4) credit += Math.max(0, (a.endMs - a.startMs) / 3600000); }   // any session overlapping the block, credited at full duration
+      if (credit < b.lenSlots / 4 - eps) checkBlocks.push({ b, c });
     }
-    t0missed.sort((a, b) => (elapsedToday[b.id] - (trackToday(b.id))) - (elapsedToday[a.id] - (trackToday(a.id))));
+    checkBlocks.sort((x, y) => (DAYS.indexOf(x.b.day) - DAYS.indexOf(y.b.day)) || (x.b.startSlot - y.b.startSlot));
     const catsG = (g) => cats.filter((c) => (c.group || "work") === g);
     const sumOf = (S, f) => S.reduce((s, c) => s + (f(c) || 0), 0);
     // Group rows fan a parent's time out to its children's groups (parent = shorthand for its % split).
@@ -1816,8 +1834,22 @@ if (IS_BROWSER) (function () {
       }
       pool.appendChild(el);
     };
-    if (t0missed.length) divider("Missed", "lbl");
-    t0missed.forEach((c) => renderItem(c, 2, "miss", "missed"));  // Tier 0: behind on today's elapsed plan → black + hide button
+    if (checkBlocks.length) {
+      divider("Check", "lbl");
+      const box = document.createElement("div"); box.className = "checkList";
+      for (const it of checkBlocks) {
+        const row = document.createElement("label"); row.className = "checkRow";
+        const cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "checkTick";
+        const nm = document.createElement("span"); nm.className = "checkName";
+        nm.textContent = it.c.name + "  " + slotLabel(it.b.startSlot) + "–" + slotLabel(it.b.startSlot + it.b.lenSlots);
+        nm.title = nm.textContent;
+        row.appendChild(cb); row.appendChild(nm);
+        const bid = it.b.id;
+        cb.addEventListener("change", () => { snap(); const bb = curBlocks().find((x) => x.id === bid); if (bb) bb.chkAck = true; commit(); });
+        box.appendChild(row);
+      }
+      pool.appendChild(box);
+    }  // Tier 0: behind on today's elapsed plan → black + hide button
     /* Today tier hidden for now (can delete later):
     if (t1over.length + t1under.length + t1at.length) divider("Today", "lbl");
     t1over.forEach((c) => renderItem(c, 2, null, false));      // 1a: over this week
@@ -1897,15 +1929,21 @@ if (IS_BROWSER) (function () {
       if (cmp < 0) dayBlocks = dayBlocks.filter((b) => b.kind === "actual" || b.event);                                  // past day: actual + events
       else if (cmp > 0) dayBlocks = dayBlocks.filter((b) => b.kind !== "actual");                                         // future day: plans + events
       else dayBlocks = dayBlocks.filter((b) => b.kind === "actual" || (b.startSlot + b.lenSlots) > nowSlot);   // today: drop plans & meetings already elapsed
-      // today: once the day has started, slide a plan block's front to "now" so it no longer overlaps tracked time
+      // today: slide a plan block's front past "now" AND past any tracked (actual) block covering its start, so it never overlaps tracked time
+      const acts = dayBlocks.filter((b) => b.kind === "actual");
       const vGeom = {};
       for (const b of dayBlocks) {
-        let vs = b.startSlot, vl = b.lenSlots;
-        if (cmp === 0 && b.kind !== "actual" && b.startSlot < nowSlot && (b.startSlot + b.lenSlots) > nowSlot) { vs = nowSlot; vl = (b.startSlot + b.lenSlots) - nowSlot; }
-        vGeom[b.id] = { s: vs, l: vl };
+        let vs = b.startSlot, ve = b.startSlot + b.lenSlots;
+        if (cmp === 0 && b.kind !== "actual") {
+          if (vs < nowSlot) vs = Math.min(nowSlot, ve);
+          let changed = true, guard = 0;
+          while (changed && guard++ < 40) { changed = false; for (const a of acts) { const ae = a.startSlot + a.lenSlots; if (a.startSlot <= vs + 1e-4 && ae > vs + 1e-4 && ae <= ve + 1e-4) { vs = ae; changed = true; } } }
+        }
+        vGeom[b.id] = { s: vs, l: Math.max(0, ve - vs) };
       }
-      const lay = layoutDay(dayBlocks.map((b) => Object.assign({}, b, { startSlot: vGeom[b.id].s, lenSlots: vGeom[b.id].l })));
-      for (const b of dayBlocks) {
+      const shown = dayBlocks.filter((b) => vGeom[b.id].l > 0.02);   // drop plan blocks fully covered by tracked time
+      const lay = layoutDay(shown.map((b) => Object.assign({}, b, { startSlot: vGeom[b.id].s, lenSlots: vGeom[b.id].l })));
+      for (const b of shown) {
         const p = lay.pos[b.id];
         const color = blockColor(b, catById);
         const ink = textOn(color);
@@ -1936,11 +1974,6 @@ if (IS_BROWSER) (function () {
         el.querySelector(".resizeHandle.bot").addEventListener("pointerdown", (e) => { e.stopPropagation(); e.preventDefault(); startBlockDrag(e, b, "resize"); });
         el.addEventListener("pointerdown", (e) => { if (e.target.closest(".blockX") || e.target.closest(".resizeHandle")) return; e.preventDefault(); startBlockDrag(e, b, "move"); });
         layer.appendChild(el);
-      }
-      for (const ov of lay.overlays) {
-        const o = document.createElement("div"); o.className = "overlap";
-        o.style.cssText = "top:" + (ov[0] * SLOT_PX) + "px;height:" + ((ov[1] - ov[0]) * SLOT_PX) + "px;left:calc(" + LABEL_W + "px + " + (ci / NC) + " * (100% - " + LABEL_W + "px) + 1px);width:calc((100% - " + LABEL_W + "px) / " + NC + " - 3px);";
-        layer.appendChild(o);
       }
     }
     renderActionBar();
@@ -2592,6 +2625,7 @@ if (IS_BROWSER) (function () {
       r += '<td><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
       r += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
       r += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
+      r += '<td><input type="checkbox" class="bcheck" title="Check — only used for untracked tasks; ticked tasks show in the pool Check list"' + (c.check ? " checked" : "") + (c.noTrack ? "" : " disabled") + "></td>";
       r += '<td><input type="checkbox" class="bplock" title="Keep this colour when you press Recolour all by group"' + (c.lockColor ? " checked" : "") + "></td>";
       r += '<td><select class="bpar" title="Roll this task’s tracked time up into a parent task"><option value="">—</option>' + state.categories.filter((p) => p.id !== c.id && !p.parent).map((p) => '<option value="' + p.id + '"' + (c.parent === p.id ? " selected" : "") + ">" + (p.name || "").replace(/</g, "&lt;") + "</option>").join("") + '</select> <input class="bsplit" type="number" min="0" max="100" step="5" placeholder="%" title="Optional: share (%) of the parent timer’s time this child receives when the parent is stopped" value="' + (c.splitPct != null ? c.splitPct : "") + '" style="width:42px;"></td>';
       r += '<td><input type="checkbox" class="blater" title="Later — done for now, but may become active again"' + (kind === "later" ? " checked" : "") + "></td>";
@@ -2629,7 +2663,7 @@ if (IS_BROWSER) (function () {
     }
     const kindRank = (c) => { const k = kindOf(c); return k === "later" ? 0 : k === "nth" ? 1 : 2; };   // second table order: Later → NTH → Done
     const inactiveList = state.categories.filter((c) => c.archived && !hasHoursMP(c)).sort((a, b) => (kindRank(a) - kindRank(b)) || (a.name || "").localeCompare(b.name || ""));
-    const mHead = '<tr><th class="paceD" title="Δ ÷ remaining effective weeks (weeks left − vacation)">Δ/w</th><th class="paceT" title="Total ÷ remaining effective weeks">T/w</th><th class="paceG" title="Committed ÷ remaining effective weeks">C/w</th><th class="dcol" data-sort="diff" title="Committed vs Total — coral = under committed, blue = over, green = on target">&Delta;' + arrow("diff") + '</th><th class="gcol gcolPrio" data-sort="prio" title="Prio — priority to do more on this task if time opens up (0–10)">Prio' + arrow("prio") + '</th><th class="stot" data-sort="total">Total' + arrow("total") + '</th><th class="gcol gcolF" data-sort="goal" title="Committed">Committed' + arrow("goal") + '</th><th class="gcol gcolFip" data-sort="goalip" title="If-possible goal — overall stretch target">IP' + arrow("goalip") + '</th><th class="name" data-sort="name">Task' + arrow("name") + '</th><th data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th data-sort="group">Group' + arrow("group") + '</th><th class="cmtCol" title="Comment">🗒</th><th class="lnkCol" title="Link">🔗</th><th class="adCol" title="Amnesty deal">AD</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th>Lock</th><th>Parent</th><th title="Done for now">Later</th><th title="Nice to have">NTH</th><th title="Finished for good">Done</th><th></th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="' + (i === state.currentWeek ? "mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="wprioCol' + (past ? " pastCol" : "") + '" title="Prio for this week (0–10)">P</th><th class="ipCol' + (past ? " pastCol" : "") + '">IP</th>'; }).join("") + "</tr>";
+    const mHead = '<tr><th class="paceD" title="Δ ÷ remaining effective weeks (weeks left − vacation)">Δ/w</th><th class="paceT" title="Total ÷ remaining effective weeks">T/w</th><th class="paceG" title="Committed ÷ remaining effective weeks">C/w</th><th class="dcol" data-sort="diff" title="Committed vs Total — coral = under committed, blue = over, green = on target">&Delta;' + arrow("diff") + '</th><th class="gcol gcolPrio" data-sort="prio" title="Prio — priority to do more on this task if time opens up (0–10)">Prio' + arrow("prio") + '</th><th class="stot" data-sort="total">Total' + arrow("total") + '</th><th class="gcol gcolF" data-sort="goal" title="Committed">Committed' + arrow("goal") + '</th><th class="gcol gcolFip" data-sort="goalip" title="If-possible goal — overall stretch target">IP' + arrow("goalip") + '</th><th class="name" data-sort="name">Task' + arrow("name") + '</th><th data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th data-sort="group">Group' + arrow("group") + '</th><th class="cmtCol" title="Comment">🗒</th><th class="lnkCol" title="Link">🔗</th><th class="adCol" title="Amnesty deal">AD</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th title="Check — tick to add an untracked task to the pool Check list">Check</th><th>Lock</th><th>Parent</th><th title="Done for now">Later</th><th title="Nice to have">NTH</th><th title="Finished for good">Done</th><th></th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="' + (i === state.currentWeek ? "mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="wprioCol' + (past ? " pastCol" : "") + '" title="Prio for this week (0–10)">P</th><th class="ipCol' + (past ? " pastCol" : "") + '">IP</th>'; }).join("") + "</tr>";
     const mFoot = (function () {
       const grpW = (c, g) => groupContribs(state, c.id)[g] || 0;
       let gt = 0, gIP = 0, goalSum = 0, cells = "";
@@ -2638,7 +2672,7 @@ if (IS_BROWSER) (function () {
       const gover = goalSum > 0.0001 && gt > goalSum + 0.0001;
       const gdf = gt - goalSum, gCls = goalSum <= 0.0001 ? "" : (gdf < -0.0001 ? "dfNeg" : gdf > 0.0001 ? "dfPos" : "dfZero"), gTxt = goalSum <= 0.0001 ? "" : (gdf < -0.0001 ? "-" + fmtHM(-gdf) : gdf > 0.0001 ? "+" + fmtHM(gdf) : "0:00");
       let f = '<tr class="budFoot"><td class="paceD btot ' + gCls + '">' + (goalSum > 0.0001 ? paceSigned(gdf) : "") + '</td><td class="paceT btot">' + pace(gt) + '</td><td class="paceG btot">' + (goalSum > 0.0001 ? pace(goalSum) : "") + '</td><td class="dcol btot ' + gCls + '">' + gTxt + '</td><td class="gcol gcolPrio btot"></td><td class="stot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="gcol gcolF btot">' + (goalSum > 0.0001 ? fmtHM(goalSum) : "") + '</td><td class="gcol gcolFip btot">' + (gIP ? fmtHM(gIP) : "") + '</td><td class="name">Total</td>';
-      for (let k = 0; k < 14; k++) f += "<td></td>";
+      for (let k = 0; k < 15; k++) f += "<td></td>";
       f += cells + "</tr>";
       // Work / Fruit / Home totals — a parent's time fans out to its children's groups
       const groupRow = (g, label) => {
@@ -2647,7 +2681,7 @@ if (IS_BROWSER) (function () {
         for (const c of activeList) { const w = grpW(c, g); goalS += gGet("goal", c.id) * w; ipS += gGet("goalIP", c.id) * w; }
         const df = tot - goalS, cls = goalS <= 0.0001 ? "" : (df < -0.0001 ? "dfNeg" : df > 0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (df < -0.0001 ? "-" + fmtHM(-df) : df > 0.0001 ? "+" + fmtHM(df) : "0:00");
         let g2 = '<tr class="budFoot budGrp budGrp-' + g + '"><td class="paceD btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(df) : "") + '</td><td class="paceT btot">' + pace(tot) + '</td><td class="paceG btot">' + (goalS > 0.0001 ? pace(goalS) : "") + '</td><td class="dcol btot ' + cls + '">' + dtxt + '</td><td class="gcol gcolPrio btot"></td><td class="stot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="gcol gcolF btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td><td class="gcol gcolFip btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td><td class="name">' + label + '</td>';
-        for (let k = 0; k < 14; k++) g2 += "<td></td>";
+        for (let k = 0; k < 15; k++) g2 += "<td></td>";
         return g2 + cc + "</tr>";
       };
       return f + groupRow("work", "Work") + groupRow("fruit", "Fruit") + groupRow("home", "Home");
@@ -2671,7 +2705,8 @@ if (IS_BROWSER) (function () {
         tr.querySelector(".bauto").addEventListener("change", (e) => { snap(); cat.auto = e.target.checked; commit(); renderBudgets(); });
         tr.querySelector(".bpar").addEventListener("change", (e) => { snap(); if (e.target.value) cat.parent = e.target.value; else delete cat.parent; commit(); renderBudgets(); });
         tr.querySelector(".bsplit").addEventListener("change", (e) => { snap(); const v = e.target.value.trim(); if (v === "") delete cat.splitPct; else cat.splitPct = Math.max(0, Math.min(100, +v || 0)); commit(); renderBudgets(); });
-        tr.querySelector(".btrack").addEventListener("change", (e) => { snap(); cat.noTrack = !e.target.checked; if (cat.noTrack && state.timer && state.timer.catId === cat.id) stopTimer(); commit(); renderBudgets(); });
+        tr.querySelector(".btrack").addEventListener("change", (e) => { snap(); cat.noTrack = !e.target.checked; if (cat.noTrack && state.timer && state.timer.catId === cat.id) stopTimer(); if (!cat.noTrack) delete cat.check; commit(); renderBudgets(); });
+        { const bk = tr.querySelector(".bcheck"); if (bk) bk.addEventListener("change", (e) => { snap(); if (e.target.checked) cat.check = true; else delete cat.check; commit(); }); }
         { const bc = tr.querySelector(".bcmt"); if (bc) bc.addEventListener("click", () => openComment(id)); }
         { const bl = tr.querySelector(".blnk"); if (bl) { if (bl.tagName === "A") bl.addEventListener("contextmenu", (e) => { e.preventDefault(); editLink(id); }); else bl.addEventListener("click", () => editLink(id)); } }
         { const ba = tr.querySelector(".bad"); if (ba) ba.addEventListener("change", (e) => { snap(); cat.ad = e.target.checked; commit(); renderBudgets(); }); }
@@ -2816,7 +2851,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v135"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v135"; } catch (e) {}
+  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v138"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
