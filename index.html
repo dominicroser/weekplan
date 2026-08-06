@@ -467,9 +467,11 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .stTitle .stScore.bad { color: #d64545; }
 .stGrid { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; table-layout: fixed; }
 .stGrid th { font-size: 9.5px; font-weight: 700; color: var(--ink3); padding: 1px 0; text-align: center; }
-.stGrid th.stNameH { text-align: left; width: 84px; }
-.stGrid td.stName { font-size: 11px; color: var(--ink); padding: 1px 4px 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 84px; }
-.stCell { height: 18px; border: 1px solid var(--bg); border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: #7a6a20; user-select: none; }
+.stGrid th.stNameH { text-align: left; width: 54px; }
+.stGrid td.stName { font-size: 10px; color: var(--ink); padding: 1px 4px 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 54px; }
+.stGrid th.stAvgH { width: 34px; font-size: 8px; }
+.stGrid td.stAvg { font-size: 8px; font-weight: 700; text-align: center; color: var(--ink3); padding: 0 2px; }
+.stCell { height: 18px; border: 1px solid var(--bg); border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 600; color: #7a6a20; user-select: none; }
 .stCell.ach { background: #fff2ab; color: #9c7a00; }
 .stCell.na  { background: #f0cf4d; color: #6f5a12; }
 .stCell.miss { background: #f2795f; color: #ffdcd4; }
@@ -494,6 +496,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .hbTable td { padding: 3px 6px; border-bottom: 1px solid var(--line); }
 .hbTable input.hbName { width: 100%; min-width: 120px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 13px; }
 .hbTable .hbType { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 4px 6px; font-size: 12px; }
+.hbTable .hbHmL { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--ink3); margin-left: 6px; white-space: nowrap; }
 .hbTable .hbRule { width: 100%; min-width: 200px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace; }
 .hbTable .hbRule:disabled { opacity: .4; }
 #habitsDialog code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--panel2); padding: 0 3px; border-radius: 3px; font-size: 11.5px; }
@@ -570,7 +573,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
         <div id="noteDock"></div>
       </div>
       <div class="rbPanel" id="streakPanel">
-        <div class="rbHd"><button class="rbAdd" id="streakBulk" title="Bulk-mark a range of days (holiday, illness…)">&#8943;</button><button class="rbAdd" id="streakCfg" title="Manage habits &amp; history">&#9881;</button></div>
+        <div class="rbHd"><button class="rbAdd" id="streakAvg" title="Show/hide averages of entered values">&#216;</button><button class="rbAdd" id="streakBulk" title="Bulk-mark a range of days (holiday, illness…)">&#8943;</button><button class="rbAdd" id="streakCfg" title="Manage habits &amp; history">&#9881;</button></div>
         <div id="streakBody"></div>
       </div>
       <div class="rbPanel" id="deadlinePanel">
@@ -764,7 +767,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v138 */
+/* build v139 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2851,7 +2854,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v138"; } catch (e) {}
+  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v139"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -2969,13 +2972,14 @@ if (IS_BROWSER) (function () {
       distributeFill(h, date, num); return;
     }
     const cur = h.entries && h.entries[date] != null ? h.entries[date] : "";
-    const v = prompt("Value for “" + h.name + "” on " + date + "\n(a number; or force with 'ach' / 'miss'; 'na'; or blank to clear):", cur === "na" ? "na" : String(cur));
+    const curDisp = (h.hm && typeof cur === "number") ? fmtHM(cur) : (cur === "na" ? "na" : String(cur));
+    const v = prompt("Value for “" + h.name + "” on " + date + "\n(a number" + (h.hm ? " as h:mm, e.g. 6:50" : "") + "; or force with 'ach' / 'miss'; 'na'; or blank to clear):", curDisp);
     if (v === null) return;
     const t = v.trim().toLowerCase();
     snap(); if (!h.entries) h.entries = {};
     if (t === "") delete h.entries[date];
     else if (t === "na" || t === "ach" || t === "miss") h.entries[date] = t;
-    else { const num = parseFloat(v.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, 'ach'/'miss', 'na', or blank."); return; } h.entries[date] = num; }
+    else { const num = v.indexOf(":") >= 0 ? parseHM(v) : parseFloat(v.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, 'ach'/'miss', 'na', or blank."); return; } h.entries[date] = num; }
     commit();
   }
   function weekHabitsFor(weekIdx) {
@@ -3035,16 +3039,18 @@ if (IS_BROWSER) (function () {
     if (note) h += '<div class="stNoteTxt">' + esc(note) + "</div>";
     h += '<table class="stGrid"><thead><tr><th class="stNameH"></th>';
     for (let i = 0; i < 6; i++) h += "<th>" + dayLbls[i] + "</th>";
+    if (ui.streakAvg) h += '<th class="stAvgH" title="Average of all entered values">Ø</th>';
     h += "</tr></thead><tbody>";
     for (const hb of s.habits) {
       const def = defFor(hb.id, s.dates[0]) || {}, nm = def.name || hb.name, ty = def.type || hb.type || "binary";
       h += '<tr><td class="stName" title="' + esc(nm) + '">' + esc(nm) + "</td>";
       for (let i = 0; i < 6; i++) {
-        const d = s.dates[i], st = habitStatus(hb, d);
+        const d = s.dates[i], st = habitStatus(hb, d), val = (hb.entries || {})[d];
         const cls = st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";
-        const glyph = st === "na" ? "NA" : (ty === "numeric" && typeof (hb.entries || {})[d] === "number" ? fmtNum((hb.entries || {})[d]) : "");
+        const glyph = st === "na" ? "NA" : (ty === "numeric" && typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : "");
         h += '<td><div class="stCell ' + cls + (d === today ? " today" : "") + (d > today ? " future" : "") + '" data-h="' + hb.id + '" data-d="' + d + '">' + glyph + "</div></td>";
       }
+      if (ui.streakAvg) { const a = ty === "numeric" ? habitAllAvg(hb) : null; h += '<td class="stAvg">' + (a ? (hb.hm ? fmtHM(a.avg) : fmtNum(a.avg)) : "") + "</td>"; }
       h += "</tr>";
     }
     return h + "</tbody></table></div>";
@@ -3128,7 +3134,7 @@ if (IS_BROWSER) (function () {
     for (const hb of list) {
       const ty = hb.type || "binary";
       h += '<tr data-id="' + hb.id + '"><td><input class="hbName" value="' + esc(hb.name) + '"></td>';
-      h += '<td><select class="hbType"><option value="binary"' + (ty === "binary" ? " selected" : "") + '>Click</option><option value="numeric"' + (ty === "numeric" ? " selected" : "") + '>Number</option><option value="hours"' + (ty === "hours" ? " selected" : "") + '>Hours</option></select></td>';
+      h += '<td><select class="hbType"><option value="binary"' + (ty === "binary" ? " selected" : "") + '>Click</option><option value="numeric"' + (ty === "numeric" ? " selected" : "") + '>Number</option><option value="hours"' + (ty === "hours" ? " selected" : "") + '>Hours</option></select>' + (ty === "numeric" ? '<label class="hbHmL" title="Enter & show values as h:mm (6:50 = 6h50m)"><input type="checkbox" class="hbHm"' + (hb.hm ? " checked" : "") + '> h:mm</label>' : "") + '</td>';
       const ph = ty === "hours" ? 'hours(&quot;Mails&quot;, 6) &lt;= 6' : ty === "numeric" ? 'value &gt;= 15' : 'optional guard, e.g. hours(&quot;Mails&quot;,1) &lt;= 1';
       h += '<td><input class="hbRule" placeholder="' + ph + '" value="' + esc(hb.rule || "") + '"></td>';
       h += '<td><input class="hbDesc" placeholder="what it means" value="' + esc(hb.desc || "") + '"></td>';
@@ -3140,6 +3146,7 @@ if (IS_BROWSER) (function () {
       const id = tr.dataset.id, hb = (state.habits || []).find((x) => x.id === id); if (!hb) return;
       tr.querySelector(".hbName").addEventListener("change", (e) => { const v = e.target.value.trim(); if (v) { snap(); hb.name = v; commitDefs(); } });
       tr.querySelector(".hbType").addEventListener("change", (e) => { snap(); hb.type = e.target.value; commitDefs(); renderHabitsTable(); });
+      const hm = tr.querySelector(".hbHm"); if (hm) hm.addEventListener("change", (e) => { snap(); if (e.target.checked) hb.hm = true; else delete hb.hm; commitDefs(); renderStreak(); });
       const rl = tr.querySelector(".hbRule"); if (rl) rl.addEventListener("change", (e) => { snap(); hb.rule = e.target.value; commitDefs(); });
       const ds = tr.querySelector(".hbDesc"); if (ds) ds.addEventListener("change", (e) => { snap(); hb.desc = e.target.value; commitDefs(); });
       const fl = tr.querySelector(".hbFill"); if (fl) fl.addEventListener("change", (e) => { snap(); const n = parseFloat(e.target.value); if (isNaN(n) || n <= 0) delete hb.fill; else hb.fill = n; commit(); });
@@ -3217,6 +3224,7 @@ if (IS_BROWSER) (function () {
     bulkDlg.showModal();
   }
   $("streakBulk").addEventListener("click", openBulk);
+  { const b = $("streakAvg"); if (b) b.addEventListener("click", () => { ui.streakAvg = !ui.streakAvg; saveUI(); renderStreak(); }); }
   $("bulkCancel").addEventListener("click", () => bulkDlg.close());
   $("bulkApply").addEventListener("click", () => {
     let a = $("bulkFrom").value, b = $("bulkTo").value; const st = $("bulkStatus").value, hid = $("bulkHabit").value;
