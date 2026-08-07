@@ -471,7 +471,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .stGrid td.stName { font-size: 10px; color: var(--ink); padding: 1px 4px 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 54px; }
 .stGrid th.stAvgH { width: 34px; font-size: 8px; }
 .stGrid td.stAvg { font-size: 8px; font-weight: 700; text-align: center; color: var(--ink3); padding: 0 2px; }
-.stCell { height: 18px; border: 1px solid var(--bg); border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 600; color: #7a6a20; user-select: none; }
+.stCell { height: 18px; border: 1px solid var(--bg); border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; padding-left: 2px; font-size: 8px; font-weight: 600; color: #7a6a20; user-select: none; }
 .stCell.ach { background: #fff2ab; color: #9c7a00; }
 .stCell.na  { background: #f0cf4d; color: #6f5a12; }
 .stCell.miss { background: #f2795f; color: #ffdcd4; }
@@ -767,7 +767,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v139 */
+/* build v141 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -817,6 +817,7 @@ function defaultNote() { return { html: "", x: null, y: null, w: 230, h: 150, op
 /* ═══════════════ Pure helpers ═══════════════ */
 function fmtH(n) { return String(Math.round(n * 100) / 100); }
 function fmtHM(hours) { const m = Math.round((hours || 0) * 60); return Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0"); }
+function fmtAvg(n) { if (n == null || !isFinite(n)) return ""; if (n === 0) return "0"; let s = Math.abs(n) >= 1000 ? String(Math.round(n)) : Number(n).toPrecision(3); if (s.indexOf("e") >= 0) s = String(Number(s)); return s.replace(/^(-?)0\./, "$1."); }
 // exact (fractional, sub-15-min) slot position for a tracked session
 function actualSlots(startMs, endMs) {
   const sd = new Date(startMs), ed = new Date(endMs);
@@ -2854,7 +2855,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v139"; } catch (e) {}
+  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v141"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3050,7 +3051,7 @@ if (IS_BROWSER) (function () {
         const glyph = st === "na" ? "NA" : (ty === "numeric" && typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : "");
         h += '<td><div class="stCell ' + cls + (d === today ? " today" : "") + (d > today ? " future" : "") + '" data-h="' + hb.id + '" data-d="' + d + '">' + glyph + "</div></td>";
       }
-      if (ui.streakAvg) { const a = ty === "numeric" ? habitAllAvg(hb) : null; h += '<td class="stAvg">' + (a ? (hb.hm ? fmtHM(a.avg) : fmtNum(a.avg)) : "") + "</td>"; }
+      if (ui.streakAvg) { const a = ty === "numeric" ? habitAllAvg(hb) : null; h += '<td class="stAvg">' + (a ? (hb.hm ? fmtHM(a.avg) : fmtAvg(a.avg)) : "") + "</td>"; }
       h += "</tr>";
     }
     return h + "</tbody></table></div>";
