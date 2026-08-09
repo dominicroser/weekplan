@@ -74,12 +74,10 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolSummary .l3 b { color: var(--ink); font-weight: 700; }
 .sheetBtn { display: block; width: 100%; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink2); padding: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 .sheetBtn:active { background: var(--panel2); }
-.poolItem { position: relative; background: var(--panel); border-radius: 0 8px 8px 0; border-left: 4px solid #888; padding: 7px 10px 8px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
-.poolItem.done { opacity: 1; }                              /* "All" tier → no shading */
-.poolItem.tier2 { background: #fbe0ee; }                    /* Open tier → light pink */
-.poolItem.over { background: #ece0fa; border-left-style: solid; }   /* Over tier → light purple */
+.poolItem { position: relative; background: #e9f8f5; border-radius: 0 8px 8px 0; border-left: 4px solid #888; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }   /* very light teal */
+.poolItem.done { opacity: 1; }
 .poolItem.armed { outline-color: var(--accent); }
-.poolTop { display: flex; justify-content: space-between; align-items: baseline; gap: 5px; font-size: 11px; }
+.poolTop { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 11px; }
 .nameInput { background: transparent; border: none; color: var(--ink); font-size: 11px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; }
 .poolHours { font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; white-space: nowrap; color: var(--good); }
 .poolTop .goalSet { font-weight: 700; margin-left: 3px; }
@@ -89,6 +87,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .barFill { height: 100%; border-radius: 3px; transition: width .2s; }
 .barFill.isover { background: var(--over) !important; }
 .poolMeta { font-size: 11px; font-weight: 400; color: var(--ink3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
+.poolCalc { margin-top: 4px; font-size: 10.5px; font-weight: 400; color: var(--ink2); font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.1px; }
 .warn { color: var(--over); font-weight: 700; margin-right: 2px; }
 .hoursInput { width: 56px; background: transparent; border: none; color: var(--ink2); font-size: 10.5px; padding: 0 2px; border-radius: 3px; text-align: right; }
 .hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 12px; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: var(--ink2); }
@@ -353,10 +352,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .pOrange { color: #b8860b; font-weight: 700; }
 .pRed { color: #e03131; font-weight: 700; }
 .pPurple { color: #8b3bd6; font-weight: 700; }
-.prioStar { background: transparent; border: none; cursor: pointer; font-size: 12px; line-height: 1; padding: 0 2px; color: #c2c8cf; }
-.prioStar.o { color: #b8860b; }
-.prioStar.r { color: #e03131; }
-.prioStar.p { color: #8b3bd6; }
+.prioStar { background: transparent; border: none; cursor: pointer; font-size: 15px; line-height: 1; padding: 0 1px; color: transparent; -webkit-text-stroke: 0.6px rgba(0,0,0,0.42); }   /* colour set inline from weekly Prio; thin outline gives the border */
 .origPlan { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink2); padding: 1px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
 .opHead { font-weight: 700; color: var(--ink); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
 .opBtn { background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; font-size: 11px; cursor: pointer; padding: 0 6px; color: var(--ink2); line-height: 1.6; }
@@ -764,7 +760,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v148 */
+/* build v149 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -853,6 +849,8 @@ const GROUPS = {
 const GROUP_ORDER = ["work", "home", "fruit", "none", "termin"];
 function isNoneGroup(c) { return !c || !c.group || c.group === "none" || GROUP_ORDER.indexOf(c.group) < 0; }
 function planTimeBlocked(c) { return !c || isNoneGroup(c) || !!c.noTrack; }   // None-group or untracked → can't plan hours or run the timer (gridding still allowed)
+function prio5Bg(v) { v = Math.max(1, Math.min(5, Math.round(+v || 0))); return v === 1 ? "#f5c518" : v === 2 ? "#f28c28" : v === 3 ? "#e03131" : v === 4 ? "#c94f8f" : "#6a2c91"; }   // 1 yellow · 2 orange · 3 red · 4 light red-purple · 5 dark purple
+function prio5Txt(v) { v = Math.max(1, Math.min(5, Math.round(+v || 0))); return v <= 2 ? "#3a2c00" : "#ffffff"; }
 const GROUP_HUE = { work: 225, home: 42, fruit: 135 };
 function groupColorFor(group, cats, exceptId) {
   const g = GROUPS[group] ? group : "work";
@@ -1625,6 +1623,9 @@ if (IS_BROWSER) (function () {
     const eps = 0.001;
     const TOL = 0.25; // within 15 min of the goal counts as "Done"
     const cw = state.currentWeek;
+    const cwMon = ymd(dateOfCell(state.anchorMonday, cw, 0));
+    const poolMp = (state.masterplans || []).find((m) => m.from <= cwMon && cwMon <= m.to) || activeMasterplan();   // masterplan owning the current week (for weekly Prio)
+    const poolWprio = (id) => (poolMp && poolMp.wprio && poolMp.wprio[id] && poolMp.wprio[id][cw] != null && poolMp.wprio[id][cw] !== "") ? poolMp.wprio[id][cw] : "";
     const rep = buildReport(state);
     const usage = weekUsage(state, cw);   // past actual (floored to 15) + today/future planned
     const used = usage.used;
@@ -1641,16 +1642,17 @@ if (IS_BROWSER) (function () {
     const tier2under = [], tier2over = [], tier3 = [];
     for (const c of cats) {
       if (c.parent) continue;                                      // children roll up into their parent; not listed on their own
-      if (isUtil(c)) { tier3.push(c); continue; }                 // not-tracked utilities → Tier 3 (kept so they stay draggable)
+      tier3.push(c);                                               // "All" tier = every task (incl. those also shown in Open / Over)
+      if (isUtil(c)) continue;                                     // util tasks: All only
       const bud = weekBudget(c, cw);
-      if (bud <= eps) { if (effUsed(c.id) > eps || c.check) tier3.push(c); continue; }   // zero Planned: gridded or check-ticked → "All" tier; else not listed
+      if (bud <= eps) continue;                                    // no plan → can't be under/over
       const u = effUsed(c.id);
-      if (Math.abs(bud - u) < TOL) tier3.push(c);                 // within 15 min of goal → "All" (settled)
-      else if (u - bud >= TOL) tier2over.push(c);                 // 15 min or more over → Over
-      else tier2under.push(c);                                     // under → Open
+      if (Math.abs(bud - u) < TOL) continue;                       // at goal → All only
+      else if (u - bud >= TOL) tier2over.push(c);                  // 15 min or more over → Over (also in All)
+      else tier2under.push(c);                                      // under → Open (also in All)
     }
-    // Tier 2 order within each group: purple ★, red ★, yellow ★, then no star
-    const prioRank = (c) => c.prio === 3 ? 3 : c.prio === 2 ? 2 : c.prio === 1 ? 1 : 0;
+    // Open / Over ordered by weekly priority (dark purple 5 = highest)
+    const prioRank = (c) => { const v = poolWprio(c.id); return (v === "" || v == null || isNaN(v)) ? 0 : +v; };
     tier2under.sort((a, b) => prioRank(b) - prioRank(a));
     tier2over.sort((a, b) => prioRank(b) - prioRank(a));
     // "All" tier order: Mails → Plan → Work/Fruit/Home (by future-grid appearance, else group work→fruit→home then alpha) → None (alpha) → Termin (reverse alpha)
@@ -1664,7 +1666,7 @@ if (IS_BROWSER) (function () {
       const key = di * 1000 + b.startSlot;
       if (futureKey[b.catId] == null || key < futureKey[b.catId]) futureKey[b.catId] = key;
     }
-    const mailRe = /^mails?$/i, planRe = /^plan$/i, gPri = { work: 0, fruit: 1, home: 2 };
+    const mailRe = /^mail/i, planRe = /^plan/i, gPri = { work: 0, fruit: 1, home: 2 };   // prefix match: "Mails", "Plan"/"Plann" etc.
     const allRank = (c) => { const nm = (c.name || "").trim(); if (mailRe.test(nm)) return 0; if (planRe.test(nm)) return 1; const g = c.group; if (g === "work" || g === "fruit" || g === "home") return 2; if (g === "termin") return 4; return 3; };
     tier3.sort((a, b) => {
       const ra = allRank(a), rb = allRank(b);
@@ -1776,30 +1778,35 @@ if (IS_BROWSER) (function () {
 
     const divider = (label, cls) => { const dv = document.createElement("div"); dv.className = "poolDivider" + (cls ? " " + cls : ""); if (label) dv.textContent = label; pool.appendChild(dv); };
     const renderItem = (cat, tier, shade, hideBtn) => {
-      if (shade == null) shade = tier;                   // tier drives the numbers; shade drives the box styling
+      if (shade == null) shade = tier;
       const bw = weekBudget(cat, cw);
       const u = effUsed(cat.id);
-      const remaining = Math.round((bw - u) * 100) / 100;
-      const isOver = bw > eps && (u - bw >= TOL);           // 15 min or more over the plan
-      const isDone = bw <= eps ? true : Math.abs(bw - u) < TOL;   // zero-planned but gridded → shown as done; else within 15 min of plan
-      const faded = shade === 3; // "All" tier
-      const ovr = isOver, pctV = bw > 0 ? Math.min(100, (u / bw) * 100) : 100;
-      // "Open" for the week = Planned − Committed, always shown (signed) — even 0, sub-15, or negative
-      const hoursTxt = (remaining > 0.0001 ? "+" : remaining < -0.0001 ? "−" : "") + fmtHM(Math.abs(remaining));
-      const hoursCls = remaining > 0.0001 ? "" : remaining < -0.0001 ? "isover" : "isdone";
+      const isOver = bw > eps && (u - bw >= TOL);
+      const isDone = bw <= eps ? true : Math.abs(bw - u) < TOL;
+      const ovr = isOver;
       const editable = !(cat.auto || planTimeBlocked(cat));
+      const showFull = !planTimeBlocked(cat);   // full T+U=G+O=P only where planning applies (tracked, non-None)
+      // Lower-row figures for this week: Timed + Upcoming = Gridded + Open = Planned
+      const T = effTrackWeek(cat.id), G = u, Uv = G - T, P = bw, O = P - G;
+      const op = (v) => v < -0.0001 ? " − " : " + ";
+      const calc = showFull
+        ? fmtHM(T) + op(Uv) + fmtHM(Math.abs(Uv)) + " = " + fmtHM(G) + op(O) + fmtHM(Math.abs(O)) + " = " + fmtHM(P)
+        : fmtHM(T) + op(Uv) + fmtHM(Math.abs(Uv)) + " = " + fmtHM(G);
+      const wp = poolWprio(cat.id), hasWp = wp !== "" && wp != null && !isNaN(wp);
+      const starColor = hasWp ? prio5Bg(+wp) : "transparent";
       const el = document.createElement("div");
-      el.className = "poolItem" + (shade === "miss" ? " missShade" : (shade === 2 && !ovr) ? " tier2" : "") + (faded ? " done" : "") + (ovr && shade !== "miss" ? " over" : "") + (armedCat === cat.id ? " armed" : "");
+      el.className = "poolItem" + (shade === "miss" ? " missShade" : (shade === 2 && !ovr) ? " tier2" : "") + (shade === 3 ? " done" : "") + (ovr && shade !== "miss" ? " over" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
       el.style.borderLeftColor = cat.color;
       el.innerHTML =
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
-        '<div class="poolTop">' + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
-        (tier === 2 ? '<button class="prioStar ' + (cat.prio === 1 ? "o" : cat.prio === 2 ? "r" : cat.prio === 3 ? "p" : "") + '" title="Priority — click to cycle: yellow, red, purple (highest), off">★</button>' : "") +
-        '<span class="poolHours ' + hoursCls + '" title="Open = Planned − Committed for this week">' + hoursTxt + "</span>" +
-        (editable ? '<button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (moves it to All)">=</button>' : "") + "</div>" +
-        '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + fmtHM(u) + " of " + (editable ? '<button class="hStep" data-d="-1">−</button><input class="goalVal goalInput" title="Click to set the weekly goal" value="' + fmtHM(bw) + '"><button class="hStep" data-d="1">+</button>' : '<span class="goalVal" title="' + (cat.auto ? "Auto — the goal follows the hours you schedule" : "Planning is off for None-group / untracked tasks") + '">' + fmtHM(bw) + "</span>") + "</div>";
+        '<div class="poolTop">' +
+        '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
+        (editable ? '<button class="hStep" data-d="-1" title="Lower this week’s goal by 15 min">−</button><button class="hStep" data-d="1" title="Raise this week’s goal by 15 min">+</button>' : "") +
+        '<button class="prioStar' + (hasWp ? " set" : "") + '" style="color:' + starColor + '" title="Weekly priority — click to cycle: none → 1 (yellow) · 2 (orange) · 3 (red) · 4 (light purple) · 5 (dark purple)">★</button>' +
+        (editable ? '<button class="goalSet" title="Set this week’s goal to what’s tracked + assigned">=</button>' : "") +
+        "</div>" +
+        '<div class="poolCalc" title="Timed + Upcoming = Gridded + Open = Planned">' + calc + "</div>";
       const nameIn = el.querySelector(".nameInput");
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe");
       for (const inp of [nameIn, stripe]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
@@ -1808,13 +1815,19 @@ if (IS_BROWSER) (function () {
         const nb = Math.max(0, Math.round((weekBudget(cat, cw) + (+b.dataset.d) * 0.25) * 100) / 100);
         ensureBudgets(state.weeks[cw])[cat.id] = nb;
         localUpdatedAt = Date.now(); saveLocal(); schedulePush();   // persist now, but hold the tier re-sort so the button stays under your cursor
-        const gvi = el.querySelector(".goalInput"); if (gvi) gvi.value = fmtHM(nb);
         poolDirty = true; schedulePoolReflow();
       }); });
       el.addEventListener("mouseleave", flushPoolReflow);   // re-sort as soon as you move off the box
-      const ps = el.querySelector(".prioStar"); if (ps) { ps.addEventListener("pointerdown", (e) => e.stopPropagation()); ps.addEventListener("click", (e) => { e.stopPropagation(); snap(); cat.prio = ((cat.prio || 0) + 1) % 4; commit(); }); }
+      const ps = el.querySelector(".prioStar"); if (ps) { ps.addEventListener("pointerdown", (e) => e.stopPropagation()); ps.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!poolMp) { toast("Add a masterplan to set weekly priority."); return; }
+        snap(); poolMp.wprio = poolMp.wprio || {}; poolMp.wprio[cat.id] = poolMp.wprio[cat.id] || {};
+        const cur = poolMp.wprio[cat.id][cw];
+        const nv = (cur == null || cur === "" || isNaN(cur)) ? 1 : (+cur >= 5 ? null : +cur + 1);   // none → 1 … 5 → none
+        if (nv == null) delete poolMp.wprio[cat.id][cw]; else poolMp.wprio[cat.id][cw] = nv;
+        commit();
+      }); }
       const gset = el.querySelector(".goalSet"); if (gset) { gset.addEventListener("pointerdown", (e) => e.stopPropagation()); gset.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = effUsed(cat.id); commit(); }); }
-      const gv = el.querySelector(".goalInput"); if (gv) { gv.addEventListener("pointerdown", (e) => e.stopPropagation()); gv.addEventListener("click", (e) => e.stopPropagation()); gv.addEventListener("change", () => { snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, parseHM(gv.value)); commit(); }); gv.addEventListener("keydown", (e) => { if (e.key === "Enter") gv.blur(); }); }
       nameIn.addEventListener("change", () => {
         const v = nameIn.value.trim();
         if (!v) { nameIn.value = cat.name; return; }
@@ -2593,7 +2606,7 @@ if (IS_BROWSER) (function () {
       r += '<td class="gcol gcolF"><input class="bgoal" type="text" inputmode="numeric"' + (planTimeBlocked(c) ? ' readonly title="Planning is off for None-group / untracked tasks"' : '') + ' value="' + (goal ? fmtHM(goal) : "") + '"></td>';
       // ── Extra (orange): IP, Prio ──
       r += '<td class="gcol gcolFip"><input class="bgoalip" type="text" inputmode="numeric" value="' + (gGet("goalIP", c.id) ? fmtHM(gGet("goalIP", c.id)) : "") + '"></td>';
-      { const pv = gGet("prio", c.id), hasP = pv != null && pv !== "" && !isNaN(pv); r += '<td class="gcol gcolPrio"' + (hasP ? ' style="background:' + prioBg(+pv) + '"' : "") + '><input class="bprio" type="number" min="0" max="10" step="1"' + (hasP ? ' style="color:' + prioTxt(+pv) + '"' : "") + ' value="' + (hasP ? pv : "") + '"></td>'; }
+      { const pv = gGet("prio", c.id), hasP = pv != null && pv !== "" && !isNaN(pv); r += '<td class="gcol gcolPrio"' + (hasP ? ' style="background:' + prio5Bg(+pv) + '"' : "") + '><input class="bprio" type="number" min="1" max="5" step="1"' + (hasP ? ' style="color:' + prio5Txt(+pv) + '"' : "") + ' value="' + (hasP ? pv : "") + '"></td>'; }
       // ── Task name ──
       r += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" placeholder="name…" value="' + (c.name || "").replace(/"/g, "&quot;") + '"></td>';
       // ── Features (pink): Group, Order, Comment, Link, Track, Check, Auto, Later, NTH, AD, Done, Delete, Def min, Parent, Lock ──
@@ -2621,7 +2634,7 @@ if (IS_BROWSER) (function () {
         const wpv = wprioGet(c.id, i), hasWp = wpv !== "" && wpv != null && !isNaN(wpv);
         r += '<td class="' + tdCls + '"><input class="bh' + (past ? " bhPast" : "") + '" data-w="' + i + '" type="text" inputmode="numeric"' + ro + cellTitle + ' value="' + val + '"></td>' +
              '<td class="ipCol' + (past ? " pastCol" : "") + '"><input class="bhip" data-w="' + i + '" type="text" inputmode="numeric" value="' + (ipGet(c.id, i) ? fmtHM(ipGet(c.id, i)) : "") + '"></td>' +
-             '<td class="wprioCol' + (past ? " pastCol" : "") + '"' + (hasWp ? ' style="background:' + prioBg(+wpv) + '"' : "") + '><input class="bwprio" data-w="' + i + '" type="number" min="0" max="10" step="1"' + (hasWp ? ' style="color:' + prioTxt(+wpv) + '"' : "") + ' value="' + (hasWp ? wpv : "") + '"></td>';
+             '<td class="wprioCol' + (past ? " pastCol" : "") + '"' + (hasWp ? ' style="background:' + prio5Bg(+wpv) + '"' : "") + '><input class="bwprio" data-w="' + i + '" type="number" min="1" max="5" step="1"' + (hasWp ? ' style="color:' + prio5Txt(+wpv) + '"' : "") + ' value="' + (hasWp ? wpv : "") + '"></td>';
       }
       r += "</tr>";
       return r;
@@ -2728,10 +2741,10 @@ if (IS_BROWSER) (function () {
         });
         tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); const bud = ensureBudgets(state.weeks[w]); const raw = inp.value.trim(); if (raw === "") delete bud[id]; else bud[id] = parseHM(raw); commit(); renderBudgets(); }); });
         tr.querySelectorAll(".bhip").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w, m = activeMasterplan(); if (!m) return; snap(); m.ip = m.ip || {}; m.ip[id] = m.ip[id] || {}; const v = parseHM(inp.value); if (v > 0) m.ip[id][w] = v; else delete m.ip[id][w]; commit(); renderBudgets(); }); });
-        tr.querySelectorAll(".bwprio").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w, m = activeMasterplan(); if (!m) return; snap(); m.wprio = m.wprio || {}; m.wprio[id] = m.wprio[id] || {}; const raw = inp.value.trim(); if (raw === "") delete m.wprio[id][w]; else m.wprio[id][w] = Math.max(0, Math.min(10, Math.round(+raw || 0))); commit(); renderBudgets(); }); });
+        tr.querySelectorAll(".bwprio").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w, m = activeMasterplan(); if (!m) return; snap(); m.wprio = m.wprio || {}; m.wprio[id] = m.wprio[id] || {}; const raw = inp.value.trim(); if (raw === "") delete m.wprio[id][w]; else m.wprio[id][w] = Math.max(1, Math.min(5, Math.round(+raw || 1))); commit(); renderBudgets(); }); });
         { const bg = tr.querySelector(".bgoal"); if (bg) bg.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.goal = m.goal || {}; const v = parseHM(bg.value); if (v > 0) m.goal[id] = v; else delete m.goal[id]; commit(); renderBudgets(); }); }
         { const bgi = tr.querySelector(".bgoalip"); if (bgi) bgi.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.goalIP = m.goalIP || {}; const v = parseHM(bgi.value); if (v > 0) m.goalIP[id] = v; else delete m.goalIP[id]; commit(); renderBudgets(); }); }
-        { const bp = tr.querySelector(".bprio"); if (bp) bp.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.prio = m.prio || {}; const raw = bp.value.trim(); if (raw === "") delete m.prio[id]; else m.prio[id] = Math.max(0, Math.min(10, Math.round(+raw || 0))); commit(); renderBudgets(); }); }
+        { const bp = tr.querySelector(".bprio"); if (bp) bp.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.prio = m.prio || {}; const raw = bp.value.trim(); if (raw === "") delete m.prio[id]; else m.prio[id] = Math.max(1, Math.min(5, Math.round(+raw || 1))); commit(); renderBudgets(); }); }
         { const bo = tr.querySelector(".bord"); if (bo) bo.addEventListener("change", () => { snap(); const v = bo.value.trim(); if (v) cat.order = v; else delete cat.order; commit(); renderBudgets(); }); }
       });
       // Stack the sticky footer rows (Total + Work/Fruit/Home) so they don't overlap at the bottom edge.
@@ -2861,7 +2874,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v148"; } catch (e) {}
+  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v149"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
