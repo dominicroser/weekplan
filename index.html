@@ -497,6 +497,16 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .hbTable input.hbName { width: 100%; min-width: 120px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 13px; }
 .hbTable .hbType { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 4px 6px; font-size: 12px; }
 .hbTable .hbHmL { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--ink3); margin-left: 6px; white-space: nowrap; }
+.oughtPanel { margin: 0 0 12px; }
+.ogTitle { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+.ogTable { border-collapse: collapse; font-size: 12px; }
+.ogTable th, .ogTable td { padding: 2px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.ogTable thead th { font-size: 11px; color: var(--ink3); font-weight: 700; }
+.ogTable th:first-child, .ogTable td.ogLbl { text-align: left; font-weight: 600; }
+.ogTable .ogIn { width: 54px; text-align: right; border: 1px solid var(--line); border-radius: 5px; padding: 2px 4px; font-size: 12px; background: var(--panel); color: var(--ink); }
+.ogTable tr.ogTot td { font-weight: 700; border-top: 2px solid var(--line); }
+.ogTable .ogPos { color: #1a7f37; }
+.ogTable .ogNeg { color: #b91c1c; }
 .hbTable .hbRule { width: 100%; min-width: 200px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace; }
 .hbTable .hbRule:disabled { opacity: .4; }
 #habitsDialog code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--panel2); padding: 0 3px; border-radius: 3px; font-size: 11.5px; }
@@ -737,6 +747,7 @@ create policy "planner anon access" on plans
     <button class="btnGhost" id="budRecolour">Recolour all by group</button>
     <button class="btnGhost" id="mpBulk">Bulk-fill hours</button>
   </div>
+  <div id="oughtPanel" class="oughtPanel"></div>
   <div id="masterplanTableWrap"></div>
 </dialog>
 
@@ -769,7 +780,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v143 */
+/* build v145 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2222,24 +2233,7 @@ if (IS_BROWSER) (function () {
     const wfW = (gW.work || 0) + (gW.fruit || 0), wfA = (gA.work || 0) + (gA.fruit || 0);
     gs += '<tr class="rfoot"><td class="rname">Work + Fruit</td><td>' + fmtHM(wfW) + "</td><td>" + fmtHM(wfA) + "</td><td>" + fmtHM(wfA / NW) + "</td></tr>";
     gs += "</tbody></table>";
-    // ── Weekly goals (editable) + per-week over/under ──
-    const gt = state.goalTotal || 0, gwf = state.goalWF || 0;
-    const signHM = (v) => (v >= 0 ? "+" : "−") + fmtHM(Math.abs(v));
-    let goalsHtml = "<h3>Weekly goals</h3>" +
-      '<div class="goalSet2">Total: <input id="goalTotalIn" class="goalGin" value="' + fmtHM(gt) + '">  ·  Work+Fruit: <input id="goalWFIn" class="goalGin" value="' + fmtHM(gwf) + '"></div>' +
-      '<table class="repTable"><thead><tr><th>Week</th><th>Total</th><th>vs goal</th><th>Work+Fruit</th><th>vs goal</th></tr></thead><tbody>';
-    for (const i of mpIdx) {
-      let tot = 0, wf = 0;
-      for (let d = 0; d < ND; d++) { const ds = ymd(dateOfCell(state.anchorMonday, i, d)); const dd = rep.days[ds]; if (dd) { tot += dd.total || 0; const bc = dd.byCat; for (const id in bc) { const w = groupContribs(state, id); wf += bc[id] * ((w.work || 0) + (w.fruit || 0)); } } }
-      const dT = gt > 0 ? '<span class="' + (tot - gt >= 0 ? "gOver" : "gUnder") + '">' + signHM(tot - gt) + "</span>" : "—";
-      const dWF = gwf > 0 ? '<span class="' + (wf - gwf >= 0 ? "gOver" : "gUnder") + '">' + signHM(wf - gwf) + "</span>" : "—";
-      goalsHtml += '<tr><td class="rname">Week ' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + (i === W ? " ★" : "") + "</td><td>" + fmtHM(tot) + "</td><td>" + dT + "</td><td>" + fmtHM(wf) + "</td><td>" + dWF + "</td></tr>";
-    }
-    goalsHtml += "</tbody></table>";
-    $("reportsBody").innerHTML = (any ? html : '<p class="muted">No tracked time in this week yet — press ▶ on a task to start the timer.</p>') + gs + goalsHtml;
-    const gi1 = $("goalTotalIn"), gi2 = $("goalWFIn");
-    if (gi1) gi1.addEventListener("change", () => { snap(); state.goalTotal = Math.max(0, parseHM(gi1.value)); commit(); renderReports(); });
-    if (gi2) gi2.addEventListener("change", () => { snap(); state.goalWF = Math.max(0, parseHM(gi2.value)); commit(); renderReports(); });
+    $("reportsBody").innerHTML = (any ? html : '<p class="muted">No tracked time in this week yet — press ▶ on a task to start the timer.</p>') + gs;
     renderLog();   // Activity now lives at the bottom of the Reports modal
   }
   $("reportsBtn").addEventListener("click", () => { renderReports(); $("reportsDialog").showModal(); });
@@ -2698,6 +2692,32 @@ if (IS_BROWSER) (function () {
     let fh = '<div class="budWrap"><table class="' + mCls + '"><thead>' + mHead + '</thead><tbody>' + activeList.map(taskRow).join("") + mFoot + "</tbody></table></div>";
 
     renderMPBar();
+    // ── Weekly Ought panel: per-group weekly target → masterplan Ought (Weeks × Weekly) and Adjusted Ought (Ought + past over/under-timing) ──
+    (function renderOught() {
+      const host = $("oughtPanel"); if (!host) return;
+      if (!mp) { host.innerHTML = ""; return; }
+      const wo = mp.weeklyOught || {};
+      const woG = (g) => (wo[g] != null && wo[g] !== "") ? wo[g] : 0;
+      const grpW = (c, g) => groupContribs(state, c.id)[g] || 0;
+      const effOf = (i) => { const h = (state.weeks[i] && state.weeks[i].holidays) || 0; return Math.max(0, 1 - h / 6); };   // holiday days shrink the week (6 days = one full vacation week)
+      const fmtWk = (n) => Math.abs(n - Math.round(n)) < 0.01 ? String(Math.round(n)) : n.toFixed(1);
+      let N = 0, pastEff = 0, nPastWeeks = 0, holDays = 0;
+      const pastTimed = { work: 0, fruit: 0, home: 0 };
+      for (const i of mpIdx) { const e = effOf(i); N += e; holDays += (state.weeks[i] && state.weeks[i].holidays) || 0; if (i < state.currentWeek) { pastEff += e; nPastWeeks++; for (const c of state.categories) { const t = trackedById(c.id, i); if (!t) continue; pastTimed.work += t * grpW(c, "work"); pastTimed.fruit += t * grpW(c, "fruit"); pastTimed.home += t * grpW(c, "home"); } } }
+      const signed = (v) => Math.abs(v) < 0.0001 ? "0:00" : (v > 0 ? "+" : "−") + fmtHM(Math.abs(v));
+      const devCls = (v) => v < -0.0001 ? "ogNeg" : v > 0.0001 ? "ogPos" : "";
+      const groups = [["work", "Work"], ["fruit", "Fruit"], ["home", "Home"]];
+      let woTot = 0, oughtTot = 0, devTot = 0, adjTot = 0, rows = "";
+      for (const [g, label] of groups) {
+        const w = woG(g), ought = N * w, dev = pastTimed[g] - pastEff * w, adj = ought + dev;   // N/pastEff = effective weeks (holidays removed); dev = past timed − past ought (+ ahead / − behind); adj = past timed + remaining effective weeks × weekly
+        woTot += w; oughtTot += ought; devTot += dev; adjTot += adj;
+        rows += '<tr><td class="ogLbl">' + label + '</td><td><input class="ogIn" data-g="' + g + '" type="text" inputmode="numeric" value="' + (w ? fmtHM(w) : "") + '"></td><td>' + fmtHM(ought) + '</td><td class="' + devCls(dev) + '">' + signed(dev) + '</td><td>' + fmtHM(adj) + '</td></tr>';
+      }
+      rows += '<tr class="ogTot"><td class="ogLbl">Total</td><td>' + fmtHM(woTot) + '</td><td>' + fmtHM(oughtTot) + '</td><td class="' + devCls(devTot) + '">' + signed(devTot) + '</td><td>' + fmtHM(adjTot) + '</td></tr>';
+      host.innerHTML = '<div class="ogTitle">Weekly Ought <span class="muted" style="font-weight:400;">(' + fmtWk(N) + ' effective week' + (N === 1 ? "" : "s") + (holDays ? " — holidays removed" : "") + ' in masterplan' + (nPastWeeks ? ", " + nPastWeeks + " past" : "") + ')</span></div>' +
+        '<table class="ogTable"><thead><tr><th></th><th title="Hours you ought to do per week (whole masterplan)">Weekly</th><th title="Effective weeks (holidays removed) × Weekly Ought">Ought</th><th title="Past weeks: timed − ought (+ ahead / − behind)">Past ±</th><th title="Ought adjusted for past over/under-timing (= past timed + remaining effective weeks × Weekly)">Adjusted</th></tr></thead><tbody>' + rows + '</tbody></table>';
+      host.querySelectorAll(".ogIn").forEach((inp) => inp.addEventListener("change", () => { const g = inp.dataset.g; snap(); mp.weeklyOught = mp.weeklyOught || {}; const v = inp.value.trim(); if (v === "") delete mp.weeklyOught[g]; else mp.weeklyOught[g] = parseHM(v); commit(); renderBudgets(); }));
+    })();
     const setWrap = (wid, h) => { const wrap = $(wid); if (!wrap) return null; const af = document.activeElement; if (af && af.blur && wrap.contains(af)) af.blur(); const prev = wrap.querySelector(".budWrap"); const ks = prev ? prev.scrollTop : 0; try { wrap.innerHTML = h; } catch (e) { wrap.textContent = ""; wrap.innerHTML = h; } const nw = wrap.querySelector(".budWrap"); if (nw) nw.scrollTop = ks; return wrap; };  // blur a focused child first + retry, so a cell's blur handler can't yank a node out mid-innerHTML (NotFoundError)
     const wrap = setWrap("masterplanTableWrap", fh);
     if (wrap) {
@@ -2860,7 +2880,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v143"; } catch (e) {}
+  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v145"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
