@@ -203,34 +203,33 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable td.paceT, .mpTable th.paceT { position: sticky; left: 50px; width: 50px; min-width: 50px; }
 .mpTable td.paceG, .mpTable th.paceG { position: sticky; left: 100px; width: 50px; min-width: 50px; }
 .mpTable td.dcol, .mpTable th.dcol { position: sticky; left: 150px; width: 64px; min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
-.mpTable td.gcolPrio, .mpTable th.gcolPrio { position: sticky; left: 214px; width: 46px; min-width: 46px; }
-.mpTable td.stot, .mpTable th.stot { position: sticky; left: 260px; width: 64px; min-width: 64px; font-variant-numeric: tabular-nums; }
-.mpTable td.gcolF, .mpTable th.gcolF { position: sticky; left: 324px; width: 88px; min-width: 88px; }
-.mpTable td.gcolFip, .mpTable th.gcolFip { position: sticky; left: 412px; width: 52px; min-width: 52px; }
+.mpTable td.stot, .mpTable th.stot { position: sticky; left: 214px; width: 64px; min-width: 64px; font-variant-numeric: tabular-nums; }
+.mpTable td.gcolF, .mpTable th.gcolF { position: sticky; left: 278px; width: 88px; min-width: 88px; }
+.mpTable td.gcolFip, .mpTable th.gcolFip { position: sticky; left: 366px; width: 52px; min-width: 52px; }
+.mpTable td.gcolPrio, .mpTable th.gcolPrio { position: sticky; left: 418px; width: 46px; min-width: 46px; }
 .mpTable td.name, .mpTable th.name { position: sticky; left: 464px; width: 132px; min-width: 132px; max-width: 132px; text-align: left; overflow: hidden; white-space: nowrap; }
 .mpTable .paceD, .mpTable .paceT, .mpTable .paceG { background: #eef0f2; text-align: center; font-variant-numeric: tabular-nums; color: var(--ink2); font-size: 11px; }
 .mpTable th.paceD, .mpTable th.paceT, .mpTable th.paceG { background: #e5e8eb; color: var(--ink3); font-weight: 500; }
-/* Pace toggle hides the 3 grey columns; Importance toggle hides Δ + Prio + overall-IP */
+/* Pace toggle hides the 3 grey columns; IP-Masterplan toggle hides the orange IP + Prio columns */
 .mpTable.hidePace .paceD, .mpTable.hidePace .paceT, .mpTable.hidePace .paceG { display: none; }
-.mpTable.hideImp td.dcol, .mpTable.hideImp th.dcol, .mpTable.hideImp td.gcolPrio, .mpTable.hideImp th.gcolPrio, .mpTable.hideImp td.gcolFip, .mpTable.hideImp th.gcolFip { display: none; }
-/* combo: pace off, importance on */
+.mpTable.hideImp td.gcolFip, .mpTable.hideImp th.gcolFip, .mpTable.hideImp td.gcolPrio, .mpTable.hideImp th.gcolPrio { display: none; }
+/* combo: pace off, IP-masterplan on */
 .mpTable.hidePace:not(.hideImp) td.dcol, .mpTable.hidePace:not(.hideImp) th.dcol { left: 0; }
-.mpTable.hidePace:not(.hideImp) td.gcolPrio, .mpTable.hidePace:not(.hideImp) th.gcolPrio { left: 64px; }
-.mpTable.hidePace:not(.hideImp) td.stot, .mpTable.hidePace:not(.hideImp) th.stot { left: 110px; }
-.mpTable.hidePace:not(.hideImp) td.gcolF, .mpTable.hidePace:not(.hideImp) th.gcolF { left: 174px; }
-.mpTable.hidePace:not(.hideImp) td.gcolFip, .mpTable.hidePace:not(.hideImp) th.gcolFip { left: 262px; }
+.mpTable.hidePace:not(.hideImp) td.stot, .mpTable.hidePace:not(.hideImp) th.stot { left: 64px; }
+.mpTable.hidePace:not(.hideImp) td.gcolF, .mpTable.hidePace:not(.hideImp) th.gcolF { left: 128px; }
+.mpTable.hidePace:not(.hideImp) td.gcolFip, .mpTable.hidePace:not(.hideImp) th.gcolFip { left: 216px; }
+.mpTable.hidePace:not(.hideImp) td.gcolPrio, .mpTable.hidePace:not(.hideImp) th.gcolPrio { left: 268px; }
 .mpTable.hidePace:not(.hideImp) td.name, .mpTable.hidePace:not(.hideImp) th.name { left: 314px; }
-/* combo: pace on, importance off */
-.mpTable.hideImp:not(.hidePace) td.stot, .mpTable.hideImp:not(.hidePace) th.stot { left: 150px; }
-.mpTable.hideImp:not(.hidePace) td.gcolF, .mpTable.hideImp:not(.hidePace) th.gcolF { left: 214px; }
-.mpTable.hideImp:not(.hidePace) td.name, .mpTable.hideImp:not(.hidePace) th.name { left: 302px; }
-/* combo: pace off, importance off */
-.mpTable.hidePace.hideImp td.stot, .mpTable.hidePace.hideImp th.stot { left: 0; }
-.mpTable.hidePace.hideImp td.gcolF, .mpTable.hidePace.hideImp th.gcolF { left: 64px; }
-.mpTable.hidePace.hideImp td.name, .mpTable.hidePace.hideImp th.name { left: 152px; }
+/* combo: pace on, IP-masterplan off (only name shifts; IP + Prio removed) */
+.mpTable.hideImp:not(.hidePace) td.name, .mpTable.hideImp:not(.hidePace) th.name { left: 366px; }
+/* combo: pace off, IP-masterplan off */
+.mpTable.hidePace.hideImp td.dcol, .mpTable.hidePace.hideImp th.dcol { left: 0; }
+.mpTable.hidePace.hideImp td.stot, .mpTable.hidePace.hideImp th.stot { left: 64px; }
+.mpTable.hidePace.hideImp td.gcolF, .mpTable.hidePace.hideImp th.gcolF { left: 128px; }
+.mpTable.hidePace.hideImp td.name, .mpTable.hidePace.hideImp th.name { left: 216px; }
 /* Hide past weeks */
 .mpTable.hidePast .pastCol { display: none; }
-.mpTable .wprioCol { background: #f4f4f5; text-align: center; min-width: 38px; width: 38px; }
+.mpTable .wprioCol { background: #fdefdc; text-align: center; min-width: 38px; width: 38px; }
 .mpTable th.wprioCol { color: var(--ink3); font-weight: 500; }
 .mpTable td.wprioCol input { width: 30px; text-align: center; }
 .mpTable td.name input.tname { width: 96px; max-width: 96px; }
@@ -239,7 +238,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable .wkHol { cursor: pointer; font-size: 9.5px; color: var(--ink3); margin-left: 3px; padding: 0 1px; border-radius: 3px; }
 .mpTable .wkHol.on { color: #b4690e; font-weight: 700; }
 .mpTable .wkHol:hover { background: rgba(0,0,0,0.08); }
-.mpTable.hideFeat td:nth-child(n+10):nth-child(-n+24), .mpTable.hideFeat th:nth-child(n+10):nth-child(-n+24) { display: none; }
+.mpTable.hideFeat td.feat, .mpTable.hideFeat th.feat { display: none; }
+.mpTable td.feat { background: #fdeef4; }
+.mpTable th.feat { background: #fbe1ec; color: var(--ink3); font-weight: 500; }
 .fillHandle { position: fixed; width: 11px; height: 11px; background: #1d4ed8; border: 1.5px solid #fff; box-shadow: 0 0 0 1px #1d4ed8; cursor: crosshair; z-index: 10000; display: none; }
 .mpTable .bh.fillHi { outline: 2px solid #1d4ed8; outline-offset: -2px; background: #e8efff; }
 .mpTable td.stot, .mpTable td.gcolF, .mpTable td.name, .mpTable td.dcol { background: var(--bg); z-index: 2; }
@@ -247,18 +248,18 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable td.paceD, .mpTable td.paceT, .mpTable td.paceG { z-index: 2; }
 .mpTable th.paceD, .mpTable th.paceT, .mpTable th.paceG { top: 0; z-index: 4; }
 .mpTable tr.budFoot td.paceD, .mpTable tr.budFoot td.paceT, .mpTable tr.budFoot td.paceG { z-index: 5; }
-.mpTable td.gcolPrio { background: #f4f4f5; z-index: 2; }
-.mpTable th.gcolPrio { background: #ececee; top: 0; z-index: 4; color: var(--ink3); font-weight: 500; }
+.mpTable td.gcolPrio { background: #fdefdc; z-index: 2; }
+.mpTable th.gcolPrio { background: #f8e3c4; top: 0; z-index: 4; color: var(--ink3); font-weight: 500; }
 .mpTable .gcolPrio { text-align: center; }
 .mpTable td.gcolPrio input { text-align: center; }
-.mpTable td.gcolFip { background: #f4f4f5; z-index: 2; color: var(--ink3); }
-.mpTable th.gcolFip { background: #ececee; top: 0; z-index: 4; color: var(--ink3); font-weight: 500; }
+.mpTable td.gcolFip { background: #fdefdc; z-index: 2; color: var(--ink3); }
+.mpTable th.gcolFip { background: #f8e3c4; top: 0; z-index: 4; color: var(--ink3); font-weight: 500; }
 .mpTable td.gcolFip input { color: var(--ink3); }
 .mpTable tr.budFoot td { position: sticky; bottom: 0; z-index: 1; }
 .mpTable tr.budFoot td.stot, .mpTable tr.budFoot td.gcolF, .mpTable tr.budFoot td.name, .mpTable tr.budFoot td.dcol, .mpTable tr.budFoot td.gcolPrio { z-index: 5; }
-.mpTable tr.budFoot td.gcolFip { z-index: 5; background: #f4f4f5; }
+.mpTable tr.budFoot td.gcolFip { z-index: 5; background: #fdefdc; }
 .mpTable tr.budGrp td { color: var(--ink2); font-weight: 500; background: var(--panel); }
-.mpTable tr.budGrp td.gcolFip { background: #eef0f1; }
+.mpTable tr.budGrp td.gcolFip { background: #f6ead8; }
 .mpTable tr.budGrp td.name { font-weight: 600; }
 .mpTable tr.budGrp-work td { background: #e8f0f9 !important; color: #1c4e80; }
 .mpTable tr.budGrp-fruit td { background: #e7f3ea !important; color: #1e7a46; }
@@ -273,12 +274,13 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable input.bhPast { color: var(--ink3); }
 .mpTable td.pastCol { background: #f7f7f8; }
 .mpTable .gcol { min-width: 46px; }
-.mpTable .ipCol { background: #f4f4f5; }
+.mpTable .ipCol { background: #fdefdc; }
 .mpTable th.ipCol { color: var(--ink3); font-weight: 500; }
 .mpTable td.ipCol input, .mpTable td.ipCol { color: var(--ink3); }
 .mpTable.hideIP .ipCol, .mpTable.hideIP .wprioCol { display: none; }
-.budTable th.mpCur { background: #efe07a; }
-.budTable td.mpCur { background: #fdf3b8; }
+.budTable th.mpCur { background: #6d28d9; color: #fff; }
+.budTable th.mpCur .wkHol { color: #ede9fe; }
+.budTable td.mpCur { background: #c3b0f0; }
 .budWrap { max-height: 62vh; overflow: auto; }
 .budGap { height: 22px; }
 .confettiBox { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
@@ -507,6 +509,10 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .ogTable tr.ogTot td { font-weight: 700; border-top: 2px solid var(--line); }
 .ogTable .ogPos { color: #1a7f37; }
 .ogTable .ogNeg { color: #b91c1c; }
+.mpOughtWrap { margin: 2px 0 10px; }
+.mpToggleBar { margin: 4px 0 10px; }
+.mpAddCol { border: 1px solid var(--line); background: var(--panel); border-radius: 4px; font-size: 12px; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: var(--ink2); font-weight: 700; }
+.mpAddCol:hover { background: var(--panel2); }
 .hbTable .hbRule { width: 100%; min-width: 200px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace; }
 .hbTable .hbRule:disabled { opacity: .4; }
 #habitsDialog code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--panel2); padding: 0 3px; border-radius: 3px; font-size: 11.5px; }
@@ -730,24 +736,25 @@ create policy "planner anon access" on plans
     <button class="btnGhost" id="mpEditRange">Edit range</button>
     <button class="btnGhost" id="mpNotes" title="Notes for this masterplan">📝 Notes</button>
     <button class="btnGhost" id="mpDel">Delete</button>
-    <label class="mpIPtog" title="Hide the advanced feature columns"><input type="checkbox" id="mpFeat"> Features</label>
-    <label class="mpIPtog" title="Hide Δ, Prio and the overall-IP (masterplan) column"><input type="checkbox" id="mpImp"> IP Masterplan</label>
-    <label class="mpIPtog" title="Hide the weekly IP and per-week Prio columns"><input type="checkbox" id="mpHideIP"> IP Week</label>
-    <label class="mpIPtog" title="Hide the three grey per-remaining-week pacing columns"><input type="checkbox" id="mpPace"> Pace</label>
-    <label class="mpIPtog" title="Hide the weeks before the current one"><input type="checkbox" id="mpPast"> Past</label>
-    <label class="mpIPtog" title="Hide tasks with 0 in the Planned column for this masterplan"><input type="checkbox" id="mpF0all"> Zero Masterplan</label>
-    <label class="mpIPtog" title="Hide tasks with 0 Planned this week"><input type="checkbox" id="mpF0cur"> Zero This Week</label>
-    <label class="mpIPtog" title="Hide tasks with 0 Planned next week"><input type="checkbox" id="mpF0next"> Zero Next Week</label>
-    <label class="mpIPtog" title="Hide tasks marked Done"><input type="checkbox" id="mpFDone"> Done</label>
-    <label class="mpIPtog" title="Hide tasks marked Later or NTH"><input type="checkbox" id="mpFLater"> Later / NTH</label>
-    <span id="mpWeeksInfo" class="mpWeeksInfo"></span>
-  </div>
-  <div class="btnRow" style="margin-bottom:10px;">
-    <button class="btnGhost" id="budAddTask">+ Add task</button>
     <button class="btnGhost" id="budRecolour">Recolour all by group</button>
     <button class="btnGhost" id="mpBulk">Bulk-fill hours</button>
   </div>
-  <div id="oughtPanel" class="oughtPanel"></div>
+  <div class="mpOughtWrap">
+    <div id="mpWeeksInfo" class="mpWeeksInfo"></div>
+    <div id="oughtPanel" class="oughtPanel"></div>
+  </div>
+  <div class="mpBar mpToggleBar">
+    <label class="mpIPtog" title="Show the pink feature columns (untick to hide)"><input type="checkbox" id="mpFeat"> Features</label>
+    <label class="mpIPtog" title="Show the orange IP and Prio (masterplan) columns (untick to hide)"><input type="checkbox" id="mpImp"> IP Masterplan</label>
+    <label class="mpIPtog" title="Show the per-week IP and Prio columns (untick to hide)"><input type="checkbox" id="mpHideIP"> IP Week</label>
+    <label class="mpIPtog" title="Show the three grey pacing columns (untick to hide)"><input type="checkbox" id="mpPace"> Pace</label>
+    <label class="mpIPtog" title="Show the weeks before the current one (untick to hide)"><input type="checkbox" id="mpPast"> Past</label>
+    <label class="mpIPtog" title="Show tasks with 0 in the Planned column for this masterplan (untick to hide)"><input type="checkbox" id="mpF0all"> Zero Masterplan</label>
+    <label class="mpIPtog" title="Show tasks with 0 Planned this week (untick to hide)"><input type="checkbox" id="mpF0cur"> Zero This Week</label>
+    <label class="mpIPtog" title="Show tasks with 0 Planned next week (untick to hide)"><input type="checkbox" id="mpF0next"> Zero Next Week</label>
+    <label class="mpIPtog" title="Show tasks marked Done (untick to hide)"><input type="checkbox" id="mpFDone"> Done</label>
+    <label class="mpIPtog" title="Show tasks marked Later or NTH (untick to hide)"><input type="checkbox" id="mpFLater"> Later / NTH</label>
+  </div>
   <div id="masterplanTableWrap"></div>
 </dialog>
 
@@ -780,7 +787,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v145 */
+/* build v147 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -867,6 +874,8 @@ const GROUPS = {
   termin:{ label: "Termin", palette: [EVENT_COLOR] },
 };
 const GROUP_ORDER = ["work", "home", "fruit", "none", "termin"];
+function isNoneGroup(c) { return !c || !c.group || c.group === "none" || GROUP_ORDER.indexOf(c.group) < 0; }
+function planTimeBlocked(c) { return !c || isNoneGroup(c) || !!c.noTrack; }   // None-group or untracked → can't plan hours or run the timer (gridding still allowed)
 const GROUP_HUE = { work: 225, home: 42, fruit: 135 };
 function groupColorFor(group, cats, exceptId) {
   const g = GROUPS[group] ? group : "work";
@@ -1512,6 +1521,7 @@ if (IS_BROWSER) (function () {
   function stopTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = null; }
   function toggleTimer(catId) {
     if (state.timer && state.timer.catId === catId) { stopTimer(); return; }
+    { const c0 = state.categories.find((x) => x.id === catId); if (planTimeBlocked(c0)) { toast("Timing is off for None-group / untracked tasks."); return; } }
     if (state.timer) stopTimer();
     state.timer = { catId: catId, startMs: Date.now() };
     saveLocal(); schedulePush(); renderAll(); startTimerLoop();
@@ -1656,10 +1666,10 @@ if (IS_BROWSER) (function () {
       if (c.parent) continue;                                      // children roll up into their parent; not listed on their own
       if (isUtil(c)) { tier3.push(c); continue; }                 // not-tracked utilities → Tier 3 (kept so they stay draggable)
       const bud = weekBudget(c, cw);
-      if (bud <= eps) continue;                                    // no weekly goal → not listed in Tier 2/3
+      if (bud <= eps) { if (effUsed(c.id) > eps) tier3.push(c); continue; }   // zero Planned: gridded → Done tier; nothing gridded → not listed
       const u = effUsed(c.id);
-      if (Math.abs(bud - u) <= TOL) tier3.push(c);                // within 15 min of goal → Tier 3 (Done)
-      else if (u - bud > TOL) tier2over.push(c);                  // over → Tier 2 (Over)
+      if (Math.abs(bud - u) < TOL) tier3.push(c);                 // within 15 min of goal → Tier 3 (Done)
+      else if (u - bud >= TOL) tier2over.push(c);                 // 15 min or more over → Tier 2 (Over)
       else tier2under.push(c);                                     // under → Tier 2 (Open)
     }
     // Tier 1: today's planned tasks, grouped by week status — over (1a) → under (1b) → at-goal (1c), each in calendar order
@@ -1670,7 +1680,7 @@ if (IS_BROWSER) (function () {
       const tlist = Object.keys(firstStart).map((id) => cats.find((c) => c.id === id)).filter((c) => c && !isUtil(c) && !c.parent && c.t1HideDate !== todayStr);
       for (const c of tlist) {
         const bud = weekBudget(c, cw), u = effUsed(c.id);
-        if (bud > eps && u - bud > TOL) t1over.push(c);
+        if (bud > eps && u - bud >= TOL) t1over.push(c);
         else if (bud > eps && bud - u > TOL) t1under.push(c);
         else t1at.push(c);
       }
@@ -1783,8 +1793,8 @@ if (IS_BROWSER) (function () {
       const bw = weekBudget(cat, cw);
       const u = effUsed(cat.id);
       const remaining = Math.round((bw - u) * 100) / 100;
-      const isOver = u - bw > TOL;
-      const isDone = Math.abs(bw - u) <= TOL;
+      const isOver = bw > eps && (u - bw >= TOL);           // 15 min or more over the plan
+      const isDone = bw <= eps ? true : Math.abs(bw - u) < TOL;   // zero-planned but gridded → shown as done; else within 15 min of plan
       const faded = shade === 3; // Tier 3 boxes shaded equally
       let ovr = isOver, pctV = bw > 0 ? Math.min(100, (u / bw) * 100) : 100, hoursTxt, hoursCls;
       if (tier === 1) {                                   // Tier 1 → remaining for TODAY (incl. running session)
@@ -1809,7 +1819,7 @@ if (IS_BROWSER) (function () {
         '<div class="poolTop">' + (tier === 2 ? '<button class="prioStar ' + (cat.prio === 1 ? "o" : cat.prio === 2 ? "r" : cat.prio === 3 ? "p" : "") + '" title="Priority — click to cycle: yellow, red, purple (highest), off">★</button>' : "") + '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
         '<span class="poolHours ' + hoursCls + '">' + hoursTxt + "</span></div>" +
         '<div class="barTrack"><div class="barFill ' + (ovr ? "isover" : "") + '" style="width:' + pctV + "%;background:" + cat.color + ';"></div></div>' +
-        '<div class="poolMeta">' + fmtHM(u) + " of " + (cat.auto ? '<span class="goalVal" title="Auto — the goal follows the hours you schedule">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><input class="goalVal goalInput" title="Click to set the weekly goal" value="' + fmtHM(bw) + '"><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>') + "</div>" +
+        '<div class="poolMeta">' + fmtHM(u) + " of " + ((cat.auto || planTimeBlocked(cat)) ? '<span class="goalVal" title="' + (cat.auto ? "Auto — the goal follows the hours you schedule" : "Planning is off for None-group / untracked tasks") + '">' + fmtHM(bw) + "</span>" : '<button class="hStep" data-d="-1">−</button><input class="goalVal goalInput" title="Click to set the weekly goal" value="' + fmtHM(bw) + '"><button class="hStep" data-d="1">+</button><button class="goalSet" title="Set this week’s goal to what’s tracked + assigned (marks it ‘enough’ → Tier 3)">=</button>') + "</div>" +
         (function () { const tw = effTrackWeek(cat.id); if (tw <= 0.0001) return ""; const tt = effTrackToday(cat.id); return '<div class="poolTrack">⏱ ' + fmtHM(tw) + " wk" + (todayInWeek && tt > 0.0001 ? " · " + fmtHM(tt) + " today" : "") + "</div>"; })() +
         (hideBtn ? '<div class="t1HideRow"><button class="t1Hide" title="Hide until midnight (stays in the week tiers)">' + (hideBtn === "missed" ? "hide from Missed" : "hide for today") + "</button></div>" : "");
       const nameIn = el.querySelector(".nameInput");
@@ -1841,7 +1851,7 @@ if (IS_BROWSER) (function () {
         el.addEventListener("pointerdown", (e) => { if (COARSE) return; if (e.target.closest(".playBtn")) return; e.preventDefault(); startNewDrag(e, cat); });
         el.addEventListener("click", (e) => { if (!COARSE) return; if (e.target.closest(".playBtn")) return; armedCat = armedCat === cat.id ? null : cat.id; renderPool(); if (armedCat) toast("Now tap the grid where “" + cat.name + "” should go"); });
       }
-      if (!cat.noTrack) {
+      if (!planTimeBlocked(cat)) {
         const isRun = state.timer && state.timer.catId === cat.id;
         const play = document.createElement("button");
         play.className = "playBtn" + (isRun ? " run" : "");
@@ -2486,7 +2496,7 @@ if (IS_BROWSER) (function () {
   function ensureWeeksForMP(mp) { const idx = mpWeekIndices(mp); if (!idx.length) return; const hi = idx[idx.length - 1]; while (state.weeks.length <= hi) state.weeks.push({ id: "w" + Date.now() + "_" + state.weeks.length, blocks: [], budgets: {} }); }
   function activeMasterplan() { const mps = state.masterplans || []; if (!mps.length) return null; let mp = mps.find((m) => m.id === state.currentMasterplan); if (!mp) { const tm = ymd(mondayOf(new Date())); mp = mps.find((m) => m.from <= tm && tm <= m.to) || mps[0]; state.currentMasterplan = mp.id; } return mp; }
   function mpRangeLabel(m) { const ya = parseYMD(m.from).getFullYear(), yb = parseYMD(m.to).getFullYear(), wa = isoWeek(parseYMD(m.from)), wb = isoWeek(parseYMD(m.to)); return ya === yb ? (ya + " · W" + wa + "–W" + wb) : ("W" + wa + "/" + ya + " – W" + wb + "/" + yb); }
-  function renderMPBar() { const cb = $("mpHideIP"); if (cb) cb.checked = !!ui.mpHideIP; const fb = $("mpFeat"); if (fb) fb.checked = !!ui.mpHideFeat; const pb = $("mpPace"); if (pb) pb.checked = !!ui.mpHidePace; const ib = $("mpImp"); if (ib) ib.checked = !!ui.mpHideImp; const zb = $("mpPast"); if (zb) zb.checked = !!ui.mpHidePast; { const a = $("mpF0all"); if (a) a.checked = !!ui.mpF0all; const c2 = $("mpF0cur"); if (c2) c2.checked = !!ui.mpF0cur; const n2 = $("mpF0next"); if (n2) n2.checked = !!ui.mpF0next; const dn = $("mpFDone"); if (dn) dn.checked = !!ui.mpFDone; const lt = $("mpFLater"); if (lt) lt.checked = !!ui.mpFLater; } const mp0 = activeMasterplan(); const nb = $("mpNotes"); if (nb) nb.textContent = (mp0 && mp0.note && mp0.note.trim()) ? "📝 Notes •" : "📝 Notes"; const sel = $("mpSelect"); if (!sel) return; const mp = mp0; sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
+  function renderMPBar() { const cb = $("mpHideIP"); if (cb) cb.checked = !ui.mpHideIP; const fb = $("mpFeat"); if (fb) fb.checked = !ui.mpHideFeat; const pb = $("mpPace"); if (pb) pb.checked = !ui.mpHidePace; const ib = $("mpImp"); if (ib) ib.checked = !ui.mpHideImp; const zb = $("mpPast"); if (zb) zb.checked = !ui.mpHidePast; { const a = $("mpF0all"); if (a) a.checked = !ui.mpF0all; const c2 = $("mpF0cur"); if (c2) c2.checked = !ui.mpF0cur; const n2 = $("mpF0next"); if (n2) n2.checked = !ui.mpF0next; const dn = $("mpFDone"); if (dn) dn.checked = !ui.mpFDone; const lt = $("mpFLater"); if (lt) lt.checked = !ui.mpFLater; } const mp0 = activeMasterplan(); const nb = $("mpNotes"); if (nb) nb.textContent = (mp0 && mp0.note && mp0.note.trim()) ? "📝 Notes •" : "📝 Notes"; const sel = $("mpSelect"); if (!sel) return; const mp = mp0; sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
   function promptRange(mp) {
     const fy = mp ? parseYMD(mp.from).getFullYear() : new Date().getFullYear(), fw = mp ? isoWeek(parseYMD(mp.from)) : isoWeek(new Date());
     const ty = mp ? parseYMD(mp.to).getFullYear() : new Date().getFullYear(), tw = mp ? isoWeek(parseYMD(mp.to)) : isoWeek(new Date());
@@ -2569,6 +2579,7 @@ if (IS_BROWSER) (function () {
     // Effective weeks (excluding holidays): total across the masterplan and remaining
     let totVac = 0; for (const i of mpIdx) { const wk = state.weeks[i]; const hd = wk && wk.holidays ? Math.max(0, Math.min(6, wk.holidays)) : 0; totVac += hd / 6; }
     const totEff = mpIdx.length - totVac;
+    const paceAll = (v) => (totEff > 0.0001 && Math.abs(v) > 0.0001) ? fmtHM(v / totEff) : "";   // per-week over ALL effective weeks of the masterplan
     const fmtWk = (n) => (Math.round(n * 10) / 10).toString();
     { const info = $("mpWeeksInfo"); if (info) info.textContent = "Weeks (excl. holidays): " + fmtWk(Math.max(0, paceDiv)) + " left / " + fmtWk(Math.max(0, totEff)) + " total"; }
     // Prio 0–10 → background gradient: 10 dark red · 5 yellow · 0 dark green
@@ -2590,7 +2601,7 @@ if (IS_BROWSER) (function () {
         else if (k === "goalip") p = gGet("goalIP", a.id) - gGet("goalIP", b.id);
         else if (k === "prio") p = (gGet("prio", a.id) || 0) - (gGet("prio", b.id) || 0);
         else if (k === "order") { const oa = String(a.order || "").trim(), ob = String(b.order || "").trim(); p = oa === ob ? 0 : (!oa ? 1 : (!ob ? -1 : (oa < ob ? -1 : 1))); }
-        else if (k === "diff") { let sa = 0, sb = 0; for (const i of mpIdx) { sa += weekEffort(a, i); sb += weekEffort(b, i); } p = (sa - gGet("goal", a.id)) - (sb - gGet("goal", b.id)); }
+        else if (k === "open") { let sa = 0, sb = 0; for (const i of mpIdx) { sa += weekEffort(a, i); sb += weekEffort(b, i); } p = (gGet("goal", a.id) - sa) - (gGet("goal", b.id) - sb); }   // Open = Planned − Committed
         else if (k[0] === "w") { const wi = +k.slice(1); p = weekEffort(a, wi) - weekEffort(b, wi); }
         return p ? p * d : nameCmp(a, b); // secondary sort: always alphabetical
       });
@@ -2610,40 +2621,47 @@ if (IS_BROWSER) (function () {
       const unassigned = !c.group || GROUP_ORDER.indexOf(c.group) < 0, kind = kindOf(c);
       let tsum = 0; for (const i of mpIdx) tsum += weekEffort(c, i);
       const goal = gGet("goal", c.id), over = goal > 0.0001 && tsum > goal + 0.0001, hasGoal = goal > 0.0001, df = tsum - goal, dcls = df < -0.0001 ? "dfNeg" : df > 0.0001 ? "dfPos" : "dfZero";
+      const openVal = goal - tsum, ocls = openVal > 0.0001 ? "dfNeg" : openVal < -0.0001 ? "dfPos" : "dfZero";   // Open = Planned − Committed (coral = still to schedule, blue = over-committed)
       let r = '<tr data-id="' + c.id + '"' + (c.ad ? ' class="adRow"' : "") + ">";
-      r += '<td class="paceD ' + (hasGoal ? dcls : "") + '">' + (hasGoal ? paceSigned(df) : "") + '</td>';
-      r += '<td class="paceT">' + pace(tsum) + '</td>';
-      r += '<td class="paceG">' + (hasGoal ? pace(goal) : "") + '</td>';
-      r += '<td class="dcol' + (hasGoal ? " " + dcls : "") + '">' + (hasGoal ? (df < -0.0001 ? "-" + fmtHM(-df) : df > 0.0001 ? "+" + fmtHM(df) : "0:00") : "") + "</td>";
-      { const pv = gGet("prio", c.id), hasP = pv != null && pv !== "" && !isNaN(pv); r += '<td class="gcol gcolPrio"' + (hasP ? ' style="background:' + prioBg(+pv) + '"' : "") + '><input class="bprio" type="number" min="0" max="10" step="1"' + (hasP ? ' style="color:' + prioTxt(+pv) + '"' : "") + ' value="' + (hasP ? pv : "") + '"></td>'; }
+      // ── Pace (grey): Open/w over future weeks, Committed/w & Planned/w over ALL weeks ──
+      r += '<td class="paceD ' + (hasGoal ? ocls : "") + '">' + (hasGoal ? paceSigned(openVal) : "") + '</td>';
+      r += '<td class="paceT">' + paceAll(tsum) + '</td>';
+      r += '<td class="paceG">' + (hasGoal ? paceAll(goal) : "") + '</td>';
+      // ── Key numbers: Open, Committed, Planned ──
+      r += '<td class="dcol' + (hasGoal ? " " + ocls : "") + '">' + (hasGoal ? (openVal > 0.0001 ? "+" + fmtHM(openVal) : openVal < -0.0001 ? "-" + fmtHM(-openVal) : "0:00") : "") + "</td>";
       r += '<td class="stot btot' + (over ? " over" : "") + '">' + fmtHM(tsum) + "</td>";
-      r += '<td class="gcol gcolF"><input class="bgoal" type="text" inputmode="numeric" value="' + (goal ? fmtHM(goal) : "") + '"></td>';
+      r += '<td class="gcol gcolF"><input class="bgoal" type="text" inputmode="numeric"' + (planTimeBlocked(c) ? ' readonly title="Planning is off for None-group / untracked tasks"' : '') + ' value="' + (goal ? fmtHM(goal) : "") + '"></td>';
+      // ── Extra (orange): IP, Prio ──
       r += '<td class="gcol gcolFip"><input class="bgoalip" type="text" inputmode="numeric" value="' + (gGet("goalIP", c.id) ? fmtHM(gGet("goalIP", c.id)) : "") + '"></td>';
+      { const pv = gGet("prio", c.id), hasP = pv != null && pv !== "" && !isNaN(pv); r += '<td class="gcol gcolPrio"' + (hasP ? ' style="background:' + prioBg(+pv) + '"' : "") + '><input class="bprio" type="number" min="0" max="10" step="1"' + (hasP ? ' style="color:' + prioTxt(+pv) + '"' : "") + ' value="' + (hasP ? pv : "") + '"></td>'; }
+      // ── Task name ──
       r += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" placeholder="name…" value="' + (c.name || "").replace(/"/g, "&quot;") + '"></td>';
-      r += '<td><input class="bord" type="text" placeholder="—" title="Order — tasks sort by this (digit by digit)" value="' + (c.order != null ? String(c.order).replace(/"/g, "&quot;") : "") + '" style="width:44px;text-align:center;"></td>';
-      r += '<td><select class="bgroup">' + (unassigned ? '<option value="" selected>—</option>' : "") + GROUP_ORDER.map((g) => '<option value="' + g + '"' + (c.group === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
-      r += '<td class="cmtCol"><button class="bcmt' + (c.comment ? " has" : "") + '" title="' + (c.comment ? c.comment.replace(/"/g, "&quot;").slice(0, 400) : "Add a comment") + '">🗒</button></td>';
-      r += '<td class="lnkCol">' + (c.link ? '<a class="blnk has" href="' + c.link.replace(/"/g, "&quot;") + '" target="_blank" rel="noopener" title="Open link (right-click to edit)">🔗</a>' : '<button class="blnk" title="Add a link">🔗</button>') + "</td>";
-      r += '<td class="adCol"><input type="checkbox" class="bad" title="Amnesty deal — deleted if not done by end of October"' + (c.ad ? " checked" : "") + "></td>";
-      r += '<td><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
-      r += '<td><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
-      r += '<td><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
-      r += '<td><input type="checkbox" class="bcheck" title="Check — only used for untracked tasks; ticked tasks show in the pool Check list"' + (c.check ? " checked" : "") + (c.noTrack ? "" : " disabled") + "></td>";
-      r += '<td><input type="checkbox" class="bplock" title="Keep this colour when you press Recolour all by group"' + (c.lockColor ? " checked" : "") + "></td>";
-      r += '<td><select class="bpar" title="Roll this task’s tracked time up into a parent task"><option value="">—</option>' + state.categories.filter((p) => p.id !== c.id && !p.parent).map((p) => '<option value="' + p.id + '"' + (c.parent === p.id ? " selected" : "") + ">" + (p.name || "").replace(/</g, "&lt;") + "</option>").join("") + '</select> <input class="bsplit" type="number" min="0" max="100" step="5" placeholder="%" title="Optional: share (%) of the parent timer’s time this child receives when the parent is stopped" value="' + (c.splitPct != null ? c.splitPct : "") + '" style="width:42px;"></td>';
-      r += '<td><input type="checkbox" class="blater" title="Later — done for now, but may become active again"' + (kind === "later" ? " checked" : "") + "></td>";
-      r += '<td><input type="checkbox" class="bnth" title="NTH — nice to have, but no time for it now"' + (kind === "nth" ? " checked" : "") + "></td>";
-      r += '<td><input type="checkbox" class="bdone" title="Done — finished for good"' + (kind === "done" ? " checked" : "") + "></td>";
-      r += '<td><button class="budDel" title="Delete task">&times;</button></td>';
+      // ── Features (pink): Group, Order, Comment, Link, Track, Check, Auto, Later, NTH, AD, Done, Delete, Def min, Parent, Lock ──
+      r += '<td class="feat"><select class="bgroup">' + (unassigned ? '<option value="" selected>—</option>' : "") + GROUP_ORDER.map((g) => '<option value="' + g + '"' + (c.group === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
+      r += '<td class="feat"><input class="bord" type="text" placeholder="—" title="Order — tasks sort by this (digit by digit)" value="' + (c.order != null ? String(c.order).replace(/"/g, "&quot;") : "") + '" style="width:44px;text-align:center;"></td>';
+      r += '<td class="feat cmtCol"><button class="bcmt' + (c.comment ? " has" : "") + '" title="' + (c.comment ? c.comment.replace(/"/g, "&quot;").slice(0, 400) : "Add a comment") + '">🗒</button></td>';
+      r += '<td class="feat lnkCol">' + (c.link ? '<a class="blnk has" href="' + c.link.replace(/"/g, "&quot;") + '" target="_blank" rel="noopener" title="Open link (right-click to edit)">🔗</a>' : '<button class="blnk" title="Add a link">🔗</button>') + "</td>";
+      r += '<td class="feat"><input type="checkbox" class="btrack" title="Track time with the timer (untick for tasks you never time)"' + (c.noTrack ? "" : " checked") + "></td>";
+      r += '<td class="feat"><input type="checkbox" class="bcheck" title="Check — only used for untracked tasks; ticked tasks show in the pool Check list"' + (c.check ? " checked" : "") + (c.noTrack ? "" : " disabled") + "></td>";
+      r += '<td class="feat"><input type="checkbox" class="bauto" title="Auto: the weekly goal follows the blocks you schedule"' + (c.auto ? " checked" : "") + "></td>";
+      r += '<td class="feat"><input type="checkbox" class="blater" title="Later — done for now, but may become active again"' + (kind === "later" ? " checked" : "") + "></td>";
+      r += '<td class="feat"><input type="checkbox" class="bnth" title="NTH — nice to have, but no time for it now"' + (kind === "nth" ? " checked" : "") + "></td>";
+      r += '<td class="feat adCol"><input type="checkbox" class="bad" title="Amnesty deal — deleted if not done by end of October"' + (c.ad ? " checked" : "") + "></td>";
+      r += '<td class="feat"><input type="checkbox" class="bdone" title="Done — finished for good"' + (kind === "done" ? " checked" : "") + "></td>";
+      r += '<td class="feat"><button class="budDel" title="Delete task">&times;</button></td>';
+      r += '<td class="feat"><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
+      r += '<td class="feat"><select class="bpar" title="Roll this task’s tracked time up into a parent task"><option value="">—</option>' + state.categories.filter((p) => p.id !== c.id && !p.parent).map((p) => '<option value="' + p.id + '"' + (c.parent === p.id ? " selected" : "") + ">" + (p.name || "").replace(/</g, "&lt;") + "</option>").join("") + '</select> <input class="bsplit" type="number" min="0" max="100" step="5" placeholder="%" title="Optional: share (%) of the parent timer’s time this child receives when the parent is stopped" value="' + (c.splitPct != null ? c.splitPct : "") + '" style="width:42px;"></td>';
+      r += '<td class="feat"><input type="checkbox" class="bplock" title="Keep this colour when you press Recolour all by group"' + (c.lockColor ? " checked" : "") + "></td>";
+      // ── Weekly hours + per-week Extra (orange): IP, Prio ──
       for (const i of mpIdx) {
-        const past = isPast(i), cellVal = past ? weekTracked(c, i) : weekBudget(c, i), ro = past ? " readonly" : "";
+        const past = isPast(i), cellVal = past ? weekTracked(c, i) : weekBudget(c, i), ro = (past || planTimeBlocked(c)) ? " readonly" : "";
         const tdCls = (i === state.currentWeek ? "mpCur" : "") + (past ? " pastCol" : "");
         const val = past ? (cellVal > 0.0001 ? fmtHM(cellVal) : "") : fmtHM(cellVal);
         const cellTitle = past ? ' title="timed hours (past week)"' : (c.auto ? ' title="Auto = assigned (future days) + timed (elapsed days). Type a commit above this to override it; below is ignored; clear to revert to auto."' : "");
         const wpv = wprioGet(c.id, i), hasWp = wpv !== "" && wpv != null && !isNaN(wpv);
         r += '<td class="' + tdCls + '"><input class="bh' + (past ? " bhPast" : "") + '" data-w="' + i + '" type="text" inputmode="numeric"' + ro + cellTitle + ' value="' + val + '"></td>' +
-             '<td class="wprioCol' + (past ? " pastCol" : "") + '"' + (hasWp ? ' style="background:' + prioBg(+wpv) + '"' : "") + '><input class="bwprio" data-w="' + i + '" type="number" min="0" max="10" step="1"' + (hasWp ? ' style="color:' + prioTxt(+wpv) + '"' : "") + ' value="' + (hasWp ? wpv : "") + '"></td>' +
-             '<td class="ipCol' + (past ? " pastCol" : "") + '"><input class="bhip" data-w="' + i + '" type="text" inputmode="numeric" value="' + (ipGet(c.id, i) ? fmtHM(ipGet(c.id, i)) : "") + '"></td>';
+             '<td class="ipCol' + (past ? " pastCol" : "") + '"><input class="bhip" data-w="' + i + '" type="text" inputmode="numeric" value="' + (ipGet(c.id, i) ? fmtHM(ipGet(c.id, i)) : "") + '"></td>' +
+             '<td class="wprioCol' + (past ? " pastCol" : "") + '"' + (hasWp ? ' style="background:' + prioBg(+wpv) + '"' : "") + '><input class="bwprio" data-w="' + i + '" type="number" min="0" max="10" step="1"' + (hasWp ? ' style="color:' + prioTxt(+wpv) + '"' : "") + ' value="' + (hasWp ? wpv : "") + '"></td>';
       }
       r += "</tr>";
       return r;
@@ -2665,25 +2683,25 @@ if (IS_BROWSER) (function () {
         return true;
       });
     }
-    const mHead = '<tr><th class="paceD" title="Δ ÷ remaining effective weeks (weeks left − vacation)">Δ/w</th><th class="paceT" title="Committed ÷ remaining effective weeks">C/w</th><th class="paceG" title="Planned ÷ remaining effective weeks">P/w</th><th class="dcol" data-sort="diff" title="Committed vs Planned — coral = under-planned (Committed < Planned), blue = over, green = on target">&Delta;' + arrow("diff") + '</th><th class="gcol gcolPrio" data-sort="prio" title="Prio — priority to do more on this task if time opens up (0–10)">Prio' + arrow("prio") + '</th><th class="stot" data-sort="total" title="Committed — timed (past weeks) + gridded (this week) + planned (future weeks)">Committed' + arrow("total") + '</th><th class="gcol gcolF" data-sort="goal" title="Planned — hours you plan for this task over the whole masterplan">Planned' + arrow("goal") + '</th><th class="gcol gcolFip" data-sort="goalip" title="If-possible goal — overall stretch target">IP' + arrow("goalip") + '</th><th class="name" data-sort="name">Task' + arrow("name") + '</th><th data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th data-sort="group">Group' + arrow("group") + '</th><th class="cmtCol" title="Comment">🗒</th><th class="lnkCol" title="Link">🔗</th><th class="adCol" title="Amnesty deal">AD</th><th data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th data-sort="auto">Auto' + arrow("auto") + '</th><th data-sort="track">Track' + arrow("track") + '</th><th title="Check — tick to add an untracked task to the pool Check list">Check</th><th>Lock</th><th>Parent</th><th title="Done for now">Later</th><th title="Nice to have">NTH</th><th title="Finished for good">Done</th><th></th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="' + (i === state.currentWeek ? "mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="wprioCol' + (past ? " pastCol" : "") + '" title="Prio for this week (0–10)">P</th><th class="ipCol' + (past ? " pastCol" : "") + '">IP</th>'; }).join("") + "</tr>";
+    const mHead = '<tr><th class="paceD" title="Open per week = (Planned − Committed) ÷ future weeks (holidays removed)">O/w</th><th class="paceT" title="Committed per week = Committed ÷ all weeks (holidays removed)">C/w</th><th class="paceG" title="Planned per week = Planned ÷ all weeks (holidays removed)">P/w</th><th class="dcol" data-sort="open" title="Open = Planned − Committed — hours still to schedule (coral = under-committed, blue = over-committed, green = on target)">Open' + arrow("open") + '</th><th class="stot" data-sort="total" title="Committed — timed (past weeks) + gridded (this week) + planned (future weeks)">Comm.' + arrow("total") + '</th><th class="gcol gcolF" data-sort="goal" title="Planned — hours you plan for this task over the whole masterplan">Plan.' + arrow("goal") + '</th><th class="gcol gcolFip" data-sort="goalip" title="If-possible goal — overall stretch target (masterplan)">IP' + arrow("goalip") + '</th><th class="gcol gcolPrio" data-sort="prio" title="Prio — priority to do more on this task if time opens up (0–10) (masterplan)">Prio' + arrow("prio") + '</th><th class="name" data-sort="name">Task' + arrow("name") + ' <button class="mpAddCol" title="Add a new task">+</button></th><th class="feat" data-sort="group">Group' + arrow("group") + '</th><th class="feat" data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th class="feat cmtCol" title="Comment">🗒</th><th class="feat lnkCol" title="Link">🔗</th><th class="feat" data-sort="track">Track' + arrow("track") + '</th><th class="feat" title="Check — tick to add an untracked task to the pool Check list">Check</th><th class="feat" data-sort="auto">Auto' + arrow("auto") + '</th><th class="feat" title="Done for now">Later</th><th class="feat" title="Nice to have">NTH</th><th class="feat adCol" title="Amnesty deal">AD</th><th class="feat" title="Finished for good">Done</th><th class="feat"></th><th class="feat" data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th class="feat">Parent</th><th class="feat">Lock</th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="' + (i === state.currentWeek ? "mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="ipCol' + (past ? " pastCol" : "") + '" title="If-possible hours this week">IP</th><th class="wprioCol' + (past ? " pastCol" : "") + '" title="Prio for this week (0–10)">P</th>'; }).join("") + "</tr>";
     const mFoot = (function () {
       const grpW = (c, g) => groupContribs(state, c.id)[g] || 0;
       let gt = 0, gIP = 0, goalSum = 0, cells = "";
-      for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { s += weekEffortAgg(c, i); sip += ipGet(c.id, i); } gt += s; cells += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + fmtHM(s) + '</td><td class="btot wprioCol' + (isPast(i) ? " pastCol" : "") + '"></td><td class="btot ipCol' + (isPast(i) ? " pastCol" : "") + '">' + (sip ? fmtHM(sip) : "") + "</td>"; }
+      for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { s += weekEffortAgg(c, i); sip += ipGet(c.id, i); } gt += s; cells += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + fmtHM(s) + '</td><td class="btot ipCol' + (isPast(i) ? " pastCol" : "") + '">' + (sip ? fmtHM(sip) : "") + '</td><td class="btot wprioCol' + (isPast(i) ? " pastCol" : "") + '"></td>'; }
       for (const c of list) { gIP += gGet("goalIP", c.id); goalSum += gGet("goal", c.id); }
       const gover = goalSum > 0.0001 && gt > goalSum + 0.0001;
-      const gdf = gt - goalSum, gCls = goalSum <= 0.0001 ? "" : (gdf < -0.0001 ? "dfNeg" : gdf > 0.0001 ? "dfPos" : "dfZero"), gTxt = goalSum <= 0.0001 ? "" : (gdf < -0.0001 ? "-" + fmtHM(-gdf) : gdf > 0.0001 ? "+" + fmtHM(gdf) : "0:00");
-      let f = '<tr class="budFoot"><td class="paceD btot ' + gCls + '">' + (goalSum > 0.0001 ? paceSigned(gdf) : "") + '</td><td class="paceT btot">' + pace(gt) + '</td><td class="paceG btot">' + (goalSum > 0.0001 ? pace(goalSum) : "") + '</td><td class="dcol btot ' + gCls + '">' + gTxt + '</td><td class="gcol gcolPrio btot"></td><td class="stot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="gcol gcolF btot">' + (goalSum > 0.0001 ? fmtHM(goalSum) : "") + '</td><td class="gcol gcolFip btot">' + (gIP ? fmtHM(gIP) : "") + '</td><td class="name">Total</td>';
-      for (let k = 0; k < 15; k++) f += "<td></td>";
+      const gOpen = goalSum - gt, gCls = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "dfNeg" : gOpen < -0.0001 ? "dfPos" : "dfZero"), gTxt = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "+" + fmtHM(gOpen) : gOpen < -0.0001 ? "-" + fmtHM(-gOpen) : "0:00");
+      let f = '<tr class="budFoot"><td class="paceD btot ' + gCls + '">' + (goalSum > 0.0001 ? paceSigned(gOpen) : "") + '</td><td class="paceT btot">' + paceAll(gt) + '</td><td class="paceG btot">' + (goalSum > 0.0001 ? paceAll(goalSum) : "") + '</td><td class="dcol btot ' + gCls + '">' + gTxt + '</td><td class="stot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="gcol gcolF btot">' + (goalSum > 0.0001 ? fmtHM(goalSum) : "") + '</td><td class="gcol gcolFip btot">' + (gIP ? fmtHM(gIP) : "") + '</td><td class="gcol gcolPrio btot"></td><td class="name">Total</td>';
+      for (let k = 0; k < 15; k++) f += '<td class="feat"></td>';
       f += cells + "</tr>";
       // Work / Fruit / Home totals — a parent's time fans out to its children's groups
       const groupRow = (g, label) => {
         let tot = 0, goalS = 0, ipS = 0, cc = "";
-        for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { const w = grpW(c, g); s += weekEffortAgg(c, i) * w; sip += ipGet(c.id, i) * w; } tot += s; cc += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + (s > 0.0001 ? fmtHM(s) : "") + '</td><td class="btot wprioCol' + (isPast(i) ? " pastCol" : "") + '"></td><td class="btot ipCol' + (isPast(i) ? " pastCol" : "") + '">' + (sip > 0.0001 ? fmtHM(sip) : "") + "</td>"; }
+        for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { const w = grpW(c, g); s += weekEffortAgg(c, i) * w; sip += ipGet(c.id, i) * w; } tot += s; cc += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + (s > 0.0001 ? fmtHM(s) : "") + '</td><td class="btot ipCol' + (isPast(i) ? " pastCol" : "") + '">' + (sip > 0.0001 ? fmtHM(sip) : "") + '</td><td class="btot wprioCol' + (isPast(i) ? " pastCol" : "") + '"></td>'; }
         for (const c of list) { const w = grpW(c, g); goalS += gGet("goal", c.id) * w; ipS += gGet("goalIP", c.id) * w; }
-        const df = tot - goalS, cls = goalS <= 0.0001 ? "" : (df < -0.0001 ? "dfNeg" : df > 0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (df < -0.0001 ? "-" + fmtHM(-df) : df > 0.0001 ? "+" + fmtHM(df) : "0:00");
-        let g2 = '<tr class="budFoot budGrp budGrp-' + g + '"><td class="paceD btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(df) : "") + '</td><td class="paceT btot">' + pace(tot) + '</td><td class="paceG btot">' + (goalS > 0.0001 ? pace(goalS) : "") + '</td><td class="dcol btot ' + cls + '">' + dtxt + '</td><td class="gcol gcolPrio btot"></td><td class="stot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="gcol gcolF btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td><td class="gcol gcolFip btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td><td class="name">' + label + '</td>';
-        for (let k = 0; k < 15; k++) g2 += "<td></td>";
+        const gOpenG = goalS - tot, cls = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "dfNeg" : gOpenG < -0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "+" + fmtHM(gOpenG) : gOpenG < -0.0001 ? "-" + fmtHM(-gOpenG) : "0:00");
+        let g2 = '<tr class="budFoot budGrp budGrp-' + g + '"><td class="paceD btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(gOpenG) : "") + '</td><td class="paceT btot">' + paceAll(tot) + '</td><td class="paceG btot">' + (goalS > 0.0001 ? paceAll(goalS) : "") + '</td><td class="dcol btot ' + cls + '">' + dtxt + '</td><td class="stot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="gcol gcolF btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td><td class="gcol gcolFip btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td><td class="gcol gcolPrio btot"></td><td class="name">' + label + '</td>';
+        for (let k = 0; k < 15; k++) g2 += '<td class="feat"></td>';
         return g2 + cc + "</tr>";
       };
       return f + groupRow("work", "Work") + groupRow("fruit", "Fruit") + groupRow("home", "Home");
@@ -2766,7 +2784,8 @@ if (IS_BROWSER) (function () {
       stackFoot();
       requestAnimationFrame(stackFoot);   // re-measure once laid out (e.g. right after the dialog opens)
       const bgt = wrap.querySelector(".bgoaltot"); if (bgt) bgt.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); const v = parseHM(bgt.value); if (v > 0) m.goalTotal = v; else delete m.goalTotal; commit(); renderBudgets(); });
-      wrap.querySelectorAll("th[data-sort]").forEach((th) => th.addEventListener("click", () => { const k = th.dataset.sort; if (budSort.key === k) budSort.dir = -budSort.dir; else { budSort.key = k; budSort.dir = 1; } renderBudgets(); }));
+      wrap.querySelectorAll("th[data-sort]").forEach((th) => th.addEventListener("click", (e) => { if (e.target.closest(".mpAddCol")) return; const k = th.dataset.sort; if (budSort.key === k) budSort.dir = -budSort.dir; else { budSort.key = k; budSort.dir = 1; } renderBudgets(); }));
+      { const ab = wrap.querySelector(".mpAddCol"); if (ab) ab.addEventListener("click", (e) => { e.stopPropagation(); mpAddTask(); }); }
       wrap.querySelectorAll(".wkHol").forEach((el) => el.addEventListener("click", (e) => {
         e.stopPropagation();
         const wi = +el.dataset.wi, w = state.weeks[wi]; if (!w) return;
@@ -2778,12 +2797,13 @@ if (IS_BROWSER) (function () {
     }
   }
   $("tasksBtn").addEventListener("click", () => { mpDlg.showModal(); renderBudgets(); });
-  $("budAddTask").addEventListener("click", () => {
+  function mpAddTask() {
     snap(); const id = "cat" + Date.now();
     state.categories.unshift({ id: id, name: "", hours: 0, group: "", defaultMin: 60, color: GREY });   // no name, no group → appears at the top until you assign a group
+    if (ui.mpHideFeat) { ui.mpHideFeat = false; saveUI(); }   // reveal the Features columns so the new task can be fully configured
     commit(); renderBudgets();
     const w = $("masterplanTableWrap"); if (w) { const inp = w.querySelector('tr[data-id="' + id + '"] .tname'); if (inp) { inp.scrollIntoView({ block: "nearest" }); inp.focus(); } }
-  });
+  }
   { const sel = $("mpSelect"); if (sel) sel.addEventListener("change", () => { state.currentMasterplan = sel.value; saveLocal(); schedulePush(); renderBudgets(); }); }
   $("mpNew").addEventListener("click", () => {
     const name = prompt("Name for the new masterplan:", "Masterplan " + ((state.masterplans || []).length + 1)); if (name === null) return;
@@ -2793,16 +2813,17 @@ if (IS_BROWSER) (function () {
     state.currentMasterplan = id; ensureWeeksForMP(state.masterplans[state.masterplans.length - 1]); commit(); renderBudgets();
   });
   $("mpEditRange").addEventListener("click", () => { const mp = activeMasterplan(); if (!mp) return; const r = promptRange(mp); if (!r) return; snap(); mp.from = r.from; mp.to = r.to; ensureWeeksForMP(mp); commit(); renderBudgets(); });
-  $("mpHideIP").addEventListener("change", (e) => { ui.mpHideIP = e.target.checked; saveUI(); renderBudgets(); });
-  $("mpFeat").addEventListener("change", (e) => { ui.mpHideFeat = e.target.checked; saveUI(); renderBudgets(); });
-  $("mpPace").addEventListener("change", (e) => { ui.mpHidePace = e.target.checked; saveUI(); renderBudgets(); });
-  $("mpImp").addEventListener("change", (e) => { ui.mpHideImp = e.target.checked; saveUI(); renderBudgets(); });
-  $("mpPast").addEventListener("change", (e) => { ui.mpHidePast = e.target.checked; saveUI(); renderBudgets(); });
-  $("mpF0all").addEventListener("change", (e) => { ui.mpF0all = e.target.checked; saveUI(); renderBudgets(); });
-  $("mpF0cur").addEventListener("change", (e) => { ui.mpF0cur = e.target.checked; saveUI(); renderBudgets(); });
-  $("mpF0next").addEventListener("change", (e) => { ui.mpF0next = e.target.checked; saveUI(); renderBudgets(); });
-  $("mpFDone").addEventListener("change", (e) => { ui.mpFDone = e.target.checked; saveUI(); renderBudgets(); });
-  $("mpFLater").addEventListener("change", (e) => { ui.mpFLater = e.target.checked; saveUI(); renderBudgets(); });
+  // Checkboxes reversed: a ticked box SHOWS the columns/tasks, un-ticking HIDES them (so the stored ui.*Hide flag is the inverse of checked)
+  $("mpHideIP").addEventListener("change", (e) => { ui.mpHideIP = !e.target.checked; saveUI(); renderBudgets(); });
+  $("mpFeat").addEventListener("change", (e) => { ui.mpHideFeat = !e.target.checked; saveUI(); renderBudgets(); });
+  $("mpPace").addEventListener("change", (e) => { ui.mpHidePace = !e.target.checked; saveUI(); renderBudgets(); });
+  $("mpImp").addEventListener("change", (e) => { ui.mpHideImp = !e.target.checked; saveUI(); renderBudgets(); });
+  $("mpPast").addEventListener("change", (e) => { ui.mpHidePast = !e.target.checked; saveUI(); renderBudgets(); });
+  $("mpF0all").addEventListener("change", (e) => { ui.mpF0all = !e.target.checked; saveUI(); renderBudgets(); });
+  $("mpF0cur").addEventListener("change", (e) => { ui.mpF0cur = !e.target.checked; saveUI(); renderBudgets(); });
+  $("mpF0next").addEventListener("change", (e) => { ui.mpF0next = !e.target.checked; saveUI(); renderBudgets(); });
+  $("mpFDone").addEventListener("change", (e) => { ui.mpFDone = !e.target.checked; saveUI(); renderBudgets(); });
+  $("mpFLater").addEventListener("change", (e) => { ui.mpFLater = !e.target.checked; saveUI(); renderBudgets(); });
   const mpBulkDlg = $("mpBulkDialog");
   $("mpBulk").addEventListener("click", () => {
     const mp = activeMasterplan(); if (!mp) return; const idx = mpWeekIndices(mp);
@@ -2880,7 +2901,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v145"; } catch (e) {}
+  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v147"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
