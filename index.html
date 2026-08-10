@@ -81,9 +81,15 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolItem { position: relative; background: transparent; border: 4px solid #9aa0a8; border-radius: 8px; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
 .poolItem.openBox { background: #f4a0c8; }   /* ≥15 min open → bright pink */
 .poolItem.overBox { background: #c3a6ee; }   /* ≥15 min over → intense (light) purple */
+.poolItem.immediate { background: #d5d9df; }   /* the task being timed / next on the grid → grey */
 .poolItem.armed { outline-color: var(--accent); }
+.poolBlackDiv { height: 4px; background: #000; border-radius: 2px; margin: 10px 2px 9px; flex-shrink: 0; }
+.poolOpen { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; margin-left: 3px; }
+.poolOpen.u { color: #7a1222; }   /* under → very dark red */
+.poolOpen.o { color: #0d1f5e; }   /* over → very dark blue */
+.poolOpen.z { color: #111; }
 .poolTop { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 11.5px; }
-.nameInput { background: transparent; border: none; color: #111; font-size: 11.5px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; }
+.nameInput { background: transparent; border: none; color: #111; font-size: 11.5px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolHours { font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; white-space: nowrap; color: var(--good); }
 .poolTop .goalSet { font-weight: 700; margin-left: 3px; }
 .poolHours.isover { color: var(--over); font-weight: 700; }
@@ -92,12 +98,9 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .barFill { height: 100%; border-radius: 3px; transition: width .2s; }
 .barFill.isover { background: var(--over) !important; }
 .poolMeta { font-size: 11.5px; font-weight: 400; color: var(--ink3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
-.poolCalc { margin-top: 4px; font-size: 11.5px; font-weight: 400; color: #111; font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.1px; }
-.poolCalc .calcClock { background: transparent; border: none; padding: 0 3px 0 0; margin: 0; color: #111; font-size: 11.5px; line-height: 1; cursor: default; }
-.poolCalc .calcClock.canTime { cursor: pointer; }
-.poolCalc .calcClock.canTime:hover { color: #c2410c; }
-.poolCalc .calcClock.run { color: #c2410c; font-weight: 700; }   /* running → dark warm orange */
-.poolCalc .calcO { font-weight: 700; color: #111; }   /* Open number is always black */
+.poolCalc { margin-top: 4px; font-size: 11.5px; font-weight: 400; color: #111; font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 2px; white-space: nowrap; overflow: hidden; }
+.poolCalc .calcClock { background: transparent; border: none; padding: 0 3px 0 0; margin: 0; color: #111; font-size: 14px; line-height: 1; cursor: pointer; }   /* play/pause always black */
+.poolCalc .ofWord { color: var(--ink3); margin: 0 3px; }
 .poolCalc input.calcP { width: 38px; border: 1px solid transparent; background: transparent; font: inherit; font-variant-numeric: tabular-nums; text-align: right; color: #111; border-radius: 3px; padding: 0 1px; cursor: text; }
 .poolCalc input.calcP:hover { border-color: var(--line); }
 .poolCalc input.calcP:focus { border-color: rgba(43,108,176,0.5); background: #fff; color: var(--ink); outline: none; }
@@ -340,8 +343,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .gUnder { color: #e03131; font-weight: 600; }
 .checkSection { background: #ff8214; border-radius: 8px; padding: 6px 9px 7px; margin: 0 2px 9px; }   /* bright, neon, cheerful orange */
 .checkList { display: flex; flex-direction: column; gap: 1px; }
-.checkRow { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: #241000; cursor: pointer; padding: 2px 3px; border-radius: 4px; }
-.checkRow:hover { background: rgba(0,0,0,0.12); }
+.checkRow { display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 700; color: #fff; cursor: pointer; padding: 2px 3px; border-radius: 4px; }
+.checkRow:hover { background: rgba(0,0,0,0.14); }
 .checkRow input { flex-shrink: 0; margin: 0; width: 15px; height: 15px; accent-color: #7a2c08; }
 .checkRow .checkName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
@@ -774,7 +777,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v157 */
+/* build v160 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1780,46 +1783,43 @@ if (IS_BROWSER) (function () {
     }
 
     const divider = (label, cls) => { const dv = document.createElement("div"); dv.className = "poolDivider" + (cls ? " " + cls : ""); if (label) dv.textContent = label; pool.appendChild(dv); };
-    const renderItem = (cat) => {
+    const renderItem = (cat, immediateId) => {
       const bw = weekBudget(cat, cw);
       const u = effUsed(cat.id);
       const isDone = bw <= eps ? true : Math.abs(bw - u) < TOL;
       const editable = !(cat.auto || planTimeBlocked(cat));
-      const showFull = !planTimeBlocked(cat);   // full T+U=G+O=P only where planning applies
-      // Lower-row figures for this week: Timed + Upcoming = Gridded + Open = Planned
-      const T = effTrackWeek(cat.id), G = u, Uv = G - T, P = bw, O = P - G;
-      const isOpenBox = !planTimeBlocked(cat) && O >= TOL;      // ≥15 min open → bright-pink box
-      const isOverBox = !planTimeBlocked(cat) && O <= -TOL;     // ≥15 min over → purple box
-      const op = (v) => v < -0.0001 ? " − " : " + ";
       const canTime = !planTimeBlocked(cat);
       const running = !!(state.timer && state.timer.catId === cat.id);
-      const clockGlyph = '<button class="calcClock' + (canTime ? " canTime" : "") + (running ? " run" : "") + '"' + (canTime ? "" : " disabled") + ' title="' + (canTime ? (running ? "Stop the timer" : "Start the timer") : "Timing is off for untracked / None / Termin tasks") + '">' + (running ? "⏸" : "▶") + "</button>";
-      const oSpan = op(O) + '<span class="calcO">' + fmtHM(Math.abs(O)) + "</span>";
-      const pCell = editable
-        ? '<input class="calcP" value="' + fmtHM(P) + '" title="Planned — this week’s goal (type to set)">'
-        : '<span class="calcP calcPstatic" title="' + (cat.auto ? "Planned — Auto: follows the hours you schedule" : "Planned") + '">' + fmtHM(P) + "</span>";
-      const calc = showFull
-        ? clockGlyph + fmtHM(T) + op(Uv) + fmtHM(Math.abs(Uv)) + " = " + fmtHM(G) + oSpan + " = " + pCell
-        : clockGlyph + fmtHM(T) + op(Uv) + fmtHM(Math.abs(Uv)) + " = " + fmtHM(G);
-      const calcTip = showFull ? "Timed + Upcoming = Gridded + Open = Planned" : "Timed + Upcoming = Gridded";
+      const T = effTrackWeek(cat.id), G = u, Uv = G - T, P = bw, O = P - G;   // Timed · Upcoming · Gridded · Planned · Open
+      const isImmediate = cat.id === immediateId;
+      const isOpenBox = !planTimeBlocked(cat) && !isImmediate && !running && O >= TOL;   // ≥15 open (not the immediate / timed task)
+      const isOverBox = !planTimeBlocked(cat) && !isImmediate && !running && O <= -TOL;  // ≥15 over
+      const openCls = O > 0.0001 ? "u" : O < -0.0001 ? "o" : "z";   // under → dark red · over → dark blue · on-target → black
+      const openTxt = fmtHM(Math.abs(O));
+      const tip = "Timed: " + fmtHM(T) + "\nUpcoming: " + fmtHM(Uv) + "\nGridded: " + fmtHM(G) + "\nOpen: " + (O < -0.0001 ? "−" : "") + fmtHM(Math.abs(O)) + "\nPlanned: " + fmtHM(P);
       const wp = poolWprio(cat.id), hasWp = wp !== "" && wp != null && !isNaN(wp);
       const starColor = hasWp ? prio5Bg(+wp) : "transparent";
+      const playBtn = canTime ? '<button class="calcClock canTime" title="' + (running ? "Stop the timer" : "Start the timer") + '">' + (running ? "⏸" : "▶") + "</button>" : "";
+      const pCell = editable
+        ? '<input class="calcP" value="' + fmtHM(P) + '" title="Planned — this week’s goal (type to set)">'
+        : '<span class="calcP calcPstatic">' + fmtHM(P) + "</span>";
+      const minus = editable ? '<button class="hStep" data-d="-1" title="Lower this week’s goal by 15 min">−</button>' : "";
+      const plus = editable ? '<button class="hStep" data-d="1" title="Raise this week’s goal by 15 min">+</button>' : "";
       const el = document.createElement("div");
-      el.className = "poolItem" + (isOpenBox ? " openBox" : isOverBox ? " overBox" : "") + (armedCat === cat.id ? " armed" : "");
+      el.className = "poolItem" + (isImmediate ? " immediate" : isOpenBox ? " openBox" : isOverBox ? " overBox" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
-      el.style.borderColor = isNoneGroup(cat) ? "#9aa0a8" : cat.color;   // None tasks: darker grey border than their light-grey colour, so the box stays visible
+      el.style.borderColor = isNoneGroup(cat) ? "#9aa0a8" : cat.color;   // None tasks: darker grey border than their light-grey colour
       el.innerHTML =
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
         '<div class="poolTop">' +
-        '<input class="nameInput" value="' + cat.name.replace(/"/g, "&quot;") + '">' +
-        (editable ? '<button class="hStep" data-d="-1" title="Lower this week’s goal by 15 min">−</button><button class="hStep" data-d="1" title="Raise this week’s goal by 15 min">+</button>' : "") +
+        '<span class="nameInput" title="' + cat.name.replace(/"/g, "&quot;") + '">' + cat.name.replace(/</g, "&lt;") + "</span>" +
         '<button class="prioStar' + (hasWp ? " set" : "") + '" style="color:' + starColor + '" title="Weekly priority — click to cycle: none → 1 (yellow) · 2 (orange) · 3 (red) · 4 (light purple) · 5 (dark purple)">★</button>' +
+        '<span class="poolOpen ' + openCls + '" title="Open = Planned − Gridded">' + openTxt + "</span>" +
         (editable ? '<button class="goalSet" title="Set this week’s goal to what’s tracked + assigned">=</button>' : "") +
         "</div>" +
-        '<div class="poolCalc" title="' + calcTip + '">' + calc + "</div>";
-      const nameIn = el.querySelector(".nameInput");
+        '<div class="poolCalc" title="' + tip + '">' + playBtn + '<span class="tVal">' + fmtHM(T) + '</span><span class="ofWord">of</span>' + minus + pCell + plus + "</div>";
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe");
-      for (const inp of [nameIn, stripe]) { inp.addEventListener("pointerdown", (e) => e.stopPropagation()); inp.addEventListener("click", (e) => e.stopPropagation()); }
+      stripe.addEventListener("pointerdown", (e) => e.stopPropagation()); stripe.addEventListener("click", (e) => e.stopPropagation());
       el.querySelectorAll(".hStep").forEach((b) => { b.addEventListener("pointerdown", (e) => e.stopPropagation()); b.addEventListener("click", (e) => {
         e.stopPropagation(); snap();
         const nb = Math.max(0, Math.round((weekBudget(cat, cw) + (+b.dataset.d) * 0.25) * 100) / 100);
@@ -1840,13 +1840,6 @@ if (IS_BROWSER) (function () {
       const gset = el.querySelector(".goalSet"); if (gset) { gset.addEventListener("pointerdown", (e) => e.stopPropagation()); gset.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = effUsed(cat.id); commit(); }); }
       const cp = el.querySelector("input.calcP"); if (cp) { cp.addEventListener("pointerdown", (e) => e.stopPropagation()); cp.addEventListener("click", (e) => e.stopPropagation()); cp.addEventListener("change", () => { snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, parseHM(cp.value)); commit(); }); cp.addEventListener("keydown", (e) => { if (e.key === "Enter") cp.blur(); }); }
       const clk = el.querySelector(".calcClock.canTime"); if (clk) { clk.addEventListener("pointerdown", (e) => e.stopPropagation()); clk.addEventListener("click", (e) => { e.stopPropagation(); toggleTimer(cat.id); }); }
-      nameIn.addEventListener("change", () => {
-        const v = nameIn.value.trim();
-        if (!v) { nameIn.value = cat.name; return; }
-        if (nameTaken(v, cat.id)) { toast('A task named "' + v + '" already exists.'); nameIn.value = cat.name; return; }
-        snap(); cat.name = v; commit();
-      });
-      nameIn.addEventListener("keydown", (e) => { if (e.key === "Enter") nameIn.blur(); });
       colorIn.addEventListener("input", () => { cat.color = colorIn.value; renderAll(); });
       colorIn.addEventListener("change", () => { snap(); commit(); });
       if (!isDone) {
@@ -1871,7 +1864,29 @@ if (IS_BROWSER) (function () {
       }
       sec.appendChild(box); pool.appendChild(sec);
     }
-    allList.forEach((c) => renderItem(c));
+    // Only show tasks planned and/or gridded for THIS week
+    const blockCatIds = new Set(); for (const b of curBlocks()) { if (!b.event) blockCatIds.add(b.catId); }
+    const timedId = state.timer ? state.timer.catId : null;
+    const shownAll = allList.filter((c) => weekBudget(c, cw) > eps || effUsed(c.id) > eps || blockCatIds.has(c.id) || c.id === timedId);
+    // Immediate task = the one being timed, else the next gridded task (earliest upcoming block this week)
+    let immediateId = (timedId && shownAll.some((c) => c.id === timedId)) ? timedId : null;
+    if (!immediateId) { let bk = Infinity; for (const c of shownAll) { const k = futureKey[c.id]; if (k != null && k < bk) { bk = k; immediateId = c.id; } } }
+    // group order: Parents → Work → Fruit → Home → None → Termin, then alphabetical
+    const gOrder = { parents: 0, work: 1, fruit: 2, home: 3, none: 4, termin: 5 };
+    const gKeyOf = (c) => gOrder[c.group] != null ? gOrder[c.group] : (isNoneGroup(c) ? 4 : 1);
+    const grpCmp = (a, b) => (gKeyOf(a) - gKeyOf(b)) || (a.name || "").localeCompare(b.name || "");
+    // open/over — but never while a task is being timed, and never the immediate task
+    const stateOf = (c) => { if (c.id === immediateId || c.id === timedId || planTimeBlocked(c)) return ""; const O = openOf(c); return O >= TOL ? "open" : O <= -TOL ? "over" : ""; };
+    const topOpen = shownAll.filter((c) => stateOf(c) === "open").sort(grpCmp);
+    const topOver = shownAll.filter((c) => stateOf(c) === "over").sort(grpCmp);
+    const inTop = new Set([...topOpen, ...topOver].map((c) => c.id)); if (immediateId) inTop.add(immediateId);
+    const topUpcoming = shownAll.filter((c) => futureKey[c.id] != null && !inTop.has(c.id)).sort((a, b) => futureKey[a.id] - futureKey[b.id]);
+    topOpen.forEach((c) => renderItem(c, immediateId));
+    topOver.forEach((c) => renderItem(c, immediateId));
+    if (immediateId) { const ic = shownAll.find((c) => c.id === immediateId); if (ic) renderItem(ic, immediateId); }
+    topUpcoming.forEach((c) => renderItem(c, immediateId));
+    if (shownAll.length) { const dv = document.createElement("div"); dv.className = "poolBlackDiv"; pool.appendChild(dv); }   // strong black divider
+    shownAll.slice().sort(grpCmp).forEach((c) => renderItem(c, immediateId));   // full grouped list
     const add = document.createElement("button");
     add.id = "addCat"; add.textContent = "+ Add task";
     add.addEventListener("click", () => {
@@ -1880,8 +1895,7 @@ if (IS_BROWSER) (function () {
       while (nameTaken(name, null)) name = base + " " + (n++);
       const ng = "work";
       state.categories.push({ id: "cat" + Date.now(), name, hours: 0, group: ng, defaultMin: 60, color: groupColorFor(ng, state.categories, null) });
-      commit();
-      for (const i of pool.querySelectorAll(".poolItem .nameInput")) if (i.value === name) { i.focus(); i.select(); break; }
+      commit();   // rename it in the Masterplan (task names aren't editable in the pool)
     });
     pool.appendChild(add);
   }
@@ -2610,7 +2624,7 @@ if (IS_BROWSER) (function () {
       // ── Key numbers: Open, Committed, Planned ──
       r += '<td class="dcol' + (hasGoal ? " " + ocls : "") + '">' + (hasGoal ? (openVal > 0.0001 ? "+" + fmtHM(openVal) : openVal < -0.0001 ? "-" + fmtHM(-openVal) : "0:00") : "") + "</td>";
       r += '<td class="stot btot' + (over ? " over" : "") + '">' + fmtHM(tsum) + "</td>";
-      r += '<td class="gcol gcolF"><input class="bgoal" type="text" inputmode="numeric"' + (planTimeBlocked(c) ? ' readonly title="Planning is off for untracked / Termin tasks"' : '') + ' value="' + (goal ? fmtHM(goal) : "") + '"></td>';
+      r += '<td class="gcol gcolF"><input class="bgoal" type="text" inputmode="numeric"' + (planTimeBlocked(c) ? ' readonly title="Planning is off for untracked / None-group / Termin tasks"' : '') + ' value="' + (goal ? fmtHM(goal) : "") + '"></td>';
       // ── Extra (orange): IP, Prio ──
       r += '<td class="gcol gcolFip"><input class="bgoalip" type="text" inputmode="numeric" value="' + (gGet("goalIP", c.id) ? fmtHM(gGet("goalIP", c.id)) : "") + '"></td>';
       { const pv = gGet("prio", c.id), hasP = pv != null && pv !== "" && !isNaN(pv); r += '<td class="gcol gcolPrio"' + (hasP ? ' style="background:' + prio5Bg(+pv) + '"' : "") + '><input class="bprio" type="number" min="1" max="5" step="1"' + (hasP ? ' style="color:' + prio5Txt(+pv) + '"' : "") + ' value="' + (hasP ? pv : "") + '"></td>'; }
@@ -2882,7 +2896,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v157"; } catch (e) {}
+  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v160"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
