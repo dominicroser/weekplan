@@ -91,6 +91,10 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolTimerPill .runElapsed { font-variant-numeric: tabular-nums; font-weight: 800; }
 .poolTimerPill .ptBtn { border: none; background: rgba(255,255,255,0.28); color: inherit; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
 .poolTimerPill .ptBtn:hover { background: rgba(255,255,255,0.45); }
+.poolStartWrap { display: flex; }
+.poolStartIn { flex: 1; width: 100%; border: 1px solid var(--line); border-radius: 15px; padding: 3px 11px; font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink); background: var(--panel); }
+.poolStartIn:focus { outline: none; border-color: rgba(43,108,176,0.5); background: #fff; }
+.taskMenu.floatMenu { position: fixed; top: auto; left: auto; }
 .poolModeBar { display: flex; gap: 9px; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
 .pmBtn { border: 1.5px solid #999; background: #fff; color: #555; cursor: pointer; font-size: 11px; line-height: 1; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 .pmBtn.pmAll { border-radius: 4px; font-weight: 800; font-size: 11px; }
@@ -553,7 +557,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 <body>
 <header>
   <span id="runBar" class="runBar" style="display:none;"></span>
-  <span class="startTimerWrap"><input id="startTimerInput" class="startTimerIn" placeholder="▶ start a timer…" autocomplete="off"><div id="taskMenu" class="taskMenu" style="display:none;"></div></span>
+  <span class="startTimerWrap"><input id="startTimerInput" class="startTimerIn" placeholder="▶ switch to another task…" autocomplete="off"><div id="taskMenu" class="taskMenu" style="display:none;"></div></span>
   <button class="iconBtn" id="undoBtn" title="Undo">&#8630;</button>
   <button class="iconBtn" id="reportsBtn" title="Reports &amp; activity">&#128202;</button>
   <button class="iconBtn" id="tasksBtn" title="Masterplan &amp; tasks">&#128029;</button>
@@ -782,7 +786,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v167 */
+/* build v168 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1481,7 +1485,7 @@ if (IS_BROWSER) (function () {
     updateFavicon();
     const el = $("runBar"), inp = $("startTimerInput");
     if (el) { el.innerHTML = ""; el.style.display = "none"; el.style.background = "transparent"; }   // running pill now lives in the pool divider
-    if (inp) { inp.style.display = ""; inp.placeholder = state.timer ? "▶ switch timer…" : "▶ start a timer…"; }
+    if (inp) { inp.style.display = ""; inp.placeholder = "▶ switch to another task…"; }   // top-bar pill is now switch-only; starting lives in the pool divider
   }
   const launcherColor = (g) => g === "work" ? "#1d4ed8" : g === "fruit" ? "#15803d" : g === "home" ? "#b8860b" : "var(--ink)";
   function eligibleTasks() {
@@ -1490,14 +1494,29 @@ if (IS_BROWSER) (function () {
     e.sort((a, b) => (grp(a) - grp(b)) || (a.name || "").localeCompare(b.name || ""));
     return e;
   }
-  function showTaskMenu() {
-    const menu = $("taskMenu"), inp = $("startTimerInput"); if (!menu || !inp) return;
+  function fillTaskMenu(inp, menu) {
+    if (!menu || !inp) return;
     const q = inp.value.trim().toLowerCase();
     const list = eligibleTasks().filter((c) => !q || (c.name || "").toLowerCase().indexOf(q) >= 0);
     if (!list.length) { menu.style.display = "none"; return; }
     menu.innerHTML = list.map((c) => '<div class="taskOpt" data-id="' + c.id + '" style="color:' + launcherColor(c.group || "work") + '">' + (c.name || "").replace(/</g, "&lt;") + "</div>").join("");
     menu.style.display = "";
+    if (menu.classList.contains("floatMenu")) { const r = inp.getBoundingClientRect(); menu.style.left = r.left + "px"; menu.style.top = (r.bottom + 3) + "px"; menu.style.minWidth = r.width + "px"; }
   }
+  function wireTimerInput(inp, menu) {
+    inp.addEventListener("change", (e) => {
+      const v = e.target.value.trim(); e.target.value = ""; if (!v) return;
+      const c = state.categories.find((x) => (x.name || "").toLowerCase() === v.toLowerCase()) || state.categories.find((x) => (x.name || "").toLowerCase().startsWith(v.toLowerCase()));
+      if (!c) { toast("No task called “" + v + "”"); return; }
+      if (c.noTrack) { toast("“" + c.name + "” is set to not-tracked."); return; }
+      toggleTimer(c.id);
+    });
+    inp.addEventListener("focus", () => fillTaskMenu(inp, menu));
+    inp.addEventListener("input", () => fillTaskMenu(inp, menu));
+    inp.addEventListener("blur", () => setTimeout(() => { menu.style.display = "none"; }, 150));
+    menu.addEventListener("mousedown", (e) => { const o = e.target.closest(".taskOpt"); if (!o) return; e.preventDefault(); const c = state.categories.find((x) => x.id === o.dataset.id); inp.value = ""; menu.style.display = "none"; if (c) toggleTimer(c.id); });
+  }
+  function showTaskMenu() { fillTaskMenu($("startTimerInput"), $("taskMenu")); }
   function discardTimer() {
     if (!state.timer) return;
     state.timer = null; stopTimerLoop(); saveLocal(); schedulePush(); renderAll(); toast("Timer discarded — nothing logged");
@@ -1878,8 +1897,9 @@ if (IS_BROWSER) (function () {
       for (const c of obTasks) obl.appendChild(renderOpenBullet(c));
       pool.appendChild(obl);
     }
-    // SECTION THREE: the divider — running-timer pill on top, the three mode buttons below (A · Upcoming · Priority; at most one active).
+    // SECTION THREE: the divider — running-timer pill (if any), then the always-visible "start a timer" pill, then the three mode buttons (A · Upcoming · Priority; at most one active).
     const mode = ui.poolMode || "";
+    document.querySelectorAll(".taskMenu.floatMenu").forEach((m) => m.remove());   // drop any stale floating menu from a previous render
     if (shownAll.length) {
       const dv = document.createElement("div"); dv.className = "poolDividerBar";
       if (state.timer) {
@@ -1898,6 +1918,12 @@ if (IS_BROWSER) (function () {
         pill.querySelector(".ptDel").addEventListener("click", discardTimer);
         dv.appendChild(pill);
       }
+      // Always-visible "start a timer" pill, sitting between the running pill and the mode buttons.
+      const stWrap = document.createElement("div"); stWrap.className = "poolStartWrap";
+      const stInp = document.createElement("input"); stInp.className = "startTimerIn poolStartIn"; stInp.placeholder = "▶ start a timer…"; stInp.setAttribute("autocomplete", "off");
+      const stMenu = document.createElement("div"); stMenu.className = "taskMenu floatMenu"; stMenu.style.display = "none"; document.body.appendChild(stMenu);
+      wireTimerInput(stInp, stMenu);
+      stWrap.appendChild(stInp); dv.appendChild(stWrap);
       const bar = document.createElement("div"); bar.className = "poolModeBar";
       bar.innerHTML = '<button class="pmBtn pmAll' + (mode === "" ? " on" : "") + '" title="All — the basic order, grouped (Parents · Work · Fruit · Home · None · Termin)">A</button>' +
         '<button class="pmBtn pmUp' + (mode === "upcoming" ? " on" : "") + '" title="Upcoming — order by when tasks come up on the grid this week (others hidden)">↑</button>' +
@@ -2421,17 +2447,7 @@ if (IS_BROWSER) (function () {
     else { const tc = cellForDate(state.anchorMonday, new Date()); viewDay = (tc.weekIdx === state.currentWeek && new Date().getDay() !== 0) ? tc.dayIdx : 0; }
     setView();
   });
-  $("startTimerInput").addEventListener("change", (e) => {
-    const v = e.target.value.trim(); e.target.value = ""; if (!v) return;
-    const c = state.categories.find((x) => (x.name || "").toLowerCase() === v.toLowerCase()) || state.categories.find((x) => (x.name || "").toLowerCase().startsWith(v.toLowerCase()));
-    if (!c) { toast("No task called “" + v + "”"); return; }
-    if (c.noTrack) { toast("“" + c.name + "” is set to not-tracked."); return; }
-    toggleTimer(c.id);
-  });
-  $("startTimerInput").addEventListener("focus", showTaskMenu);
-  $("startTimerInput").addEventListener("input", showTaskMenu);
-  $("startTimerInput").addEventListener("blur", () => setTimeout(() => { const m = $("taskMenu"); if (m) m.style.display = "none"; }, 150));
-  $("taskMenu").addEventListener("mousedown", (e) => { const o = e.target.closest(".taskOpt"); if (!o) return; e.preventDefault(); const c = state.categories.find((x) => x.id === o.dataset.id); $("startTimerInput").value = ""; $("taskMenu").style.display = "none"; if (c) toggleTimer(c.id); });
+  wireTimerInput($("startTimerInput"), $("taskMenu"));   // top-bar pill = switch to another task on the go
   $("weekPrev").onclick = () => { if (viewDay >= 0) { stepDay(-1); return; } if (state.currentWeek > 0) { state.currentWeek--; selectedId = null; commit(); } };
   $("weekNext").onclick = () => { if (viewDay >= 0) { stepDay(1); return; } if (state.currentWeek < state.weeks.length - 1) { state.currentWeek++; selectedId = null; commit(); } else { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); } };
 
@@ -2961,7 +2977,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { const BUILD = "v167"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v168"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
