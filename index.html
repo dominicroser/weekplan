@@ -79,12 +79,12 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolSummary .l3 b { color: var(--ink); font-weight: 700; }
 .sheetBtn { display: block; width: 100%; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink2); padding: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 .sheetBtn:active { background: var(--panel2); }
-.poolItem { position: relative; background: transparent; border: 2.5px solid #9aa0a8; border-radius: 8px; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
+.poolItem { position: relative; background: transparent; border: 4.5px solid #9aa0a8; border-radius: 8px; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
 .poolItem.openBox { background: #f4a0c8; }   /* ≥15 min open → bright pink */
 .poolItem.overBox { background: #c3a6ee; }   /* ≥15 min over → intense (light) purple */
 .poolItem.armed { outline-color: var(--accent); }
 .poolTop { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 11px; }
-.nameInput { background: transparent; border: none; color: var(--ink); font-size: 11px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; }
+.nameInput { background: transparent; border: none; color: #111; font-size: 11px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; }
 .poolHours { font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; white-space: nowrap; color: var(--good); }
 .poolTop .goalSet { font-weight: 700; margin-left: 3px; }
 .poolHours.isover { color: var(--over); font-weight: 700; }
@@ -93,24 +93,24 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .barFill { height: 100%; border-radius: 3px; transition: width .2s; }
 .barFill.isover { background: var(--over) !important; }
 .poolMeta { font-size: 11px; font-weight: 400; color: var(--ink3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
-.poolCalc { margin-top: 4px; font-size: 10.5px; font-weight: 400; color: var(--ink2); font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.1px; }
-.poolCalc .calcClock { background: transparent; border: none; padding: 0 3px 0 0; margin: 0; color: var(--ink3); font-size: 10px; line-height: 1; cursor: default; }
+.poolCalc { margin-top: 4px; font-size: 10.5px; font-weight: 400; color: #111; font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.1px; }
+.poolCalc .calcClock { background: transparent; border: none; padding: 0 3px 0 0; margin: 0; color: #111; font-size: 10px; line-height: 1; cursor: default; }
 .poolCalc .calcClock.canTime { cursor: pointer; }
 .poolCalc .calcClock.canTime:hover { color: #c2410c; }
 .poolCalc .calcClock.run { color: #c2410c; font-weight: 700; }   /* running → dark warm orange */
 .poolCalc .calcO { font-weight: 700; color: #111; }   /* Open number is always black */
-.poolCalc input.calcP { width: 38px; border: 1px solid transparent; background: transparent; font: inherit; font-variant-numeric: tabular-nums; text-align: right; color: var(--ink2); border-radius: 3px; padding: 0 1px; cursor: text; }
+.poolCalc input.calcP { width: 38px; border: 1px solid transparent; background: transparent; font: inherit; font-variant-numeric: tabular-nums; text-align: right; color: #111; border-radius: 3px; padding: 0 1px; cursor: text; }
 .poolCalc input.calcP:hover { border-color: var(--line); }
 .poolCalc input.calcP:focus { border-color: rgba(43,108,176,0.5); background: #fff; color: var(--ink); outline: none; }
 .warn { color: var(--over); font-weight: 700; margin-right: 2px; }
 .hoursInput { width: 56px; background: transparent; border: none; color: var(--ink2); font-size: 10.5px; padding: 0 2px; border-radius: 3px; text-align: right; }
-.hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 12px; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: var(--ink2); }
+.hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 12px; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: #111; }
 .hStep:active { background: var(--panel); }
 .goalVal { display: inline-block; min-width: 30px; text-align: center; }
 .goalInput { width: 40px; min-width: 40px; border: 1px solid transparent; background: transparent; font: inherit; font-size: 10.5px; text-align: center; color: var(--ink2); border-radius: 4px; padding: 1px 0; cursor: text; }
 .goalInput:hover { border-color: var(--line); }
 .goalInput:focus { border-color: rgba(43,108,176,0.5); background: #fff; color: var(--ink); outline: none; }
-.goalSet { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 11px; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: var(--ink2); }
+.goalSet { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 11px; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: #111; }
 .goalSet:active { background: var(--panel); }
 .hoursInput:focus, .nameInput:focus { background: #fff; outline: 1px solid rgba(43,108,176,0.4); }
 .stripe { position: absolute; left: -4px; top: 0; bottom: 0; width: 14px; cursor: pointer; }
@@ -776,7 +776,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v152 */
+/* build v154 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -859,7 +859,7 @@ const GROUPS = {
   work:  { label: "Work",  palette: ["#1c4e80","#2b6cb0","#3b82c4","#5fa0e0","#0d3b66","#1a5fa0","#4a90d9","#7fb3e6","#245e9e","#0f6fc4"] },
   home:  { label: "Home",  palette: ["#e6b800","#ffd633","#c9a227","#f5d76e","#b8920a","#ffe066","#d4af1f","#f0c419","#a87f00","#ffd24d"] },
   fruit: { label: "Fruit", palette: ["#1e7a46","#52b35e","#2b8a3e","#74c365","#157f4a","#43a047","#6abf69","#2f9e44","#3f7d3a","#86c97a"] },
-  parents:{ label: "Parents", palette: ["#0e8a9a","#12a2b5","#2bb7c9","#0b7180","#159fb0","#3cc3d4","#0a6270","#1892a3"] },
+  parents:{ label: "Parents", palette: ["#ff7f50","#f4795e","#ff9478","#e9765b","#ff8a6b","#fb8a6a","#ffa07a","#e06f52"] },   /* coral */
   none:  { label: "None",  palette: [GREY] },
   termin:{ label: "Termin", palette: [EVENT_COLOR] },
 };
@@ -869,7 +869,7 @@ function planTimeBlocked(c) { return !c || !!c.noTrack || isNoneGroup(c) || c.gr
 function prio5Bg(v) { v = Math.max(1, Math.min(5, Math.round(+v || 0))); return v === 1 ? "#f5c518" : v === 2 ? "#f28c28" : v === 3 ? "#e03131" : v === 4 ? "#c94f8f" : "#6a2c91"; }   // 1 yellow · 2 orange · 3 red · 4 light red-purple · 5 dark purple
 function prio5Txt(v) { v = Math.max(1, Math.min(5, Math.round(+v || 0))); return v <= 2 ? "#3a2c00" : "#ffffff"; }
 function groupBorderColor(c) { const g = c && c.group; return g === "work" ? "#2b6cb0" : g === "home" ? "#e0a500" : g === "fruit" ? "#2b8a3e" : g === "parents" ? "#0e8a9a" : g === "termin" ? "#e03131" : "#9aa0a8"; }   // pool box border = the task's group colour
-const GROUP_HUE = { work: 225, home: 42, fruit: 135, parents: 187 };
+const GROUP_HUE = { work: 225, home: 42, fruit: 135, parents: 16 };
 function groupColorFor(group, cats, exceptId) {
   const g = GROUPS[group] ? group : "work";
   if (g === "none") return GREY;          // light grey
@@ -1672,23 +1672,20 @@ if (IS_BROWSER) (function () {
       if (futureKey[b.catId] == null || key < futureKey[b.catId]) futureKey[b.catId] = key;
     }
     const openOf = (c) => weekBudget(c, cw) - effUsed(c.id);   // Planned − Gridded
-    const bucketOf = (c) => { if (!planTimeBlocked(c)) { const O = openOf(c); if (O >= TOL) return 0; if (O <= -TOL) return 1; } return (weekBudget(c, cw) > eps || effUsed(c.id) > eps) ? 2 : 3; };   // open≥15 · over≥15 · has plan/grid · nothing
-    const mailRe = /^mail/i, planRe = /^plan/i, gPri = { work: 0, fruit: 1, home: 2 };   // prefix match: "Mails", "Plan"/"Plann" etc.
-    const allRank = (c) => { const nm = (c.name || "").trim(); if (mailRe.test(nm)) return 0; if (planRe.test(nm)) return 1; const g = c.group; if (g === "work" || g === "fruit" || g === "home") return 2; if (g === "termin") return 4; return 3; };
-    const prevCmp = (a, b) => {
-      const ra = allRank(a), rb = allRank(b);
+    const bucketOf = (c) => { if (!planTimeBlocked(c)) { const O = openOf(c); if (O >= TOL) return 0; if (O <= -TOL) return 1; } return 2; };   // open≥15 · over≥15 · everything else
+    // Within the "rest": Parents (alpha) → Work/Fruit/Home/None on this week's future grid (by grid order) → not-gridded Work→Fruit→Home→None (alpha) → Termin (reverse alpha)
+    const gPri2 = { work: 0, fruit: 1, home: 2, none: 3 };
+    const gKey = (c) => (c.group === "work" || c.group === "fruit" || c.group === "home") ? c.group : "none";
+    const restRank = (c) => { const g = c.group; if (g === "parents") return 0; if (g === "termin") return 3; return futureKey[c.id] != null ? 1 : 2; };
+    const restCmp = (a, b) => {
+      const ra = restRank(a), rb = restRank(b);
       if (ra !== rb) return ra - rb;
-      if (ra === 2) {
-        const fa = futureKey[a.id] != null, fb = futureKey[b.id] != null;
-        if (fa !== fb) return fa ? -1 : 1;                                                  // future-gridded tasks first
-        if (fa && fb) return (futureKey[a.id] - futureKey[b.id]) || (a.name || "").localeCompare(b.name || "");   // by grid time
-        const ga = gPri[a.group] != null ? gPri[a.group] : 9, gb = gPri[b.group] != null ? gPri[b.group] : 9;      // else work→fruit→home, then alpha
-        return (ga - gb) || (a.name || "").localeCompare(b.name || "");
-      }
-      if (ra === 4) return (b.name || "").localeCompare(a.name || "");                       // Termin → reverse alpha
-      return (a.name || "").localeCompare(b.name || "");                                     // Mails/Plan/None → alpha
+      if (ra === 1) return (futureKey[a.id] - futureKey[b.id]) || (a.name || "").localeCompare(b.name || "");   // by future-grid order
+      if (ra === 3) return (b.name || "").localeCompare(a.name || "");                                          // Termin → reverse alpha
+      if (ra === 2) { const ga = gPri2[gKey(a)], gb = gPri2[gKey(b)]; return (ga - gb) || (a.name || "").localeCompare(b.name || ""); }
+      return (a.name || "").localeCompare(b.name || "");                                                         // Parents → alpha
     };
-    allList.sort((a, b) => { const ba = bucketOf(a), bb = bucketOf(b); return (ba - bb) || prevCmp(a, b); });
+    allList.sort((a, b) => { const ba = bucketOf(a), bb = bucketOf(b); return (ba - bb) || restCmp(a, b); });
     pool.innerHTML = "";
 
     const W = state.weeks.length;
@@ -1813,7 +1810,7 @@ if (IS_BROWSER) (function () {
       const el = document.createElement("div");
       el.className = "poolItem" + (isOpenBox ? " openBox" : isOverBox ? " overBox" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
-      el.style.borderColor = groupBorderColor(cat);
+      el.style.borderColor = cat.color;
       el.innerHTML =
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
         '<div class="poolTop">' +
@@ -2788,8 +2785,7 @@ if (IS_BROWSER) (function () {
     snap(); const id = "cat" + Date.now();
     state.categories.unshift({ id: id, name: "", hours: 0, group: "", defaultMin: 60, color: GREY });   // no name, no group → appears at the top until you assign a group
     if (ui.mpHideFeat) { ui.mpHideFeat = false; saveUI(); }   // reveal the Features columns so the new task can be fully configured
-    // Seed 1h so a brand-new task stays visible even when the Zero-Masterplan / Zero-This-Week / Zero-Next-Week filters are on
-    { const m = activeMasterplan(); if (m) { m.goal = m.goal || {}; m.goal[id] = 1; } const cw2 = state.currentWeek; if (state.weeks[cw2]) ensureBudgets(state.weeks[cw2])[id] = 1; if (state.weeks[cw2 + 1]) ensureBudgets(state.weeks[cw2 + 1])[id] = 1; }
+    if (ui.mpF0all || ui.mpF0cur || ui.mpF0next) { ui.mpF0all = false; ui.mpF0cur = false; ui.mpF0next = false; saveUI(); }   // tick all three Zero filters so a brand-new (0-planned) task stays visible
     commit(); renderBudgets();
     const w = $("masterplanTableWrap"); if (w) { const inp = w.querySelector('tr[data-id="' + id + '"] .tname'); if (inp) { inp.scrollIntoView({ block: "nearest" }); inp.focus(); } }
   }
@@ -2890,7 +2886,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v152"; } catch (e) {}
+  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v154"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3336,10 +3332,10 @@ if (IS_BROWSER) (function () {
     if (!state.habitVersions.length && (state.habits || []).length) state.habitVersions.push({ v: 1, from: ymd(mondayOf(new Date())), defs: defsSnapshot() });
     saveLocal(); schedulePush();
   }
-  function seedColors() {   // one-time: give the Plan/Mails parents their pink shades (softer; Plan cooler/mauve, Mails warmer/rose)
-    if ((state.colorSeedV || 0) >= 4) return;
-    for (const c of state.categories) { const n = (c.name || "").toLowerCase(); if (n === "plan") c.color = "#ecc9a5"; else if (n === "mails") c.color = "#f3b4ac"; }
-    state.colorSeedV = 4; saveLocal(); schedulePush();
+  function seedColors() {   // one-time: give the Mails/Plann parents their coral shades (Mails dark & saturated, Plann lighter)
+    if ((state.colorSeedV || 0) >= 5) return;
+    for (const c of state.categories) { const n = (c.name || "").toLowerCase(); if (/^plan/.test(n)) c.color = "#ff8a66"; else if (/^mail/.test(n)) c.color = "#d94f34"; }
+    state.colorSeedV = 5; saveLocal(); schedulePush();
   }
   function mergeSplitBlocks() {   // one-time: fold existing adjacent child actual-blocks (from old timer splits) into single parent blocks with a stored split
     if (state.splitMergeV) return;
