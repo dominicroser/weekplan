@@ -52,7 +52,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 /* ── Layout ── */
 #body { display: flex; align-items: flex-start; }
 #pool { width: 270px; flex-shrink: 0; padding: 12px 11px; display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 60px); overflow-y: auto; }
-.poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 0; margin-bottom: 0; flex-shrink: 0; line-height: 1.55; }
+.poolSummary { font-size: 11.5px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 0; margin-bottom: 0; flex-shrink: 0; line-height: 1.55; }
 .poolSummary .sumSec:last-child { margin-bottom: 0; }
 .poolSummary .opHead { font-weight: 400; margin-bottom: 0; }
 .poolSummary .sumSec { margin-bottom: 7px; }
@@ -60,12 +60,13 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolSummary .sumSec.collapsible .sumHd { cursor: pointer; }
 .sumTbl { border-collapse: collapse; width: 100%; font-family: 'Inter', sans-serif; font-size: 11.5px; }
 .sumTbl th, .sumTbl td { border: 1px solid var(--line); padding: 1px 5px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 400; }
-.sumTbl th { color: #111; }
+.sumTbl th { color: #111; font-weight: 700; }
+.sumTbl td.sumRowLbl { font-weight: 700; }
 .sumTbl tr.trM td { color: #d6336c; }
 .sumTbl tr.trG td { color: #5aa2e6; }   /* Growth → light blue */
 .sumTbl tr.trW td { color: #12388f; }   /* Work → dark blue */
 .sumTbl th.sumBtnCell { text-align: center; padding: 0 3px; }
-.sumExpand { background: transparent; border: none; cursor: pointer; color: #111; font-size: 12px; line-height: 1; padding: 0 1px; }
+.sumExpand { background: transparent; border: none; cursor: pointer; color: #111; font-size: 11.5px; line-height: 1; padding: 0 1px; }
 .sumExpand:hover { color: var(--ink); }
 .sumTbl tr.trF td { color: #15803d; }
 .sumTbl tr.trH td { color: #b8860b; }
@@ -81,8 +82,8 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolItem.openBox { background: #f4a0c8; }   /* ≥15 min open → bright pink */
 .poolItem.overBox { background: #c3a6ee; }   /* ≥15 min over → intense (light) purple */
 .poolItem.armed { outline-color: var(--accent); }
-.poolTop { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 11px; }
-.nameInput { background: transparent; border: none; color: #111; font-size: 11px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; }
+.poolTop { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 11.5px; }
+.nameInput { background: transparent; border: none; color: #111; font-size: 11.5px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; }
 .poolHours { font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; white-space: nowrap; color: var(--good); }
 .poolTop .goalSet { font-weight: 700; margin-left: 3px; }
 .poolHours.isover { color: var(--over); font-weight: 700; }
@@ -90,9 +91,9 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .barTrack { height: 4px; background: rgba(0,0,0,0.08); border-radius: 3px; margin: 4px 0 3px; overflow: hidden; }
 .barFill { height: 100%; border-radius: 3px; transition: width .2s; }
 .barFill.isover { background: var(--over) !important; }
-.poolMeta { font-size: 11px; font-weight: 400; color: var(--ink3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
-.poolCalc { margin-top: 4px; font-size: 10.5px; font-weight: 400; color: #111; font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.1px; }
-.poolCalc .calcClock { background: transparent; border: none; padding: 0 3px 0 0; margin: 0; color: #111; font-size: 10px; line-height: 1; cursor: default; }
+.poolMeta { font-size: 11.5px; font-weight: 400; color: var(--ink3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
+.poolCalc { margin-top: 4px; font-size: 11.5px; font-weight: 400; color: #111; font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.1px; }
+.poolCalc .calcClock { background: transparent; border: none; padding: 0 3px 0 0; margin: 0; color: #111; font-size: 11.5px; line-height: 1; cursor: default; }
 .poolCalc .calcClock.canTime { cursor: pointer; }
 .poolCalc .calcClock.canTime:hover { color: #c2410c; }
 .poolCalc .calcClock.run { color: #c2410c; font-weight: 700; }   /* running → dark warm orange */
@@ -102,20 +103,20 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolCalc input.calcP:focus { border-color: rgba(43,108,176,0.5); background: #fff; color: var(--ink); outline: none; }
 .warn { color: var(--over); font-weight: 700; margin-right: 2px; }
 .hoursInput { width: 56px; background: transparent; border: none; color: var(--ink2); font-size: 10.5px; padding: 0 2px; border-radius: 3px; text-align: right; }
-.hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 12px; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: #111; }
+.hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 15px; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: #111; }
 .hStep:active { background: var(--panel); }
 .goalVal { display: inline-block; min-width: 30px; text-align: center; }
 .goalInput { width: 40px; min-width: 40px; border: 1px solid transparent; background: transparent; font: inherit; font-size: 10.5px; text-align: center; color: var(--ink2); border-radius: 4px; padding: 1px 0; cursor: text; }
 .goalInput:hover { border-color: var(--line); }
 .goalInput:focus { border-color: rgba(43,108,176,0.5); background: #fff; color: var(--ink); outline: none; }
-.goalSet { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 11px; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: #111; }
+.goalSet { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 15px; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: #111; }
 .goalSet:active { background: var(--panel); }
 .hoursInput:focus, .nameInput:focus { background: #fff; outline: 1px solid rgba(43,108,176,0.4); }
 .stripe { position: absolute; left: -4px; top: 0; bottom: 0; width: 14px; cursor: pointer; }
 .stripe input { opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
 .catX { position: absolute; top: 2px; right: 4px; background: transparent; border: none; color: rgba(0,0,0,0.22); font-size: 14px; cursor: pointer; line-height: 1; padding: 2px; }
 .catX:hover { color: #c53030; }
-#addCat { background: transparent; border: 1px dashed var(--line); color: var(--ink2); padding: 8px; border-radius: 7px; font-size: 12.5px; cursor: pointer; margin-top: 4px; }
+#addCat { background: transparent; border: 1px dashed var(--line); color: var(--ink2); padding: 8px; border-radius: 7px; font-size: 11.5px; cursor: pointer; margin-top: 4px; }
 
 /* ── Grid ── */
 #gridWrap { flex: 1; padding: 12px 14px 0 2px; min-width: 0; }
@@ -337,11 +338,10 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .goalSet2 { margin: 6px 0 12px; font-size: 13px; color: var(--ink); }
 .gOver { color: #2f9e44; font-weight: 600; }
 .gUnder { color: #e03131; font-weight: 600; }
-.checkSection { background: #b8460f; border-radius: 8px; padding: 6px 9px 7px; margin: 0 2px 9px; }   /* warm, dark, saturated orange */
-.checkTitle { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase; color: #fff; margin-bottom: 4px; }
+.checkSection { background: #ff8214; border-radius: 8px; padding: 6px 9px 7px; margin: 0 2px 9px; }   /* bright, neon, cheerful orange */
 .checkList { display: flex; flex-direction: column; gap: 1px; }
-.checkRow { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #fff; cursor: pointer; padding: 2px 3px; border-radius: 4px; }
-.checkRow:hover { background: rgba(255,255,255,0.15); }
+.checkRow { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: #241000; cursor: pointer; padding: 2px 3px; border-radius: 4px; }
+.checkRow:hover { background: rgba(0,0,0,0.12); }
 .checkRow input { flex-shrink: 0; margin: 0; width: 15px; height: 15px; accent-color: #7a2c08; }
 .checkRow .checkName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
@@ -367,7 +367,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .pRed { color: #e03131; font-weight: 700; }
 .pPurple { color: #8b3bd6; font-weight: 700; }
 .prioStar { background: transparent; border: none; cursor: pointer; font-size: 15px; line-height: 1; padding: 0 1px; color: transparent; -webkit-text-stroke: 0.6px rgba(0,0,0,0.42); }   /* colour set inline from weekly Prio; thin outline gives the border */
-.origPlan { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink2); padding: 1px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
+.origPlan { font-family: 'Inter', sans-serif; font-size: 11.5px; color: var(--ink2); padding: 1px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
 .opHead { font-weight: 700; color: var(--ink); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
 .opBtn { background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; font-size: 11px; cursor: pointer; padding: 0 6px; color: var(--ink2); line-height: 1.6; }
 .opRow { line-height: 1.55; }
@@ -437,16 +437,16 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .rbHd .rbAdd { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; width: 20px; height: 20px; line-height: 1; cursor: pointer; font-size: 14px; }
 .rbHd .rbAdd:hover { background: var(--panel2); }
 /* Deadlines */
-.dlTable { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; }
-.dlTable td { padding: 2px 3px; vertical-align: middle; }
-.dlTable input.dlDate { width: 128px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 5px; padding: 2px 4px; font-size: 11px; }
-.dlTable .dlDateCell { min-width: 84px; }
+.dlTable { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 10.5px; }
+.dlTable td { padding: 1px 3px; vertical-align: middle; }
+.dlTable input.dlDate { width: 118px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 5px; padding: 1px 4px; font-size: 10px; }
+.dlTable .dlDateCell { min-width: 76px; }
 .dlTable .dlDateTxt { cursor: pointer; white-space: nowrap; color: var(--ink); border-bottom: 1px dotted var(--ink3); }
-.dlTable input.dlName { width: 100%; border: none; background: transparent; color: var(--ink); font-size: 12px; padding: 2px 2px; }
+.dlTable input.dlName { width: 100%; border: none; background: transparent; color: var(--ink); font-size: 10.5px; padding: 1px 2px; }
 .dlTable input.dlName:focus { outline: 1px solid var(--line); border-radius: 4px; }
 .dlTable tr.past { opacity: .45; }
-.dlTable .dlDel { border: none; background: transparent; color: var(--ink3); cursor: pointer; font-size: 13px; }
-.dlDays { color: var(--ink3); font-size: 10.5px; white-space: nowrap; }
+.dlTable .dlDel { border: none; background: transparent; color: var(--ink3); cursor: pointer; font-size: 12px; }
+.dlDays { color: var(--ink3); font-size: 9.5px; white-space: nowrap; }
 .dlEmpty, .stEmpty { color: var(--ink3); font-size: 11.5px; font-style: italic; }
 /* Streak grid */
 .stWeek { margin-bottom: 8px; }
@@ -774,7 +774,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v155 */
+/* build v157 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -789,7 +789,7 @@ const LABEL_W = 40;
 const STORAGE_KEY = "weekly-planner-v3";
 const OLD_KEY = "weekly-planner-v2";
 const CFG_KEY = "weekly-planner-sync";
-const EVENT_COLOR = "#f03434"; // vivid red — meetings and the Termin group
+const EVENT_COLOR = "#a82f48"; // darker, slightly purplish wine-red (weinrot) — meetings and the Termin group
 const GREY = "#dce0e5";        // None group (light grey)
 const ZUG_COLOR = "#eaff00";   // bright neon yellow — Zug group
 const PINK = "#d6336c";
@@ -1857,7 +1857,6 @@ if (IS_BROWSER) (function () {
     };
     if (checkBlocks.length) {
       const sec = document.createElement("div"); sec.className = "checkSection";
-      const ttl = document.createElement("div"); ttl.className = "checkTitle"; ttl.textContent = "Check"; sec.appendChild(ttl);
       const box = document.createElement("div"); box.className = "checkList";
       for (const it of checkBlocks) {
         const row = document.createElement("label"); row.className = "checkRow";
@@ -2883,7 +2882,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v155"; } catch (e) {}
+  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v157"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
