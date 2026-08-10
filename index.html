@@ -87,6 +87,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolBlackDiv { height: 4px; background: #000; border-radius: 2px; margin: 10px 2px 9px; flex-shrink: 0; }
 .poolModeBar { display: flex; gap: 10px; align-items: center; justify-content: center; margin: 9px 2px; padding: 4px 0; border-top: 3px solid #000; border-bottom: 3px solid #000; flex-shrink: 0; }
 .pmBtn { border: 1.5px solid #555; background: #fff; color: #333; cursor: pointer; font-size: 14px; line-height: 1; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.pmBtn.pmAll { border-radius: 5px; font-weight: 800; font-size: 13px; }
 .pmBtn.pmUp { border-radius: 50%; }
 .pmBtn.pmPrio { border-radius: 5px; }
 .pmBtn.on { background: #333; color: #fff; border-color: #333; }
@@ -580,7 +581,6 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
   <aside id="rightBar">
     <div id="rbGrip" title="Drag to change the side-bar width"></div>
     <div id="rbInner">
-      <button class="rbCollapse" id="rbCollapse" title="Hide side bar">&raquo;</button>
       <div class="rbPanel" id="streakPanel">
         <div class="rbHd"><button class="rbAdd" id="streakAvg" title="Show/hide averages of entered values">&#216;</button><button class="rbAdd" id="streakBulk" title="Bulk-mark a range of days (holiday, illness…)">&#8943;</button><button class="rbAdd" id="streakCfg" title="Manage habits &amp; history">&#9881;</button></div>
         <div id="streakBody"></div>
@@ -594,7 +594,6 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
       </div>
     </div>
   </aside>
-  <button class="rbReopen" id="rbReopen" title="Show side bar">&laquo;</button>
 </div>
 
 <dialog id="habitsDialog">
@@ -783,7 +782,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v162 */
+/* build v163 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1763,27 +1762,7 @@ if (IS_BROWSER) (function () {
     summary.className = "poolSummary";
     summary.innerHTML = '<div class="sumSec">' + buildTable() + "</div>";
     pool.appendChild(summary);
-
-    // ── Original plan (today's plan as captured at the start of the day) ──
-    ensureSnapshot();
-    const base = (state.snapshot && state.snapshot.plan) || {};
-    const opIds = Object.keys(base).filter((id) => { const c = state.categories.find((x) => x.id === id); return base[id] > 0.0001 && c && !c.noTrack && !c.parent; });
-    if (opIds.length) {
-      const op = document.createElement("div");
-      op.className = "origPlan collapsible" + (ui.opCollapsed ? "" : " open");
-      let h = '<div class="opHead"><span class="triangle"></span>Original plan <button class="opBtn" title="Use the current plan as the baseline">&#8635;</button></div><div class="secBody">';
-      for (const id of opIds) {
-        const c = state.categories.find((x) => x.id === id);
-        const mid = base[id], done = trackToday(id), rem = Math.max(0, mid - done);
-        const cls = done <= 0.0001 ? "opNone" : (done < mid - 0.0001 ? "opPartial" : "opEnough"); // nothing / not enough / enough done
-        h += '<div class="opRow ' + cls + '"><span class="opName">' + c.name.replace(/</g, "&lt;") + "</span> <b>" + fmtHM(rem) + "</b> + " + fmtHM(done) + " = " + fmtHM(mid) + "</div>";
-      }
-      h += "</div>";
-      op.innerHTML = h;
-      op.querySelector(".opHead").addEventListener("click", (e) => { if (e.target.closest(".opBtn")) return; ui.opCollapsed = !ui.opCollapsed; saveUI(); op.classList.toggle("open"); });
-      op.querySelector(".opBtn").addEventListener("click", (e) => { e.stopPropagation(); state.snapshot = { date: ymd(new Date()), plan: planForToday() }; saveLocal(); schedulePush(); renderPool(); });
-      pool.appendChild(op);
-    }
+    ensureSnapshot();   // keep today's baseline captured (shown in the Reports modal)
 
     const divider = (label, cls) => { const dv = document.createElement("div"); dv.className = "poolDivider" + (cls ? " " + cls : ""); if (label) dv.textContent = label; pool.appendChild(dv); };
     const renderItem = (cat, immediateId) => {
@@ -1889,11 +1868,13 @@ if (IS_BROWSER) (function () {
     const mode = ui.poolMode || "";
     if (shownAll.length) {
       const bar = document.createElement("div"); bar.className = "poolModeBar";
-      bar.innerHTML = '<button class="pmBtn pmUp' + (mode === "upcoming" ? " on" : "") + '" title="Upcoming — order by when tasks come up on the grid this week (others hidden)">↑</button>' +
+      bar.innerHTML = '<button class="pmBtn pmAll' + (mode === "" ? " on" : "") + '" title="All — the basic order, grouped (Parents · Work · Fruit · Home · None · Termin)">A</button>' +
+        '<button class="pmBtn pmUp' + (mode === "upcoming" ? " on" : "") + '" title="Upcoming — order by when tasks come up on the grid this week (others hidden)">↑</button>' +
         '<button class="pmBtn pmPrio' + (mode === "priority" ? " on" : "") + '" title="Priority — order by weekly priority 5→1 (tasks without a priority hidden)">★</button>';
       pool.appendChild(bar);
-      bar.querySelector(".pmUp").addEventListener("click", () => { ui.poolMode = mode === "upcoming" ? "" : "upcoming"; saveUI(); renderPool(); });
-      bar.querySelector(".pmPrio").addEventListener("click", () => { ui.poolMode = mode === "priority" ? "" : "priority"; saveUI(); renderPool(); });
+      bar.querySelector(".pmAll").addEventListener("click", () => { ui.poolMode = ""; saveUI(); renderPool(); });
+      bar.querySelector(".pmUp").addEventListener("click", () => { ui.poolMode = "upcoming"; saveUI(); renderPool(); });
+      bar.querySelector(".pmPrio").addEventListener("click", () => { ui.poolMode = "priority"; saveUI(); renderPool(); });
     }
     // MAIN list, depending on the active mode
     let mainList;
@@ -2251,7 +2232,21 @@ if (IS_BROWSER) (function () {
     const wfW = (gW.work || 0) + (gW.fruit || 0), wfA = (gA.work || 0) + (gA.fruit || 0);
     gs += '<tr class="rfoot"><td class="rname">Work + Fruit</td><td>' + fmtHM(wfW) + "</td><td>" + fmtHM(wfA) + "</td><td>" + fmtHM(wfA / NW) + "</td></tr>";
     gs += "</tbody></table>";
-    $("reportsBody").innerHTML = (any ? html : '<p class="muted">No tracked time in this week yet — press ▶ on a task to start the timer.</p>') + gs;
+    // ── Original plan (today) ──
+    ensureSnapshot();
+    const opBase = (state.snapshot && state.snapshot.plan) || {};
+    const opTodayDS = ymd(new Date());
+    const opDone = (id) => (rep.days[opTodayDS] && rep.days[opTodayDS].byCat[id]) || 0;
+    const opIds = Object.keys(opBase).filter((id) => { const c = state.categories.find((x) => x.id === id); return opBase[id] > 0.0001 && c && !c.noTrack && !c.parent; });
+    let opHtml = "";
+    if (opIds.length) {
+      opHtml = '<h3 style="margin-top:0;">Original plan (today) <button class="btnGhost" id="opReset" style="font-size:11px; padding:2px 8px; margin-left:6px;">Reset to now</button></h3>' +
+        '<p class="muted" style="margin:0 0 6px;">Today’s plan as captured at the start of the day. Each row reads <b>still to do</b> + already&nbsp;timed = originally&nbsp;planned. Colour: purple = nothing done yet, blue = started but not enough, grey = done (or more).</p><div class="opReport">';
+      for (const id of opIds) { const c = state.categories.find((x) => x.id === id); const mid = opBase[id], done = opDone(id), rem = Math.max(0, mid - done); const cls = done <= 0.0001 ? "opNone" : (done < mid - 0.0001 ? "opPartial" : "opEnough"); opHtml += '<div class="opRow ' + cls + '"><span class="opName">' + c.name.replace(/</g, "&lt;") + "</span> <b>" + fmtHM(rem) + "</b> + " + fmtHM(done) + " = " + fmtHM(mid) + "</div>"; }
+      opHtml += "</div>";
+    }
+    $("reportsBody").innerHTML = opHtml + (any ? html : '<p class="muted">No tracked time in this week yet — press ▶ on a task to start the timer.</p>') + gs;
+    { const rb = $("opReset"); if (rb) rb.addEventListener("click", () => { state.snapshot = { date: ymd(new Date()), plan: planForToday() }; saveLocal(); schedulePush(); renderReports(); }); }
     renderLog();   // Activity now lives at the bottom of the Reports modal
   }
   $("reportsBtn").addEventListener("click", () => { renderReports(); $("reportsDialog").showModal(); });
@@ -2414,9 +2409,6 @@ if (IS_BROWSER) (function () {
     else if (cmd === "outdent") document.execCommand("outdent");
     state.note.html = $("noteBody").innerHTML; saveNoteSoon();
   }
-  { const c = $("rbCollapse"), r = $("rbReopen");
-    if (c) c.addEventListener("click", () => { ui.rightBarClosed = true; saveUI(); applyRightBar(); });
-    if (r) r.addEventListener("click", () => { ui.rightBarClosed = false; saveUI(); applyRightBar(); }); }
   $("noteBody").addEventListener("input", () => { state.note.html = $("noteBody").innerHTML; saveNoteSoon(); });
   $("noteBody").addEventListener("keydown", (e) => {
     if (e.key === "Tab") { e.preventDefault(); noteCmd(e.shiftKey ? "outdent" : "indent"); return; }
@@ -2910,7 +2902,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { const BUILD = "v162"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v163"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3065,7 +3057,7 @@ if (IS_BROWSER) (function () {
   }
   function applyRightBar() {
     const rb = $("rightBar"), ro = $("rbReopen"); if (!rb) return;
-    const closed = !!ui.rightBarClosed;
+    const closed = false;   // right bar is always shown (collapse removed)
     rb.classList.toggle("closed", closed);
     if (!closed && ui.rightBarW) rb.style.width = ui.rightBarW + "px";
     if (ro) ro.style.display = closed ? "block" : "none";
