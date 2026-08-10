@@ -85,12 +85,12 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolItem.immediate.immRun { background: #a2a8b0; }   /* currently running → dark grey */
 .poolItem.armed { outline-color: var(--accent); }
 .poolBlackDiv { height: 4px; background: #000; border-radius: 2px; margin: 10px 2px 9px; flex-shrink: 0; }
-.poolModeBar { display: flex; gap: 10px; align-items: center; justify-content: center; margin: 9px 2px; padding: 4px 0; border-top: 3px solid #000; border-bottom: 3px solid #000; flex-shrink: 0; }
-.pmBtn { border: 1.5px solid #555; background: #fff; color: #333; cursor: pointer; font-size: 14px; line-height: 1; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
-.pmBtn.pmAll { border-radius: 5px; font-weight: 800; font-size: 13px; }
+.poolModeBar { display: flex; gap: 9px; align-items: center; justify-content: center; margin: 6px 2px; padding: 2px 0; border-top: 2px solid #6b6f76; border-bottom: 2px solid #6b6f76; flex-shrink: 0; }
+.pmBtn { border: 1.5px solid #999; background: #fff; color: #555; cursor: pointer; font-size: 11px; line-height: 1; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.pmBtn.pmAll { border-radius: 4px; font-weight: 800; font-size: 11px; }
 .pmBtn.pmUp { border-radius: 50%; }
-.pmBtn.pmPrio { border-radius: 5px; }
-.pmBtn.on { background: #333; color: #fff; border-color: #333; }
+.pmBtn.pmPrio { border-radius: 4px; }
+.pmBtn.on { background: #8f959d; color: #fff; border-color: #8f959d; }   /* active → grey */
 .poolOpen { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; margin-left: 3px; }
 .poolOpen.u { color: #7a1222; }   /* under → very dark red */
 .poolOpen.o { color: #0d1f5e; }   /* over → very dark blue */
@@ -205,67 +205,49 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpWeeksInfo { font-size: 11px; color: var(--ink3); margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
 /* Masterplan table: frozen Total (next to name) + frozen footer + Goal + grey IP columns */
 .mpTable th, .mpTable td { box-sizing: border-box; }
-.mpTable td.paceD, .mpTable th.paceD { position: sticky; left: 0; width: 50px; min-width: 50px; }
-.mpTable td.paceT, .mpTable th.paceT { position: sticky; left: 50px; width: 50px; min-width: 50px; }
-.mpTable td.paceG, .mpTable th.paceG { position: sticky; left: 100px; width: 50px; min-width: 50px; }
-.mpTable td.dcol, .mpTable th.dcol { position: sticky; left: 150px; width: 64px; min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
-.mpTable td.stot, .mpTable th.stot { position: sticky; left: 214px; width: 64px; min-width: 64px; font-variant-numeric: tabular-nums; }
-.mpTable td.gcolF, .mpTable th.gcolF { position: sticky; left: 278px; width: 88px; min-width: 88px; }
-.mpTable td.gcolFip, .mpTable th.gcolFip { position: sticky; left: 366px; width: 52px; min-width: 52px; }
-.mpTable td.gcolPrio, .mpTable th.gcolPrio { position: sticky; left: 418px; width: 46px; min-width: 46px; }
-.mpTable td.name, .mpTable th.name { position: sticky; left: 464px; width: 132px; min-width: 132px; max-width: 132px; text-align: left; overflow: hidden; white-space: nowrap; }
-.mpTable .paceD, .mpTable .paceT, .mpTable .paceG { background: #eef0f2; text-align: center; font-variant-numeric: tabular-nums; color: var(--ink2); font-size: 11px; }
-.mpTable th.paceD, .mpTable th.paceT, .mpTable th.paceG { background: #e5e8eb; color: var(--ink3); font-weight: 500; }
-/* Pace toggle hides the 3 grey columns; IP-Masterplan toggle hides the orange IP + Prio columns */
-.mpTable.hidePace .paceD, .mpTable.hidePace .paceT, .mpTable.hidePace .paceG { display: none; }
-.mpTable.hideImp td.gcolFip, .mpTable.hideImp th.gcolFip, .mpTable.hideImp td.gcolPrio, .mpTable.hideImp th.gcolPrio { display: none; }
-/* combo: pace off, IP-masterplan on */
-.mpTable.hidePace:not(.hideImp) td.dcol, .mpTable.hidePace:not(.hideImp) th.dcol { left: 0; }
-.mpTable.hidePace:not(.hideImp) td.stot, .mpTable.hidePace:not(.hideImp) th.stot { left: 64px; }
-.mpTable.hidePace:not(.hideImp) td.gcolF, .mpTable.hidePace:not(.hideImp) th.gcolF { left: 128px; }
-.mpTable.hidePace:not(.hideImp) td.gcolFip, .mpTable.hidePace:not(.hideImp) th.gcolFip { left: 216px; }
-.mpTable.hidePace:not(.hideImp) td.gcolPrio, .mpTable.hidePace:not(.hideImp) th.gcolPrio { left: 268px; }
-.mpTable.hidePace:not(.hideImp) td.name, .mpTable.hidePace:not(.hideImp) th.name { left: 314px; }
-/* combo: pace on, IP-masterplan off (only name shifts; IP + Prio removed) */
-.mpTable.hideImp:not(.hidePace) td.name, .mpTable.hideImp:not(.hidePace) th.name { left: 366px; }
-/* combo: pace off, IP-masterplan off */
-.mpTable.hidePace.hideImp td.dcol, .mpTable.hidePace.hideImp th.dcol { left: 0; }
-.mpTable.hidePace.hideImp td.stot, .mpTable.hidePace.hideImp th.stot { left: 64px; }
-.mpTable.hidePace.hideImp td.gcolF, .mpTable.hidePace.hideImp th.gcolF { left: 128px; }
-.mpTable.hidePace.hideImp td.name, .mpTable.hidePace.hideImp th.name { left: 216px; }
+.mpTable td.name, .mpTable th.name { position: sticky; left: 0; width: 150px; min-width: 150px; max-width: 150px; text-align: left; overflow: hidden; white-space: nowrap; }
+/* Weekly key (light green): C/w · O/w · P/w */
+.mpTable .keyWk { background: #e6f5e6; text-align: center; font-variant-numeric: tabular-nums; color: var(--ink2); font-size: 11px; min-width: 48px; width: 48px; }
+.mpTable th.keyWk { background: #d3edd3; color: var(--ink3); font-weight: 500; }
+.mpTable.hidePace .keyWk { display: none; }
+/* Total key (darker green): Timed · Committed · Open */
+.mpTable .keyTot { background: #c6e6c6; text-align: center; font-variant-numeric: tabular-nums; min-width: 56px; width: 56px; }
+.mpTable th.keyTot { background: #a9d7a9; color: var(--ink3); font-weight: 500; }
+.mpTable.hideTotal .keyTot { display: none; }
+/* Planned (masterplan, lighter purple) */
+.mpTable .gcolF.planMP { background: #ece4fb; min-width: 84px; width: 84px; }
+.mpTable th.gcolF.planMP { background: #ddd0f5; }
+/* ★ IP + Prio (masterplan, orange) */
+.mpTable .starMP { background: #fdefdc; }
+.mpTable th.starMP { background: #f8e3c4; color: var(--ink3); font-weight: 500; }
+.mpTable.hideImp .starMP { display: none; }
+/* Weekly hours (darker purple) */
+.mpTable .wkHours { background: #d9c9f2; text-align: center; font-variant-numeric: tabular-nums; }
+.mpTable th.wkHours { background: #c3aef0; color: var(--ink3); font-weight: 500; }
 /* Hide past weeks */
 .mpTable.hidePast .pastCol { display: none; }
 .mpTable .wprioCol { background: #fdefdc; text-align: center; min-width: 38px; width: 38px; }
 .mpTable th.wprioCol { color: var(--ink3); font-weight: 500; }
 .mpTable td.wprioCol input { width: 30px; text-align: center; }
-.mpTable td.name input.tname { width: 96px; max-width: 96px; }
+.mpTable td.name input.tname { width: 114px; max-width: 114px; }
 .mpTable input.bgoal, .mpTable input.bgoalip { width: 56px; }
-.mpTable input.bprio { width: 34px; }
+.mpTable input.bprio, .mpTable input.bwprio { width: 34px; text-align: center; -moz-appearance: textfield; appearance: textfield; }
+.mpTable input.bprio::-webkit-inner-spin-button, .mpTable input.bprio::-webkit-outer-spin-button, .mpTable input.bwprio::-webkit-inner-spin-button, .mpTable input.bwprio::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .mpTable .wkHol { cursor: pointer; font-size: 9.5px; color: var(--ink3); margin-left: 3px; padding: 0 1px; border-radius: 3px; }
 .mpTable .wkHol.on { color: #b4690e; font-weight: 700; }
 .mpTable .wkHol:hover { background: rgba(0,0,0,0.08); }
 .mpTable.hideFeat td.feat, .mpTable.hideFeat th.feat { display: none; }
-.mpTable td.feat { background: #fdeef4; }
-.mpTable th.feat { background: #fbe1ec; color: var(--ink3); font-weight: 500; }
+.mpTable td.feat { background: #f2e8d5; }
+.mpTable th.feat { background: #e7d7ba; color: var(--ink3); font-weight: 500; }
 .fillHandle { position: fixed; width: 11px; height: 11px; background: #1d4ed8; border: 1.5px solid #fff; box-shadow: 0 0 0 1px #1d4ed8; cursor: crosshair; z-index: 10000; display: none; }
 .mpTable .bh.fillHi { outline: 2px solid #1d4ed8; outline-offset: -2px; background: #e8efff; }
-.mpTable td.stot, .mpTable td.gcolF, .mpTable td.name, .mpTable td.dcol { background: var(--bg); z-index: 2; }
-.mpTable th.stot, .mpTable th.gcolF, .mpTable th.name, .mpTable th.dcol { background: var(--panel); top: 0; z-index: 4; }
-.mpTable td.paceD, .mpTable td.paceT, .mpTable td.paceG { z-index: 2; }
-.mpTable th.paceD, .mpTable th.paceT, .mpTable th.paceG { top: 0; z-index: 4; }
-.mpTable tr.budFoot td.paceD, .mpTable tr.budFoot td.paceT, .mpTable tr.budFoot td.paceG { z-index: 5; }
-.mpTable td.gcolPrio { background: #fdefdc; z-index: 2; }
-.mpTable th.gcolPrio { background: #f8e3c4; top: 0; z-index: 4; color: var(--ink3); font-weight: 500; }
-.mpTable .gcolPrio { text-align: center; }
-.mpTable td.gcolPrio input { text-align: center; }
-.mpTable td.gcolFip { background: #fdefdc; z-index: 2; color: var(--ink3); }
-.mpTable th.gcolFip { background: #f8e3c4; top: 0; z-index: 4; color: var(--ink3); font-weight: 500; }
-.mpTable td.gcolFip input { color: var(--ink3); }
+.mpTable td.name { background: var(--bg); z-index: 3; }
+.mpTable th.name { background: var(--panel); top: 0; z-index: 6; }
+.mpTable .gcolPrio, .mpTable td.gcolPrio input, .mpTable td.gcolFip { text-align: center; }
+.mpTable td.gcolFip, .mpTable td.gcolFip input { color: var(--ink3); }
 .mpTable tr.budFoot td { position: sticky; bottom: 0; z-index: 1; }
-.mpTable tr.budFoot td.stot, .mpTable tr.budFoot td.gcolF, .mpTable tr.budFoot td.name, .mpTable tr.budFoot td.dcol, .mpTable tr.budFoot td.gcolPrio { z-index: 5; }
-.mpTable tr.budFoot td.gcolFip { z-index: 5; background: #fdefdc; }
-.mpTable tr.budGrp td { color: var(--ink2); font-weight: 500; background: var(--panel); }
-.mpTable tr.budGrp td.gcolFip { background: #f6ead8; }
+.mpTable tr.budFoot td.name { z-index: 6; }
+.mpTable tr.budGrp td { color: var(--ink2); font-weight: 500; }
 .mpTable tr.budGrp td.name { font-weight: 600; }
 .mpTable tr.budGrp-work td { background: #e8f0f9 !important; color: #1c4e80; }
 .mpTable tr.budGrp-fruit td { background: #e7f3ea !important; color: #1e7a46; }
@@ -284,9 +266,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable th.ipCol { color: var(--ink3); font-weight: 500; }
 .mpTable td.ipCol input, .mpTable td.ipCol { color: var(--ink3); }
 .mpTable.hideIP .ipCol, .mpTable.hideIP .wprioCol { display: none; }
-.budTable th.mpCur { background: #6d28d9; color: #fff; }
+.budTable th.mpCur { background: #6d28d9 !important; color: #fff; }
 .budTable th.mpCur .wkHol { color: #ede9fe; }
-.budTable td.mpCur { background: #c3b0f0; }
+.budTable td.mpCur { background: #b9a3f0 !important; }
 .budWrap { max-height: 62vh; overflow: auto; }
 .budGap { height: 22px; }
 .confettiBox { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
@@ -739,14 +721,15 @@ create policy "planner anon access" on plans
     <div id="oughtPanel" class="oughtPanel"></div>
   </div>
   <div class="mpBar mpToggleBar">
-    <label class="mpIPtog" title="Show the pink feature columns (untick to hide)"><input type="checkbox" id="mpFeat"> Features</label>
-    <label class="mpIPtog" title="Show the orange IP and Prio (masterplan) columns (untick to hide)"><input type="checkbox" id="mpImp"> IP Masterplan</label>
-    <label class="mpIPtog" title="Show the per-week IP and Prio columns (untick to hide)"><input type="checkbox" id="mpHideIP"> IP Week</label>
-    <label class="mpIPtog" title="Show the three grey pacing columns (untick to hide)"><input type="checkbox" id="mpPace"> Pace</label>
-    <label class="mpIPtog" title="Show the weeks before the current one (untick to hide)"><input type="checkbox" id="mpPast"> Past</label>
+    <label class="mpIPtog" title="Show the light-brown feature columns (untick to hide)"><input type="checkbox" id="mpFeat"> Features</label>
+    <label class="mpIPtog" title="Show the weekly key columns: C/w · O/w · P/w (untick to hide)"><input type="checkbox" id="mpPace"> Weekly</label>
+    <label class="mpIPtog" title="Show the total key columns: Timed · Committed · Open (untick to hide)"><input type="checkbox" id="mpTotal"> Total</label>
+    <label class="mpIPtog" title="★ Masterplan couple — IP (if-possible hours) + Prio (1–5), shown/hidden together (untick to hide)"><input type="checkbox" id="mpImp"> ★ MP</label>
+    <label class="mpIPtog" title="★ Weekly couple — per-week IP + Prio, shown/hidden together (untick to hide)"><input type="checkbox" id="mpHideIP"> ★ Wk</label>
     <label class="mpIPtog" title="Show tasks with 0 in the Planned column for this masterplan (untick to hide)"><input type="checkbox" id="mpF0all"> Zero Masterplan</label>
     <label class="mpIPtog" title="Show tasks with 0 Planned this week (untick to hide)"><input type="checkbox" id="mpF0cur"> Zero This Week</label>
     <label class="mpIPtog" title="Show tasks with 0 Planned next week (untick to hide)"><input type="checkbox" id="mpF0next"> Zero Next Week</label>
+    <label class="mpIPtog" title="Show the weeks before the current one (untick to hide)"><input type="checkbox" id="mpPast"> Past</label>
     <label class="mpIPtog" title="Show tasks marked Done (untick to hide)"><input type="checkbox" id="mpFDone"> Done</label>
     <label class="mpIPtog" title="Show tasks marked Later or NTH (untick to hide)"><input type="checkbox" id="mpFLater"> Later / NTH</label>
   </div>
@@ -782,7 +765,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v164 */
+/* build v166 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2098,6 +2081,19 @@ if (IS_BROWSER) (function () {
       autoScroll(e.clientY);
     }
   });
+  function pushOverlapsDown(day, aStart, aLen, exclude) {   // Ctrl/Cmd-drop: shove only the overlapping plan blocks down, just enough (cascading); returns false if it won't fit the day
+    const others = curBlocks().filter((b) => b.day === day && b !== exclude && !b.event && !b.meeting && b.kind !== "actual").sort((x, y) => x.startSlot - y.startSlot);
+    let floor = aStart + aLen; const moves = [];
+    for (const b of others) {
+      if (b.startSlot + b.lenSlots <= aStart) continue;   // fully above the placed block → leave it
+      const ns = Math.max(b.startSlot, floor);
+      if (ns + b.lenSlots > TOTAL_SLOTS) return false;
+      if (ns !== b.startSlot) moves.push([b, ns]);
+      floor = ns + b.lenSlots;
+    }
+    for (const m of moves) m[0].startSlot = m[1];
+    return true;
+  }
   document.addEventListener("pointerup", (e) => {
     if (!drag) return; const d = drag; drag = null; ghost.style.display = "none"; clearPreview();
     const pos = gridPos(e.clientX, e.clientY);
@@ -2105,11 +2101,7 @@ if (IS_BROWSER) (function () {
       if (pos) {
         snap();
         const len = Math.max(1, Math.min(d.lenSlots, TOTAL_SLOTS - pos.slot));
-        if (e.ctrlKey || e.metaKey) {   // Ctrl/Cmd-drop → push later task blocks down to make room
-          const later = curBlocks().filter((b) => b.day === pos.day && !b.event && !b.meeting && b.kind !== "actual" && b.startSlot >= pos.slot);
-          if (later.length && later.some((b) => b.startSlot + len + b.lenSlots > TOTAL_SLOTS)) toast("Not enough room left in the day to push the others down");
-          else for (const b of later) b.startSlot += len;
-        }
+        if (e.ctrlKey || e.metaKey) { if (!pushOverlapsDown(pos.day, pos.slot, len, null)) toast("Not enough room left in the day to push the others down"); }   // Ctrl/Cmd-drop → shove overlapping blocks down
         curBlocks().push({ id: state.nextId++, catId: d.catId, day: pos.day, startSlot: pos.slot, lenSlots: len });
         commit();
       }
@@ -2121,6 +2113,7 @@ if (IS_BROWSER) (function () {
           if (b.meeting) { const swCat = state.categories.find((c) => (c.name || "").trim().toLowerCase() === "switch"); if (swCat) sw = curBlocks().find((x) => x.catId === swCat.id && x.day === b.day && (x.startSlot + x.lenSlots) === b.startSlot); }
           b.day = pos.day; b.startSlot = Math.max(0, Math.min(pos.slot - d.grabOffset, TOTAL_SLOTS - b.lenSlots)); syncActualMs(b);
           if (sw) { sw.day = b.day; sw.startSlot = Math.max(0, b.startSlot - sw.lenSlots); }
+          if (e.ctrlKey || e.metaKey) { if (!pushOverlapsDown(b.day, b.startSlot, b.lenSlots, b)) toast("Not enough room left in the day to push the others down"); }   // Ctrl/Cmd-move → shove overlapping blocks down
         } commit(); }
       else renderBlocks();
     } else if (d.mode === "resize" || d.mode === "resizeTop") { if (d.snapped) { const rb = findBlock(d.blockId); if (rb) syncActualMs(rb); commit(); } }
@@ -2496,7 +2489,7 @@ if (IS_BROWSER) (function () {
   function ensureWeeksForMP(mp) { const idx = mpWeekIndices(mp); if (!idx.length) return; const hi = idx[idx.length - 1]; while (state.weeks.length <= hi) state.weeks.push({ id: "w" + Date.now() + "_" + state.weeks.length, blocks: [], budgets: {} }); }
   function activeMasterplan() { const mps = state.masterplans || []; if (!mps.length) return null; let mp = mps.find((m) => m.id === state.currentMasterplan); if (!mp) { const tm = ymd(mondayOf(new Date())); mp = mps.find((m) => m.from <= tm && tm <= m.to) || mps[0]; state.currentMasterplan = mp.id; } return mp; }
   function mpRangeLabel(m) { const ya = parseYMD(m.from).getFullYear(), yb = parseYMD(m.to).getFullYear(), wa = isoWeek(parseYMD(m.from)), wb = isoWeek(parseYMD(m.to)); return ya === yb ? (ya + " · W" + wa + "–W" + wb) : ("W" + wa + "/" + ya + " – W" + wb + "/" + yb); }
-  function renderMPBar() { const cb = $("mpHideIP"); if (cb) cb.checked = !ui.mpHideIP; const fb = $("mpFeat"); if (fb) fb.checked = !ui.mpHideFeat; const pb = $("mpPace"); if (pb) pb.checked = !ui.mpHidePace; const ib = $("mpImp"); if (ib) ib.checked = !ui.mpHideImp; const zb = $("mpPast"); if (zb) zb.checked = !ui.mpHidePast; { const a = $("mpF0all"); if (a) a.checked = !ui.mpF0all; const c2 = $("mpF0cur"); if (c2) c2.checked = !ui.mpF0cur; const n2 = $("mpF0next"); if (n2) n2.checked = !ui.mpF0next; const dn = $("mpFDone"); if (dn) dn.checked = !ui.mpFDone; const lt = $("mpFLater"); if (lt) lt.checked = !ui.mpFLater; } const mp0 = activeMasterplan(); const nb = $("mpNotes"); if (nb) nb.textContent = (mp0 && mp0.note && mp0.note.trim()) ? "📝 Notes •" : "📝 Notes"; const sel = $("mpSelect"); if (!sel) return; const mp = mp0; sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
+  function renderMPBar() { const cb = $("mpHideIP"); if (cb) cb.checked = !ui.mpHideIP; const fb = $("mpFeat"); if (fb) fb.checked = !ui.mpHideFeat; const pb = $("mpPace"); if (pb) pb.checked = !ui.mpHidePace; const tb = $("mpTotal"); if (tb) tb.checked = !ui.mpHideTotal; const ib = $("mpImp"); if (ib) ib.checked = !ui.mpHideImp; const zb = $("mpPast"); if (zb) zb.checked = !ui.mpHidePast; { const a = $("mpF0all"); if (a) a.checked = !ui.mpF0all; const c2 = $("mpF0cur"); if (c2) c2.checked = !ui.mpF0cur; const n2 = $("mpF0next"); if (n2) n2.checked = !ui.mpF0next; const dn = $("mpFDone"); if (dn) dn.checked = !ui.mpFDone; const lt = $("mpFLater"); if (lt) lt.checked = !ui.mpFLater; } const mp0 = activeMasterplan(); const nb = $("mpNotes"); if (nb) nb.textContent = (mp0 && mp0.note && mp0.note.trim()) ? "📝 Notes •" : "📝 Notes"; const sel = $("mpSelect"); if (!sel) return; const mp = mp0; sel.innerHTML = (state.masterplans || []).map((m) => '<option value="' + m.id + '"' + (mp && m.id === mp.id ? " selected" : "") + ">" + (m.name || "").replace(/</g, "&lt;") + " (" + mpRangeLabel(m) + ")</option>").join(""); }
   function promptRange(mp) {
     const fy = mp ? parseYMD(mp.from).getFullYear() : new Date().getFullYear(), fw = mp ? isoWeek(parseYMD(mp.from)) : isoWeek(new Date());
     const ty = mp ? parseYMD(mp.to).getFullYear() : new Date().getFullYear(), tw = mp ? isoWeek(parseYMD(mp.to)) : isoWeek(new Date());
@@ -2597,6 +2590,7 @@ if (IS_BROWSER) (function () {
         else if (k === "done") p = (a.archived ? 1 : 0) - (b.archived ? 1 : 0);
         else if (k === "auto") p = (a.auto ? 1 : 0) - (b.auto ? 1 : 0);
         else if (k === "total") { let sa = 0, sb = 0; for (const i of mpIdx) { sa += weekEffort(a, i); sb += weekEffort(b, i); } p = sa - sb; }
+        else if (k === "timed") { let sa = 0, sb = 0; for (const i of mpIdx) { sa += weekTracked(a, i); sb += weekTracked(b, i); } p = sa - sb; }
         else if (k === "goal") p = gGet("goal", a.id) - gGet("goal", b.id);
         else if (k === "goalip") p = gGet("goalIP", a.id) - gGet("goalIP", b.id);
         else if (k === "prio") p = (gGet("prio", a.id) || 0) - (gGet("prio", b.id) || 0);
@@ -2623,20 +2617,9 @@ if (IS_BROWSER) (function () {
       const goal = gGet("goal", c.id), over = goal > 0.0001 && tsum > goal + 0.0001, hasGoal = goal > 0.0001, df = tsum - goal, dcls = df < -0.0001 ? "dfNeg" : df > 0.0001 ? "dfPos" : "dfZero";
       const openVal = goal - tsum, ocls = openVal > 0.0001 ? "dfNeg" : openVal < -0.0001 ? "dfPos" : "dfZero";   // Open = Planned − Committed (coral = still to schedule, blue = over-committed)
       let r = '<tr data-id="' + c.id + '"' + (c.ad ? ' class="adRow"' : "") + ">";
-      // ── Pace (grey): Open/w over future weeks, Committed/w & Planned/w over ALL weeks ──
-      r += '<td class="paceD ' + (hasGoal ? ocls : "") + '">' + (hasGoal ? paceSigned(openVal) : "") + '</td>';
-      r += '<td class="paceT">' + paceAll(tsum) + '</td>';
-      r += '<td class="paceG">' + (hasGoal ? paceAll(goal) : "") + '</td>';
-      // ── Key numbers: Open, Committed, Planned ──
-      r += '<td class="dcol' + (hasGoal ? " " + ocls : "") + '">' + (hasGoal ? (openVal > 0.0001 ? "+" + fmtHM(openVal) : openVal < -0.0001 ? "-" + fmtHM(-openVal) : "0:00") : "") + "</td>";
-      r += '<td class="stot btot' + (over ? " over" : "") + '">' + fmtHM(tsum) + "</td>";
-      r += '<td class="gcol gcolF"><input class="bgoal" type="text" inputmode="numeric"' + (planTimeBlocked(c) ? ' readonly title="Planning is off for untracked / None-group / Termin tasks"' : '') + ' value="' + (goal ? fmtHM(goal) : "") + '"></td>';
-      // ── Extra (orange): IP, Prio ──
-      r += '<td class="gcol gcolFip"><input class="bgoalip" type="text" inputmode="numeric" value="' + (gGet("goalIP", c.id) ? fmtHM(gGet("goalIP", c.id)) : "") + '"></td>';
-      { const pv = gGet("prio", c.id), hasP = pv != null && pv !== "" && !isNaN(pv); r += '<td class="gcol gcolPrio"' + (hasP ? ' style="background:' + prio5Bg(+pv) + '"' : "") + '><input class="bprio" type="number" min="1" max="5" step="1"' + (hasP ? ' style="color:' + prio5Txt(+pv) + '"' : "") + ' value="' + (hasP ? pv : "") + '"></td>'; }
-      // ── Task name ──
+      // ── Task name (frozen) ──
       r += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" placeholder="name…" value="' + (c.name || "").replace(/"/g, "&quot;") + '"></td>';
-      // ── Features (pink): Group, Order, Comment, Link, Track, Check, Auto, Later, NTH, AD, Done, Delete, Def min, Parent, Lock ──
+      // ── Features (light brown): Group, Order, Comment, Link, Track, Check, Auto, Later, NTH, AD, Done, Delete, Def min, Parent, Lock ──
       r += '<td class="feat"><select class="bgroup">' + (unassigned ? '<option value="" selected>—</option>' : "") + GROUP_ORDER.map((g) => '<option value="' + g + '"' + (c.group === g ? " selected" : "") + ">" + GROUPS[g].label + "</option>").join("") + "</select></td>";
       r += '<td class="feat"><input class="bord" type="text" placeholder="—" title="Order — tasks sort by this (digit by digit)" value="' + (c.order != null ? String(c.order).replace(/"/g, "&quot;") : "") + '" style="width:44px;text-align:center;"></td>';
       r += '<td class="feat cmtCol"><button class="bcmt' + (c.comment ? " has" : "") + '" title="' + (c.comment ? c.comment.replace(/"/g, "&quot;").slice(0, 400) : "Add a comment") + '">🗒</button></td>';
@@ -2652,16 +2635,29 @@ if (IS_BROWSER) (function () {
       r += '<td class="feat"><input class="bdef" type="number" step="15" min="0" placeholder="rest" title="Default block length (minutes) when you drag this task onto the grid — leave empty to drop the week’s remaining goal" value="' + (c.defaultMin != null ? c.defaultMin : "") + '"></td>';
       r += '<td class="feat"><select class="bpar" title="Roll this task’s tracked time up into a parent task"><option value="">—</option>' + state.categories.filter((p) => p.id !== c.id && !p.parent).map((p) => '<option value="' + p.id + '"' + (c.parent === p.id ? " selected" : "") + ">" + (p.name || "").replace(/</g, "&lt;") + "</option>").join("") + '</select> <input class="bsplit" type="number" min="0" max="100" step="5" placeholder="%" title="Optional: share (%) of the parent timer’s time this child receives when the parent is stopped" value="' + (c.splitPct != null ? c.splitPct : "") + '" style="width:42px;"></td>';
       r += '<td class="feat"><input type="checkbox" class="bplock" title="Keep this colour when you press Recolour all by group"' + (c.lockColor ? " checked" : "") + "></td>";
-      // ── Weekly hours + per-week Extra (orange): IP, Prio ──
+      // ── Weekly key (light green): C/w, O/w, P/w ──
+      r += '<td class="paceT keyWk">' + paceAll(tsum) + '</td>';
+      r += '<td class="paceD keyWk ' + (hasGoal ? ocls : "") + '">' + (hasGoal ? paceSigned(openVal) : "") + '</td>';
+      r += '<td class="paceG keyWk">' + (hasGoal ? paceAll(goal) : "") + '</td>';
+      // ── Total key (darker green): Timed, Committed, Open ──
+      r += '<td class="keyTot ktTimed">' + (timedMP(c) > 0.0001 ? fmtHM(timedMP(c)) : "") + '</td>';
+      r += '<td class="stot keyTot btot' + (over ? " over" : "") + '">' + fmtHM(tsum) + "</td>";
+      r += '<td class="dcol keyTot' + (hasGoal ? " " + ocls : "") + '">' + (hasGoal ? (openVal > 0.0001 ? "+" + fmtHM(openVal) : openVal < -0.0001 ? "-" + fmtHM(-openVal) : "0:00") : "") + "</td>";
+      // ── Planned (masterplan, lighter purple) ──
+      r += '<td class="gcol gcolF planMP"><input class="bgoal" type="text" inputmode="numeric"' + (planTimeBlocked(c) ? ' readonly title="Planning is off for untracked / None-group / Termin tasks"' : '') + ' value="' + (goal ? fmtHM(goal) : "") + '"></td>';
+      // ── ★ IP + Prio (masterplan, orange) ──
+      r += '<td class="gcol gcolFip starMP"><input class="bgoalip" type="text" inputmode="numeric" value="' + (gGet("goalIP", c.id) ? fmtHM(gGet("goalIP", c.id)) : "") + '"></td>';
+      { const pv = gGet("prio", c.id), hasP = pv != null && pv !== "" && !isNaN(pv); r += '<td class="gcol gcolPrio starMP"' + (hasP ? ' style="background:' + prio5Bg(+pv) + '"' : "") + '><input class="bprio" type="number" min="0" max="5" step="1"' + (hasP ? ' style="color:' + prio5Txt(+pv) + '"' : "") + ' value="' + (hasP ? pv : "") + '"></td>'; }
+      // ── Weekly hours (darker purple) + per-week ★ IP, Prio (orange) ──
       for (const i of mpIdx) {
         const past = isPast(i), cellVal = past ? weekTracked(c, i) : weekBudget(c, i), ro = (past || planTimeBlocked(c)) ? " readonly" : "";
-        const tdCls = (i === state.currentWeek ? "mpCur" : "") + (past ? " pastCol" : "");
+        const tdCls = "wkHours" + (i === state.currentWeek ? " mpCur" : "") + (past ? " pastCol" : "");
         const val = past ? (cellVal > 0.0001 ? fmtHM(cellVal) : "") : fmtHM(cellVal);
         const cellTitle = past ? ' title="timed hours (past week)"' : (c.auto ? ' title="Auto = assigned (future days) + timed (elapsed days). Type a commit above this to override it; below is ignored; clear to revert to auto."' : "");
         const wpv = wprioGet(c.id, i), hasWp = wpv !== "" && wpv != null && !isNaN(wpv);
         r += '<td class="' + tdCls + '"><input class="bh' + (past ? " bhPast" : "") + '" data-w="' + i + '" type="text" inputmode="numeric"' + ro + cellTitle + ' value="' + val + '"></td>' +
              '<td class="ipCol' + (past ? " pastCol" : "") + '"><input class="bhip" data-w="' + i + '" type="text" inputmode="numeric" value="' + (ipGet(c.id, i) ? fmtHM(ipGet(c.id, i)) : "") + '"></td>' +
-             '<td class="wprioCol' + (past ? " pastCol" : "") + '"' + (hasWp ? ' style="background:' + prio5Bg(+wpv) + '"' : "") + '><input class="bwprio" data-w="' + i + '" type="number" min="1" max="5" step="1"' + (hasWp ? ' style="color:' + prio5Txt(+wpv) + '"' : "") + ' value="' + (hasWp ? wpv : "") + '"></td>';
+             '<td class="wprioCol' + (past ? " pastCol" : "") + '"' + (hasWp ? ' style="background:' + prio5Bg(+wpv) + '"' : "") + '><input class="bwprio" data-w="' + i + '" type="number" min="0" max="5" step="1"' + (hasWp ? ' style="color:' + prio5Txt(+wpv) + '"' : "") + ' value="' + (hasWp ? wpv : "") + '"></td>';
       }
       r += "</tr>";
       return r;
@@ -2683,30 +2679,38 @@ if (IS_BROWSER) (function () {
         return true;
       });
     }
-    const mHead = '<tr><th class="paceD" title="Open per week = (Planned − Committed) ÷ future weeks (holidays removed)">O/w</th><th class="paceT" title="Committed per week = Committed ÷ all weeks (holidays removed)">C/w</th><th class="paceG" title="Planned per week = Planned ÷ all weeks (holidays removed)">P/w</th><th class="dcol" data-sort="open" title="Open = Planned − Committed — hours still to schedule (coral = under-committed, blue = over-committed, green = on target)">Open' + arrow("open") + '</th><th class="stot" data-sort="total" title="Committed — timed (past weeks) + gridded (this week) + planned (future weeks)">Comm.' + arrow("total") + '</th><th class="gcol gcolF" data-sort="goal" title="Planned — hours you plan for this task over the whole masterplan">Plan.' + arrow("goal") + '</th><th class="gcol gcolFip" data-sort="goalip" title="If-possible goal — overall stretch target (masterplan)">IP' + arrow("goalip") + '</th><th class="gcol gcolPrio" data-sort="prio" title="Prio — priority to do more on this task if time opens up (0–10) (masterplan)">Prio' + arrow("prio") + '</th><th class="name" data-sort="name">Task' + arrow("name") + ' <button class="mpAddCol" title="Add a new task">+</button></th><th class="feat" data-sort="group">Group' + arrow("group") + '</th><th class="feat" data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th class="feat cmtCol" title="Comment">🗒</th><th class="feat lnkCol" title="Link">🔗</th><th class="feat" data-sort="track">Track' + arrow("track") + '</th><th class="feat" title="Check — tick to add an untracked task to the pool Check list">Check</th><th class="feat" data-sort="auto">Auto' + arrow("auto") + '</th><th class="feat" title="Done for now">Later</th><th class="feat" title="Nice to have">NTH</th><th class="feat adCol" title="Amnesty deal">AD</th><th class="feat" title="Finished for good">Done</th><th class="feat"></th><th class="feat" data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th class="feat">Parent</th><th class="feat">Lock</th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="' + (i === state.currentWeek ? "mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="ipCol' + (past ? " pastCol" : "") + '" title="If-possible hours this week">IP</th><th class="wprioCol' + (past ? " pastCol" : "") + '" title="Prio for this week (0–10)">P</th>'; }).join("") + "</tr>";
+    const mHead = '<tr><th class="name" data-sort="name">Task' + arrow("name") + ' <button class="mpAddCol" title="Add a new task">+</button></th><th class="feat" data-sort="group">Group' + arrow("group") + '</th><th class="feat" data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th class="feat cmtCol" title="Comment">🗒</th><th class="feat lnkCol" title="Link">🔗</th><th class="feat" data-sort="track">Track' + arrow("track") + '</th><th class="feat" title="Check — tick to add an untracked task to the pool Check list">Check</th><th class="feat" data-sort="auto">Auto' + arrow("auto") + '</th><th class="feat" title="Done for now">Later</th><th class="feat" title="Nice to have">NTH</th><th class="feat adCol" title="Amnesty deal">AD</th><th class="feat" title="Finished for good">Done</th><th class="feat"></th><th class="feat" data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th class="feat">Parent</th><th class="feat">Lock</th><th class="paceT keyWk" title="Committed per week = Committed ÷ all weeks (holidays removed)">C/w</th><th class="paceD keyWk" title="Open per week = (Planned − Committed) ÷ future weeks (holidays removed)">O/w</th><th class="paceG keyWk" title="Planned per week = Planned ÷ all weeks (holidays removed)">P/w</th><th class="keyTot ktTimed" data-sort="timed" title="Timed — everything you have timed with the ▶ timer so far in this masterplan">Timed' + arrow("timed") + '</th><th class="stot keyTot" data-sort="total" title="Committed — timed (past weeks) + gridded (this week) + planned (future weeks)">Comm.' + arrow("total") + '</th><th class="dcol keyTot" data-sort="open" title="Open = Planned − Committed (hours still to schedule)">Open' + arrow("open") + '</th><th class="gcol gcolF planMP" data-sort="goal" title="Planned — hours you plan for this task over the whole masterplan">Plan.' + arrow("goal") + '</th><th class="gcol gcolFip starMP" data-sort="goalip" title="★ IP Masterplan — if-possible stretch goal (hours)">IP' + arrow("goalip") + '</th><th class="gcol gcolPrio starMP" data-sort="prio" title="★ Prio Masterplan — priority 1–5 (0 = none)">Prio' + arrow("prio") + '</th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="wkHours' + (i === state.currentWeek ? " mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="ipCol' + (past ? " pastCol" : "") + '" title="★ IP — if-possible hours this week">IP</th><th class="wprioCol' + (past ? " pastCol" : "") + '" title="★ Prio for this week (0–5)">P</th>'; }).join("") + "</tr>";
     const mFoot = (function () {
       const grpW = (c, g) => groupContribs(state, c.id)[g] || 0;
-      let gt = 0, gIP = 0, goalSum = 0, cells = "";
-      for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { s += weekEffortAgg(c, i); sip += ipGet(c.id, i); } gt += s; cells += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + fmtHM(s) + '</td><td class="btot ipCol' + (isPast(i) ? " pastCol" : "") + '">' + (sip ? fmtHM(sip) : "") + '</td><td class="btot wprioCol' + (isPast(i) ? " pastCol" : "") + '"></td>'; }
-      for (const c of list) { gIP += gGet("goalIP", c.id); goalSum += gGet("goal", c.id); }
+      let gt = 0, gIP = 0, goalSum = 0, timedTot = 0, cells = "";
+      for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { s += weekEffortAgg(c, i); sip += ipGet(c.id, i); } gt += s; cells += '<td class="wkHours btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + fmtHM(s) + '</td><td class="btot ipCol' + (isPast(i) ? " pastCol" : "") + '">' + (sip ? fmtHM(sip) : "") + '</td><td class="btot wprioCol' + (isPast(i) ? " pastCol" : "") + '"></td>'; }
+      for (const c of list) { gIP += gGet("goalIP", c.id); goalSum += gGet("goal", c.id); timedTot += timedMP(c); }
       const gover = goalSum > 0.0001 && gt > goalSum + 0.0001;
       const gOpen = goalSum - gt, gCls = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "dfNeg" : gOpen < -0.0001 ? "dfPos" : "dfZero"), gTxt = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "+" + fmtHM(gOpen) : gOpen < -0.0001 ? "-" + fmtHM(-gOpen) : "0:00");
-      let f = '<tr class="budFoot"><td class="paceD btot ' + gCls + '">' + (goalSum > 0.0001 ? paceSigned(gOpen) : "") + '</td><td class="paceT btot">' + paceAll(gt) + '</td><td class="paceG btot">' + (goalSum > 0.0001 ? paceAll(goalSum) : "") + '</td><td class="dcol btot ' + gCls + '">' + gTxt + '</td><td class="stot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="gcol gcolF btot">' + (goalSum > 0.0001 ? fmtHM(goalSum) : "") + '</td><td class="gcol gcolFip btot">' + (gIP ? fmtHM(gIP) : "") + '</td><td class="gcol gcolPrio btot"></td><td class="name">Total</td>';
+      let f = '<tr class="budFoot"><td class="name">Total</td>';
       for (let k = 0; k < 15; k++) f += '<td class="feat"></td>';
+      f += '<td class="paceT keyWk btot">' + paceAll(gt) + '</td><td class="paceD keyWk btot ' + gCls + '">' + (goalSum > 0.0001 ? paceSigned(gOpen) : "") + '</td><td class="paceG keyWk btot">' + (goalSum > 0.0001 ? paceAll(goalSum) : "") + '</td>' +
+        '<td class="keyTot ktTimed btot">' + (timedTot > 0.0001 ? fmtHM(timedTot) : "") + '</td><td class="stot keyTot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="dcol keyTot btot ' + gCls + '">' + gTxt + '</td>' +
+        '<td class="gcol gcolF planMP btot">' + (goalSum > 0.0001 ? fmtHM(goalSum) : "") + '</td>' +
+        '<td class="gcol gcolFip starMP btot">' + (gIP ? fmtHM(gIP) : "") + '</td><td class="gcol gcolPrio starMP btot"></td>';
       f += cells + "</tr>";
       // Work / Fruit / Home totals — a parent's time fans out to its children's groups
       const groupRow = (g, label) => {
-        let tot = 0, goalS = 0, ipS = 0, cc = "";
-        for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { const w = grpW(c, g); s += weekEffortAgg(c, i) * w; sip += ipGet(c.id, i) * w; } tot += s; cc += '<td class="btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + (s > 0.0001 ? fmtHM(s) : "") + '</td><td class="btot ipCol' + (isPast(i) ? " pastCol" : "") + '">' + (sip > 0.0001 ? fmtHM(sip) : "") + '</td><td class="btot wprioCol' + (isPast(i) ? " pastCol" : "") + '"></td>'; }
-        for (const c of list) { const w = grpW(c, g); goalS += gGet("goal", c.id) * w; ipS += gGet("goalIP", c.id) * w; }
+        let tot = 0, goalS = 0, ipS = 0, timedS = 0, cc = "";
+        for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { const w = grpW(c, g); s += weekEffortAgg(c, i) * w; sip += ipGet(c.id, i) * w; } tot += s; cc += '<td class="wkHours btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + (s > 0.0001 ? fmtHM(s) : "") + '</td><td class="btot ipCol' + (isPast(i) ? " pastCol" : "") + '">' + (sip > 0.0001 ? fmtHM(sip) : "") + '</td><td class="btot wprioCol' + (isPast(i) ? " pastCol" : "") + '"></td>'; }
+        for (const c of list) { const w = grpW(c, g); goalS += gGet("goal", c.id) * w; ipS += gGet("goalIP", c.id) * w; timedS += timedMP(c) * w; }
         const gOpenG = goalS - tot, cls = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "dfNeg" : gOpenG < -0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "+" + fmtHM(gOpenG) : gOpenG < -0.0001 ? "-" + fmtHM(-gOpenG) : "0:00");
-        let g2 = '<tr class="budFoot budGrp budGrp-' + g + '"><td class="paceD btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(gOpenG) : "") + '</td><td class="paceT btot">' + paceAll(tot) + '</td><td class="paceG btot">' + (goalS > 0.0001 ? paceAll(goalS) : "") + '</td><td class="dcol btot ' + cls + '">' + dtxt + '</td><td class="stot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="gcol gcolF btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td><td class="gcol gcolFip btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td><td class="gcol gcolPrio btot"></td><td class="name">' + label + '</td>';
+        let g2 = '<tr class="budFoot budGrp budGrp-' + g + '"><td class="name">' + label + '</td>';
         for (let k = 0; k < 15; k++) g2 += '<td class="feat"></td>';
+        g2 += '<td class="paceT keyWk btot">' + paceAll(tot) + '</td><td class="paceD keyWk btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(gOpenG) : "") + '</td><td class="paceG keyWk btot">' + (goalS > 0.0001 ? paceAll(goalS) : "") + '</td>' +
+          '<td class="keyTot ktTimed btot">' + (timedS > 0.0001 ? fmtHM(timedS) : "") + '</td><td class="stot keyTot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="dcol keyTot btot ' + cls + '">' + dtxt + '</td>' +
+          '<td class="gcol gcolF planMP btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td>' +
+          '<td class="gcol gcolFip starMP btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td><td class="gcol gcolPrio starMP btot"></td>';
         return g2 + cc + "</tr>";
       };
       return f + groupRow("work", "Work") + groupRow("fruit", "Fruit") + groupRow("home", "Home");
     })();
-    const mCls = "budTable mpTable" + (ui.mpHideIP ? " hideIP" : "") + (ui.mpHideFeat ? " hideFeat" : "") + (ui.mpHidePace ? " hidePace" : "") + (ui.mpHideImp ? " hideImp" : "") + (ui.mpHidePast ? " hidePast" : "");
+    const mCls = "budTable mpTable" + (ui.mpHideIP ? " hideIP" : "") + (ui.mpHideFeat ? " hideFeat" : "") + (ui.mpHidePace ? " hidePace" : "") + (ui.mpHideTotal ? " hideTotal" : "") + (ui.mpHideImp ? " hideImp" : "") + (ui.mpHidePast ? " hidePast" : "");
     let fh = '<div class="budWrap"><table class="' + mCls + '"><thead>' + mHead + '</thead><tbody>' + activeList.map(taskRow).join("") + mFoot + "</tbody></table></div>";
 
     renderMPBar();
@@ -2768,10 +2772,10 @@ if (IS_BROWSER) (function () {
         });
         tr.querySelectorAll(".bh").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w; snap(); const bud = ensureBudgets(state.weeks[w]); const raw = inp.value.trim(); if (raw === "") delete bud[id]; else bud[id] = parseHM(raw); commit(); renderBudgets(); }); });
         tr.querySelectorAll(".bhip").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w, m = activeMasterplan(); if (!m) return; snap(); m.ip = m.ip || {}; m.ip[id] = m.ip[id] || {}; const v = parseHM(inp.value); if (v > 0) m.ip[id][w] = v; else delete m.ip[id][w]; commit(); renderBudgets(); }); });
-        tr.querySelectorAll(".bwprio").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w, m = activeMasterplan(); if (!m) return; snap(); m.wprio = m.wprio || {}; m.wprio[id] = m.wprio[id] || {}; const raw = inp.value.trim(); if (raw === "") delete m.wprio[id][w]; else m.wprio[id][w] = Math.max(1, Math.min(5, Math.round(+raw || 1))); commit(); renderBudgets(); }); });
+        tr.querySelectorAll(".bwprio").forEach((inp) => { inp.addEventListener("change", () => { const w = +inp.dataset.w, m = activeMasterplan(); if (!m) return; snap(); m.wprio = m.wprio || {}; m.wprio[id] = m.wprio[id] || {}; const raw = inp.value.trim(); const v = Math.max(0, Math.min(5, Math.round(+raw || 0))); if (raw === "" || v <= 0) delete m.wprio[id][w]; else m.wprio[id][w] = v; commit(); renderBudgets(); }); });
         { const bg = tr.querySelector(".bgoal"); if (bg) bg.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.goal = m.goal || {}; const v = parseHM(bg.value); if (v > 0) m.goal[id] = v; else delete m.goal[id]; commit(); renderBudgets(); }); }
         { const bgi = tr.querySelector(".bgoalip"); if (bgi) bgi.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.goalIP = m.goalIP || {}; const v = parseHM(bgi.value); if (v > 0) m.goalIP[id] = v; else delete m.goalIP[id]; commit(); renderBudgets(); }); }
-        { const bp = tr.querySelector(".bprio"); if (bp) bp.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.prio = m.prio || {}; const raw = bp.value.trim(); if (raw === "") delete m.prio[id]; else m.prio[id] = Math.max(1, Math.min(5, Math.round(+raw || 1))); commit(); renderBudgets(); }); }
+        { const bp = tr.querySelector(".bprio"); if (bp) bp.addEventListener("change", () => { const m = activeMasterplan(); if (!m) return; snap(); m.prio = m.prio || {}; const raw = bp.value.trim(); const v = Math.max(0, Math.min(5, Math.round(+raw || 0))); if (raw === "" || v <= 0) delete m.prio[id]; else m.prio[id] = v; commit(); renderBudgets(); }); }
         { const bo = tr.querySelector(".bord"); if (bo) bo.addEventListener("change", () => { snap(); const v = bo.value.trim(); if (v) cat.order = v; else delete cat.order; commit(); renderBudgets(); }); }
       });
       // Stack the sticky footer rows (Total + Work/Fruit/Home) so they don't overlap at the bottom edge.
@@ -2818,6 +2822,7 @@ if (IS_BROWSER) (function () {
   $("mpHideIP").addEventListener("change", (e) => { ui.mpHideIP = !e.target.checked; saveUI(); renderBudgets(); });
   $("mpFeat").addEventListener("change", (e) => { ui.mpHideFeat = !e.target.checked; saveUI(); renderBudgets(); });
   $("mpPace").addEventListener("change", (e) => { ui.mpHidePace = !e.target.checked; saveUI(); renderBudgets(); });
+  { const t = $("mpTotal"); if (t) t.addEventListener("change", (e) => { ui.mpHideTotal = !e.target.checked; saveUI(); renderBudgets(); }); }
   $("mpImp").addEventListener("change", (e) => { ui.mpHideImp = !e.target.checked; saveUI(); renderBudgets(); });
   $("mpPast").addEventListener("change", (e) => { ui.mpHidePast = !e.target.checked; saveUI(); renderBudgets(); });
   $("mpF0all").addEventListener("change", (e) => { ui.mpF0all = !e.target.checked; saveUI(); renderBudgets(); });
@@ -2902,7 +2907,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { const BUILD = "v164"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v166"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
