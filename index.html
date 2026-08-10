@@ -782,7 +782,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v163 */
+/* build v164 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1765,7 +1765,7 @@ if (IS_BROWSER) (function () {
     ensureSnapshot();   // keep today's baseline captured (shown in the Reports modal)
 
     const divider = (label, cls) => { const dv = document.createElement("div"); dv.className = "poolDivider" + (cls ? " " + cls : ""); if (label) dv.textContent = label; pool.appendChild(dv); };
-    const renderItem = (cat, immediateId) => {
+    const renderItem = (cat, immediateId, plain) => {
       const bw = weekBudget(cat, cw);
       const u = effUsed(cat.id);
       const isDone = bw <= eps ? true : Math.abs(bw - u) < TOL;
@@ -1789,7 +1789,7 @@ if (IS_BROWSER) (function () {
       const minus = editable ? '<button class="hStep" data-d="-1" title="Lower this week’s goal by 15 min">−</button>' : "";
       const plus = editable ? '<button class="hStep" data-d="1" title="Raise this week’s goal by 15 min">+</button>' : "";
       const el = document.createElement("div");
-      el.className = "poolItem" + (isImmediate ? (running ? " immediate immRun" : " immediate") : isOpenBox ? " openBox" : isOverBox ? " overBox" : "") + (armedCat === cat.id ? " armed" : "");
+      el.className = "poolItem" + (plain ? "" : (isImmediate ? (running ? " immediate immRun" : " immediate") : isOpenBox ? " openBox" : isOverBox ? " overBox" : "")) + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
       el.style.borderColor = isNoneGroup(cat) ? "#9aa0a8" : cat.color;   // None tasks: darker grey border than their light-grey colour
       el.innerHTML =
@@ -1881,7 +1881,7 @@ if (IS_BROWSER) (function () {
     if (mode === "upcoming") mainList = shownAll.filter((c) => futureKey[c.id] != null).sort((a, b) => futureKey[a.id] - futureKey[b.id]);
     else if (mode === "priority") { const pv = (c) => { const v = poolWprio(c.id); return (v === "" || v == null || isNaN(v)) ? null : +v; }; mainList = shownAll.filter((c) => pv(c) != null).sort((a, b) => (pv(b) - pv(a)) || grpCmp(a, b)); }
     else mainList = shownAll.slice().sort(grpCmp);   // basic order
-    mainList.forEach((c) => renderItem(c, immediateId));
+    mainList.forEach((c) => renderItem(c, immediateId, true));   // main list: no shading (transparent), even for open/over/immediate
     const add = document.createElement("button");
     add.id = "addCat"; add.textContent = "+ Add task";
     add.addEventListener("click", () => {
@@ -2902,7 +2902,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { const BUILD = "v163"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v164"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
