@@ -58,16 +58,14 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolSummary .sumSec { margin-bottom: 7px; }
 .poolSummary .sumHd { font-weight: 800; font-size: 12px; color: var(--ink); margin: 3px 0 2px; display: flex; align-items: center; gap: 5px; }
 .poolSummary .sumSec.collapsible .sumHd { cursor: pointer; }
-.sumTbl { border-collapse: collapse; width: 100%; font-family: 'Inter', sans-serif; font-size: 10.5px; }
-.sumTbl th, .sumTbl td { border: 1px solid var(--line); padding: 1px 5px; text-align: center; font-variant-numeric: tabular-nums; }
-.sumTbl th { color: var(--ink3); font-weight: 600; }
-.sumTbl td.sumRowLbl { font-weight: 700; }
+.sumTbl { border-collapse: collapse; width: 100%; font-family: 'Inter', sans-serif; font-size: 11.5px; }
+.sumTbl th, .sumTbl td { border: 1px solid var(--line); padding: 1px 5px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 400; }
+.sumTbl th { color: #111; }
 .sumTbl tr.trM td { color: #d6336c; }
 .sumTbl tr.trG td { color: #5aa2e6; }   /* Growth → light blue */
 .sumTbl tr.trW td { color: #12388f; }   /* Work → dark blue */
-.sumTbl th.sumBold, .sumTbl td.sumBold { font-weight: 700; }
-.sumTbl th.sumBtnCell { text-align: right; padding: 0 3px; }
-.sumExpand { background: transparent; border: none; cursor: pointer; color: var(--ink3); font-size: 11px; line-height: 1; padding: 0 1px; }
+.sumTbl th.sumBtnCell { text-align: center; padding: 0 3px; }
+.sumExpand { background: transparent; border: none; cursor: pointer; color: #111; font-size: 12px; line-height: 1; padding: 0 1px; }
 .sumExpand:hover { color: var(--ink); }
 .sumTbl tr.trF td { color: #15803d; }
 .sumTbl tr.trH td { color: #b8860b; }
@@ -79,7 +77,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolSummary .l3 b { color: var(--ink); font-weight: 700; }
 .sheetBtn { display: block; width: 100%; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink2); padding: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 .sheetBtn:active { background: var(--panel2); }
-.poolItem { position: relative; background: transparent; border: 4.5px solid #9aa0a8; border-radius: 8px; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
+.poolItem { position: relative; background: transparent; border: 4px solid #9aa0a8; border-radius: 8px; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
 .poolItem.openBox { background: #f4a0c8; }   /* ≥15 min open → bright pink */
 .poolItem.overBox { background: #c3a6ee; }   /* ≥15 min over → intense (light) purple */
 .poolItem.armed { outline-color: var(--accent); }
@@ -776,7 +774,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v154 */
+/* build v155 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1743,21 +1741,20 @@ if (IS_BROWSER) (function () {
       const exp = !isDay && !!ui.sumExpanded;
       const cols = isDay ? ["T", "U", "G"] : (exp ? ["T", "U", "G", "O", "P"] : ["T", "P"]);
       const keyOf = { T: "T", P: "P", G: "C", O: "O", U: "A" };   // display letter → underlying value key
-      const bold = { T: 1, P: 1 };
       const rows = isDay
         ? [ { c: "trM", lF: "Mails", lS: "M", S: mailCats }, { c: "trG", lF: "Growth", lS: "G", S: growthCats }, { c: "trW", lF: "Work", lS: "W", wt: gwt("work") }, { c: "trF", lF: "Fruit", lS: "F", wt: gwt("fruit") }, { c: "trH", lF: "Home", lS: "H", wt: gwt("home") }, { c: "trT", lF: "Total", lS: "T", wt: twt } ]
         : [ { c: "trW", lF: "Work", lS: "W", wt: gwt("work") }, { c: "trF", lF: "Fruit", lS: "F", wt: gwt("fruit") }, { c: "trH", lF: "Home", lS: "H", wt: gwt("home") }, { c: "trT", lF: "Total", lS: "T", wt: twt } ];
       const colTip = { T: "Timed — time you've run with the ▶ timer", P: "Planned — hours you've allocated", G: "Gridded — Timed before now plus the blocks on the grid", O: "Open — Planned minus Gridded", U: "Upcoming — Gridded minus Timed" };
       const expBtn = isDay ? "" : '<button class="sumExpand" title="' + (exp ? "Show only Timed & Planned" : "Show all columns (T · U · G · O · P)") + '">' + (exp ? "«" : "»") + "</button>";
-      let h = '<table class="sumTbl"><thead><tr><th class="sumBtnCell">' + expBtn + "</th>" + cols.map((c) => '<th class="' + (bold[c] ? "sumBold" : "") + '" title="' + (colTip[c] || "") + '">' + c + "</th>").join("") + "</tr></thead><tbody>";
-      for (const r of rows) { const v = r.wt ? wsumVals(r.wt, scope) : rowVals(r.S, scope); h += '<tr class="' + r.c + '"><td class="sumRowLbl">' + (exp ? r.lS : r.lF) + "</td>" + cols.map((c) => { const val = v[keyOf[c]]; return '<td class="' + (bold[c] ? "sumBold" : "") + '">' + (val == null ? "" : (c === "O" ? fmtSigned(val) : fmtHM(val))) + "</td>"; }).join("") + "</tr>"; }
+      let h = '<table class="sumTbl"><thead><tr><th class="sumBtnCell">' + (isDay ? "Day" : "Week") + (expBtn ? " " + expBtn : "") + "</th>" + cols.map((c) => '<th title="' + (colTip[c] || "") + '">' + c + "</th>").join("") + "</tr></thead><tbody>";
+      for (const r of rows) { const v = r.wt ? wsumVals(r.wt, scope) : rowVals(r.S, scope); h += '<tr class="' + r.c + '"><td class="sumRowLbl">' + (exp ? r.lS : r.lF) + "</td>" + cols.map((c) => { const val = v[keyOf[c]]; return "<td>" + (val == null ? "" : (c === "O" ? fmtSigned(val) : fmtHM(val))) + "</td>"; }).join("") + "</tr>"; }
       return h + "</tbody></table>";
     };
     const summary = document.createElement("div");
     summary.className = "poolSummary";
     summary.innerHTML =
-      '<div class="sumSec"><div class="sumHd">Day</div>' + buildTable("day") + "</div>" +
-      '<div class="sumSec"><div class="sumHd">Week</div>' + buildTable("week") + "</div>";
+      '<div class="sumSec">' + buildTable("day") + "</div>" +
+      '<div class="sumSec">' + buildTable("week") + "</div>";
     summary.querySelectorAll(".sumExpand").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); ui.sumExpanded = !ui.sumExpanded; saveUI(); renderPool(); }));
     pool.appendChild(summary);
 
@@ -1810,7 +1807,7 @@ if (IS_BROWSER) (function () {
       const el = document.createElement("div");
       el.className = "poolItem" + (isOpenBox ? " openBox" : isOverBox ? " overBox" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
-      el.style.borderColor = cat.color;
+      el.style.borderColor = isNoneGroup(cat) ? "#9aa0a8" : cat.color;   // None tasks: darker grey border than their light-grey colour, so the box stays visible
       el.innerHTML =
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
         '<div class="poolTop">' +
@@ -2886,7 +2883,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v154"; } catch (e) {}
+  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v155"; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3333,9 +3330,9 @@ if (IS_BROWSER) (function () {
     saveLocal(); schedulePush();
   }
   function seedColors() {   // one-time: give the Mails/Plann parents their coral shades (Mails dark & saturated, Plann lighter)
-    if ((state.colorSeedV || 0) >= 5) return;
-    for (const c of state.categories) { const n = (c.name || "").toLowerCase(); if (/^plan/.test(n)) c.color = "#ff8a66"; else if (/^mail/.test(n)) c.color = "#d94f34"; }
-    state.colorSeedV = 5; saveLocal(); schedulePush();
+    if ((state.colorSeedV || 0) >= 6) return;
+    for (const c of state.categories) { const n = (c.name || "").toLowerCase(); if (/^plan/.test(n)) c.color = "#ffa588"; else if (/^mail/.test(n)) c.color = "#ff7050"; }   // Mails = bright coral, Plann = light coral
+    state.colorSeedV = 6; saveLocal(); schedulePush();
   }
   function mergeSplitBlocks() {   // one-time: fold existing adjacent child actual-blocks (from old timer splits) into single parent blocks with a stored split
     if (state.splitMergeV) return;
