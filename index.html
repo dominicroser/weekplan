@@ -52,13 +52,13 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 /* ── Layout ── */
 #body { display: flex; align-items: flex-start; }
 #pool { width: 270px; flex-shrink: 0; padding: 12px 11px; display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 60px); overflow-y: auto; }
-.poolSummary { font-size: 11.5px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 0; margin-bottom: 0; flex-shrink: 0; line-height: 1.55; }
+.poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 0; margin-bottom: 0; flex-shrink: 0; line-height: 1.55; }
 .poolSummary .sumSec:last-child { margin-bottom: 0; }
 .poolSummary .opHead { font-weight: 400; margin-bottom: 0; }
 .poolSummary .sumSec { margin-bottom: 7px; }
 .poolSummary .sumHd { font-weight: 800; font-size: 12px; color: var(--ink); margin: 3px 0 2px; display: flex; align-items: center; gap: 5px; }
 .poolSummary .sumSec.collapsible .sumHd { cursor: pointer; }
-.sumTbl { border-collapse: collapse; width: 100%; font-family: 'Inter', sans-serif; font-size: 11.5px; }
+.sumTbl { border-collapse: collapse; width: 100%; font-family: 'Inter', sans-serif; font-size: 11px; }
 .sumTbl th, .sumTbl td { border: 1px solid var(--line); padding: 1px 5px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 400; }
 .sumTbl th { color: #111; font-weight: 700; }
 .sumTbl td.sumRowLbl { font-weight: 700; }
@@ -66,7 +66,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .sumTbl tr.trG td { color: #5aa2e6; }   /* Growth → light blue */
 .sumTbl tr.trW td { color: #12388f; }   /* Work → dark blue */
 .sumTbl th.sumBtnCell { text-align: center; padding: 0 3px; }
-.sumExpand { background: transparent; border: none; cursor: pointer; color: #111; font-size: 11.5px; line-height: 1; padding: 0 1px; }
+.sumExpand { background: transparent; border: none; cursor: pointer; color: #111; font-size: 11px; line-height: 1; padding: 0 1px; }
 .sumExpand:hover { color: var(--ink); }
 .sumTbl tr.trF td { color: #15803d; }
 .sumTbl tr.trH td { color: #b8860b; }
@@ -81,15 +81,21 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolItem { position: relative; background: transparent; border: 4px solid #9aa0a8; border-radius: 8px; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
 .poolItem.openBox { background: #f4a0c8; }   /* ≥15 min open → bright pink */
 .poolItem.overBox { background: #c3a6ee; }   /* ≥15 min over → intense (light) purple */
-.poolItem.immediate { background: #d5d9df; }   /* the task being timed / next on the grid → grey */
+.poolItem.immediate { background: #d5d9df; }   /* next on the grid (upcoming) → light grey */
+.poolItem.immediate.immRun { background: #a2a8b0; }   /* currently running → dark grey */
 .poolItem.armed { outline-color: var(--accent); }
 .poolBlackDiv { height: 4px; background: #000; border-radius: 2px; margin: 10px 2px 9px; flex-shrink: 0; }
+.poolModeBar { display: flex; gap: 10px; align-items: center; justify-content: center; margin: 9px 2px; padding: 4px 0; border-top: 3px solid #000; border-bottom: 3px solid #000; flex-shrink: 0; }
+.pmBtn { border: 1.5px solid #555; background: #fff; color: #333; cursor: pointer; font-size: 14px; line-height: 1; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.pmBtn.pmUp { border-radius: 50%; }
+.pmBtn.pmPrio { border-radius: 5px; }
+.pmBtn.on { background: #333; color: #fff; border-color: #333; }
 .poolOpen { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; margin-left: 3px; }
 .poolOpen.u { color: #7a1222; }   /* under → very dark red */
 .poolOpen.o { color: #0d1f5e; }   /* over → very dark blue */
 .poolOpen.z { color: #111; }
-.poolTop { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 11.5px; }
-.nameInput { background: transparent; border: none; color: #111; font-size: 11.5px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.poolTop { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 11px; }
+.nameInput { background: transparent; border: none; color: #111; font-size: 11px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolHours { font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; white-space: nowrap; color: var(--good); }
 .poolTop .goalSet { font-weight: 700; margin-left: 3px; }
 .poolHours.isover { color: var(--over); font-weight: 700; }
@@ -97,29 +103,29 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .barTrack { height: 4px; background: rgba(0,0,0,0.08); border-radius: 3px; margin: 4px 0 3px; overflow: hidden; }
 .barFill { height: 100%; border-radius: 3px; transition: width .2s; }
 .barFill.isover { background: var(--over) !important; }
-.poolMeta { font-size: 11.5px; font-weight: 400; color: var(--ink3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
-.poolCalc { margin-top: 4px; font-size: 11.5px; font-weight: 400; color: #111; font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 2px; white-space: nowrap; overflow: hidden; }
+.poolMeta { font-size: 11px; font-weight: 400; color: var(--ink3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
+.poolCalc { margin-top: 4px; font-size: 11px; font-weight: 400; color: #111; font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 2px; white-space: nowrap; overflow: hidden; }
 .poolCalc .calcClock { background: transparent; border: none; padding: 0 3px 0 0; margin: 0; color: #111; font-size: 14px; line-height: 1; cursor: pointer; }   /* play/pause always black */
-.poolCalc .ofWord { color: var(--ink3); margin: 0 3px; }
-.poolCalc input.calcP { width: 38px; border: 1px solid transparent; background: transparent; font: inherit; font-variant-numeric: tabular-nums; text-align: right; color: #111; border-radius: 3px; padding: 0 1px; cursor: text; }
+.poolCalc .ofWord { color: #111; margin: 0 3px; }
+.poolCalc input.calcP { width: 38px; border: 1px solid transparent; background: transparent; font: inherit; font-variant-numeric: tabular-nums; text-align: center; color: #111; border-radius: 3px; padding: 0 1px; cursor: text; }
 .poolCalc input.calcP:hover { border-color: var(--line); }
 .poolCalc input.calcP:focus { border-color: rgba(43,108,176,0.5); background: #fff; color: var(--ink); outline: none; }
 .warn { color: var(--over); font-weight: 700; margin-right: 2px; }
 .hoursInput { width: 56px; background: transparent; border: none; color: var(--ink2); font-size: 10.5px; padding: 0 2px; border-radius: 3px; text-align: right; }
-.hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 15px; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: #111; }
+.hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 14px; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: #111; }
 .hStep:active { background: var(--panel); }
 .goalVal { display: inline-block; min-width: 30px; text-align: center; }
 .goalInput { width: 40px; min-width: 40px; border: 1px solid transparent; background: transparent; font: inherit; font-size: 10.5px; text-align: center; color: var(--ink2); border-radius: 4px; padding: 1px 0; cursor: text; }
 .goalInput:hover { border-color: var(--line); }
 .goalInput:focus { border-color: rgba(43,108,176,0.5); background: #fff; color: var(--ink); outline: none; }
-.goalSet { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 15px; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: #111; }
+.goalSet { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 14px; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: #111; }
 .goalSet:active { background: var(--panel); }
 .hoursInput:focus, .nameInput:focus { background: #fff; outline: 1px solid rgba(43,108,176,0.4); }
 .stripe { position: absolute; left: -4px; top: 0; bottom: 0; width: 14px; cursor: pointer; }
 .stripe input { opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
 .catX { position: absolute; top: 2px; right: 4px; background: transparent; border: none; color: rgba(0,0,0,0.22); font-size: 14px; cursor: pointer; line-height: 1; padding: 2px; }
 .catX:hover { color: #c53030; }
-#addCat { background: transparent; border: 1px dashed var(--line); color: var(--ink2); padding: 8px; border-radius: 7px; font-size: 11.5px; cursor: pointer; margin-top: 4px; }
+#addCat { background: transparent; border: 1px dashed var(--line); color: var(--ink2); padding: 8px; border-radius: 7px; font-size: 11px; cursor: pointer; margin-top: 4px; }
 
 /* ── Grid ── */
 #gridWrap { flex: 1; padding: 12px 14px 0 2px; min-width: 0; }
@@ -343,7 +349,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .gUnder { color: #e03131; font-weight: 600; }
 .checkSection { background: #ff8214; border-radius: 8px; padding: 6px 9px 7px; margin: 0 2px 9px; }   /* bright, neon, cheerful orange */
 .checkList { display: flex; flex-direction: column; gap: 1px; }
-.checkRow { display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 700; color: #fff; cursor: pointer; padding: 2px 3px; border-radius: 4px; }
+.checkRow { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; color: #fff; cursor: pointer; padding: 2px 3px; border-radius: 4px; }
 .checkRow:hover { background: rgba(0,0,0,0.14); }
 .checkRow input { flex-shrink: 0; margin: 0; width: 15px; height: 15px; accent-color: #7a2c08; }
 .checkRow .checkName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -369,8 +375,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .pOrange { color: #b8860b; font-weight: 700; }
 .pRed { color: #e03131; font-weight: 700; }
 .pPurple { color: #8b3bd6; font-weight: 700; }
-.prioStar { background: transparent; border: none; cursor: pointer; font-size: 15px; line-height: 1; padding: 0 1px; color: transparent; -webkit-text-stroke: 0.6px rgba(0,0,0,0.42); }   /* colour set inline from weekly Prio; thin outline gives the border */
-.origPlan { font-family: 'Inter', sans-serif; font-size: 11.5px; color: var(--ink2); padding: 1px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
+.prioStar { background: transparent; border: none; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 1px; color: transparent; -webkit-text-stroke: 0.6px rgba(0,0,0,0.42); }   /* colour set inline from weekly Prio; thin outline gives the border */
+.origPlan { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink2); padding: 1px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
 .opHead { font-weight: 700; color: var(--ink); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
 .opBtn { background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; font-size: 11px; cursor: pointer; padding: 0 6px; color: var(--ink2); line-height: 1.6; }
 .opRow { line-height: 1.55; }
@@ -575,12 +581,12 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
     <div id="rbGrip" title="Drag to change the side-bar width"></div>
     <div id="rbInner">
       <button class="rbCollapse" id="rbCollapse" title="Hide side bar">&raquo;</button>
-      <div class="rbPanel" id="notePanel">
-        <div id="noteDock"></div>
-      </div>
       <div class="rbPanel" id="streakPanel">
         <div class="rbHd"><button class="rbAdd" id="streakAvg" title="Show/hide averages of entered values">&#216;</button><button class="rbAdd" id="streakBulk" title="Bulk-mark a range of days (holiday, illness…)">&#8943;</button><button class="rbAdd" id="streakCfg" title="Manage habits &amp; history">&#9881;</button></div>
         <div id="streakBody"></div>
+      </div>
+      <div class="rbPanel" id="notePanel">
+        <div id="noteDock"></div>
       </div>
       <div class="rbPanel" id="deadlinePanel">
         <div class="rbHd"><button class="rbAdd" id="dlAdd" title="Add deadline">+</button></div>
@@ -777,7 +783,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v160 */
+/* build v162 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1738,27 +1744,24 @@ if (IS_BROWSER) (function () {
     };
     const mailCats = sumCats.filter((c) => /mail/i.test(c.name || ""));
     const growthCats = sumCats.filter((c) => /growth/i.test(c.name || ""));
-    const fmtSigned = (v) => (v < -0.0001 ? "−" : "") + fmtHM(Math.abs(v));
-    const buildTable = (scope) => {
-      const isDay = scope === "day";
-      const exp = !isDay && !!ui.sumExpanded;
-      const cols = isDay ? ["T", "U", "G"] : (exp ? ["T", "U", "G", "O", "P"] : ["T", "P"]);
-      const keyOf = { T: "T", P: "P", G: "C", O: "O", U: "A" };   // display letter → underlying value key
-      const rows = isDay
-        ? [ { c: "trM", lF: "Mails", lS: "M", S: mailCats }, { c: "trG", lF: "Growth", lS: "G", S: growthCats }, { c: "trW", lF: "Work", lS: "W", wt: gwt("work") }, { c: "trF", lF: "Fruit", lS: "F", wt: gwt("fruit") }, { c: "trH", lF: "Home", lS: "H", wt: gwt("home") }, { c: "trT", lF: "Total", lS: "T", wt: twt } ]
-        : [ { c: "trW", lF: "Work", lS: "W", wt: gwt("work") }, { c: "trF", lF: "Fruit", lS: "F", wt: gwt("fruit") }, { c: "trH", lF: "Home", lS: "H", wt: gwt("home") }, { c: "trT", lF: "Total", lS: "T", wt: twt } ];
-      const colTip = { T: "Timed — time you've run with the ▶ timer", P: "Planned — hours you've allocated", G: "Gridded — Timed before now plus the blocks on the grid", O: "Open — Planned minus Gridded", U: "Upcoming — Gridded minus Timed" };
-      const expBtn = isDay ? "" : '<button class="sumExpand" title="' + (exp ? "Show only Timed & Planned" : "Show all columns (T · U · G · O · P)") + '">' + (exp ? "«" : "»") + "</button>";
-      let h = '<table class="sumTbl"><thead><tr><th class="sumBtnCell">' + (isDay ? "Day" : "Week") + (expBtn ? " " + expBtn : "") + "</th>" + cols.map((c) => '<th title="' + (colTip[c] || "") + '">' + c + "</th>").join("") + "</tr></thead><tbody>";
-      for (const r of rows) { const v = r.wt ? wsumVals(r.wt, scope) : rowVals(r.S, scope); h += '<tr class="' + r.c + '"><td class="sumRowLbl">' + (exp ? r.lS : r.lF) + "</td>" + cols.map((c) => { const val = v[keyOf[c]]; return "<td>" + (val == null ? "" : (c === "O" ? fmtSigned(val) : fmtHM(val))) + "</td>"; }).join("") + "</tr>"; }
+    const buildTable = () => {
+      const rows = [
+        { c: "trM", l: "Mails", S: mailCats },
+        { c: "trW", l: "Work", wt: gwt("work") },
+        { c: "trF", l: "Fruit", wt: gwt("fruit") },
+        { c: "trH", l: "Home", wt: gwt("home") },
+        { c: "trT", l: "Total", wt: twt },
+      ];
+      const vals = (r) => r.wt
+        ? { TD: wsum((c) => trackToday(c.id), r.wt), TW: wsum((c) => trackWeek(c.id), r.wt), P: wsum((c) => weekBudget(c, cw), r.wt) }
+        : { TD: sumOf(r.S, (c) => trackToday(c.id)), TW: sumOf(r.S, (c) => trackWeek(c.id)), P: sumOf(r.S, (c) => weekBudget(c, cw)) };
+      let h = '<table class="sumTbl"><thead><tr><th class="sumBtnCell"></th><th title="Timed today">T-D</th><th title="Timed this week">T-W</th><th title="Planned this week">P</th></tr></thead><tbody>';
+      for (const r of rows) { const v = vals(r); h += '<tr class="' + r.c + '"><td class="sumRowLbl">' + r.l + "</td><td>" + fmtHM(v.TD) + "</td><td>" + fmtHM(v.TW) + "</td><td>" + fmtHM(v.P) + "</td></tr>"; }
       return h + "</tbody></table>";
     };
     const summary = document.createElement("div");
     summary.className = "poolSummary";
-    summary.innerHTML =
-      '<div class="sumSec">' + buildTable("day") + "</div>" +
-      '<div class="sumSec">' + buildTable("week") + "</div>";
-    summary.querySelectorAll(".sumExpand").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); ui.sumExpanded = !ui.sumExpanded; saveUI(); renderPool(); }));
+    summary.innerHTML = '<div class="sumSec">' + buildTable() + "</div>";
     pool.appendChild(summary);
 
     // ── Original plan (today's plan as captured at the start of the day) ──
@@ -1796,6 +1799,7 @@ if (IS_BROWSER) (function () {
       const isOverBox = !planTimeBlocked(cat) && !isImmediate && !running && O <= -TOL;  // ≥15 over
       const openCls = O > 0.0001 ? "u" : O < -0.0001 ? "o" : "z";   // under → dark red · over → dark blue · on-target → black
       const openTxt = fmtHM(Math.abs(O));
+      const showRight = !planTimeBlocked(cat) && Math.abs(O) > 0.0001;   // Open h:mm + = shown only for tracked tasks with a non-zero Open
       const tip = "Timed: " + fmtHM(T) + "\nUpcoming: " + fmtHM(Uv) + "\nGridded: " + fmtHM(G) + "\nOpen: " + (O < -0.0001 ? "−" : "") + fmtHM(Math.abs(O)) + "\nPlanned: " + fmtHM(P);
       const wp = poolWprio(cat.id), hasWp = wp !== "" && wp != null && !isNaN(wp);
       const starColor = hasWp ? prio5Bg(+wp) : "transparent";
@@ -1806,16 +1810,16 @@ if (IS_BROWSER) (function () {
       const minus = editable ? '<button class="hStep" data-d="-1" title="Lower this week’s goal by 15 min">−</button>' : "";
       const plus = editable ? '<button class="hStep" data-d="1" title="Raise this week’s goal by 15 min">+</button>' : "";
       const el = document.createElement("div");
-      el.className = "poolItem" + (isImmediate ? " immediate" : isOpenBox ? " openBox" : isOverBox ? " overBox" : "") + (armedCat === cat.id ? " armed" : "");
+      el.className = "poolItem" + (isImmediate ? (running ? " immediate immRun" : " immediate") : isOpenBox ? " openBox" : isOverBox ? " overBox" : "") + (armedCat === cat.id ? " armed" : "");
       el.dataset.cat = cat.id;
       el.style.borderColor = isNoneGroup(cat) ? "#9aa0a8" : cat.color;   // None tasks: darker grey border than their light-grey colour
       el.innerHTML =
         '<label class="stripe"><input type="color" value="' + cat.color + '"></label>' +
         '<div class="poolTop">' +
-        '<span class="nameInput" title="' + cat.name.replace(/"/g, "&quot;") + '">' + cat.name.replace(/</g, "&lt;") + "</span>" +
         '<button class="prioStar' + (hasWp ? " set" : "") + '" style="color:' + starColor + '" title="Weekly priority — click to cycle: none → 1 (yellow) · 2 (orange) · 3 (red) · 4 (light purple) · 5 (dark purple)">★</button>' +
-        '<span class="poolOpen ' + openCls + '" title="Open = Planned − Gridded">' + openTxt + "</span>" +
-        (editable ? '<button class="goalSet" title="Set this week’s goal to what’s tracked + assigned">=</button>' : "") +
+        '<span class="nameInput" title="' + cat.name.replace(/"/g, "&quot;") + '">' + cat.name.replace(/</g, "&lt;") + "</span>" +
+        (showRight ? '<span class="poolOpen ' + openCls + '" title="Open = Planned − Gridded">' + openTxt + "</span>" : "") +
+        (showRight && editable ? '<button class="goalSet" title="Set this week’s goal to what’s tracked + assigned">=</button>' : "") +
         "</div>" +
         '<div class="poolCalc" title="' + tip + '">' + playBtn + '<span class="tVal">' + fmtHM(T) + '</span><span class="ofWord">of</span>' + minus + pCell + plus + "</div>";
       const colorIn = el.querySelector(".stripe input"), stripe = el.querySelector(".stripe");
@@ -1877,16 +1881,26 @@ if (IS_BROWSER) (function () {
     const grpCmp = (a, b) => (gKeyOf(a) - gKeyOf(b)) || (a.name || "").localeCompare(b.name || "");
     // open/over — but never while a task is being timed, and never the immediate task
     const stateOf = (c) => { if (c.id === immediateId || c.id === timedId || planTimeBlocked(c)) return ""; const O = openOf(c); return O >= TOL ? "open" : O <= -TOL ? "over" : ""; };
-    const topOpen = shownAll.filter((c) => stateOf(c) === "open").sort(grpCmp);
-    const topOver = shownAll.filter((c) => stateOf(c) === "over").sort(grpCmp);
-    const inTop = new Set([...topOpen, ...topOver].map((c) => c.id)); if (immediateId) inTop.add(immediateId);
-    const topUpcoming = shownAll.filter((c) => futureKey[c.id] != null && !inTop.has(c.id)).sort((a, b) => futureKey[a.id] - futureKey[b.id]);
-    topOpen.forEach((c) => renderItem(c, immediateId));
-    topOver.forEach((c) => renderItem(c, immediateId));
+    // TOP (always): Open, Over, Immediate
+    shownAll.filter((c) => stateOf(c) === "open").sort(grpCmp).forEach((c) => renderItem(c, immediateId));
+    shownAll.filter((c) => stateOf(c) === "over").sort(grpCmp).forEach((c) => renderItem(c, immediateId));
     if (immediateId) { const ic = shownAll.find((c) => c.id === immediateId); if (ic) renderItem(ic, immediateId); }
-    topUpcoming.forEach((c) => renderItem(c, immediateId));
-    if (shownAll.length) { const dv = document.createElement("div"); dv.className = "poolBlackDiv"; pool.appendChild(dv); }   // strong black divider
-    shownAll.slice().sort(grpCmp).forEach((c) => renderItem(c, immediateId));   // full grouped list
+    // Mode bar: Upcoming (round) · Priority (star). At most one active.
+    const mode = ui.poolMode || "";
+    if (shownAll.length) {
+      const bar = document.createElement("div"); bar.className = "poolModeBar";
+      bar.innerHTML = '<button class="pmBtn pmUp' + (mode === "upcoming" ? " on" : "") + '" title="Upcoming — order by when tasks come up on the grid this week (others hidden)">↑</button>' +
+        '<button class="pmBtn pmPrio' + (mode === "priority" ? " on" : "") + '" title="Priority — order by weekly priority 5→1 (tasks without a priority hidden)">★</button>';
+      pool.appendChild(bar);
+      bar.querySelector(".pmUp").addEventListener("click", () => { ui.poolMode = mode === "upcoming" ? "" : "upcoming"; saveUI(); renderPool(); });
+      bar.querySelector(".pmPrio").addEventListener("click", () => { ui.poolMode = mode === "priority" ? "" : "priority"; saveUI(); renderPool(); });
+    }
+    // MAIN list, depending on the active mode
+    let mainList;
+    if (mode === "upcoming") mainList = shownAll.filter((c) => futureKey[c.id] != null).sort((a, b) => futureKey[a.id] - futureKey[b.id]);
+    else if (mode === "priority") { const pv = (c) => { const v = poolWprio(c.id); return (v === "" || v == null || isNaN(v)) ? null : +v; }; mainList = shownAll.filter((c) => pv(c) != null).sort((a, b) => (pv(b) - pv(a)) || grpCmp(a, b)); }
+    else mainList = shownAll.slice().sort(grpCmp);   // basic order
+    mainList.forEach((c) => renderItem(c, immediateId));
     const add = document.createElement("button");
     add.id = "addCat"; add.textContent = "+ Add task";
     add.addEventListener("click", () => {
@@ -2896,7 +2910,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { document.title = "Plapp v138"; const bi = $("buildInfo"); if (bi) bi.textContent = "build v160"; } catch (e) {}
+  try { const BUILD = "v162"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
