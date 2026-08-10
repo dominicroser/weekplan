@@ -85,7 +85,13 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolItem.immediate.immRun { background: #a2a8b0; }   /* currently running → dark grey */
 .poolItem.armed { outline-color: var(--accent); }
 .poolBlackDiv { height: 4px; background: #000; border-radius: 2px; margin: 10px 2px 9px; flex-shrink: 0; }
-.poolModeBar { display: flex; gap: 9px; align-items: center; justify-content: center; margin: 6px 2px; padding: 2px 0; border-top: 2px solid #6b6f76; border-bottom: 2px solid #6b6f76; flex-shrink: 0; }
+.poolDividerBar { display: flex; flex-direction: column; gap: 6px; align-items: stretch; margin: 11px 2px; padding: 7px 0; border-top: 2px solid #6b6f76; border-bottom: 2px solid #6b6f76; flex-shrink: 0; }
+.poolTimerPill { display: flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.poolTimerPill .ptName { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.poolTimerPill .runElapsed { font-variant-numeric: tabular-nums; font-weight: 800; }
+.poolTimerPill .ptBtn { border: none; background: rgba(255,255,255,0.28); color: inherit; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
+.poolTimerPill .ptBtn:hover { background: rgba(255,255,255,0.45); }
+.poolModeBar { display: flex; gap: 9px; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
 .pmBtn { border: 1.5px solid #999; background: #fff; color: #555; cursor: pointer; font-size: 11px; line-height: 1; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 .pmBtn.pmAll { border-radius: 4px; font-weight: 800; font-size: 11px; }
 .pmBtn.pmUp { border-radius: 50%; }
@@ -95,6 +101,17 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolOpen.u { color: #7a1222; }   /* under → very dark red */
 .poolOpen.o { color: #0d1f5e; }   /* over → very dark blue */
 .poolOpen.z { color: #111; }
+.obList { display: flex; flex-direction: column; gap: 4px; margin: 0 2px 4px; }
+.obItem { display: flex; flex-direction: column; gap: 1px; padding: 2px 2px 3px 12px; position: relative; font-size: 11px; font-weight: 800; }
+.obItem::before { content: "•"; position: absolute; left: 1px; top: 1px; font-size: 12px; }
+.obItem.obPink { color: #d1006a; }    /* open & positive → intense pink */
+.obItem.obPurple { color: #7a1fa6; }  /* open & negative (over) → intense purple */
+.obRow1, .obRow2 { display: flex; align-items: center; gap: 6px; }
+.obName { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.obPlan { font-variant-numeric: tabular-nums; min-width: 34px; text-align: center; }
+.obOpen { font-variant-numeric: tabular-nums; }
+.obBtn { border: 1.5px solid currentColor; background: transparent; color: inherit; cursor: pointer; font-size: 14px; line-height: 1; width: 18px; height: 18px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; font-weight: 700; }
+.obBtn:hover { background: rgba(0,0,0,0.08); }
 .poolTop { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 11px; }
 .nameInput { background: transparent; border: none; color: #111; font-size: 11px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolHours { font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; white-space: nowrap; color: var(--good); }
@@ -330,11 +347,11 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .goalSet2 { margin: 6px 0 12px; font-size: 13px; color: var(--ink); }
 .gOver { color: #2f9e44; font-weight: 600; }
 .gUnder { color: #e03131; font-weight: 600; }
-.checkSection { background: #ff8214; border-radius: 8px; padding: 6px 9px 7px; margin: 0 2px 9px; }   /* bright, neon, cheerful orange */
+.checkSection { padding: 0; margin: 0 2px 8px; }
 .checkList { display: flex; flex-direction: column; gap: 1px; }
-.checkRow { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; color: #fff; cursor: pointer; padding: 2px 3px; border-radius: 4px; }
-.checkRow:hover { background: rgba(0,0,0,0.14); }
-.checkRow input { flex-shrink: 0; margin: 0; width: 15px; height: 15px; accent-color: #7a2c08; }
+.checkRow { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; color: #e2560a; cursor: pointer; padding: 2px 3px; border-radius: 4px; }   /* intense warm orange, bold */
+.checkRow:hover { background: rgba(226,86,10,0.12); }
+.checkRow input { flex-shrink: 0; margin: 0; width: 15px; height: 15px; accent-color: #e2560a; }
 .checkRow .checkName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .poolDivider.abDiv { height: 2px; background: #9aa0a8; opacity: 0.8; border-radius: 2px; margin: 7px 2px; }
@@ -358,7 +375,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .pOrange { color: #b8860b; font-weight: 700; }
 .pRed { color: #e03131; font-weight: 700; }
 .pPurple { color: #8b3bd6; font-weight: 700; }
-.prioStar { background: transparent; border: none; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 1px; color: transparent; -webkit-text-stroke: 0.6px rgba(0,0,0,0.42); }   /* colour set inline from weekly Prio; thin outline gives the border */
+.prioStar { background: transparent; border: none; cursor: pointer; font-size: 15px; line-height: 1; padding: 0 1px; color: transparent; -webkit-text-stroke: 0.6px rgba(0,0,0,0.42); }   /* colour set inline from weekly Prio; thin outline gives the border */
 .origPlan { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink2); padding: 1px 3px 8px; border-bottom: 1px solid var(--line); margin-bottom: 2px; flex-shrink: 0; }
 .opHead { font-weight: 700; color: var(--ink); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
 .opBtn { background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; font-size: 11px; cursor: pointer; padding: 0 6px; color: var(--ink2); line-height: 1.6; }
@@ -765,7 +782,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v166 */
+/* build v167 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1283,6 +1300,7 @@ if (IS_BROWSER) (function () {
   let budSort = { key: null, dir: 1 };
   let viewDay = -1; // -1 = week view; 0..5 = single-day view of that weekday
   let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null, previewEl = null;
+  const recentlyUnprio = {};   // catId → { t, pv } : in priority sort, a task whose star was just cleared lingers ~3s before dropping out
 
   const $ = (id) => document.getElementById(id);
 
@@ -1461,25 +1479,9 @@ if (IS_BROWSER) (function () {
   }
   function updateRunBar() {
     updateFavicon();
-    const el = $("runBar"), inp = $("startTimerInput"); if (!el) return;
-    if (!state.timer) {
-      el.innerHTML = ""; el.style.display = "none"; el.style.background = "transparent";
-      if (inp) { inp.style.display = ""; inp.placeholder = "▶ start a timer…"; }
-      return;
-    }
-    if (inp) { inp.style.display = ""; inp.placeholder = "▶ switch timer…"; }   // starting one while another runs logs the running one and switches
-    const c = state.categories.find((x) => x.id === state.timer.catId);
-    const color = c ? c.color : "#888", ink = textOn(color);
-    el.style.display = ""; el.style.background = color; el.style.color = ink;
-    el.innerHTML = '<span class="rbName"></span><span class="rbElapsed" id="rbElapsed"></span>' +
-      '<button class="rbBtn rbStop" title="Stop timer (log it)">⏸</button>' +
-      '<button class="rbBtn rbEdit" title="Edit the start time">✎</button>' +
-      '<button class="rbBtn rbDel" title="Discard the current timing (do not log it)">✕</button>';
-    el.querySelector(".rbName").textContent = c ? c.name : "?";
-    el.querySelector("#rbElapsed").textContent = fmtClock(Date.now() - state.timer.startMs);
-    el.querySelector(".rbStop").addEventListener("click", () => toggleTimer(state.timer.catId));
-    el.querySelector(".rbEdit").addEventListener("click", adjustTimerStart);
-    el.querySelector(".rbDel").addEventListener("click", discardTimer);
+    const el = $("runBar"), inp = $("startTimerInput");
+    if (el) { el.innerHTML = ""; el.style.display = "none"; el.style.background = "transparent"; }   // running pill now lives in the pool divider
+    if (inp) { inp.style.display = ""; inp.placeholder = state.timer ? "▶ switch timer…" : "▶ start a timer…"; }
   }
   const launcherColor = (g) => g === "work" ? "#1d4ed8" : g === "fruit" ? "#15803d" : g === "home" ? "#b8860b" : "var(--ink)";
   function eligibleTasks() {
@@ -1799,8 +1801,9 @@ if (IS_BROWSER) (function () {
         if (!poolMp) { toast("Add a masterplan to set weekly priority."); return; }
         snap(); poolMp.wprio = poolMp.wprio || {}; poolMp.wprio[cat.id] = poolMp.wprio[cat.id] || {};
         const cur = poolMp.wprio[cat.id][cw];
-        const nv = (cur == null || cur === "" || isNaN(cur)) ? 1 : (+cur >= 5 ? null : +cur + 1);   // none → 1 … 5 → none
-        if (nv == null) delete poolMp.wprio[cat.id][cw]; else poolMp.wprio[cat.id][cw] = nv;
+        const nv = (cur == null || cur === "" || isNaN(cur)) ? 1 : (+cur >= 5 ? null : +cur + 1);   // none → 1 … 5 … → none
+        if (nv == null) { delete poolMp.wprio[cat.id][cw]; recentlyUnprio[cat.id] = { t: Date.now(), pv: +cur }; setTimeout(() => { if (recentlyUnprio[cat.id] && Date.now() - recentlyUnprio[cat.id].t >= 3000) { delete recentlyUnprio[cat.id]; renderPool(); } }, 3100); }
+        else { poolMp.wprio[cat.id][cw] = nv; delete recentlyUnprio[cat.id]; }
         commit();
       }); }
       const gset = el.querySelector(".goalSet"); if (gset) { gset.addEventListener("pointerdown", (e) => e.stopPropagation()); gset.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = effUsed(cat.id); commit(); }); }
@@ -1808,11 +1811,35 @@ if (IS_BROWSER) (function () {
       const clk = el.querySelector(".calcClock.canTime"); if (clk) { clk.addEventListener("pointerdown", (e) => e.stopPropagation()); clk.addEventListener("click", (e) => { e.stopPropagation(); toggleTimer(cat.id); }); }
       colorIn.addEventListener("input", () => { cat.color = colorIn.value; renderAll(); });
       colorIn.addEventListener("change", () => { snap(); commit(); });
-      if (!isDone) {
-        el.addEventListener("pointerdown", (e) => { if (COARSE) return; e.preventDefault(); startNewDrag(e, cat); });
-        el.addEventListener("click", (e) => { if (!COARSE) return; armedCat = armedCat === cat.id ? null : cat.id; renderPool(); if (armedCat) toast("Now tap the grid where “" + cat.name + "” should go"); });
-      }
+      el.addEventListener("pointerdown", (e) => { if (COARSE) return; if (e.target.closest("input, button, select, .stripe")) return; e.preventDefault(); startNewDrag(e, cat); });
+      el.addEventListener("click", (e) => { if (!COARSE) return; if (e.target.closest("input, button, select, .stripe")) return; armedCat = armedCat === cat.id ? null : cat.id; renderPool(); if (armedCat) toast("Now tap the grid where “" + cat.name + "” should go"); });
       pool.appendChild(el);
+    };
+    // A bullet (section two) for a task with a non-zero Open: name / − / planned / + on row 1; signed Open (inverted) / = on row 2.
+    const renderOpenBullet = (cat) => {
+      const bw = weekBudget(cat, cw);
+      const O = bw - effUsed(cat.id);                 // Open = Planned − Gridded
+      const sign = O > 0 ? "−" : "+";                 // inverted: Open positive → minus sign in front, Open negative → plus sign
+      const el = document.createElement("div");
+      el.className = "obItem " + (O > 0 ? "obPink" : "obPurple");
+      el.dataset.cat = cat.id;
+      el.innerHTML =
+        '<div class="obRow1">' +
+          '<span class="obName" title="' + cat.name.replace(/"/g, "&quot;") + '">' + cat.name.replace(/</g, "&lt;") + "</span>" +
+          '<button class="obBtn obMinus" title="Lower this week’s goal by 15 min">−</button>' +
+          '<span class="obPlan" title="Planned — this week’s goal">' + fmtHM(bw) + "</span>" +
+          '<button class="obBtn obPlus" title="Raise this week’s goal by 15 min">+</button>' +
+        "</div>" +
+        '<div class="obRow2">' +
+          '<span class="obOpen" title="Open = Planned − Gridded">' + sign + fmtHM(Math.abs(O)) + "</span>" +
+          '<button class="obBtn obEq" title="Set this week’s goal to what’s tracked + assigned">=</button>' +
+        "</div>";
+      const step = (d) => { snap(); const nb = Math.max(0, Math.round((weekBudget(cat, cw) + d * 0.25) * 100) / 100); ensureBudgets(state.weeks[cw])[cat.id] = nb; localUpdatedAt = Date.now(); saveLocal(); schedulePush(); poolDirty = true; schedulePoolReflow(); };
+      el.querySelector(".obMinus").addEventListener("click", (e) => { e.stopPropagation(); step(-1); });
+      el.querySelector(".obPlus").addEventListener("click", (e) => { e.stopPropagation(); step(1); });
+      el.querySelector(".obEq").addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = effUsed(cat.id); commit(); });
+      el.addEventListener("mouseleave", flushPoolReflow);   // re-sort once you move off the bullet
+      return el;
     };
     if (checkBlocks.length) {
       const sec = document.createElement("div"); sec.className = "checkSection";
@@ -1843,18 +1870,40 @@ if (IS_BROWSER) (function () {
     const grpCmp = (a, b) => (gKeyOf(a) - gKeyOf(b)) || (a.name || "").localeCompare(b.name || "");
     // open/over — but never while a task is being timed, and never the immediate task
     const stateOf = (c) => { if (c.id === immediateId || c.id === timedId || planTimeBlocked(c)) return ""; const O = openOf(c); return O >= TOL ? "open" : O <= -TOL ? "over" : ""; };
-    // TOP (always): Open, Over, Immediate
-    shownAll.filter((c) => stateOf(c) === "open").sort(grpCmp).forEach((c) => renderItem(c, immediateId));
-    shownAll.filter((c) => stateOf(c) === "over").sort(grpCmp).forEach((c) => renderItem(c, immediateId));
-    if (immediateId) { const ic = shownAll.find((c) => c.id === immediateId); if (ic) renderItem(ic, immediateId); }
-    // Mode bar: Upcoming (round) · Priority (star). At most one active.
+    // SECTION TWO: bullet list of tasks with a non-zero Open — pink if Open positive, purple if Open negative (over). The timed task is omitted (it lives in the pill below).
+    const obTasks = shownAll.filter((c) => c.id !== timedId && !planTimeBlocked(c) && Math.abs(openOf(c)) >= TOL)
+      .sort((a, b) => { const oa = openOf(a) >= TOL ? 0 : 1, ob = openOf(b) >= TOL ? 0 : 1; return (oa - ob) || grpCmp(a, b); });   // open (positive) first, then over
+    if (obTasks.length) {
+      const obl = document.createElement("div"); obl.className = "obList";
+      for (const c of obTasks) obl.appendChild(renderOpenBullet(c));
+      pool.appendChild(obl);
+    }
+    // SECTION THREE: the divider — running-timer pill on top, the three mode buttons below (A · Upcoming · Priority; at most one active).
     const mode = ui.poolMode || "";
     if (shownAll.length) {
+      const dv = document.createElement("div"); dv.className = "poolDividerBar";
+      if (state.timer) {
+        const tc = state.categories.find((x) => x.id === state.timer.catId);
+        const tcolor = tc ? tc.color : "#888", tink = textOn(tcolor);
+        const pill = document.createElement("div"); pill.className = "poolTimerPill";
+        pill.style.background = tcolor; pill.style.color = tink;
+        pill.innerHTML = '<span class="ptName"></span><span class="runElapsed"></span>' +
+          '<button class="ptBtn ptStop" title="Stop timer (log it)">⏸</button>' +
+          '<button class="ptBtn ptEdit" title="Edit the start time">✎</button>' +
+          '<button class="ptBtn ptDel" title="Discard the current timing (do not log it)">✕</button>';
+        pill.querySelector(".ptName").textContent = tc ? tc.name : "?";
+        pill.querySelector(".runElapsed").textContent = fmtClock(Date.now() - state.timer.startMs);
+        pill.querySelector(".ptStop").addEventListener("click", () => toggleTimer(state.timer.catId));
+        pill.querySelector(".ptEdit").addEventListener("click", adjustTimerStart);
+        pill.querySelector(".ptDel").addEventListener("click", discardTimer);
+        dv.appendChild(pill);
+      }
       const bar = document.createElement("div"); bar.className = "poolModeBar";
       bar.innerHTML = '<button class="pmBtn pmAll' + (mode === "" ? " on" : "") + '" title="All — the basic order, grouped (Parents · Work · Fruit · Home · None · Termin)">A</button>' +
         '<button class="pmBtn pmUp' + (mode === "upcoming" ? " on" : "") + '" title="Upcoming — order by when tasks come up on the grid this week (others hidden)">↑</button>' +
         '<button class="pmBtn pmPrio' + (mode === "priority" ? " on" : "") + '" title="Priority — order by weekly priority 5→1 (tasks without a priority hidden)">★</button>';
-      pool.appendChild(bar);
+      dv.appendChild(bar);
+      pool.appendChild(dv);
       bar.querySelector(".pmAll").addEventListener("click", () => { ui.poolMode = ""; saveUI(); renderPool(); });
       bar.querySelector(".pmUp").addEventListener("click", () => { ui.poolMode = "upcoming"; saveUI(); renderPool(); });
       bar.querySelector(".pmPrio").addEventListener("click", () => { ui.poolMode = "priority"; saveUI(); renderPool(); });
@@ -1862,7 +1911,12 @@ if (IS_BROWSER) (function () {
     // MAIN list, depending on the active mode
     let mainList;
     if (mode === "upcoming") mainList = shownAll.filter((c) => futureKey[c.id] != null).sort((a, b) => futureKey[a.id] - futureKey[b.id]);
-    else if (mode === "priority") { const pv = (c) => { const v = poolWprio(c.id); return (v === "" || v == null || isNaN(v)) ? null : +v; }; mainList = shownAll.filter((c) => pv(c) != null).sort((a, b) => (pv(b) - pv(a)) || grpCmp(a, b)); }
+    else if (mode === "priority") {
+      const pv = (c) => { const v = poolWprio(c.id); return (v === "" || v == null || isNaN(v)) ? null : +v; };
+      const linger = (c) => (recentlyUnprio[c.id] && Date.now() - recentlyUnprio[c.id].t < 3000) ? recentlyUnprio[c.id].pv : null;   // just-cleared star: hold its old rank ~3s
+      const epv = (c) => { const v = pv(c); return v != null ? v : linger(c); };
+      mainList = shownAll.filter((c) => epv(c) != null).sort((a, b) => (epv(b) - epv(a)) || grpCmp(a, b));
+    }
     else mainList = shownAll.slice().sort(grpCmp);   // basic order
     mainList.forEach((c) => renderItem(c, immediateId, true));   // main list: no shading (transparent), even for open/over/immediate
     const add = document.createElement("button");
@@ -2907,7 +2961,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { const BUILD = "v166"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v167"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
