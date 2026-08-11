@@ -85,7 +85,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolItem.immediate.immRun { background: #a2a8b0; }   /* currently running → dark grey */
 .poolItem.armed { outline-color: var(--accent); }
 .poolBlackDiv { height: 4px; background: #000; border-radius: 2px; margin: 10px 2px 9px; flex-shrink: 0; }
-.cbBox { background: #aab0b9; border-radius: 10px; padding: 8px 9px; margin: 9px 0 0; display: flex; flex-direction: column; gap: 6px; min-height: 22px; }   /* single darker-grey box, check + bullets; stays even when empty */
+.cbBox { background: #9aa0aa; border: 1px solid #33383e; border-radius: 10px; padding: 8px 9px; margin: 9px 0 0; display: flex; flex-direction: column; gap: 6px; min-height: 22px; box-sizing: border-box; }   /* one grey box for ALL check + open/over rows; very-dark-grey 1px border */
 .pillSec { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 0; }
 .poolTimerPill { display: flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #fff; color: #000; border: 1.5px solid #000; }
 .poolTimerPill .ptName { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -97,20 +97,20 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolStartIn::placeholder { color: #000; opacity: 0.6; }
 .poolStartIn:focus { outline: none; border-color: #000; background: #fff; }
 .taskMenu.floatMenu { position: fixed; top: auto; left: auto; }
-.btnBox { background: #aab0b9; border-radius: 8px; padding: 6px 0; margin: 10px 0 0; display: flex; justify-content: center; }   /* full width like the task boxes; tight gap below */
+.btnBox { background: #9aa0aa; border: 3px solid #33383e; border-radius: 8px; padding: 15px 0; margin: 10px 0 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }   /* full width + same height/border as a task box; very-dark-grey 3px border */
 .poolModeBar { display: flex; gap: 9px; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
-.pmBtn { border: 1.5px solid #62c1b6; background: #8ed6cd; color: #06463f; cursor: pointer; font-size: 11px; line-height: 1; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }   /* light teal */
+.pmBtn { border: 1.5px solid #63d8ca; background: #a8ede4; color: #064b43; cursor: pointer; font-size: 11px; line-height: 1; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }   /* bright light teal */
 .pmBtn.pmAll { border-radius: 4px; font-weight: 800; font-size: 11px; }
 .pmBtn.pmUp { border-radius: 50%; }
 .pmBtn.pmPrio { border-radius: 4px; }
-.pmBtn.on { background: #0e8b7f; color: #fff; border-color: #0e8b7f; }   /* active → darker teal */
+.pmBtn.on { background: #14b9a8; color: #fff; border-color: #14b9a8; }   /* active → brighter dark teal */
 .poolOpen { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; margin-left: 3px; }
 .poolOpen.u { color: #7a1222; }   /* under → very dark red */
 .poolOpen.o { color: #0d1f5e; }   /* over → very dark blue */
 .poolOpen.z { color: #111; }
 .obItem { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 1px 2px; border-radius: 4px; }
-.obItem.obPink { color: #ff1493; }    /* open & positive → neon pink */
-.obItem.obPurple { color: #b026ff; }  /* open & negative (over) → neon purple */
+.obItem.obPink { color: #ff4fb2; }    /* open & positive → bright pink */
+.obItem.obPurple { color: #c264ff; }  /* open & negative (over) → bright purple */
 .obTick { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: currentColor; pointer-events: none; }   /* aesthetic only, un-tickable */
 .obName { flex: 1; min-width: 0; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
 .obCtrls { display: flex; align-items: center; gap: 4px; font-weight: 400; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
@@ -362,9 +362,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .gUnder { color: #e03131; font-weight: 600; }
 .checkSection { padding: 0; margin: 0; display: contents; }
 .checkList { display: contents; }
-.checkRow { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #ff6d00; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* neon cheerful orange, bold */
-.checkRow:hover { background: rgba(255,109,0,0.14); }
-.checkRow input { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: #ff6d00; }
+.checkRow { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #ff9124; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* bright, light cheerful orange, bold */
+.checkRow:hover { background: rgba(255,145,36,0.16); }
+.checkRow input { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: #ff9124; }
 .checkRow .checkName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .poolDivider.abDiv { height: 2px; background: #9aa0a8; opacity: 0.8; border-radius: 2px; margin: 7px 2px; }
@@ -795,7 +795,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v170 */
+/* build v171 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2977,7 +2977,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { const BUILD = "v170"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v171"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
