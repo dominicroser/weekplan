@@ -78,44 +78,44 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolSummary .l3 b { color: var(--ink); font-weight: 700; }
 .sheetBtn { display: block; width: 100%; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink2); padding: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 .sheetBtn:active { background: var(--panel2); }
-.poolItem { position: relative; background: transparent; border: 4px solid #9aa0a8; border-radius: 8px; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
+.poolItem { position: relative; background: transparent; border: 3px solid #9aa0a8; border-radius: 8px; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; }
 .poolItem.openBox { background: #f4a0c8; }   /* ≥15 min open → bright pink */
 .poolItem.overBox { background: #c3a6ee; }   /* ≥15 min over → intense (light) purple */
 .poolItem.immediate { background: #d5d9df; }   /* next on the grid (upcoming) → light grey */
 .poolItem.immediate.immRun { background: #a2a8b0; }   /* currently running → dark grey */
 .poolItem.armed { outline-color: var(--accent); }
 .poolBlackDiv { height: 4px; background: #000; border-radius: 2px; margin: 10px 2px 9px; flex-shrink: 0; }
-.poolDividerBar { display: flex; flex-direction: column; gap: 6px; align-items: stretch; margin: 11px 2px; padding: 7px 0; border-top: 2px solid #6b6f76; border-bottom: 2px solid #6b6f76; flex-shrink: 0; }
-.poolTimerPill { display: flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.cbBox { background: #e7e9ec; border-radius: 10px; padding: 6px 8px; margin: 0 2px; display: flex; flex-direction: column; gap: 2px; min-height: 22px; }   /* check + bullets; stays even when empty */
+.pillSec { display: flex; flex-direction: column; gap: 5px; margin: 8px 2px 0; }
+.poolTimerPill { display: flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #fff; color: #000; border: 1.5px solid #000; }
 .poolTimerPill .ptName { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolTimerPill .runElapsed { font-variant-numeric: tabular-nums; font-weight: 800; }
-.poolTimerPill .ptBtn { border: none; background: rgba(255,255,255,0.28); color: inherit; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
-.poolTimerPill .ptBtn:hover { background: rgba(255,255,255,0.45); }
+.poolTimerPill .ptBtn { border: 1px solid #000; background: #fff; color: #000; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
+.poolTimerPill .ptBtn:hover { background: #eee; }
 .poolStartWrap { display: flex; }
-.poolStartIn { flex: 1; width: 100%; border: 1px solid var(--line); border-radius: 15px; padding: 3px 11px; font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink); background: var(--panel); }
-.poolStartIn:focus { outline: none; border-color: rgba(43,108,176,0.5); background: #fff; }
+.poolStartIn { flex: 1; width: 100%; border: 1.5px solid #000; border-radius: 15px; padding: 3px 11px; font-family: 'Inter', sans-serif; font-size: 11px; color: #000; background: #fff; }
+.poolStartIn::placeholder { color: #000; opacity: 0.6; }
+.poolStartIn:focus { outline: none; border-color: #000; background: #fff; }
 .taskMenu.floatMenu { position: fixed; top: auto; left: auto; }
+.btnBox { background: #e7e9ec; border-radius: 10px; padding: 5px 0; margin: 8px 2px 4px; display: flex; justify-content: center; }
 .poolModeBar { display: flex; gap: 9px; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
-.pmBtn { border: 1.5px solid #999; background: #fff; color: #555; cursor: pointer; font-size: 11px; line-height: 1; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.pmBtn { border: 1.5px solid #c4c8cd; background: #f7f8f9; color: #9aa0a8; cursor: pointer; font-size: 11px; line-height: 1; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }   /* light grey on the grey box */
 .pmBtn.pmAll { border-radius: 4px; font-weight: 800; font-size: 11px; }
 .pmBtn.pmUp { border-radius: 50%; }
 .pmBtn.pmPrio { border-radius: 4px; }
-.pmBtn.on { background: #8f959d; color: #fff; border-color: #8f959d; }   /* active → grey */
+.pmBtn.on { background: #8f959d; color: #fff; border-color: #8f959d; }   /* active → darker grey */
 .poolOpen { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; margin-left: 3px; }
 .poolOpen.u { color: #7a1222; }   /* under → very dark red */
 .poolOpen.o { color: #0d1f5e; }   /* over → very dark blue */
 .poolOpen.z { color: #111; }
-.obList { display: flex; flex-direction: column; gap: 4px; margin: 0 2px 4px; }
-.obItem { display: flex; flex-direction: column; gap: 1px; padding: 2px 2px 3px 12px; position: relative; font-size: 11px; font-weight: 800; }
-.obItem::before { content: "•"; position: absolute; left: 1px; top: 1px; font-size: 12px; }
-.obItem.obPink { color: #d1006a; }    /* open & positive → intense pink */
-.obItem.obPurple { color: #7a1fa6; }  /* open & negative (over) → intense purple */
-.obRow1, .obRow2 { display: flex; align-items: center; gap: 6px; }
-.obName { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.obPlan { font-variant-numeric: tabular-nums; min-width: 34px; text-align: center; }
-.obOpen { font-variant-numeric: tabular-nums; }
-.obBtn { border: 1.5px solid currentColor; background: transparent; color: inherit; cursor: pointer; font-size: 14px; line-height: 1; width: 18px; height: 18px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; font-weight: 700; }
-.obBtn:hover { background: rgba(0,0,0,0.08); }
+.obItem { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 1px 2px; border-radius: 4px; }
+.obItem.obPink { color: #ff1493; }    /* open & positive → neon pink */
+.obItem.obPurple { color: #b026ff; }  /* open & negative (over) → neon purple */
+.obTick { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: currentColor; pointer-events: none; }   /* aesthetic only, un-tickable */
+.obName { flex: 1; min-width: 0; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+.obCtrls { display: flex; align-items: center; gap: 4px; font-weight: 400; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.obBtn { border: none; background: transparent; color: inherit; cursor: pointer; font-size: 11px; line-height: 1; padding: 0 1px; }
+.obBtn:hover { color: #000; }
 .poolTop { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 11px; }
 .nameInput { background: transparent; border: none; color: #111; font-size: 11px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolHours { font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; white-space: nowrap; color: var(--good); }
@@ -143,7 +143,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .goalSet { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 14px; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: #111; }
 .goalSet:active { background: var(--panel); }
 .hoursInput:focus, .nameInput:focus { background: #fff; outline: 1px solid rgba(43,108,176,0.4); }
-.stripe { position: absolute; left: -4px; top: 0; bottom: 0; width: 14px; cursor: pointer; }
+.stripe { position: absolute; left: -3px; top: 0; bottom: 0; width: 13px; cursor: pointer; }
 .stripe input { opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
 .catX { position: absolute; top: 2px; right: 4px; background: transparent; border: none; color: rgba(0,0,0,0.22); font-size: 14px; cursor: pointer; line-height: 1; padding: 2px; }
 .catX:hover { color: #c53030; }
@@ -351,11 +351,11 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .goalSet2 { margin: 6px 0 12px; font-size: 13px; color: var(--ink); }
 .gOver { color: #2f9e44; font-weight: 600; }
 .gUnder { color: #e03131; font-weight: 600; }
-.checkSection { padding: 0; margin: 0 2px 8px; }
-.checkList { display: flex; flex-direction: column; gap: 1px; }
-.checkRow { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; color: #e2560a; cursor: pointer; padding: 2px 3px; border-radius: 4px; }   /* intense warm orange, bold */
-.checkRow:hover { background: rgba(226,86,10,0.12); }
-.checkRow input { flex-shrink: 0; margin: 0; width: 15px; height: 15px; accent-color: #e2560a; }
+.checkSection { padding: 0; margin: 0; display: contents; }
+.checkList { display: contents; }
+.checkRow { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #ff6d00; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* neon cheerful orange, bold */
+.checkRow:hover { background: rgba(255,109,0,0.14); }
+.checkRow input { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: #ff6d00; }
 .checkRow .checkName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .poolDivider.abDiv { height: 2px; background: #9aa0a8; opacity: 0.8; border-radius: 2px; margin: 7px 2px; }
@@ -786,7 +786,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v168 */
+/* build v169 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1834,7 +1834,7 @@ if (IS_BROWSER) (function () {
       el.addEventListener("click", (e) => { if (!COARSE) return; if (e.target.closest("input, button, select, .stripe")) return; armedCat = armedCat === cat.id ? null : cat.id; renderPool(); if (armedCat) toast("Now tap the grid where “" + cat.name + "” should go"); });
       pool.appendChild(el);
     };
-    // A bullet (section two) for a task with a non-zero Open: name / − / planned / + on row 1; signed Open (inverted) / = on row 2.
+    // A one-row bullet (section two) for a task with a non-zero Open: [aesthetic checkbox] bold name … not-bold − planned + signed-Open =
     const renderOpenBullet = (cat) => {
       const bw = weekBudget(cat, cw);
       const O = bw - effUsed(cat.id);                 // Open = Planned − Gridded
@@ -1843,16 +1843,15 @@ if (IS_BROWSER) (function () {
       el.className = "obItem " + (O > 0 ? "obPink" : "obPurple");
       el.dataset.cat = cat.id;
       el.innerHTML =
-        '<div class="obRow1">' +
-          '<span class="obName" title="' + cat.name.replace(/"/g, "&quot;") + '">' + cat.name.replace(/</g, "&lt;") + "</span>" +
+        '<input type="checkbox" class="obTick" disabled tabindex="-1" aria-hidden="true">' +
+        '<span class="obName" title="' + cat.name.replace(/"/g, "&quot;") + '">' + cat.name.replace(/</g, "&lt;") + "</span>" +
+        '<span class="obCtrls">' +
           '<button class="obBtn obMinus" title="Lower this week’s goal by 15 min">−</button>' +
           '<span class="obPlan" title="Planned — this week’s goal">' + fmtHM(bw) + "</span>" +
           '<button class="obBtn obPlus" title="Raise this week’s goal by 15 min">+</button>' +
-        "</div>" +
-        '<div class="obRow2">' +
           '<span class="obOpen" title="Open = Planned − Gridded">' + sign + fmtHM(Math.abs(O)) + "</span>" +
           '<button class="obBtn obEq" title="Set this week’s goal to what’s tracked + assigned">=</button>' +
-        "</div>";
+        "</span>";
       const step = (d) => { snap(); const nb = Math.max(0, Math.round((weekBudget(cat, cw) + d * 0.25) * 100) / 100); ensureBudgets(state.weeks[cw])[cat.id] = nb; localUpdatedAt = Date.now(); saveLocal(); schedulePush(); poolDirty = true; schedulePoolReflow(); };
       el.querySelector(".obMinus").addEventListener("click", (e) => { e.stopPropagation(); step(-1); });
       el.querySelector(".obPlus").addEventListener("click", (e) => { e.stopPropagation(); step(1); });
@@ -1860,21 +1859,18 @@ if (IS_BROWSER) (function () {
       el.addEventListener("mouseleave", flushPoolReflow);   // re-sort once you move off the bullet
       return el;
     };
-    if (checkBlocks.length) {
-      const sec = document.createElement("div"); sec.className = "checkSection";
-      const box = document.createElement("div"); box.className = "checkList";
-      for (const it of checkBlocks) {
-        const row = document.createElement("label"); row.className = "checkRow";
-        const cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "checkTick";
-        const nm = document.createElement("span"); nm.className = "checkName";
-        nm.textContent = it.c.name + "  " + slotLabel(it.b.startSlot) + "–" + slotLabel(it.b.startSlot + it.b.lenSlots);
-        nm.title = nm.textContent;
-        row.appendChild(cb); row.appendChild(nm);
-        const bid = it.b.id;
-        cb.addEventListener("change", () => { snap(); const bb = curBlocks().find((x) => x.id === bid); if (bb) bb.chkAck = true; commit(); });
-        box.appendChild(row);
-      }
-      sec.appendChild(box); pool.appendChild(sec);
+    // SECTION (grey box): check list + open/over bullets — stays visible even when empty.
+    const cbBox = document.createElement("div"); cbBox.className = "cbBox"; pool.appendChild(cbBox);
+    for (const it of checkBlocks) {
+      const row = document.createElement("label"); row.className = "checkRow";
+      const cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "checkTick";
+      const nm = document.createElement("span"); nm.className = "checkName";
+      nm.textContent = it.c.name + "  " + slotLabel(it.b.startSlot) + "–" + slotLabel(it.b.startSlot + it.b.lenSlots);
+      nm.title = nm.textContent;
+      row.appendChild(cb); row.appendChild(nm);
+      const bid = it.b.id;
+      cb.addEventListener("change", () => { snap(); const bb = curBlocks().find((x) => x.id === bid); if (bb) bb.chkAck = true; commit(); });
+      cbBox.appendChild(row);
     }
     // Only show tasks planned and/or gridded for THIS week
     const blockCatIds = new Set(); for (const b of curBlocks()) { if (!b.event) blockCatIds.add(b.catId); }
@@ -1892,44 +1888,38 @@ if (IS_BROWSER) (function () {
     // SECTION TWO: bullet list of tasks with a non-zero Open — pink if Open positive, purple if Open negative (over). The timed task is omitted (it lives in the pill below).
     const obTasks = shownAll.filter((c) => c.id !== timedId && !planTimeBlocked(c) && Math.abs(openOf(c)) >= TOL)
       .sort((a, b) => { const oa = openOf(a) >= TOL ? 0 : 1, ob = openOf(b) >= TOL ? 0 : 1; return (oa - ob) || grpCmp(a, b); });   // open (positive) first, then over
-    if (obTasks.length) {
-      const obl = document.createElement("div"); obl.className = "obList";
-      for (const c of obTasks) obl.appendChild(renderOpenBullet(c));
-      pool.appendChild(obl);
-    }
-    // SECTION THREE: the divider — running-timer pill (if any), then the always-visible "start a timer" pill, then the three mode buttons (A · Upcoming · Priority; at most one active).
+    for (const c of obTasks) cbBox.appendChild(renderOpenBullet(c));
+    // SECTION 3: timer pill area — running pill (if timing) + the always-visible "start a timer" pill (white bg, all-black border/font).
     const mode = ui.poolMode || "";
     document.querySelectorAll(".taskMenu.floatMenu").forEach((m) => m.remove());   // drop any stale floating menu from a previous render
+    const pillSec = document.createElement("div"); pillSec.className = "pillSec"; pool.appendChild(pillSec);
+    if (state.timer) {
+      const tc = state.categories.find((x) => x.id === state.timer.catId);
+      const pill = document.createElement("div"); pill.className = "poolTimerPill";
+      pill.innerHTML = '<span class="ptName"></span><span class="runElapsed"></span>' +
+        '<button class="ptBtn ptStop" title="Stop timer (log it)">⏸</button>' +
+        '<button class="ptBtn ptEdit" title="Edit the start time">✎</button>' +
+        '<button class="ptBtn ptDel" title="Discard the current timing (do not log it)">✕</button>';
+      pill.querySelector(".ptName").textContent = tc ? tc.name : "?";
+      pill.querySelector(".runElapsed").textContent = fmtClock(Date.now() - state.timer.startMs);
+      pill.querySelector(".ptStop").addEventListener("click", () => toggleTimer(state.timer.catId));
+      pill.querySelector(".ptEdit").addEventListener("click", adjustTimerStart);
+      pill.querySelector(".ptDel").addEventListener("click", discardTimer);
+      pillSec.appendChild(pill);
+    }
+    const stWrap = document.createElement("div"); stWrap.className = "poolStartWrap";
+    const stInp = document.createElement("input"); stInp.className = "startTimerIn poolStartIn"; stInp.placeholder = "▶ start a timer…"; stInp.setAttribute("autocomplete", "off");
+    const stMenu = document.createElement("div"); stMenu.className = "taskMenu floatMenu"; stMenu.style.display = "none"; document.body.appendChild(stMenu);
+    wireTimerInput(stInp, stMenu);
+    stWrap.appendChild(stInp); pillSec.appendChild(stWrap);
+    // SECTION 4: the three mode buttons (A · Upcoming · Priority; at most one active) in a grey rounded box.
     if (shownAll.length) {
-      const dv = document.createElement("div"); dv.className = "poolDividerBar";
-      if (state.timer) {
-        const tc = state.categories.find((x) => x.id === state.timer.catId);
-        const tcolor = tc ? tc.color : "#888", tink = textOn(tcolor);
-        const pill = document.createElement("div"); pill.className = "poolTimerPill";
-        pill.style.background = tcolor; pill.style.color = tink;
-        pill.innerHTML = '<span class="ptName"></span><span class="runElapsed"></span>' +
-          '<button class="ptBtn ptStop" title="Stop timer (log it)">⏸</button>' +
-          '<button class="ptBtn ptEdit" title="Edit the start time">✎</button>' +
-          '<button class="ptBtn ptDel" title="Discard the current timing (do not log it)">✕</button>';
-        pill.querySelector(".ptName").textContent = tc ? tc.name : "?";
-        pill.querySelector(".runElapsed").textContent = fmtClock(Date.now() - state.timer.startMs);
-        pill.querySelector(".ptStop").addEventListener("click", () => toggleTimer(state.timer.catId));
-        pill.querySelector(".ptEdit").addEventListener("click", adjustTimerStart);
-        pill.querySelector(".ptDel").addEventListener("click", discardTimer);
-        dv.appendChild(pill);
-      }
-      // Always-visible "start a timer" pill, sitting between the running pill and the mode buttons.
-      const stWrap = document.createElement("div"); stWrap.className = "poolStartWrap";
-      const stInp = document.createElement("input"); stInp.className = "startTimerIn poolStartIn"; stInp.placeholder = "▶ start a timer…"; stInp.setAttribute("autocomplete", "off");
-      const stMenu = document.createElement("div"); stMenu.className = "taskMenu floatMenu"; stMenu.style.display = "none"; document.body.appendChild(stMenu);
-      wireTimerInput(stInp, stMenu);
-      stWrap.appendChild(stInp); dv.appendChild(stWrap);
+      const btnBox = document.createElement("div"); btnBox.className = "btnBox";
       const bar = document.createElement("div"); bar.className = "poolModeBar";
       bar.innerHTML = '<button class="pmBtn pmAll' + (mode === "" ? " on" : "") + '" title="All — the basic order, grouped (Parents · Work · Fruit · Home · None · Termin)">A</button>' +
         '<button class="pmBtn pmUp' + (mode === "upcoming" ? " on" : "") + '" title="Upcoming — order by when tasks come up on the grid this week (others hidden)">↑</button>' +
         '<button class="pmBtn pmPrio' + (mode === "priority" ? " on" : "") + '" title="Priority — order by weekly priority 5→1 (tasks without a priority hidden)">★</button>';
-      dv.appendChild(bar);
-      pool.appendChild(dv);
+      btnBox.appendChild(bar); pool.appendChild(btnBox);
       bar.querySelector(".pmAll").addEventListener("click", () => { ui.poolMode = ""; saveUI(); renderPool(); });
       bar.querySelector(".pmUp").addEventListener("click", () => { ui.poolMode = "upcoming"; saveUI(); renderPool(); });
       bar.querySelector(".pmPrio").addEventListener("click", () => { ui.poolMode = "priority"; saveUI(); renderPool(); });
@@ -2977,7 +2967,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { const BUILD = "v168"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v169"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
