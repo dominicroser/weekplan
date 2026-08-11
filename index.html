@@ -103,14 +103,14 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .pmBtn.pmAll { border-radius: 4px; font-weight: 800; font-size: 11px; }
 .pmBtn.pmUp { border-radius: 50%; }
 .pmBtn.pmPrio { border-radius: 4px; }
-.pmBtn.on { background: #14b9a8; color: #fff; border-color: #14b9a8; }   /* active → brighter dark teal */
+.pmBtn.on { background: #14b9a8; color: #fff; border-color: #000; }   /* active → brighter dark teal, black border */
 .poolOpen { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; margin-left: 3px; }
 .poolOpen.u { color: #7a1222; }   /* under → very dark red */
 .poolOpen.o { color: #0d1f5e; }   /* over → very dark blue */
 .poolOpen.z { color: #111; }
 .obItem { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 1px 2px; border-radius: 4px; }
-.obItem.obPink { color: #ff4fb2; }    /* open & positive → bright pink */
-.obItem.obPurple { color: #c264ff; }  /* open & negative (over) → bright purple */
+.obItem.obPink { color: #ff7ac8; }    /* open & positive → lighter, brighter pink */
+.obItem.obPurple { color: #d68eff; }  /* open & negative (over) → lighter, brighter purple */
 .obTick { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: currentColor; pointer-events: none; }   /* aesthetic only, un-tickable */
 .obName { flex: 1; min-width: 0; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
 .obCtrls { display: flex; align-items: center; gap: 4px; font-weight: 400; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
@@ -364,8 +364,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .gUnder { color: #e03131; font-weight: 600; }
 .checkSection { padding: 0; margin: 0; display: contents; }
 .checkList { display: contents; }
-.checkRow { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #ff9124; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* bright, light cheerful orange, bold */
-.checkRow:hover { background: rgba(255,145,36,0.16); }
+.checkRow { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #ffb457; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* lighter, brighter cheerful orange, bold */
+.checkRow:hover { background: rgba(255,180,87,0.2); }
 .checkRow input { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: #ff9124; }
 .checkRow .checkName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
@@ -805,7 +805,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v172 */
+/* build v173 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2992,7 +2992,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { const BUILD = "v172"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v173"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
