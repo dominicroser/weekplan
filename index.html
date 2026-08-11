@@ -88,13 +88,13 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolItem.immediate.immRun { background: #a2a8b0; }   /* currently running → dark grey */
 .poolItem.armed { outline-color: var(--accent); }
 .poolBlackDiv { height: 4px; background: #000; border-radius: 2px; margin: 10px 2px 9px; flex-shrink: 0; }
-.cbBox { background: #9aa0aa; border: 1px solid #33383e; border-radius: 10px; padding: 8px 9px; margin: 9px 0 0; display: flex; flex-direction: column; gap: 6px; min-height: 22px; box-sizing: border-box; }   /* one grey box for ALL check + open/over rows; very-dark-grey 1px border */
-.pillSec { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 0; }
-.poolTimerPill { display: flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #fff; color: #000; border: 1.5px solid #000; }
+.cbBox { background: #fff; border: none; border-radius: 10px; padding: 6px 3px; margin: 9px 0 0; display: flex; flex-direction: column; gap: 6px; min-height: 22px; box-sizing: border-box; }   /* white, borderless container for ALL check + open/over rows */
+.pillSec { display: flex; flex-direction: column; gap: 6px; margin: 9px 0 0; }
+.poolTimerPill { display: flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #9aa0aa; color: #fff; border: 1px solid #000; }
 .poolTimerPill .ptName { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolTimerPill .runElapsed { font-variant-numeric: tabular-nums; font-weight: 800; }
-.poolTimerPill .ptBtn { border: 1px solid #000; background: #fff; color: #000; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
-.poolTimerPill .ptBtn:hover { background: #eee; }
+.poolTimerPill .ptBtn { border: none; background: rgba(255,255,255,0.22); color: #fff; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
+.poolTimerPill .ptBtn:hover { background: rgba(255,255,255,0.38); }
 .poolStartWrap { display: flex; }
 .poolStartIn { flex: 1; width: 100%; border: 1.5px solid #000; border-radius: 15px; padding: 3px 11px; font-family: 'Inter', sans-serif; font-size: 11px; color: #000; background: #fff; }
 .poolStartIn::placeholder { color: #000; opacity: 0.6; }
@@ -106,14 +106,14 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .pmBtn.pmAll { border-radius: 4px; font-weight: 800; font-size: 11px; }
 .pmBtn.pmUp { border-radius: 50%; }
 .pmBtn.pmPrio { border-radius: 4px; }
-.pmBtn.on { background: #14b9a8; color: #fff; border-color: #000; }   /* active → brighter dark teal, black border */
+.pmBtn.on { background: #14b9a8; color: #fff; border-color: #0b6f65; }   /* active → brighter dark teal, dark-teal border */
 .poolOpen { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; margin-left: 3px; }
 .poolOpen.u { color: #7a1222; }   /* under → very dark red */
 .poolOpen.o { color: #0d1f5e; }   /* over → very dark blue */
 .poolOpen.z { color: #111; }
 .obItem { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 1px 2px; border-radius: 4px; }
-.obItem.obPink { color: #ff7ac8; }    /* open & positive → lighter, brighter pink */
-.obItem.obPurple { color: #d68eff; }  /* open & negative (over) → lighter, brighter purple */
+.obItem.obPink { color: #ff1493; }    /* open & positive → intense saturated pink (on white) */
+.obItem.obPurple { color: #b010e8; }  /* open & negative (over) → intense saturated purple (on white) */
 .obTick { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: currentColor; pointer-events: none; }   /* aesthetic only, un-tickable */
 .obName { flex: 1; min-width: 0; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
 .obCtrls { display: flex; align-items: center; gap: 4px; font-weight: 400; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
@@ -242,8 +242,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable th.keyTot { background: #a9d7a9; color: var(--ink3); font-weight: 500; }
 .mpTable.hideTotal .keyTot { display: none; }
 /* Planned (masterplan, lighter purple) */
-.mpTable .gcolF.planMP { background: #ece4fb; min-width: 84px; width: 84px; }
-.mpTable th.gcolF.planMP { background: #ddd0f5; }
+.mpTable .gcolF.planMP { background: #ecb9de; min-width: 84px; width: 84px; }   /* Plan → medium purplish-pink */
+.mpTable th.gcolF.planMP { background: #e2a4d1; }
 /* ★ IP + Prio (masterplan, orange) */
 .mpTable .starMP { background: #fdefdc; }
 .mpTable th.starMP { background: #f8e3c4; color: var(--ink3); font-weight: 500; }
@@ -300,14 +300,14 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable td.parCol select.bpar { width: 46px; }
 .mpTable td.parCol input.bsplit { width: 34px; }
 .mpTable .ckCol { width: 30px; min-width: 30px; padding-left: 2px; padding-right: 2px; }      /* narrower checkbox feature columns */
-.mpTable td.dcol { background: #edc9e6; }                                                      /* Open column → purplish pink */
-.mpTable th.dcol { background: #e0b0d5; }
+.mpTable td.dcol { background: #f8ddf0; }                                                      /* Open → lightest purplish-pink */
+.mpTable th.dcol { background: #f0cbe6; }
 .mpTable thead th { padding-top: 9px; padding-bottom: 9px; vertical-align: middle; }           /* taller, less-cramped header row */
 .mpTable tbody tr.budFoot td, .mpTable tbody tr.budGrp td { font-weight: 700; }                /* the 4 bottom rows (Total/Work/Fruit/Home) → bold */
 .mpTable tr.budFoot td { background: var(--panel) !important; }                                /* no column shading on the Total row */
-.budTable th.mpCur { background: #6d28d9 !important; color: #fff; }
-.budTable th.mpCur .wkHol { color: #ede9fe; }
-.budTable td.mpCur { background: #b9a3f0 !important; }
+.budTable th.mpCur { background: #bd489f !important; color: #fff; }   /* Current week → darkest purplish-pink */
+.budTable th.mpCur .wkHol { color: #fbe6f4; }
+.budTable td.mpCur { background: #d888c3 !important; }
 .budWrap { max-height: 62vh; overflow: auto; }
 .budGap { height: 22px; }
 .confettiBox { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
@@ -371,9 +371,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .gUnder { color: #e03131; font-weight: 600; }
 .checkSection { padding: 0; margin: 0; display: contents; }
 .checkList { display: contents; }
-.checkRow { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #ffb457; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* lighter, brighter cheerful orange, bold */
-.checkRow:hover { background: rgba(255,180,87,0.2); }
-.checkRow input { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: #ff9124; }
+.checkRow { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #ff6a00; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* intense saturated orange (on white), bold */
+.checkRow:hover { background: rgba(255,106,0,0.12); }
+.checkRow input { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: #ff6a00; }
 .checkRow .checkName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .poolDivider.abDiv { height: 2px; background: #9aa0a8; opacity: 0.8; border-radius: 2px; margin: 7px 2px; }
@@ -520,7 +520,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .oughtPanel { margin: 0 0 12px; }
 .ogTitle { display: none; }   /* title removed — the weeks summary now lives in the top bar line */
 .ogTable { border-collapse: collapse; font-size: 12px; }
-.ogTable th, .ogTable td { padding: 0 10px; height: 26px; box-sizing: border-box; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; font-size: 12px; }
+.ogTable th, .ogTable td { padding: 0 10px; height: 26px; box-sizing: border-box; text-align: right; border-bottom: none; white-space: nowrap; font-size: 12px; }   /* borderless → exact 26px rows so the three blocks line up */
 .ogTable thead th { font-size: 12px; color: #111; font-weight: 700; }
 .ogTable thead th:first-child { color: var(--ink3); }   /* keep the top-left "Ought" grey */
 .ogTable th:first-child, .ogTable td.ogLbl { text-align: left; font-weight: 600; }
@@ -819,7 +819,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v177 */
+/* build v178 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1926,7 +1926,7 @@ if (IS_BROWSER) (function () {
     // SECTION 3: timer pill area — running pill (if timing) + the always-visible "start a timer" pill (white bg, all-black border/font).
     const mode = ui.poolMode || "";
     document.querySelectorAll(".taskMenu.floatMenu").forEach((m) => m.remove());   // drop any stale floating menu from a previous render
-    const pillSec = document.createElement("div"); pillSec.className = "pillSec"; pool.appendChild(pillSec);
+    const pillSec = document.createElement("div"); pillSec.className = "pillSec"; pool.insertBefore(pillSec, cbBox);   // timer pill sits directly below the table, above the check/open-over box
     if (state.timer) {
       const tc = state.categories.find((x) => x.id === state.timer.catId);
       const pill = document.createElement("div"); pill.className = "poolTimerPill";
@@ -3009,7 +3009,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v177"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v178"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
