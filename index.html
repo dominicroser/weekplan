@@ -90,15 +90,15 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolBlackDiv { height: 4px; background: #000; border-radius: 2px; margin: 10px 2px 9px; flex-shrink: 0; }
 .cbBox { background: #fff; border: none; border-radius: 10px; padding: 6px 3px; margin: 9px 0 0; display: flex; flex-direction: column; gap: 6px; min-height: 22px; box-sizing: border-box; }   /* white, borderless container for ALL check + open/over rows */
 .pillSec { display: flex; flex-direction: column; gap: 6px; margin: 9px 0 0; }
-.poolTimerPill { display: flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #9aa0aa; color: #fff; border: 1px solid #000; }
+.poolTimerPill { display: flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #383d44; color: #fff; border: 1px solid #000; }
 .poolTimerPill .ptName { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolTimerPill .runElapsed { font-variant-numeric: tabular-nums; font-weight: 800; }
 .poolTimerPill .ptBtn { border: none; background: rgba(255,255,255,0.22); color: #fff; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
 .poolTimerPill .ptBtn:hover { background: rgba(255,255,255,0.38); }
 .poolStartWrap { display: flex; }
-.poolStartIn { flex: 1; width: 100%; border: 1.5px solid #000; border-radius: 15px; padding: 3px 11px; font-family: 'Inter', sans-serif; font-size: 11px; color: #000; background: #fff; }
-.poolStartIn::placeholder { color: #000; opacity: 0.6; }
-.poolStartIn:focus { outline: none; border-color: #000; background: #fff; }
+.poolStartIn { flex: 1; width: 100%; border: 1px solid #000; border-radius: 15px; padding: 3px 11px; font-family: 'Inter', sans-serif; font-size: 11px; color: #fff; background: #383d44; }
+.poolStartIn::placeholder { color: #fff; opacity: 0.85; }
+.poolStartIn:focus { outline: none; border-color: #000; background: #383d44; color: #fff; }
 .taskMenu.floatMenu { position: fixed; top: auto; left: auto; }
 .btnBox { background: #9aa0aa; border: 3px solid #33383e; border-radius: 8px; padding: 15px 0; margin: 10px 0 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }   /* full width + same height/border as a task box; very-dark-grey 3px border */
 .poolModeBar { display: flex; gap: 9px; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
@@ -111,9 +111,9 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolOpen.u { color: #7a1222; }   /* under → very dark red */
 .poolOpen.o { color: #0d1f5e; }   /* over → very dark blue */
 .poolOpen.z { color: #111; }
-.obItem { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 1px 2px; border-radius: 4px; }
-.obItem.obPink { color: #ff1493; }    /* open & positive → intense saturated pink (on white) */
-.obItem.obPurple { color: #b010e8; }  /* open & negative (over) → intense saturated purple (on white) */
+.obItem { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 1px 2px; border-radius: 4px; }
+.obItem.obPink { color: #e60d84; }    /* open & positive → intense saturated pink (on white) */
+.obItem.obPurple { color: #8a0dc4; }  /* open & negative (over) → darker intense purple (on white) */
 .obTick { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: currentColor; pointer-events: none; }   /* aesthetic only, un-tickable */
 .obName { flex: 1; min-width: 0; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
 .obCtrls { display: flex; align-items: center; gap: 4px; font-weight: 400; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
@@ -371,10 +371,11 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .gUnder { color: #e03131; font-weight: 600; }
 .checkSection { padding: 0; margin: 0; display: contents; }
 .checkList { display: contents; }
-.checkRow { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #ff6a00; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* intense saturated orange (on white), bold */
+.checkRow { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 400; color: #ff6a00; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* intense saturated orange (on white) */
 .checkRow:hover { background: rgba(255,106,0,0.12); }
 .checkRow input { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: #ff6a00; }
-.checkRow .checkName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.checkRow .checkTime { font-weight: 400; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }   /* time → non-bold, right-aligned */
+.checkRow .checkName { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 800; }
 .poolDivider { height: 6px; background: rgba(0,0,0,0.55); border-radius: 3px; margin: 11px 2px; flex-shrink: 0; }
 .poolDivider.abDiv { height: 2px; background: #9aa0a8; opacity: 0.8; border-radius: 2px; margin: 7px 2px; }
 .poolDivider.lbl { height: auto; background: #16335c; border-radius: 0; border-top: 4px solid #000; border-bottom: 4px solid #000; padding: 5px 0; margin: 13px 2px 6px; color: #b6ff7a; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
@@ -520,7 +521,13 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .oughtPanel { margin: 0 0 12px; }
 .ogTitle { display: none; }   /* title removed — the weeks summary now lives in the top bar line */
 .ogTable { border-collapse: collapse; font-size: 12px; }
-.ogTable th, .ogTable td { padding: 0 10px; height: 26px; box-sizing: border-box; text-align: right; border-bottom: none; white-space: nowrap; font-size: 12px; }   /* borderless → exact 26px rows so the three blocks line up */
+.ogTable th, .ogTable td { padding: 0 10px; height: 26px; box-sizing: border-box; text-align: right; border: 1px solid var(--line); white-space: nowrap; font-size: 12px; vertical-align: middle; }
+.ogTable .ogPass { border: none; background: transparent; text-align: left; padding: 0 18px 0 0; }   /* tick + week-info cells share the rows but show no grid */
+.ogTable .ogGap { padding-left: 30px; }
+.ogTable .ogWeekCell { color: #111; }
+.ogTable .ogWeekHdr { font-weight: 700; }
+.ogFilt { display: inline-flex; align-items: center; gap: 6px; color: #111; font-weight: 400; cursor: pointer; white-space: nowrap; }
+.ogFilt input { margin: 0; width: 15px; height: 15px; flex-shrink: 0; }
 .ogTable thead th { font-size: 12px; color: #111; font-weight: 700; }
 .ogTable thead th:first-child { color: var(--ink3); }   /* keep the top-left "Ought" grey */
 .ogTable th:first-child, .ogTable td.ogLbl { text-align: left; font-weight: 600; }
@@ -769,23 +776,6 @@ create policy "planner anon access" on plans
   </div>
   <div class="mpOughtRow">
     <div id="oughtPanel" class="oughtPanel"></div>
-    <div class="mpFilterCols mpAlignBlock">
-      <div class="mpFilterCol">
-        <label class="mpIPtog" title="Show tasks with 0 in the Planned column for this masterplan (untick to hide)"><input type="checkbox" id="mpF0all"> 0 Masterplan</label>
-        <label class="mpIPtog" title="Show tasks with 0 Planned this week (untick to hide)"><input type="checkbox" id="mpF0cur"> 0 Week</label>
-        <label class="mpIPtog" title="Show tasks with 0 Planned next week (untick to hide)"><input type="checkbox" id="mpF0next"> 0 Next Week</label>
-      </div>
-      <div class="mpFilterCol">
-        <label class="mpIPtog" title="Show the weeks before the current one (untick to hide)"><input type="checkbox" id="mpPast"> Past</label>
-        <label class="mpIPtog" title="Show tasks marked Done (untick to hide)"><input type="checkbox" id="mpFDone"> Done</label>
-        <label class="mpIPtog" title="Show tasks marked Later or NTH (untick to hide)"><input type="checkbox" id="mpFLater"> Later/NTH</label>
-      </div>
-    </div>
-    <div class="mpWeeksBlock mpAlignBlock">
-      <div class="mpWeeksLine mpWeeksHdr">Weeks</div>
-      <div class="mpWeeksLine" id="mpWorkWeeks"></div>
-      <div class="mpWeeksLine" id="mpHolWeeks"></div>
-    </div>
   </div>
   <div id="masterplanTableWrap"></div>
 </dialog>
@@ -819,7 +809,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v178 */
+/* build v179 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1898,10 +1888,11 @@ if (IS_BROWSER) (function () {
     for (const it of checkBlocks) {
       const row = document.createElement("label"); row.className = "checkRow";
       const cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "checkTick";
-      const nm = document.createElement("span"); nm.className = "checkName";
-      nm.textContent = it.c.name + "  " + slotLabel(it.b.startSlot) + "–" + slotLabel(it.b.startSlot + it.b.lenSlots);
-      nm.title = nm.textContent;
-      row.appendChild(cb); row.appendChild(nm);
+      const nm = document.createElement("span"); nm.className = "checkName"; nm.textContent = it.c.name;
+      const hm = (sl) => slotLabel(sl).replace(/^0/, "");   // h:mm (no leading-zero hour)
+      const tm = document.createElement("span"); tm.className = "checkTime"; tm.textContent = hm(it.b.startSlot) + "–" + hm(it.b.startSlot + it.b.lenSlots);
+      row.title = it.c.name + "  " + tm.textContent;
+      row.appendChild(cb); row.appendChild(nm); row.appendChild(tm);
       const bid = it.b.id;
       cb.addEventListener("change", () => { snap(); const bb = curBlocks().find((x) => x.id === bid); if (bb) bb.chkAck = true; commit(); });
       cbBox.appendChild(row);
@@ -2668,8 +2659,8 @@ if (IS_BROWSER) (function () {
     const totEff = mpIdx.length - totVac;
     const paceAll = (v) => (totEff > 0.0001 && Math.abs(v) > 0.0001) ? fmtHM(v / totEff) : "";   // per-week over ALL effective weeks of the masterplan
     const fmtWk = (n) => (Math.round(n * 10) / 10).toString();
-    { const ww = $("mpWorkWeeks"); if (ww) ww.textContent = "Work weeks: " + fmtWk(Math.max(0, paceDiv)) + " left / " + fmtWk(Math.max(0, totEff)) + " total";
-      const hw = $("mpHolWeeks"); if (hw) hw.textContent = "Holiday weeks: " + fmtWk(Math.max(0, vacEq)) + " left / " + fmtWk(Math.max(0, totVac)) + " total"; }
+    const weeksWorkTxt = "Work weeks: " + fmtWk(Math.max(0, paceDiv)) + " left / " + fmtWk(Math.max(0, totEff)) + " total";   // shown inside the Ought table (built in renderOught)
+    const weeksHolTxt = "Holiday weeks: " + fmtWk(Math.max(0, vacEq)) + " left / " + fmtWk(Math.max(0, totVac)) + " total";
     // Prio 0–10 → background gradient: 10 dark red · 5 yellow · 0 dark green
     const prioBg = (v) => { v = Math.max(0, Math.min(10, v)); const L = (a, b, t) => Math.round(a + (b - a) * t); const dg = [26, 122, 40], ye = [230, 184, 0], dr = [155, 28, 28]; let r, g, b; if (v <= 5) { const t = v / 5; r = L(dg[0], ye[0], t); g = L(dg[1], ye[1], t); b = L(dg[2], ye[2], t); } else { const t = (v - 5) / 5; r = L(ye[0], dr[0], t); g = L(ye[1], dr[1], t); b = L(ye[2], dr[2], t); } return "rgb(" + r + "," + g + "," + b + ")"; };
     const prioTxt = (v) => { v = Math.max(0, Math.min(10, v)); return (v >= 3.5 && v <= 6.5) ? "#3a3000" : "#fff"; };   // dark text only on the yellow midrange
@@ -2826,16 +2817,27 @@ if (IS_BROWSER) (function () {
       const signed = (v) => Math.abs(v) < 0.0001 ? "0:00" : (v > 0 ? "+" : "−") + fmtHM(Math.abs(v));
       const devCls = (v) => v < -0.0001 ? "ogNeg" : v > 0.0001 ? "ogPos" : "";
       const groups = [["work", "Work"], ["fruit", "Fruit"], ["home", "Home"]];
+      // Filter tickboxes + week info ride in the same table (transparent cells) so they align row-for-row with Work/Fruit/Home.
+      const fltOn = { mpF0all: !ui.mpF0all, mpF0cur: !ui.mpF0cur, mpF0next: !ui.mpF0next, mpPast: !ui.mpHidePast, mpFDone: !ui.mpFDone, mpFLater: !ui.mpFLater };
+      const flt = (id, lbl, tip) => '<label class="ogFilt" title="' + tip + '"><input type="checkbox" id="' + id + '"' + (fltOn[id] ? " checked" : "") + '> ' + lbl + '</label>';
+      const extras = {
+        work:  '<td class="ogPass ogGap">' + flt("mpF0all", "0 Masterplan", "Show tasks with 0 Planned for this masterplan (untick to hide)") + '</td><td class="ogPass">' + flt("mpPast", "Past", "Show the weeks before the current one (untick to hide)") + '</td><td class="ogPass ogWeekCell ogWeekHdr">Weeks</td>',
+        fruit: '<td class="ogPass ogGap">' + flt("mpF0cur", "0 Week", "Show tasks with 0 Planned this week (untick to hide)") + '</td><td class="ogPass">' + flt("mpFDone", "Done", "Show tasks marked Done (untick to hide)") + '</td><td class="ogPass ogWeekCell">' + weeksWorkTxt + '</td>',
+        home:  '<td class="ogPass ogGap">' + flt("mpF0next", "0 Next Week", "Show tasks with 0 Planned next week (untick to hide)") + '</td><td class="ogPass">' + flt("mpFLater", "Later/NTH", "Show tasks marked Later or NTH (untick to hide)") + '</td><td class="ogPass ogWeekCell">' + weeksHolTxt + '</td>',
+      };
       let woTot = 0, oughtTot = 0, devTot = 0, adjTot = 0, rows = "";
       for (const [g, label] of groups) {
         const w = woG(g), ought = N * w, dev = pastTimed[g] - pastEff * w, adj = ought + dev;   // N/pastEff = effective weeks (holidays removed); dev = past timed − past ought (+ ahead / − behind); adj = past timed + remaining effective weeks × weekly
         woTot += w; oughtTot += ought; devTot += dev; adjTot += adj;
-        rows += '<tr><td class="ogLbl">' + label + '</td><td><input class="ogIn" data-g="' + g + '" type="text" inputmode="numeric" value="' + (w ? fmtHM(w) : "") + '"></td><td>' + fmtHM(ought) + '</td><td class="' + devCls(dev) + '">' + signed(dev) + '</td><td>' + fmtHM(adj) + '</td></tr>';
+        rows += '<tr><td class="ogLbl">' + label + '</td><td><input class="ogIn" data-g="' + g + '" type="text" inputmode="numeric" value="' + (w ? fmtHM(w) : "") + '"></td><td>' + fmtHM(ought) + '</td><td class="' + devCls(dev) + '">' + signed(dev) + '</td><td>' + fmtHM(adj) + '</td>' + extras[g] + '</tr>';
       }
-      rows += '<tr class="ogTot"><td class="ogLbl">Total</td><td>' + fmtHM(woTot) + '</td><td>' + fmtHM(oughtTot) + '</td><td class="' + devCls(devTot) + '">' + signed(devTot) + '</td><td>' + fmtHM(adjTot) + '</td></tr>';
+      rows += '<tr class="ogTot"><td class="ogLbl">Total</td><td>' + fmtHM(woTot) + '</td><td>' + fmtHM(oughtTot) + '</td><td class="' + devCls(devTot) + '">' + signed(devTot) + '</td><td>' + fmtHM(adjTot) + '</td><td class="ogPass ogGap"></td><td class="ogPass"></td><td class="ogPass"></td></tr>';
       host.innerHTML = '<div class="ogTitle">Weekly Ought <span class="muted" style="font-weight:400;">(' + fmtWk(N) + ' effective week' + (N === 1 ? "" : "s") + (holDays ? " — holidays removed" : "") + ' in masterplan' + (nPastWeeks ? ", " + nPastWeeks + " past" : "") + ')</span></div>' +
-        '<table class="ogTable"><thead><tr><th>Ought</th><th title="Hours you ought to do per week (whole masterplan)">Week</th><th title="Effective weeks (holidays removed) × Weekly Ought">MP</th><th title="Past weeks: timed − ought (+ ahead / − behind)">Past ±</th><th title="Ought adjusted for past over/under-timing (= past timed + remaining effective weeks × Weekly)">Adjusted</th></tr></thead><tbody>' + rows + '</tbody></table>';
+        '<table class="ogTable"><thead><tr><th>Ought</th><th title="Hours you ought to do per week (whole masterplan)">Week</th><th title="Effective weeks (holidays removed) × Weekly Ought">MP</th><th title="Past weeks: timed − ought (+ ahead / − behind)">Past ±</th><th title="Ought adjusted for past over/under-timing (= past timed + remaining effective weeks × Weekly)">Adjusted</th><th class="ogPass ogGap"></th><th class="ogPass"></th><th class="ogPass"></th></tr></thead><tbody>' + rows + '</tbody></table>';
       host.querySelectorAll(".ogIn").forEach((inp) => inp.addEventListener("change", () => { const g = inp.dataset.g; snap(); mp.weeklyOught = mp.weeklyOught || {}; const v = inp.value.trim(); if (v === "") delete mp.weeklyOught[g]; else mp.weeklyOught[g] = parseHM(v); commit(); renderBudgets(); }));
+      const wireFilt = (id, set) => { const el = host.querySelector("#" + id); if (el) el.addEventListener("change", (e) => { set(!e.target.checked); saveUI(); renderBudgets(); }); };
+      wireFilt("mpF0all", (v) => ui.mpF0all = v); wireFilt("mpF0cur", (v) => ui.mpF0cur = v); wireFilt("mpF0next", (v) => ui.mpF0next = v);
+      wireFilt("mpPast", (v) => ui.mpHidePast = v); wireFilt("mpFDone", (v) => ui.mpFDone = v); wireFilt("mpFLater", (v) => ui.mpFLater = v);
     })();
     const setWrap = (wid, h) => { const wrap = $(wid); if (!wrap) return null; const af = document.activeElement; if (af && af.blur && wrap.contains(af)) af.blur(); const prev = wrap.querySelector(".budWrap"); const ks = prev ? prev.scrollTop : 0; try { wrap.innerHTML = h; } catch (e) { wrap.textContent = ""; wrap.innerHTML = h; } const nw = wrap.querySelector(".budWrap"); if (nw) nw.scrollTop = ks; return wrap; };  // blur a focused child first + retry, so a cell's blur handler can't yank a node out mid-innerHTML (NotFoundError)
     const wrap = setWrap("masterplanTableWrap", fh);
@@ -2926,12 +2928,7 @@ if (IS_BROWSER) (function () {
   });
   $("mpEditRange").addEventListener("click", () => { const mp = activeMasterplan(); if (!mp) return; const r = promptRange(mp); if (!r) return; snap(); mp.from = r.from; mp.to = r.to; ensureWeeksForMP(mp); commit(); renderBudgets(); });
   // Checkboxes reversed: a ticked box SHOWS the columns/tasks, un-ticking HIDES them (so the stored ui.*Hide flag is the inverse of checked). Column toggles (Features / Info MP · ★ MP / Info Wk · ★ Wk) now live as buttons in the table headers.
-  $("mpPast").addEventListener("change", (e) => { ui.mpHidePast = !e.target.checked; saveUI(); renderBudgets(); });
-  $("mpF0all").addEventListener("change", (e) => { ui.mpF0all = !e.target.checked; saveUI(); renderBudgets(); });
-  $("mpF0cur").addEventListener("change", (e) => { ui.mpF0cur = !e.target.checked; saveUI(); renderBudgets(); });
-  $("mpF0next").addEventListener("change", (e) => { ui.mpF0next = !e.target.checked; saveUI(); renderBudgets(); });
-  $("mpFDone").addEventListener("change", (e) => { ui.mpFDone = !e.target.checked; saveUI(); renderBudgets(); });
-  $("mpFLater").addEventListener("change", (e) => { ui.mpFLater = !e.target.checked; saveUI(); renderBudgets(); });
+  // (the 6 filter checkboxes now live inside the Ought table and are wired in renderOught)
   const mpBulkDlg = $("mpBulkDialog");
   $("mpBulk").addEventListener("click", () => {
     const mp = activeMasterplan(); if (!mp) return; const idx = mpWeekIndices(mp);
@@ -3009,7 +3006,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v178"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v179"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
