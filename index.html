@@ -96,9 +96,9 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolTimerPill .ptBtn { border: none; background: rgba(0,0,0,0.18); color: inherit; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
 .poolTimerPill .ptBtn:hover { background: rgba(0,0,0,0.3); }
 .poolStartWrap { display: flex; }
-.poolStartIn { flex: 1; width: 100%; border: 1px solid #000; border-radius: 15px; padding: 3px 11px; font-family: 'Inter', sans-serif; font-size: 11px; color: #fff; background: #383d44; }
-.poolStartIn::placeholder { color: #fff; opacity: 0.85; }
-.poolStartIn:focus { outline: none; border-color: #000; background: #383d44; color: #fff; }
+.poolStartIn { flex: 1; width: 100%; border: 1px solid #b8bec6; border-radius: 15px; padding: 3px 11px; font-family: 'Inter', sans-serif; font-size: 11px; color: #383d44; background: #e9ebef; }   /* light-grey pill, dark-grey (legible) font + ▶ */
+.poolStartIn::placeholder { color: #383d44; opacity: 0.75; }
+.poolStartIn:focus { outline: none; border-color: #8f959d; background: #fff; color: #383d44; }
 .taskMenu.floatMenu { position: fixed; top: auto; left: auto; }
 .btnBox { background: #9aa0aa; border: 3px solid #33383e; border-radius: 8px; padding: 15px 0; margin: 10px 0 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }   /* full width + same height/border as a task box; very-dark-grey 3px border */
 .poolModeBar { display: flex; gap: 9px; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
@@ -111,7 +111,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolOpen.u { color: #7a1222; }   /* under → very dark red */
 .poolOpen.o { color: #0d1f5e; }   /* over → very dark blue */
 .poolOpen.z { color: #111; }
-.obItem { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 1px 2px; border-radius: 4px; }
+.obItem { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 1px 2px; border-radius: 4px; }
 .obItem.obPink { color: #e60d84; }    /* open & positive → intense saturated pink (on white) */
 .obItem.obPurple { color: #8a0dc4; }  /* open & negative (over) → darker intense purple (on white) */
 .obTick { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: currentColor; pointer-events: none; }   /* aesthetic only, un-tickable */
@@ -119,7 +119,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .obCtrls { display: flex; align-items: center; gap: 4px; font-weight: 400; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .obBtn { border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; font-size: 11px; line-height: 1; padding: 0 3px; border-radius: 3px; }
 .obBtn:hover { background: rgba(255,255,255,0.5); }
-.obCtrls input.obPlan { width: 36px; border: 1px solid currentColor; background: #fff; font: inherit; font-weight: 400; font-variant-numeric: tabular-nums; text-align: center; color: inherit; border-radius: 3px; padding: 0 1px; }
+.obCtrls input.obPlan { width: 36px; border: 1px solid currentColor; background: #fff; font-family: inherit; font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; text-align: center; color: inherit; border-radius: 3px; padding: 0 1px; }
 .obCtrls input.obPlan:focus { outline: none; box-shadow: 0 0 0 1px currentColor; }
 .poolTop { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 11px; }
 .nameInput { background: transparent; border: none; color: #111; font-size: 11px; font-weight: 700; padding: 0; flex: 1; min-width: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -304,7 +304,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable th.dcol { background: #f0cbe6; }
 .mpTable thead th { padding-top: 9px; padding-bottom: 9px; vertical-align: middle; }           /* taller, less-cramped header row */
 .mpTable tbody tr.budFoot td, .mpTable tbody tr.budGrp td { font-weight: 700; }                /* the 4 bottom rows (Total/Work/Fruit/Home) → bold */
-.mpTable tr.budFoot td { background: var(--panel) !important; }                                /* no column shading on the Total row */
+.mpTable tbody tr.budFoot td.dcol { font-weight: 700; }                                        /* incl. the Open column in the bottom rows */
+.mpTable tr.budFoot:not(.budGrp) td { background: var(--panel) !important; }                   /* no column shading on the Total row (but leave the Work/Fruit/Home tints) */
 .budTable th.mpCur { background: #bd489f !important; color: #fff; }   /* Current week → darkest purplish-pink */
 .budTable th.mpCur .wkHol { color: #fbe6f4; }
 .budTable td.mpCur { background: #d888c3 !important; }
@@ -371,7 +372,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .gUnder { color: #e03131; font-weight: 600; }
 .checkSection { padding: 0; margin: 0; display: contents; }
 .checkList { display: contents; }
-.checkRow { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 400; color: #ff6a00; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* intense saturated orange (on white) */
+.checkRow { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 400; color: #ff6a00; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* intense saturated orange (on white) */
 .checkRow:hover { background: rgba(255,106,0,0.12); }
 .checkRow input { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: #ff6a00; }
 .checkRow .checkTime { font-weight: 400; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }   /* time → non-bold, right-aligned */
@@ -807,7 +808,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v180 */
+/* build v181 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1932,7 +1933,7 @@ if (IS_BROWSER) (function () {
       pillSec.appendChild(pill);
     }
     const stWrap = document.createElement("div"); stWrap.className = "poolStartWrap";
-    const stInp = document.createElement("input"); stInp.className = "startTimerIn poolStartIn"; stInp.placeholder = "▶ start a timer…"; stInp.setAttribute("autocomplete", "off");
+    const stInp = document.createElement("input"); stInp.className = "poolStartIn"; stInp.placeholder = "▶ start a timer…"; stInp.setAttribute("autocomplete", "off");
     const stMenu = document.createElement("div"); stMenu.className = "taskMenu floatMenu"; stMenu.style.display = "none"; document.body.appendChild(stMenu);
     wireTimerInput(stInp, stMenu);
     stWrap.appendChild(stInp); pillSec.appendChild(stWrap);
@@ -3005,7 +3006,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v180"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v181"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
