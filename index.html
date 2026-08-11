@@ -93,8 +93,8 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolTimerPill { display: flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #383d44; color: #fff; border: 1px solid #000; }
 .poolTimerPill .ptName { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolTimerPill .runElapsed { font-variant-numeric: tabular-nums; font-weight: 800; }
-.poolTimerPill .ptBtn { border: none; background: rgba(255,255,255,0.22); color: #fff; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
-.poolTimerPill .ptBtn:hover { background: rgba(255,255,255,0.38); }
+.poolTimerPill .ptBtn { border: none; background: rgba(0,0,0,0.18); color: inherit; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
+.poolTimerPill .ptBtn:hover { background: rgba(0,0,0,0.3); }
 .poolStartWrap { display: flex; }
 .poolStartIn { flex: 1; width: 100%; border: 1px solid #000; border-radius: 15px; padding: 3px 11px; font-family: 'Inter', sans-serif; font-size: 11px; color: #fff; background: #383d44; }
 .poolStartIn::placeholder { color: #fff; opacity: 0.85; }
@@ -276,9 +276,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable tr.budFoot td.name { z-index: 6; }
 .mpTable tr.budGrp td { color: var(--ink2); font-weight: 500; }
 .mpTable tr.budGrp td.name { font-weight: 600; }
-.mpTable tr.budGrp-work td { background: #e8f0f9 !important; color: #1c4e80; }
-.mpTable tr.budGrp-fruit td { background: #e7f3ea !important; color: #1e7a46; }
-.mpTable tr.budGrp-home td { background: #fbf1d3 !important; color: #8a6d00; }
+.mpTable tr.budGrp-work td { background: #eaf3fd !important; color: #1c4e80; }    /* very light blue */
+.mpTable tr.budGrp-fruit td { background: #ebfaef !important; color: #1e7a46; }   /* very light green */
+.mpTable tr.budGrp-home td { background: #fdfbe1 !important; color: #8a6d00; }    /* very light yellow */
 .mpTable td.stot.over { color: #d64545; }
 .mpTable td.dcol.dfNeg { color: #9c1f3d; font-weight: 400; }   /* wine-red */
 .mpTable td.dcol.dfPos { color: #2563eb; font-weight: 400; }
@@ -522,8 +522,8 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .ogTitle { display: none; }   /* title removed — the weeks summary now lives in the top bar line */
 .ogTable { border-collapse: collapse; font-size: 12px; }
 .ogTable th, .ogTable td { padding: 0 10px; height: 26px; box-sizing: border-box; text-align: right; border: 1px solid var(--line); white-space: nowrap; font-size: 12px; vertical-align: middle; }
-.ogTable .ogPass { border: none; background: transparent; text-align: left; padding: 0 18px 0 0; }   /* tick + week-info cells share the rows but show no grid */
-.ogTable .ogGap { padding-left: 30px; }
+.ogTable .ogPass { border: none !important; background: transparent; text-align: left; padding: 0 34px 0 0; }   /* tick + week-info cells share the rows but show no grid at all */
+.ogTable .ogGap { padding-left: 34px; }
 .ogTable .ogWeekCell { color: #111; }
 .ogTable .ogWeekHdr { font-weight: 700; }
 .ogFilt { display: inline-flex; align-items: center; gap: 6px; color: #111; font-weight: 400; cursor: pointer; white-space: nowrap; }
@@ -593,8 +593,6 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 </head>
 <body class="notranslate">
 <header>
-  <span id="runBar" class="runBar" style="display:none;"></span>
-  <span class="startTimerWrap"><input id="startTimerInput" class="startTimerIn" placeholder="▶ switch to another task…" autocomplete="off"><div id="taskMenu" class="taskMenu" style="display:none;"></div></span>
   <button class="iconBtn" id="undoBtn" title="Undo">&#8630;</button>
   <button class="iconBtn" id="reportsBtn" title="Reports &amp; activity">&#128202;</button>
   <button class="iconBtn" id="tasksBtn" title="Masterplan &amp; tasks">&#128029;</button>
@@ -809,7 +807,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v179 */
+/* build v180 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1921,6 +1919,7 @@ if (IS_BROWSER) (function () {
     if (state.timer) {
       const tc = state.categories.find((x) => x.id === state.timer.catId);
       const pill = document.createElement("div"); pill.className = "poolTimerPill";
+      { const tcol = tc ? tc.color : "#888"; pill.style.background = tcol; pill.style.color = textOn(tcol); pill.style.borderColor = "#000"; }   // running pill keeps the running task's colour
       pill.innerHTML = '<span class="ptName"></span><span class="runElapsed"></span>' +
         '<button class="ptBtn ptStop" title="Stop timer (log it)">⏸</button>' +
         '<button class="ptBtn ptEdit" title="Edit the start time">✎</button>' +
@@ -2462,7 +2461,7 @@ if (IS_BROWSER) (function () {
     else { const tc = cellForDate(state.anchorMonday, new Date()); viewDay = (tc.weekIdx === state.currentWeek && new Date().getDay() !== 0) ? tc.dayIdx : 0; }
     setView();
   });
-  wireTimerInput($("startTimerInput"), $("taskMenu"));   // top-bar pill = switch to another task on the go
+  // (top-bar switch pill removed — start/switch a timer from the pool's "▶ start a timer…" field)
   $("weekPrev").onclick = () => { if (viewDay >= 0) { stepDay(-1); return; } if (state.currentWeek > 0) { state.currentWeek--; selectedId = null; commit(); } };
   $("weekNext").onclick = () => { if (viewDay >= 0) { stepDay(1); return; } if (state.currentWeek < state.weeks.length - 1) { state.currentWeek++; selectedId = null; commit(); } else { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); } };
 
@@ -2765,7 +2764,7 @@ if (IS_BROWSER) (function () {
         return true;
       });
     }
-    const mHead = '<tr><th class="name" data-sort="name">Task' + arrow("name") + ' <button class="mpAddCol" title="Add a new task">+</button><button class="mpHdrBtn mpFeatBtn' + (ui.mpHideFeat ? "" : " on") + '" data-tog="feat" title="Show/hide the feature columns">Features</button></th><th class="feat" data-sort="group">Group' + arrow("group") + '</th><th class="feat" data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th class="feat cmtCol" title="Comment">🗒</th><th class="feat lnkCol" title="Link">🔗</th><th class="feat ckCol" data-sort="track">Track' + arrow("track") + '</th><th class="feat ckCol" title="Check — tick to add an untracked task to the pool Check list">Check</th><th class="feat ckCol" data-sort="auto">Auto' + arrow("auto") + '</th><th class="feat ckCol" title="Done for now">Later</th><th class="feat ckCol" title="Nice to have">NTH</th><th class="feat adCol" title="Amnesty deal">AD</th><th class="feat ckCol" title="Finished for good">Done</th><th class="feat ckCol" title="Delete task">x</th><th class="feat" data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th class="feat parCol">Parent</th><th class="feat">Lock</th><th class="paceT keyWk" title="Committed per week = Committed ÷ all weeks (holidays removed)">C/w</th><th class="paceD keyWk" title="Open per week = (Planned − Committed) ÷ future weeks (holidays removed)">O/w</th><th class="paceG keyWk" title="Planned per week = Planned ÷ all weeks (holidays removed)">P/w</th><th class="keyTot ktTimed" data-sort="timed" title="Timed — everything you have timed with the ▶ timer so far in this masterplan">Timed' + arrow("timed") + '</th><th class="stot keyTot" data-sort="total" title="Committed — timed (past weeks) + gridded (this week) + planned (future weeks)">Comm' + arrow("total") + '</th><th class="dcol keyTot" data-sort="open" title="Open = Planned − Committed (hours still to schedule)">Open' + arrow("open") + '</th><th class="gcol gcolF planMP" data-sort="goal" title="Planned — hours you plan for this task over the whole masterplan">Plan' + arrow("goal") + '<button class="mpHdrBtn mpHdrIcon planInfoBtn' + (ui.mpHideTotal ? "" : " on") + '" data-tog="total" title="Show/hide the masterplan info columns: Timed · Comm · Open">ⓘ</button><button class="mpHdrBtn mpHdrIcon planAvgBtn' + (ui.mpHidePace ? "" : " on") + '" data-tog="pace" title="Show/hide the average columns: C/w · O/w · P/w (per-week averages)">⌀</button><button class="mpHdrBtn mpHdrIcon planStarBtn' + (ui.mpHideImp ? "" : " on") + '" data-tog="imp" title="Show/hide the ★ MP columns: IP + Prio for the whole masterplan">★</button></th><th class="gcol gcolFip starMP" data-sort="goalip" title="★ IP Masterplan — if-possible stretch goal (hours)">IP' + arrow("goalip") + '</th><th class="gcol gcolPrio starMP" data-sort="prio" title="★ Prio Masterplan — priority 1–5 (0 = none)">★' + arrow("prio") + '</th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="wkHours' + (i === state.currentWeek ? " mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<button class="mpHdrBtn mpHdrIcon wkStarBtn' + (ui.wkStar && ui.wkStar[i] ? " on" : "") + '" data-tog="wkstar" data-wi="' + i + '" title="Open this week’s IP + Prio (★) columns">★</button><span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="ipCol ipW' + i + (past ? " pastCol" : "") + '" title="★ IP — if-possible hours this week">IP</th><th class="wprioCol prioW' + i + (past ? " pastCol" : "") + '" title="★ Prio for this week (0–5)">★</th>'; }).join("") + "</tr>";
+    const mHead = '<tr><th class="name" data-sort="name">Task' + arrow("name") + ' <button class="mpAddCol" title="Add a new task">+</button><button class="mpHdrBtn mpFeatBtn' + (ui.mpHideFeat ? "" : " on") + '" data-tog="feat" title="Show/hide the feature columns">Features</button></th><th class="feat" data-sort="group">Group' + arrow("group") + '</th><th class="feat" data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th class="feat cmtCol" title="Comment">🗒</th><th class="feat lnkCol" title="Link">🔗</th><th class="feat ckCol" data-sort="track">Track' + arrow("track") + '</th><th class="feat ckCol" title="Check — tick to add an untracked task to the pool Check list">Check</th><th class="feat ckCol" data-sort="auto">Auto' + arrow("auto") + '</th><th class="feat ckCol" title="Done for now">Later</th><th class="feat ckCol" title="Nice to have">NTH</th><th class="feat adCol" title="Amnesty deal">AD</th><th class="feat ckCol" title="Finished for good">Done</th><th class="feat ckCol" title="Delete task">x</th><th class="feat" data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th class="feat parCol">Parent</th><th class="feat">Lock</th><th class="paceT keyWk" title="Committed per week = Committed ÷ all weeks (holidays removed)">C/w</th><th class="paceD keyWk" title="Open per week = (Planned − Committed) ÷ future weeks (holidays removed)">O/w</th><th class="paceG keyWk" title="Planned per week = Planned ÷ all weeks (holidays removed)">P/w</th><th class="keyTot ktTimed" data-sort="timed" title="Timed — everything you have timed with the ▶ timer so far in this masterplan">Timed' + arrow("timed") + '</th><th class="stot keyTot" data-sort="total" title="Committed — timed (past weeks) + gridded (this week) + planned (future weeks)">Comm' + arrow("total") + '</th><th class="dcol keyTot" data-sort="open" title="Open = Planned − Committed (hours still to schedule)">Open' + arrow("open") + '</th><th class="gcol gcolF planMP" data-sort="goal" title="Planned — hours you plan for this task over the whole masterplan">Plan' + arrow("goal") + '<button class="mpHdrBtn mpHdrIcon planAvgBtn' + (ui.mpHidePace ? "" : " on") + '" data-tog="pace" title="Show/hide the average columns: C/w · O/w · P/w (per-week averages)">⌀</button><button class="mpHdrBtn mpHdrIcon planInfoBtn' + (ui.mpHideTotal ? "" : " on") + '" data-tog="total" title="Show/hide the masterplan info columns: Timed · Comm · Open">ⓘ</button><button class="mpHdrBtn mpHdrIcon planStarBtn' + (ui.mpHideImp ? "" : " on") + '" data-tog="imp" title="Show/hide the ★ MP columns: IP + Prio for the whole masterplan">★</button></th><th class="gcol gcolFip starMP" data-sort="goalip" title="★ IP Masterplan — if-possible stretch goal (hours)">IP' + arrow("goalip") + '</th><th class="gcol gcolPrio starMP" data-sort="prio" title="★ Prio Masterplan — priority 1–5 (0 = none)">★' + arrow("prio") + '</th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="wkHours' + (i === state.currentWeek ? " mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<button class="mpHdrBtn mpHdrIcon wkStarBtn' + (ui.wkStar && ui.wkStar[i] ? " on" : "") + '" data-tog="wkstar" data-wi="' + i + '" title="Open this week’s IP + Prio (★) columns">★</button><span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="ipCol ipW' + i + (past ? " pastCol" : "") + '" title="★ IP — if-possible hours this week">IP</th><th class="wprioCol prioW' + i + (past ? " pastCol" : "") + '" title="★ Prio for this week (0–5)">★</th>'; }).join("") + "</tr>";
     const mFoot = (function () {
       const grpW = (c, g) => groupContribs(state, c.id)[g] || 0;
       let gt = 0, gIP = 0, goalSum = 0, timedTot = 0, cells = "";
@@ -3006,7 +3005,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v179"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v180"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
