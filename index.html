@@ -54,6 +54,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 /* ── Layout ── */
 #body { display: flex; align-items: flex-start; }
 #pool { width: 270px; flex-shrink: 0; padding: 12px 11px; display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 60px); overflow-y: auto; }
+#pool > * { flex-shrink: 0; }   /* keep every section at its natural height so the pool scrolls instead of squishing boxes (which made rows spill over the pill) */
 .poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 0; margin-bottom: 0; flex-shrink: 0; line-height: 1.55; }
 .poolSummary .sumSec:last-child { margin-bottom: 0; }
 .poolSummary .opHead { font-weight: 400; margin-bottom: 0; }
@@ -818,7 +819,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v176 */
+/* build v177 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -3008,7 +3009,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v176"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v177"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
