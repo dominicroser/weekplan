@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
 <meta charset="utf-8">
+<meta name="google" content="notranslate">
+<meta name="robots" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Plapp</title>
 <meta name="theme-color" content="#ffffff">
@@ -572,7 +574,7 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .clDesc { color: var(--ink2); }
 </style>
 </head>
-<body>
+<body class="notranslate">
 <header>
   <span id="runBar" class="runBar" style="display:none;"></span>
   <span class="startTimerWrap"><input id="startTimerInput" class="startTimerIn" placeholder="▶ switch to another task…" autocomplete="off"><div id="taskMenu" class="taskMenu" style="display:none;"></div></span>
@@ -805,7 +807,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v173 */
+/* build v174 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2992,7 +2994,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
-  try { const BUILD = "v173"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v174"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
