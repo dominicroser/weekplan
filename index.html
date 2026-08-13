@@ -38,8 +38,8 @@ input:focus { outline: 1px solid rgba(43,108,176,0.5); }
 header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 9px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
 /* compact week switcher, tucked into the 40px gutter to the left of the day headers (absolute → doesn't push the grid down) */
-.weekNav { position: absolute; top: 7px; left: 0; width: 40px; height: 15px; display: flex; align-items: center; justify-content: center; gap: 0; z-index: 6; }
-.weekNav button { background: transparent; border: none; color: var(--ink3); width: 12px; height: 15px; padding: 0; font-size: 10px; line-height: 1; cursor: pointer; }
+.weekNav { position: absolute; top: 9px; left: 0; width: 40px; height: 22px; display: flex; align-items: center; justify-content: center; gap: 0; z-index: 6; }
+.weekNav button { background: transparent; border: none; color: var(--ink2); width: 14px; height: 22px; padding: 0; font-size: 13px; line-height: 1; cursor: pointer; }
 .weekNav button:hover { color: var(--ink); }
 #weekLabel { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; color: var(--ink2); min-width: 13px; text-align: center; padding: 0; }
 #cmdForm { flex: 1; min-width: 200px; display: flex; }
@@ -168,8 +168,8 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 
 /* ── Grid ── */
 #gridWrap { position: relative; flex: 1; padding: 8px 14px 0 2px; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
-#dayHeaderRow { display: flex; margin-bottom: 4px; }
-.dayHeader { flex: 1; text-align: center; font-size: 12px; font-weight: 600; color: var(--ink2); letter-spacing: 0.04em; font-family: 'Inter', sans-serif; text-transform: uppercase; }
+#dayHeaderRow { display: flex; align-items: center; min-height: 24px; margin-bottom: 6px; }
+.dayHeader { flex: 1; text-align: center; font-size: 13px; font-weight: 600; color: var(--ink2); letter-spacing: 0.04em; font-family: 'Inter', sans-serif; text-transform: uppercase; }
 #gridScroll { flex: 1; min-height: 0; overflow: auto; border-radius: 8px; border: 1px solid var(--line); }
 #grid { position: relative; background: var(--grid); border-radius: 8px; touch-action: pan-y pan-x; }
 .slotLine { position: absolute; left: 0; right: 0; height: 0; pointer-events: none; }
@@ -177,7 +177,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .colSep { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line2); pointer-events: none; }
 .block { position: absolute; border-radius: 5px; padding: 1px 5px; overflow: hidden; cursor: grab; box-shadow: 0 1px 3px rgba(0,0,0,0.18); display: flex; flex-direction: column; justify-content: flex-start; touch-action: none; z-index: 2; }
 .block.event { border: 1.5px dashed rgba(0,0,0,0.45); }
-.block.pastBlock::after { content: ""; position: absolute; inset: 0; background: rgba(255,255,255,0.42); border-radius: inherit; pointer-events: none; }   /* blocks on past days get a white-transparent frost */
+.block.pastBlock::after { content: ""; position: absolute; inset: 0; background: rgba(150,214,205,0.42); border-radius: inherit; pointer-events: none; }   /* blocks on past days get a teal-tinted white frost */
 .block.selected { outline: 2px solid var(--accent); outline-offset: 1px; z-index: 6; }
 .block.dragging { opacity: 0.45; }
 .blockLabel { font-size: 10.5px; font-weight: 700; line-height: 1.1; font-family: 'Inter', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
@@ -646,7 +646,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 <div id="body">
   <div id="leftBar">
     <form id="cmdForm">
-      <input id="cmdInput" placeholder='Type a task or meeting… e.g. "Growth mon-sat 5–5:30am" or "Meet Fred tue 1–2:30pm"' autocomplete="off">
+      <input id="cmdInput" placeholder='Task: "Growth mon-sat 5–5:30am" · Meeting: "Meet Fred tue 1–2:30pm" · Meeting on a task: "Growth: Fred tue 1–2:30pm"' autocomplete="off">
     </form>
     <aside id="pool"></aside>
   </div>
@@ -862,7 +862,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v189 */
+/* build v191 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1603,7 +1603,7 @@ if (IS_BROWSER) (function () {
     const q = inp.value.trim().toLowerCase();
     const list = eligibleTasks().filter((c) => !q || (c.name || "").toLowerCase().indexOf(q) >= 0);
     if (!list.length) { menu.style.display = "none"; return; }
-    menu.innerHTML = list.map((c) => '<div class="taskOpt" data-id="' + c.id + '" style="color:' + launcherColor(c.group || "work") + '">' + (c.name || "").replace(/</g, "&lt;") + "</div>").join("");
+    menu.innerHTML = list.map((c) => { const col = c.group === "parents" ? (c.color || "var(--ink)") : launcherColor(c.group || "work"); return '<div class="taskOpt" data-id="' + c.id + '" style="color:' + col + '">' + (c.name || "").replace(/</g, "&lt;") + "</div>"; }).join("");
     menu.style.display = "";
     if (menu.classList.contains("floatMenu")) { const r = inp.getBoundingClientRect(); menu.style.left = r.left + "px"; menu.style.top = (r.bottom + 3) + "px"; menu.style.minWidth = r.width + "px"; }
   }
@@ -2627,8 +2627,8 @@ if (IS_BROWSER) (function () {
     else toast("Added meeting “" + r.name + "”" + scopeTxt + " (+ switch)");
     $("cmdInput").value = ""; $("cmdInput").blur(); commit();
   });
-  // spill the pill over the pool edge onto the grid while there's text in it; snap back when empty/blurred (incl. after Enter)
-  $("cmdInput").addEventListener("input", () => $("cmdForm").classList.toggle("spill", $("cmdInput").value.length > 0));
+  // spill the pill over the pool edge onto the grid as soon as it's focused (so the tips show immediately); snap back on blur/Enter
+  $("cmdInput").addEventListener("focus", () => $("cmdForm").classList.add("spill"));
   $("cmdInput").addEventListener("blur", () => $("cmdForm").classList.remove("spill"));
 
   /* ── weeks ── */
@@ -3198,7 +3198,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v189"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v191"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
