@@ -37,12 +37,16 @@ input:focus { outline: 1px solid rgba(43,108,176,0.5); }
 /* ── Header ── */
 header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 9px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
-.weekNav { display: flex; align-items: center; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 2px; flex-shrink: 0; }
-.weekNav button { background: transparent; border: none; color: var(--ink2); width: 28px; height: 28px; border-radius: 7px; font-size: 14px; cursor: pointer; }
-.weekNav button:hover { background: var(--panel2); }
-#weekLabel { font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; color: var(--ink); min-width: 26px; text-align: center; padding: 0 2px; }
+/* compact week switcher, tucked into the 40px gutter to the left of the day headers (absolute → doesn't push the grid down) */
+.weekNav { position: absolute; top: 7px; left: 0; width: 40px; height: 15px; display: flex; align-items: center; justify-content: center; gap: 0; z-index: 6; }
+.weekNav button { background: transparent; border: none; color: var(--ink3); width: 12px; height: 15px; padding: 0; font-size: 10px; line-height: 1; cursor: pointer; }
+.weekNav button:hover { color: var(--ink); }
+#weekLabel { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; color: var(--ink2); min-width: 13px; text-align: center; padding: 0; }
 #cmdForm { flex: 1; min-width: 200px; display: flex; }
-#cmdInput { flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+#cmdInput { flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 13px; transition: width 0.12s ease, box-shadow 0.12s ease; }
+/* while typing, the pill spills past the left pool's edge, out over the grid; it snaps back on Enter/blur */
+#cmdForm.spill { overflow: visible; }
+#cmdForm.spill #cmdInput { flex: 0 0 auto; width: min(620px, calc(100vw - 320px)); position: relative; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
 #cmdInput::placeholder { color: var(--ink3); }
 .iconBtn { background: transparent; border: 1px solid var(--line); color: var(--ink2); width: 34px; height: 34px; border-radius: 8px; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .iconBtn:active { background: var(--panel2); }
@@ -86,7 +90,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolItem { position: relative; background: transparent; border: 4px solid #9aa0a8; border-radius: 8px; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; display: flex; align-items: center; gap: 7px; }
 .poolItem > .prioStar { flex-shrink: 0; font-size: 18px; }   /* star in its own vertically-centred column (doesn't grow the box) */
 .poolBody { flex: 1; min-width: 0; font-weight: 700; }   /* everything inside the box is bold */
-.poolUpDiv { height: 0; border-top: 2px dashed #9aa0a8; margin: 6px 2px 4px; flex-shrink: 0; }   /* Upcoming view: separates the not-upcoming tasks below */
+.poolUpDiv { height: 0; border-top: 5px solid #6b7280; margin: 9px 2px 6px; flex-shrink: 0; }   /* Upcoming view: separates the not-upcoming tasks below */
 .poolItem.openBox { background: #f4a0c8; }   /* ≥15 min open → bright pink */
 .poolItem.overBox { background: #c3a6ee; }   /* ≥15 min over → intense (light) purple */
 .poolItem.immediate { background: #d5d9df; }   /* next on the grid (upcoming) → light grey */
@@ -163,8 +167,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #addCat { background: transparent; border: 1px dashed var(--line); color: var(--ink2); padding: 8px; border-radius: 7px; font-size: 11px; cursor: pointer; margin-top: 4px; }
 
 /* ── Grid ── */
-#gridWrap { flex: 1; padding: 8px 14px 0 2px; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
-#gridTopBar { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; flex-shrink: 0; }
+#gridWrap { position: relative; flex: 1; padding: 8px 14px 0 2px; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
 #dayHeaderRow { display: flex; margin-bottom: 4px; }
 .dayHeader { flex: 1; text-align: center; font-size: 12px; font-weight: 600; color: var(--ink2); letter-spacing: 0.04em; font-family: 'Inter', sans-serif; text-transform: uppercase; }
 #gridScroll { flex: 1; min-height: 0; overflow: auto; border-radius: 8px; border: 1px solid var(--line); }
@@ -174,6 +177,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .colSep { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line2); pointer-events: none; }
 .block { position: absolute; border-radius: 5px; padding: 1px 5px; overflow: hidden; cursor: grab; box-shadow: 0 1px 3px rgba(0,0,0,0.18); display: flex; flex-direction: column; justify-content: flex-start; touch-action: none; z-index: 2; }
 .block.event { border: 1.5px dashed rgba(0,0,0,0.45); }
+.block.pastBlock::after { content: ""; position: absolute; inset: 0; background: rgba(255,255,255,0.42); border-radius: inherit; pointer-events: none; }   /* blocks on past days get a white-transparent frost */
 .block.selected { outline: 2px solid var(--accent); outline-offset: 1px; z-index: 6; }
 .block.dragging { opacity: 0.45; }
 .blockLabel { font-size: 10.5px; font-weight: 700; line-height: 1.1; font-family: 'Inter', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
@@ -647,14 +651,12 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
     <aside id="pool"></aside>
   </div>
   <div id="gridWrap">
-    <div id="gridTopBar">
-      <div class="weekNav">
-        <button id="weekPrev" title="Previous week">&#9664;</button>
-        <span id="weekLabel">Week 1</span>
-        <button id="weekNext" title="Next week">&#9654;</button>
-      </div>
-      <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="display:none;width:auto;padding:0 9px;">Week</button>
+    <div class="weekNav">
+      <button id="weekPrev" title="Previous week">&#9664;</button>
+      <span id="weekLabel">1</span>
+      <button id="weekNext" title="Next week">&#9654;</button>
     </div>
+    <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="display:none;width:auto;padding:0 9px;">Week</button>
     <div id="dayHeaderRow"></div>
     <div id="gridScroll"><div id="gridInner"><div id="grid"></div></div></div>
   </div>
@@ -860,7 +862,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v188 */
+/* build v189 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2214,7 +2216,7 @@ if (IS_BROWSER) (function () {
         const vs = vGeom[b.id].s, vl = vGeom[b.id].l;
         const hPx = isAct ? Math.max(4, vl * SLOT_PX) : (vl * SLOT_PX - 2);
         const el = document.createElement("div");
-        el.className = "block" + (b.event ? " event" : "") + (b.meeting ? " meeting" : "") + (isAct ? " actual" : " plan") + (selectedId === b.id ? " selected" : "");
+        el.className = "block" + (b.event ? " event" : "") + (b.meeting ? " meeting" : "") + (isAct ? " actual" : " plan") + (selectedId === b.id ? " selected" : "") + (cmp < 0 ? " pastBlock" : "");
         el.dataset.id = b.id;
         const frac = ci / NC + p.col / (NC * p.nCols);
         el.style.cssText =
@@ -2625,6 +2627,9 @@ if (IS_BROWSER) (function () {
     else toast("Added meeting “" + r.name + "”" + scopeTxt + " (+ switch)");
     $("cmdInput").value = ""; $("cmdInput").blur(); commit();
   });
+  // spill the pill over the pool edge onto the grid while there's text in it; snap back when empty/blurred (incl. after Enter)
+  $("cmdInput").addEventListener("input", () => $("cmdForm").classList.toggle("spill", $("cmdInput").value.length > 0));
+  $("cmdInput").addEventListener("blur", () => $("cmdForm").classList.remove("spill"));
 
   /* ── weeks ── */
   function stepDay(d) {
@@ -3193,7 +3198,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v188"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v189"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3415,7 +3420,7 @@ if (IS_BROWSER) (function () {
     // button row sits between the present week and the next week (so "Nxt Wk" stays put when toggled)
     h += '<div class="stBtnRow">' +
       '<button class="stBtn stCfg" title="Manage habits & history">🔥</button>' +
-      '<button class="stBtn stNext' + (ui.streakNext ? " on" : "") + '" title="Show / hide next week">Nxt Wk</button>' +
+      '<button class="stBtn stNext' + (ui.streakNext ? " on" : "") + '" title="Show / hide next week">Next</button>' +
       '<button class="stBtn stBulk" title="Bulk-mark a range of days (holiday, illness…)">Bulk</button>' +
       '<button class="stBtn stNoteBtn' + (curNote ? " has" : "") + '" title="Note for this week">🖉</button>' +
       '<button class="stBtn stAvg' + (ui.streakAvg ? " on" : "") + '" title="Show / hide averages of entered values">Ø</button>' +
