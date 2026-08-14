@@ -88,7 +88,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .sheetBtn { display: block; width: 100%; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink2); padding: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 .sheetBtn:active { background: var(--panel2); }
 .poolItem { position: relative; background: transparent; border: 4px solid #9aa0a8; border-radius: 8px; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; display: flex; align-items: center; gap: 7px; }
-.poolRight { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }   /* right-hand column: star on top, play below */
+.poolRight { flex-shrink: 0; margin-left: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }   /* right-hand column: star on top, play below — extra gap from the body */
 .poolRight .prioStar { font-size: 18px; }
 .poolRight .calcClock { background: transparent; border: none; padding: 0; margin: 0; color: #111; font-size: 14px; line-height: 1; cursor: pointer; }   /* play/pause below the star */
 .poolBody { flex: 1; min-width: 0; font-weight: 700; }   /* everything inside the box is bold */
@@ -121,7 +121,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .pmBtn.pmUp { border-radius: 50%; }
 .pmBtn.pmPrio { border-radius: 4px; }
 .pmBtn.on { background: #14b9a8; color: #fff; border-color: #0b6f65; }   /* active → brighter dark teal, dark-teal border */
-.poolOpen { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; margin-left: 3px; }
+.poolOpen { font-weight: 400; white-space: nowrap; font-variant-numeric: tabular-nums; margin-left: 3px; }
 .poolOpen.u { color: #7a1222; }   /* under → very dark red */
 .poolOpen.o { color: #0d1f5e; }   /* over → very dark blue */
 .poolOpen.z { color: #111; }
@@ -145,7 +145,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .barFill { height: 100%; border-radius: 3px; transition: width .2s; }
 .barFill.isover { background: var(--over) !important; }
 .poolMeta { font-size: 11px; font-weight: 400; color: var(--ink3); font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 3px; }
-.poolCalc { margin-top: 4px; font-size: 11px; font-weight: 700; color: #111; font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 2px; white-space: nowrap; overflow: hidden; }
+.poolCalc { margin-top: 4px; font-size: 11px; font-weight: 400; color: #111; font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 2px; white-space: nowrap; overflow: hidden; }
 .poolCalc .calcClock { background: transparent; border: none; padding: 0 3px 0 0; margin: 0; color: #111; font-size: 14px; line-height: 1; cursor: pointer; }   /* play/pause always black */
 .poolCalc .ofWord { color: #111; margin: 0 3px; }
 .poolCalc input.calcP { width: 38px; border: 1px solid transparent; background: transparent; font: inherit; font-variant-numeric: tabular-nums; text-align: center; color: #111; border-radius: 3px; padding: 0 1px; cursor: text; }
@@ -153,13 +153,13 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolCalc input.calcP:focus { border-color: rgba(43,108,176,0.5); background: #fff; color: var(--ink); outline: none; }
 .warn { color: var(--over); font-weight: 700; margin-right: 2px; }
 .hoursInput { width: 56px; background: transparent; border: none; color: var(--ink2); font-size: 10.5px; padding: 0 2px; border-radius: 3px; text-align: right; }
-.hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 14px; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: #111; }
+.hStep { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 11px; font-weight: 400; line-height: 1; padding: 0 5px; margin: 0 1px; cursor: pointer; color: #111; }
 .hStep:active { background: var(--panel); }
 .goalVal { display: inline-block; min-width: 30px; text-align: center; }
 .goalInput { width: 40px; min-width: 40px; border: 1px solid transparent; background: transparent; font: inherit; font-size: 10.5px; text-align: center; color: var(--ink2); border-radius: 4px; padding: 1px 0; cursor: text; }
 .goalInput:hover { border-color: var(--line); }
 .goalInput:focus { border-color: rgba(43,108,176,0.5); background: #fff; color: var(--ink); outline: none; }
-.goalSet { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 14px; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: #111; }
+.goalSet { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; font-size: 11px; font-weight: 400; line-height: 1; padding: 0 5px; margin-left: 5px; cursor: pointer; color: #111; }
 .goalSet:active { background: var(--panel); }
 .poolCalc .goalSet { margin-left: auto; }   /* push = to the far right of the row → plenty of space after the + button */
 .hoursInput:focus, .nameInput:focus { background: #fff; outline: 1px solid rgba(43,108,176,0.4); }
@@ -283,9 +283,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable.hideCreate td.fCreate, .mpTable.hideCreate th.fCreate { display: none; }   /* Create: Group, Order, Track, Check, Auto, Later, NTH, AD, Def min, Parent, Lock */
 .mpTable.hideOver td.fOver, .mpTable.hideOver th.fOver { display: none; }       /* Over: Done, Delete */
 /* subtly different shade per feature group (override the generic .feat brown — needs the extra class for specificity) */
-.mpTable td.feat.fInfo, .mpTable th.feat.fInfo { background: #e3eefb; }     /* Info → light blue */
-.mpTable td.feat.fCreate, .mpTable th.feat.fCreate { background: #f2ecdb; }   /* Create → light tan */
-.mpTable td.feat.fOver, .mpTable th.feat.fOver { background: #fbe6ea; }     /* Over → light pink */
+.mpTable td.feat.fInfo, .mpTable th.feat.fInfo { background: #f3e8d6; }     /* Info → lightest brown */
+.mpTable td.feat.fCreate, .mpTable th.feat.fCreate { background: #e7d4b6; }   /* Feat → medium light brown */
+.mpTable td.feat.fOver, .mpTable th.feat.fOver { background: #efdcc4; }     /* Over → light brown */
 .mpTable td.feat { background: #f2e8d5; }
 .mpTable th.feat { background: #e7d7ba; color: var(--ink3); font-weight: 500; }
 .fillHandle { position: fixed; width: 11px; height: 11px; background: #1d4ed8; border: 1.5px solid #fff; box-shadow: 0 0 0 1px #1d4ed8; cursor: crosshair; z-index: 10000; display: none; }
@@ -373,10 +373,8 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .budDel:hover { color: #c53030; }
 
 /* ── time tracking ── */
-.dayHeader.today { color: #0c857a; }
 .dayHeader .dnum { font-weight: 400; color: var(--ink3); font-size: 13px; margin-left: 2px; }
-.dayHeader.today .dnum { color: #0c857a; }
-.todayCol { position: absolute; top: 0; bottom: 0; background: rgba(18,175,158,0.16); pointer-events: none; z-index: 1; }   /* present day → stronger teal shading */
+.todayCol { position: absolute; top: 0; bottom: 0; background: transparent; pointer-events: none; z-index: 1; }   /* present day → no shading */
 .pastDayCol { position: absolute; top: 0; bottom: 0; background: rgba(150,214,205,0.32); pointer-events: none; z-index: 1; }   /* past days → teal-tinted wash across the whole column */
 .nowLine { position: absolute; height: 3px; background: #111; opacity: 0.92; pointer-events: none; z-index: 8; border-radius: 2px; }
 .nowLine::before { content: ""; position: absolute; left: -1px; top: -3px; width: 9px; height: 9px; border-radius: 50%; background: #111; }
@@ -609,7 +607,10 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .mpHdrBtn.mpHdrIcon { padding: 1px 4px; font-size: 11px; margin-left: 2px; font-weight: 700; }
 .mpHdrBtn.on { background: #6d28d9; color: #fff; border-color: #6d28d9; }
 .mpHdrBtn:hover { filter: brightness(0.96); }
-.mpAddCol { border: 1px solid var(--line); background: var(--panel); border-radius: 4px; font-size: 12px; line-height: 1; padding: 0 5px; margin-right: 5px; cursor: pointer; color: var(--ink2); font-weight: 700; }
+/* the + and the three feature toggles: darker grey than the header, white font */
+.mpFeatBtn { background: #8a9099; color: #fff; border-color: #8a9099; }
+.mpFeatBtn.on { background: #565c66; color: #fff; border-color: #565c66; }
+.mpAddCol { border: 1px solid #565c66; background: #565c66; border-radius: 4px; font-size: 12px; line-height: 1; padding: 0 5px; margin-right: 5px; cursor: pointer; color: #fff; font-weight: 700; }
 .mpAddCol:hover { background: var(--panel2); }
 .hbTable .hbRule { width: 100%; min-width: 200px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace; }
 .hbTable .hbRule:disabled { opacity: .4; }
@@ -872,7 +873,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v196 */
+/* build v198 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2968,7 +2969,7 @@ if (IS_BROWSER) (function () {
         return true;
       });
     }
-    const mHead = '<tr><th class="name" data-sort="name"><button class="mpAddCol" title="Add a new task">+</button>Task' + arrow("name") + '<button class="mpHdrBtn mpFeatBtn' + (ui.mpHideInfo ? "" : " on") + '" data-tog="info" title="Show/hide Info columns: Comment, Link">Info</button><button class="mpHdrBtn mpFeatBtn' + (ui.mpHideCreate ? "" : " on") + '" data-tog="create" title="Show/hide Create columns: Group, Order, Track, Check, Auto, Later, NTH, AD, Def min, Parent, Lock">Create</button><button class="mpHdrBtn mpFeatBtn' + (ui.mpHideOver ? "" : " on") + '" data-tog="over" title="Show/hide Over columns: Done, Delete">Over</button></th><th class="feat fInfo cmtCol" title="Comment">🗒</th><th class="feat fInfo lnkCol" title="Link">🔗</th><th class="feat fCreate" data-sort="group">Group' + arrow("group") + '</th><th class="feat fCreate" data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th class="feat fCreate ckCol" data-sort="track">Track' + arrow("track") + '</th><th class="feat fCreate ckCol" title="Check — tick to add an untracked task to the pool Check list">Check</th><th class="feat fCreate ckCol" data-sort="auto">Auto' + arrow("auto") + '</th><th class="feat fCreate ckCol" title="Done for now">Later</th><th class="feat fCreate ckCol" title="Nice to have">NTH</th><th class="feat fCreate adCol" title="Amnesty deal">AD</th><th class="feat fCreate" data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th class="feat fCreate parCol">Parent</th><th class="feat fCreate">Lock</th><th class="feat fOver ckCol" title="Finished for good">Done</th><th class="feat fOver ckCol" title="Delete task">x</th><th class="paceT keyWk" title="Committed per week = Committed ÷ all weeks (holidays removed)">C/w</th><th class="paceD keyWk" title="Open per week = (Planned − Committed) ÷ future weeks (holidays removed)">O/w</th><th class="paceG keyWk" title="Planned per week = Planned ÷ all weeks (holidays removed)">P/w</th><th class="keyTot ktTimed" data-sort="timed" title="Timed — everything you have timed with the ▶ timer so far in this masterplan">Timed' + arrow("timed") + '</th><th class="stot keyTot" data-sort="total" title="Committed — timed (past weeks) + gridded (this week) + planned (future weeks)">Comm' + arrow("total") + '</th><th class="dcol keyTot" data-sort="open" title="Open = Planned − Committed (hours still to schedule)">Open' + arrow("open") + '</th><th class="gcol gcolF planMP" data-sort="goal" title="Planned — hours you plan for this task over the whole masterplan">Plan' + arrow("goal") + '<button class="mpHdrBtn mpHdrIcon planAvgBtn' + (ui.mpHidePace ? "" : " on") + '" data-tog="pace" title="Show/hide the average columns: C/w · O/w · P/w (per-week averages)">⌀</button><button class="mpHdrBtn mpHdrIcon planInfoBtn' + (ui.mpHideTotal ? "" : " on") + '" data-tog="total" title="Show/hide the masterplan info columns: Timed · Comm · Open">ⓘ</button><button class="mpHdrBtn mpHdrIcon planStarBtn' + (ui.mpHideImp ? "" : " on") + '" data-tog="imp" title="Show/hide the ★ MP columns: IP + Prio for the whole masterplan">★</button></th><th class="gcol gcolFip starMP" data-sort="goalip" title="★ IP Masterplan — if-possible stretch goal (hours)">IP' + arrow("goalip") + '</th><th class="gcol gcolPrio starMP" data-sort="prio" title="★ Prio Masterplan — priority 1–5 (0 = none)">★' + arrow("prio") + '</th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="wkHours' + (i === state.currentWeek ? " mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<button class="mpHdrBtn mpHdrIcon wkStarBtn' + (ui.wkStar && ui.wkStar[i] ? " on" : "") + '" data-tog="wkstar" data-wi="' + i + '" title="Open this week’s IP + Prio (★) columns">★</button><span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="ipCol ipW' + i + (past ? " pastCol" : "") + '" title="★ IP — if-possible hours this week">IP</th><th class="wprioCol prioW' + i + (past ? " pastCol" : "") + '" title="★ Prio for this week (0–5)">★</th>'; }).join("") + "</tr>";
+    const mHead = '<tr><th class="name" data-sort="name"><button class="mpAddCol" title="Add a new task">+</button>Task' + arrow("name") + '<button class="mpHdrBtn mpFeatBtn' + (ui.mpHideInfo ? "" : " on") + '" data-tog="info" title="Show/hide Info columns: Comment, Link">🗒🔗</button><button class="mpHdrBtn mpFeatBtn' + (ui.mpHideCreate ? "" : " on") + '" data-tog="create" title="Show/hide Feature columns: Group, Order, Track, Check, Auto, Later, NTH, AD, Def min, Parent, Lock">Feat</button><button class="mpHdrBtn mpFeatBtn' + (ui.mpHideOver ? "" : " on") + '" data-tog="over" title="Show/hide Over columns: Done, Delete">D/x</button></th><th class="feat fInfo cmtCol" title="Comment">🗒</th><th class="feat fInfo lnkCol" title="Link">🔗</th><th class="feat fCreate" data-sort="group">Group' + arrow("group") + '</th><th class="feat fCreate" data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th class="feat fCreate ckCol" data-sort="track">Track' + arrow("track") + '</th><th class="feat fCreate ckCol" title="Check — tick to add an untracked task to the pool Check list">Check</th><th class="feat fCreate ckCol" data-sort="auto">Auto' + arrow("auto") + '</th><th class="feat fCreate ckCol" title="Done for now">Later</th><th class="feat fCreate ckCol" title="Nice to have">NTH</th><th class="feat fCreate adCol" title="Amnesty deal">AD</th><th class="feat fCreate" data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th class="feat fCreate parCol">Parent</th><th class="feat fCreate">Lock</th><th class="feat fOver ckCol" title="Finished for good">Done</th><th class="feat fOver ckCol" title="Delete task">x</th><th class="paceT keyWk" title="Committed per week = Committed ÷ all weeks (holidays removed)">C/w</th><th class="paceD keyWk" title="Open per week = (Planned − Committed) ÷ future weeks (holidays removed)">O/w</th><th class="paceG keyWk" title="Planned per week = Planned ÷ all weeks (holidays removed)">P/w</th><th class="keyTot ktTimed" data-sort="timed" title="Timed — everything you have timed with the ▶ timer so far in this masterplan">Timed' + arrow("timed") + '</th><th class="stot keyTot" data-sort="total" title="Committed — timed (past weeks) + gridded (this week) + planned (future weeks)">Comm' + arrow("total") + '</th><th class="dcol keyTot" data-sort="open" title="Open = Planned − Committed (hours still to schedule)">Open' + arrow("open") + '</th><th class="gcol gcolF planMP" data-sort="goal" title="Planned — hours you plan for this task over the whole masterplan">Plan' + arrow("goal") + '<button class="mpHdrBtn mpHdrIcon planAvgBtn' + (ui.mpHidePace ? "" : " on") + '" data-tog="pace" title="Show/hide the average columns: C/w · O/w · P/w (per-week averages)">⌀</button><button class="mpHdrBtn mpHdrIcon planInfoBtn' + (ui.mpHideTotal ? "" : " on") + '" data-tog="total" title="Show/hide the masterplan info columns: Timed · Comm · Open">ⓘ</button><button class="mpHdrBtn mpHdrIcon planStarBtn' + (ui.mpHideImp ? "" : " on") + '" data-tog="imp" title="Show/hide the ★ MP columns: IP + Prio for the whole masterplan">★</button></th><th class="gcol gcolFip starMP" data-sort="goalip" title="★ IP Masterplan — if-possible stretch goal (hours)">IP' + arrow("goalip") + '</th><th class="gcol gcolPrio starMP" data-sort="prio" title="★ Prio Masterplan — priority 1–5 (0 = none)">★' + arrow("prio") + '</th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="wkHours' + (i === state.currentWeek ? " mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<button class="mpHdrBtn mpHdrIcon wkStarBtn' + (ui.wkStar && ui.wkStar[i] ? " on" : "") + '" data-tog="wkstar" data-wi="' + i + '" title="Open this week’s IP + Prio (★) columns">★</button><span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="ipCol ipW' + i + (past ? " pastCol" : "") + '" title="★ IP — if-possible hours this week">IP</th><th class="wprioCol prioW' + i + (past ? " pastCol" : "") + '" title="★ Prio for this week (0–5)">★</th>'; }).join("") + "</tr>";
     const mFoot = (function () {
       const grpW = (c, g) => groupContribs(state, c.id)[g] || 0;
       let gt = 0, gIP = 0, goalSum = 0, timedTot = 0, cells = "";
@@ -3214,7 +3215,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v196"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v198"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
