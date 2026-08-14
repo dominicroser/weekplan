@@ -39,9 +39,9 @@ header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 9px; 
 h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
 /* compact week switcher, tucked into the 40px gutter to the left of the day headers (absolute → doesn't push the grid down) */
 .weekNav { position: absolute; top: 9px; left: 0; width: 40px; height: 22px; display: flex; align-items: center; justify-content: center; gap: 0; z-index: 6; }
-.weekNav button { background: transparent; border: none; color: var(--ink2); width: 14px; height: 22px; padding: 0; font-size: 13px; line-height: 1; cursor: pointer; }
+.weekNav button { background: transparent; border: none; color: var(--ink2); width: 14px; height: 22px; padding: 0; font-size: 13px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .weekNav button:hover { color: var(--ink); }
-#weekLabel { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 400; color: var(--ink2); min-width: 13px; text-align: center; padding: 0; }
+#weekLabel { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 400; line-height: 1; color: var(--ink2); min-width: 13px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; }
 #cmdForm { flex: 1; min-width: 200px; display: flex; }
 #cmdInput { flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 13px; transition: width 0.12s ease, box-shadow 0.12s ease; }
 /* while typing, the pill spills past the left pool's edge, out over the grid; it snaps back on Enter/blur */
@@ -873,7 +873,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v200 */
+/* build v201 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -3215,7 +3215,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v200"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v201"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
