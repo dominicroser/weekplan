@@ -45,8 +45,15 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #cmdForm { flex: 1; min-width: 200px; display: flex; }
 #cmdInput { flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 13px; transition: width 0.12s ease, box-shadow 0.12s ease; }
 /* while typing, the pill spills past the left pool's edge, out over the grid; it snaps back on Enter/blur */
-#cmdForm.spill { overflow: visible; }
-#cmdForm.spill #cmdInput { flex: 0 0 auto; width: min(620px, calc(100vw - 320px)); position: relative; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+#cmdForm.spill { overflow: visible; position: relative; }
+#cmdForm.spill #cmdInput { flex: 0 0 auto; width: min(720px, calc(100vw - 300px)); position: relative; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+/* help panel spills below the pill (and to the right) while it's focused */
+#cmdHelp { display: none; }
+#cmdForm.spill #cmdHelp { display: block; position: absolute; top: calc(100% + 6px); left: 0; width: min(720px, calc(100vw - 300px)); max-height: calc(100vh - 130px); overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.22); padding: 10px 12px; z-index: 60; font-size: 12px; line-height: 1.5; color: var(--ink); }
+#cmdHelp .chH { margin-bottom: 6px; }
+#cmdHelp .chEx { margin: 2px 0; color: var(--ink2); }
+#cmdHelp .chH2 { margin-top: 8px; color: var(--ink3); font-size: 11px; line-height: 1.6; }
+#cmdHelp code { background: var(--panel2); border-radius: 4px; padding: 0 4px; font-family: 'Inter', sans-serif; color: var(--ink); }
 #cmdInput::placeholder { color: var(--ink3); }
 .iconBtn { background: transparent; border: 1px solid var(--line); color: var(--ink2); width: 34px; height: 34px; border-radius: 8px; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .iconBtn:active { background: var(--panel2); }
@@ -398,7 +405,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .gUnder { color: #e03131; font-weight: 600; }
 .checkSection { padding: 0; margin: 0; display: contents; }
 .checkList { display: contents; }
-.checkBox { margin: 9px 0 0; padding: 2px 3px; display: flex; flex-direction: column; gap: 2px; }   /* only the tasks to be checked */
+.checkBox { margin: 9px 0 0; padding: 5px 7px; display: flex; flex-direction: column; gap: 2px; background: #eceef1; border-radius: 6px; }   /* pink tasks-to-check list on a light grey panel */
 .checkRow { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 400; color: #e60d84; cursor: pointer; padding: 1px 2px; border-radius: 4px; }   /* intense pink */
 .checkRow:hover { background: rgba(230,13,132,0.1); }
 .checkRow input { flex-shrink: 0; margin: 0; width: 14px; height: 14px; accent-color: #e60d84; }
@@ -419,7 +426,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .sgTable .sgEq { font-weight: 800; }
 .sgTable tr.sgTotRow td { font-weight: 800; }
 .sgTable tr.sgTotRow td.sgP { text-align: center; }   /* Total-of-Planned centred in its cell */
-.sgTable tr.sgOver td { background: #383d44 !important; color: #fff; }   /* over → dark grey line, white text */
+.sgTable tr.sgOver td { background: #5c636e !important; color: #fff; }   /* over → dark grey (not black), white text */   /* over → dark grey line, white text */
 .sgTable tr.sgOver td.sgName { color: #fff !important; }
 .sgTable tr.sgOver .sgBtn { color: #fff; border-color: rgba(255,255,255,0.55); }
 .sgTable tr.sgOver input.sgPlan { color: #fff; }
@@ -657,7 +664,16 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 <div id="body">
   <div id="leftBar">
     <form id="cmdForm">
-      <input id="cmdInput" placeholder='Task: "Growth mon-sat 5–5:30am" · Meeting: "Meet Fred tue 1–2:30pm" · Meeting on a task: "Growth: Fred tue 1–2:30pm"' autocomplete="off">
+      <input id="cmdInput" placeholder='&lt;what&gt; : &lt;when&gt;  —  e.g. "Growth : mon 10-11am"' autocomplete="off">
+      <div id="cmdHelp">
+        <div class="chH"><b>&lt;what&gt; : &lt;when&gt;</b> — before the colon, up to three comma-separated parts in any order: a masterplan task · a free name · the word “Event”.</div>
+        <div class="chEx"><code>Growth : mon 10-11am</code> — schedule the task <b>Growth</b></div>
+        <div class="chEx"><code>Growth, Fred : mon 10-11am</code> — Growth on the grid, shown as <b>“Growth (Fred)”</b></div>
+        <div class="chEx"><code>Growth, Fred, Event : mon 10-11am</code> — an <b>event “Fred”</b> on the Growth task (+ switch)</div>
+        <div class="chEx"><code>Fred, Event : mon 10-11am</code> — a plain <b>event “Fred”</b> (+ switch)</div>
+        <div class="chEx"><code>chairs : mon 10-11am</code> — a one-off <b>“Off”</b> task “chairs”</div>
+        <div class="chH2">Time: <code>10-11am · 10:30-11 · 1030-1130 · 22:30</code> (a bare time uses the current am/pm). Days: <code>mon · mon-fri · every day</code>. Weeks: <code>this week · whole masterplan · weeks 38-51</code>. Prefix <code>delete</code> to remove.</div>
+      </div>
     </form>
     <aside id="pool"></aside>
   </div>
@@ -873,7 +889,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v203 */
+/* build v205 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -957,8 +973,8 @@ const GROUPS = {
   home:  { label: "Home",  palette: ["#e6b800","#ffd633","#c9a227","#f5d76e","#b8920a","#ffe066","#d4af1f","#f0c419","#a87f00","#ffd24d"] },
   fruit: { label: "Fruit", palette: ["#1e7a46","#52b35e","#2b8a3e","#74c365","#157f4a","#43a047","#6abf69","#2f9e44","#3f7d3a","#86c97a"] },
   parents:{ label: "Parents", palette: ["#ff7f50","#f4795e","#ff9478","#e9765b","#ff8a6b","#fb8a6a","#ffa07a","#e06f52"] },   /* coral */
-  none:  { label: "None",  palette: [GREY] },
-  termin:{ label: "Termin", palette: [EVENT_COLOR] },
+  none:  { label: "Off",  palette: [GREY] },
+  termin:{ label: "Event", palette: [EVENT_COLOR] },
 };
 const GROUP_ORDER = ["work", "home", "fruit", "parents", "none", "termin"];
 function isNoneGroup(c) { return !c || !c.group || c.group === "none" || GROUP_ORDER.indexOf(c.group) < 0; }
@@ -1022,7 +1038,7 @@ function layoutDay(list) {
 /* ── Merge blocks of the SAME task that touch or overlap on the same day ── */
 function mergeAdjacent(blocks) {
   const result = [], mer = [];
-  for (const b of blocks) { if (b.event || b.meeting || (b.kind || "plan") !== "plan") result.push(b); else mer.push(b); } // only merge plain plan blocks; keep actuals/events/meetings intact
+  for (const b of blocks) { if (b.event || b.meeting || b.oneoff || (b.kind || "plan") !== "plan") result.push(b); else mer.push(b); } // only merge plain plan blocks; keep actuals/events/meetings/one-offs intact
   const keyOf = (b) => "c:" + b.catId + "|" + b.day;
   const groups = {};
   for (const b of mer) { (groups[keyOf(b)] = groups[keyOf(b)] || []).push(b); }
@@ -1134,7 +1150,7 @@ function weekUsage(state, weekIdx) {
 }
 
 /* ── Time range ── */
-const TIME_RE = /(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\s*(?:-|–|—|to|until)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?/i;
+const TIME_RE = /(\d{1,2})(?:[:.]?(\d{2}))?\s*(am|pm)?\s*(?:-|–|—|to|until)\s*(\d{1,2})(?:[:.]?(\d{2}))?\s*(am|pm)?/i;
 function parseTimeRange(text) {
   const m = TIME_RE.exec(text);
   if (!m) return null;
@@ -1152,7 +1168,7 @@ function parseTimeRange(text) {
   }
   if (end <= start && end + 1440 - start <= 720) end += 1440; // crosses midnight (span ≤ 12h) → end lands on the next day
   if (end <= start || start < 0 || end > 2880) return { error: true, raw: m[0] };
-  return { startMin: start, endMin: end, raw: m[0] };
+  return { startMin: start, endMin: end, raw: m[0], hadMeridiem: !!(a1 || a2) };
 }
 
 /* ── Days (Mon–Sat; Sunday dropped) ── */
@@ -1185,59 +1201,63 @@ function parseDays(text) {
   return { days: [...days].filter((d) => d < ND).sort((a, b) => a - b), matches };
 }
 
+// Grammar: [delete] <what> : <when>
+//   <when> = time (+ optional days/weeks), as before.
+//   <what> = 1–3 comma-separated parts in any order: a masterplan task name · a free name · the word "Event".
 function parseCommand(text, categories) {
   let del = false;
   { const dm = text.match(/^\s*(delete|del|remove|clear)\b\s*/i); if (dm) { del = true; text = text.slice(dm[0].length); } }
-  // optional "Task:" prefix → an assigned meeting (counts toward that task; shown red with a task-coloured band)
-  let prefixCat = null, src = text;
   const ci = text.indexOf(":");
-  if (ci > 0) {
-    const pre = text.slice(0, ci).trim();
-    if (pre && !/\d/.test(pre)) { // a name, not a clock time like 10:00
-      const m = categories.find((c) => c.name.toLowerCase() === pre.toLowerCase()) || categories.find((c) => c.name.toLowerCase().startsWith(pre.toLowerCase()));
-      if (m) { prefixCat = m; src = text.slice(ci + 1); }
-    }
-  }
-  // week scope: "weeks 38-51" → that ISO-week range; "whole masterplan"/"all weeks" → every week of the active masterplan; default = current week only
+  if (ci < 0) return { error: "Use a colon: type the task/event, then “:”, then the time. E.g. “Growth : mon 10-11am”." };
+  const whatPart = text.slice(0, ci).trim();
+  let src = text.slice(ci + 1);
+  // week scope: "weeks 38-51" → that ISO-week range; "whole masterplan"/"all weeks" → every week; default = current week only
   let scope = "week", wkFrom = 0, wkTo = 0;
   const wkRe = /\b(?:weeks?|wk|w)\s*(\d{1,2})\s*(?:-|–|—|to|through|thru|till|until)\s*(\d{1,2})\b/i;
   const mpRe = /\b(whole masterplan|entire masterplan|all weeks|every week|across the masterplan|for the masterplan|the masterplan|masterplan)\b/i;
   const twRe = /\b(this week|current week)\b/i;
-  if (mpRe.test(src)) { scope = "all"; src = src.replace(mpRe, " "); }               // scope phrases first, so "all weeks 9-10" keeps 9-10 as the time
+  if (mpRe.test(src)) { scope = "all"; src = src.replace(mpRe, " "); }
   else if (twRe.test(src)) { scope = "week"; src = src.replace(twRe, " "); }
   else { const wkm = src.match(wkRe); if (wkm) { scope = "range"; wkFrom = +wkm[1]; wkTo = +wkm[2]; src = src.replace(wkm[0], " "); } }
   const tr = parseTimeRange(src);
-  if (!tr && !del) return { error: "No time range found. Try e.g. “Growth mon-sat 5–5:30am”." };
-  if (tr && tr.error) return { error: "That time range looks off (end must be after start)." };
+  if (!tr && !del) return { error: "No time after the colon. E.g. “Growth : mon 10-11am”." };
+  if (tr && tr.error) return { error: "That time looks off (end must be after start)." };
+  // bare 12-hour times with no am/pm adopt the current half of the day (e.g. “9-10” at 8pm → 9pm–10pm)
+  let sMin = tr ? tr.startMin : 0, eMin = tr ? tr.endMin : 0;
+  if (tr && !tr.hadMeridiem && sMin < 720 && eMin <= 720 && new Date().getHours() >= 12) { sMin += 720; eMin += 720; }
   const dayStr = tr ? src.replace(tr.raw, " ") : src;
   const pd = parseDays(dayStr);
   if (!pd.days.length) {   // no day given → default to today (Mon–Sat); only Sundays still ask
     const jsDay = new Date().getDay(), td = jsDay === 0 ? -1 : jsDay - 1;
     if (td >= 0) pd.days = [td];
-    else return { error: "Which days? Try “every day”, “mon–fri”, or “tue and thu” (Mon–Sat only)." };
+    else return { error: "Which day? Add e.g. “mon”, “mon-fri”, or “every day”." };
   }
-  let rest = dayStr;
-  for (const s of pd.matches) rest = rest.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), " ");
-  const rawRest = rest.replace(/[,.;:!]+/g, " ").replace(/\s+/g, " ").trim();   // name before filler-word stripping (so a task literally named "Plan"/"Add" survives)
-  rest = rest.replace(/\b(delete|del|remove|clear|assign|add|plan|put|schedule|block|task|meeting|meet w|every|each|from|at|on|and|the|for|whole|masterplan|weeks?)\b/gi, " ")
-    .replace(/[,.;:!]+/g, " ").replace(/\s+/g, " ").trim();
-  const startSlot = tr ? Math.round(tr.startMin / SLOT_MIN) : 0;
-  const endSlotRaw = tr ? Math.round(tr.endMin / SLOT_MIN) : 0;
+  const startSlot = tr ? Math.round(sMin / SLOT_MIN) : 0;
+  const endSlotRaw = tr ? Math.round(eMin / SLOT_MIN) : 0;
   const lenSlots = tr ? Math.max(1, Math.min(TOTAL_SLOTS, endSlotRaw) - startSlot) : 0;
-  const nextLen = tr ? Math.max(0, endSlotRaw - TOTAL_SLOTS) : 0; // slots spilling past midnight → placed on the next day
-  const ext = { del, scope, wkFrom, wkTo, hasTime: !!tr };
-  if (prefixCat) return Object.assign({ kind: "meeting", cat: prefixCat, name: rest || prefixCat.name, days: pd.days, startSlot, lenSlots, nextLen }, ext);
-  { const exactRaw = rawRest && categories.find((c) => (c.name || "").toLowerCase() === rawRest.toLowerCase()); if (exactRaw) return Object.assign({ kind: "task", cat: exactRaw, name: rawRest, days: pd.days, startSlot, lenSlots, nextLen }, ext); }
-  if (!rest) return { error: "Which task or meeting? Include a name in the command." };
-  const q = rest.toLowerCase();
-  const wordIn = (name, hay) => { if (!name) return false; const n = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); return new RegExp("(^|[^a-z0-9])" + n + "([^a-z0-9]|$)", "i").test(hay); };   // whole-word match, so "On" won't match inside "Fionn"
-  const cat =
-    categories.find((c) => c.name.toLowerCase() === q) ||
-    categories.find((c) => c.name.toLowerCase().startsWith(q)) ||
-    categories.find((c) => c.name.toLowerCase().includes(q)) ||
-    categories.find((c) => wordIn(c.name.toLowerCase(), q)) || null;
-  if (cat) return Object.assign({ kind: "task", cat, name: rest, days: pd.days, startSlot, lenSlots, nextLen }, ext);
-  return Object.assign({ kind: "event", name: rest, days: pd.days, startSlot, lenSlots, nextLen }, ext);
+  const nextLen = tr ? Math.max(0, endSlotRaw - TOTAL_SLOTS) : 0;   // slots spilling past midnight
+  const ext = { del, scope, wkFrom, wkTo, hasTime: !!tr, days: pd.days, startSlot, lenSlots, nextLen };
+  // classify the comma-separated "what" parts
+  const parts = whatPart.split(",").map((s) => s.trim()).filter(Boolean);
+  if (!parts.length) return { error: "Type the task or event name before the colon." };
+  let isEvent = false, taskCat = null; const rest = [];
+  for (const p of parts) {
+    if (p.toLowerCase() === "event") { isEvent = true; continue; }
+    const m = categories.find((c) => (c.name || "").toLowerCase() === p.toLowerCase());
+    if (m && !taskCat) { taskCat = m; continue; }
+    rest.push(p);
+  }
+  if (rest.length > 1) return { error: "Too many names — before the colon use: a task, a free name, and/or “Event” (comma-separated)." };
+  const freeName = rest[0] || null;
+  if (isEvent) {
+    const name = freeName || (taskCat ? taskCat.name : "");
+    if (!name) return { error: "Give the event a name, e.g. “Fred, Event : mon 10-11am”." };
+    if (taskCat) return Object.assign({ kind: "meeting", cat: taskCat, name }, ext);
+    return Object.assign({ kind: "event", name }, ext);
+  }
+  if (taskCat) return Object.assign({ kind: "task", cat: taskCat, name: taskCat.name, label: freeName || null }, ext);
+  if (!freeName) return { error: "Type a task name, e.g. “Growth : mon 10-11am”." };
+  return Object.assign({ kind: "oneoff", name: freeName }, ext);   // free name, not in the masterplan → one-off “Off” task
 }
 
 /* ── CSV ── */
@@ -1640,7 +1660,7 @@ if (IS_BROWSER) (function () {
   function stopTimerLoop() { if (timerTick) clearInterval(timerTick); timerTick = null; }
   function toggleTimer(catId) {
     if (state.timer && state.timer.catId === catId) { stopTimer(); return; }
-    { const c0 = state.categories.find((x) => x.id === catId); if (planTimeBlocked(c0)) { toast("Timing is off for untracked / Termin tasks."); return; } }
+    { const c0 = state.categories.find((x) => x.id === catId); if (planTimeBlocked(c0)) { toast("Timing is off for untracked / Event tasks."); return; } }
     if (state.timer) stopTimer();
     state.timer = { catId: catId, startMs: Date.now() };
     saveLocal(); schedulePush(); renderAll(); startTimerLoop();
@@ -1830,17 +1850,21 @@ if (IS_BROWSER) (function () {
     const timerStartDate = state.timer ? ymd(new Date(state.timer.startMs)) : null;
     const checkBlocks = [];
     if (todayIdx >= 0) for (const b of curBlocks()) {
-      if (b.event || b.kind === "actual" || b.chkAck) continue;
+      if (b.kind === "actual" || b.chkAck) continue;
       const di = DAYS.indexOf(b.day); if (di < 0 || di > todayIdx) continue;
       const bEnd = b.startSlot + b.lenSlots;
       if (!(di < todayIdx || bEnd <= nowSlotS)) continue;            // block hasn't ended yet
+      // always-check once past: one-offs, events, assigned events, and annotated task blocks — shown by their own name
+      if (b.oneoff) { checkBlocks.push({ b, name: b.name }); continue; }
+      if (b.event || b.meeting) { checkBlocks.push({ b, name: b.name }); continue; }
       const c = chkById[b.catId]; if (!c || c.archived || c.parent) continue;
+      if (b.label) { checkBlocks.push({ b, c, name: b.label + " (" + c.name + ")" }); continue; }
       const ds = chkDates[di];
-      if (c.noTrack) { if (c.check) checkBlocks.push({ b, c }); continue; }
+      if (c.noTrack) { if (c.check) checkBlocks.push({ b, c, name: c.name }); continue; }
       if (c.auto) continue;
       if (state.timer && state.timer.catId === c.id && timerStartDate === ds && timerStartSlot < bEnd - 1e-4) continue;   // timer still running, overlapping this block
       let credit = 0; for (const a of curBlocks()) { if (a.kind === "actual" && a.catId === c.id && a.date === ds && a.startSlot < bEnd - 1e-4 && (a.startSlot + a.lenSlots) > b.startSlot + 1e-4) credit += Math.max(0, (a.endMs - a.startMs) / 3600000); }   // any session overlapping the block, credited at full duration
-      if (credit < b.lenSlots / 4 - eps) checkBlocks.push({ b, c });
+      if (credit < b.lenSlots / 4 - eps) checkBlocks.push({ b, c, name: c.name });
     }
     checkBlocks.sort((x, y) => (DAYS.indexOf(x.b.day) - DAYS.indexOf(y.b.day)) || (x.b.startSlot - y.b.startSlot));
     const catsG = (g) => cats.filter((c) => (c.group || "work") === g);
@@ -1986,14 +2010,15 @@ if (IS_BROWSER) (function () {
       for (const it of checkBlocks) {
         const row = document.createElement("label"); row.className = "checkRow";
         const cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "checkTick";
-        const nm = document.createElement("span"); nm.className = "checkName"; nm.textContent = it.c.name;
+        const itName = it.name || (it.c ? it.c.name : "");
+        const nm = document.createElement("span"); nm.className = "checkName"; nm.textContent = itName;
         const hm = (sl) => slotLabel(sl).replace(/^0/, "");   // h:mm (no leading-zero hour)
         const tm = document.createElement("span"); tm.className = "checkTime"; tm.textContent = hm(it.b.startSlot) + "–" + hm(it.b.startSlot + it.b.lenSlots);
-        row.title = it.c.name + "  " + tm.textContent;
+        row.title = itName + "  " + tm.textContent;
         row.appendChild(cb); row.appendChild(nm); row.appendChild(tm);
         const bid = it.b.id;
         cb.addEventListener("change", () => { snap(); const bb = curBlocks().find((x) => x.id === bid); if (bb) bb.chkAck = true; commit(); });
-        if (!COARSE) {   // desktop: drag a check-list row onto the grid to re-schedule that task (drops a new block), same as dragging its pool box
+        if (!COARSE && it.c) {   // desktop: task-backed rows can be dragged onto the grid to re-schedule (one-offs/events have no task to re-drop)
           const dcat = it.c;
           row.addEventListener("pointerdown", (e) => {
             if (e.target.closest("input")) return;   // clicking the tick still checks it off
@@ -2040,8 +2065,8 @@ if (IS_BROWSER) (function () {
       });
     }
     sgLastOrder = sgOrder.map((c) => c.id);
-    let sgHtml = '<div class="sgTitle"><span class="sgTri">' + (ui.sgCollapsed ? "▸" : "▾") + "</span>Stretch Goal</div>";
-    if (!ui.sgCollapsed && sgTasks.length) {
+    let sgHtml = "";
+    if (sgTasks.length) {
       let body = "", sumO = 0, sumT = 0, sumP = 0;
       for (const c of sgOrder) {
         const bw = weekBudget(c, cw), O = sgVal.open(c), T = effTrackWeek(c.id);
@@ -2062,7 +2087,7 @@ if (IS_BROWSER) (function () {
           '<td class="sgP">' + pCell + "</td>" +
           "</tr>";
       }
-      const totRow = '<tr class="sgTotRow' + (sumO < -0.0001 ? " sgOver" : "") + '"><td class="sgPrio"></td><td class="sgOpen">' + (Math.abs(sumO) < 0.0001 ? "0:00" : fmtHM(Math.abs(sumO))) + '</td><td class="sgName">Total</td><td class="sgT">' + fmtHM(sumT) + '</td><td class="sgP">' + fmtHM(sumP) + "</td></tr>";
+      const totRow = '<tr class="sgTotRow"><td class="sgPrio"></td><td class="sgOpen">' + (Math.abs(sumO) < 0.0001 ? "0:00" : fmtHM(Math.abs(sumO))) + '</td><td class="sgName">Total</td><td class="sgT">' + fmtHM(sumT) + '</td><td class="sgP">' + fmtHM(sumP) + "</td></tr>";
       sgHtml += '<table class="sgTable"><thead><tr>' +
         '<th class="sgH sgPrioH" data-sk="prio" title="Sort by priority">★</th>' +
         '<th class="sgH" data-sk="open" title="Sort by Open (Planned − Gridded this week)">O</th>' +
@@ -2071,7 +2096,6 @@ if (IS_BROWSER) (function () {
         "</tr></thead><tbody>" + body + totRow + "</tbody></table>";
     }
     const sgWrap = document.createElement("div"); sgWrap.className = "sgWrap"; sgWrap.innerHTML = sgHtml; pool.appendChild(sgWrap);
-    sgWrap.querySelector(".sgTitle").addEventListener("click", () => { ui.sgCollapsed = !ui.sgCollapsed; saveUI(); renderPool(); });
     sgWrap.querySelectorAll(".sgH").forEach((th) => th.addEventListener("click", () => { const k = th.dataset.sk, cur = ui.sgSort || { key: "prio", dir: -1 }; ui.sgSort = cur.key === k ? { key: k, dir: -(cur.dir || 1) } : { key: k, dir: k === "name" ? 1 : -1 }; sgFrozen = null; saveUI(); renderPool(); }));
     sgWrap.querySelectorAll("tr[data-cat]").forEach((tr) => {
       const cat = state.categories.find((x) => x.id === tr.dataset.cat); if (!cat) return;
@@ -2093,6 +2117,16 @@ if (IS_BROWSER) (function () {
       const eq = tr.querySelector(".sgEq"); if (eq) eq.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = effUsed(cat.id); commit(); });
       const inp = tr.querySelector("input.sgPlan"); if (inp) { inp.addEventListener("change", () => { snap(); ensureBudgets(state.weeks[cw])[cat.id] = Math.max(0, parseHM(inp.value)); commit(); }); inp.addEventListener("keydown", (e) => { if (e.key === "Enter") inp.blur(); }); }
       tr.addEventListener("mouseleave", flushPoolReflow);
+      if (!COARSE) {   // desktop: drag a Stretch-Goal row onto the grid to schedule that task (same as dragging its pool box)
+        const dcat = cat;
+        tr.addEventListener("pointerdown", (e) => {
+          if (e.target.closest("input, button")) return;
+          const sx = e.clientX, sy = e.clientY; let started = false;
+          const mv = (ev) => { if (!started && Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 6) { started = true; startNewDrag(ev, dcat); } };
+          const up = () => { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); };
+          document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
+        });
+      }
     });
     // SECTION 3: timer pill area — running pill (if timing) + the always-visible "start a timer" pill (white bg, all-black border/font).
     if (ui.poolMode === "priority") { ui.poolMode = ""; saveUI(); }   // priority mode retired — priorities now live in the Stretch Goal table
@@ -2123,7 +2157,7 @@ if (IS_BROWSER) (function () {
     if (shownAll.length) {
       const btnBox = document.createElement("div"); btnBox.className = "btnBox";
       const bar = document.createElement("div"); bar.className = "poolModeBar";
-      bar.innerHTML = '<button class="pmBtn pmAll' + (mode === "" ? " on" : "") + '" title="All — the basic order, grouped (Parents · Work · Fruit · Home · None · Termin)">A</button>' +
+      bar.innerHTML = '<button class="pmBtn pmAll' + (mode === "" ? " on" : "") + '" title="All — the basic order, grouped (Parents · Work · Fruit · Home · Off · Event)">A</button>' +
         '<button class="pmBtn pmUp' + (mode === "upcoming" ? " on" : "") + '" title="Upcoming — order by when tasks come up on the grid this week (others hidden)">↑</button>';
       const nav = document.createElement("div"); nav.className = "poolNav";
       nav.innerHTML = '<button class="navBtn pmRep" title="Reports & activity">📊</button><button class="navBtn pmMp" title="Masterplan & tasks">🐝</button>';
@@ -2157,8 +2191,8 @@ if (IS_BROWSER) (function () {
 
   /* ── blocks ── */
   function dispCat(b, catById) { const c = catById[b.catId]; if (!c) return null; return (c.parent && catById[c.parent]) ? catById[c.parent] : c; }   // child blocks show as their parent on the grid
-  function blockName(b, catById) { if (b.event || b.meeting) return b.name || "Meeting"; const c = dispCat(b, catById); return c ? c.name : "?"; }
-  function blockColor(b, catById) { if (b.event || b.meeting) return EVENT_COLOR; const c = dispCat(b, catById); return c ? c.color : "#888"; }
+  function blockName(b, catById) { if (b.oneoff) return b.name || "?"; if (b.event || b.meeting) return b.name || "Event"; const c = dispCat(b, catById); const nm = c ? c.name : "?"; return b.label ? nm + " (" + b.label + ")" : nm; }   // annotated task → "Task (label)" on the grid
+  function blockColor(b, catById) { if (b.oneoff) return b.color || GREY; if (b.event || b.meeting) return EVENT_COLOR; const c = dispCat(b, catById); return c ? c.color : "#888"; }
 
   function renderBlocks() {
     const layer = $("blocksLayer"); if (!layer) return;
@@ -2205,7 +2239,7 @@ if (IS_BROWSER) (function () {
       const colDate = dateOfCell(state.anchorMonday, state.currentWeek, di);
       const cmp = colDate.getTime() - todayMid.getTime(); // <0 past, 0 today, >0 future
       if (cmp < 0) { const pc = document.createElement("div"); pc.className = "pastDayCol"; pc.style.cssText = "left:calc(" + LABEL_W + "px + " + (ci / NC) + " * (100% - " + LABEL_W + "px));width:calc((100% - " + LABEL_W + "px) / " + NC + ");"; layer.appendChild(pc); }   // teal wash over the whole past-day column
-      let dayBlocks = blocks.filter((b) => b.day === day && (b.event || catById[b.catId]));
+      let dayBlocks = blocks.filter((b) => b.day === day && (b.event || b.oneoff || catById[b.catId]));
       if (cmp < 0) dayBlocks = dayBlocks.filter((b) => b.kind === "actual" || b.event);                                  // past day: actual + events
       else if (cmp > 0) dayBlocks = dayBlocks.filter((b) => b.kind !== "actual");                                         // future day: plans + events
       else dayBlocks = dayBlocks.filter((b) => b.kind === "actual" || (b.startSlot + b.lenSlots) > nowSlot);   // today: drop plans & meetings already elapsed
@@ -2595,7 +2629,8 @@ if (IS_BROWSER) (function () {
       const overlaps = (b) => !r.hasTime || (b.startSlot < (r.startSlot + r.lenSlots) && r.startSlot < (b.startSlot + b.lenSlots));
       const isTarget = (b) => {
         if (!dayLabels.includes(b.day) || b.kind === "actual") return false;
-        if (r.kind === "task") return b.catId === r.cat.id && !b.meeting && !b.event && overlaps(b);
+        if (r.kind === "task") return b.catId === r.cat.id && !b.meeting && !b.event && !b.oneoff && overlaps(b);
+        if (r.kind === "oneoff") return b.oneoff && (b.name || "").toLowerCase() === (r.name || "").toLowerCase() && overlaps(b);
         if (r.kind === "meeting") return b.meeting && b.catId === r.cat.id && (!r.name || (b.name || "").toLowerCase() === r.name.toLowerCase()) && overlaps(b);
         return b.event && (b.name || "").toLowerCase() === (r.name || "").toLowerCase() && overlaps(b);
       };
@@ -2620,9 +2655,15 @@ if (IS_BROWSER) (function () {
     for (const wi of targetWeeks) {
       const B = state.weeks[wi].blocks;
       if (r.kind === "task") {
+        const lab = r.label ? { label: r.label } : {};
         for (const di of r.days) {
-          B.push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
-          if (spill && di + 1 < ND) B.push({ id: state.nextId++, catId: r.cat.id, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
+          B.push(Object.assign({ id: state.nextId++, catId: r.cat.id, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" }, lab));
+          if (spill && di + 1 < ND) B.push(Object.assign({ id: state.nextId++, catId: r.cat.id, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" }, lab));
+        }
+      } else if (r.kind === "oneoff") {
+        for (const di of r.days) {
+          B.push({ id: state.nextId++, oneoff: true, name: r.name, color: GREY, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
+          if (spill && di + 1 < ND) B.push({ id: state.nextId++, oneoff: true, name: r.name, color: GREY, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
         }
       } else if (r.kind === "meeting") {
         for (const di of r.days) {
@@ -2637,9 +2678,10 @@ if (IS_BROWSER) (function () {
       }
     }
     const nW = targetWeeks.length, scopeTxt = (nW > 1) ? " across " + nW + " weeks" : "";
-    if (r.kind === "task") toast("Placed " + (r.days.length * nW) + " × " + fmtH((r.lenSlots + r.nextLen) / SPH) + "h of “" + r.cat.name + "”" + scopeTxt + (spill ? " (over midnight)" : ""));
-    else if (r.kind === "meeting") toast("Meeting “" + r.name + "” → " + r.cat.name + scopeTxt + " (+ switch)");
-    else toast("Added meeting “" + r.name + "”" + scopeTxt + " (+ switch)");
+    if (r.kind === "task") toast("Placed " + (r.days.length * nW) + " × " + fmtH((r.lenSlots + r.nextLen) / SPH) + "h of “" + r.cat.name + "”" + (r.label ? " (" + r.label + ")" : "") + scopeTxt + (spill ? " (over midnight)" : ""));
+    else if (r.kind === "oneoff") toast("Added one-off “" + r.name + "”" + scopeTxt);
+    else if (r.kind === "meeting") toast("Event “" + r.name + "” → " + r.cat.name + scopeTxt + " (+ switch)");
+    else toast("Added event “" + r.name + "”" + scopeTxt + " (+ switch)");
     $("cmdInput").value = ""; $("cmdInput").blur(); commit();
   });
   // spill the pill over the pool edge onto the grid as soon as it's focused (so the tips show immediately); snap back on blur/Enter
@@ -2930,7 +2972,7 @@ if (IS_BROWSER) (function () {
       r += '<td class="stot keyTot btot' + (over ? " over" : "") + '">' + fmtHM(tsum) + "</td>";
       r += '<td class="dcol keyTot' + (hasGoal ? " " + ocls : "") + '">' + (hasGoal ? (openVal > 0.0001 ? "-" + fmtHM(openVal) : openVal < -0.0001 ? "+" + fmtHM(-openVal) : "0:00") : "") + "</td>";   // reversed sign
       // ── Planned (masterplan, lighter purple) ──
-      r += '<td class="gcol gcolF planMP"><input class="bgoal" type="text" inputmode="numeric"' + (planTimeBlocked(c) ? ' readonly title="Planning is off for untracked / None-group / Termin tasks"' : '') + ' value="' + (goal ? fmtHM(goal) : "") + '"></td>';
+      r += '<td class="gcol gcolF planMP"><input class="bgoal" type="text" inputmode="numeric"' + (planTimeBlocked(c) ? ' readonly title="Planning is off for untracked / Off / Event tasks"' : '') + ' value="' + (goal ? fmtHM(goal) : "") + '"></td>';
       // ── ★ IP + Prio (masterplan, orange) ──
       { const pv = gGet("prio", c.id), hasP = pv != null && pv !== "" && !isNaN(pv), pos = hasP && +pv > 0; r += '<td class="gcol gcolPrio starMP"' + (pos ? ' style="background:' + prio5Bg(+pv) + '"' : "") + '><input class="bprio" type="number" min="0" max="5" step="1"' + (pos ? ' style="color:' + prio5Txt(+pv) + '"' : "") + ' value="' + (hasP ? pv : "") + '"></td>'; }
       r += '<td class="gcol gcolFip starMP"><input class="bgoalip" type="text" inputmode="numeric" value="' + (gGet("goalIP", c.id) ? fmtHM(gGet("goalIP", c.id)) : "") + '"></td>';
@@ -3216,7 +3258,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v203"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v205"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
