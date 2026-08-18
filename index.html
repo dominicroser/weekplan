@@ -889,7 +889,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v205 */
+/* build v207 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2035,7 +2035,9 @@ if (IS_BROWSER) (function () {
     const blockCatIds = new Set(); for (const b of curBlocks()) { if (!b.event) blockCatIds.add(b.catId); }
     const timedId = state.timer ? state.timer.catId : null;
     const hasWprio = (id) => { const v = poolWprio(id); return v !== "" && v != null && !isNaN(v) && +v > 0; };   // a weekly priority > 0 (even with 0 planned hours) is enough to show a task
-    const shownAll = allList.filter((c) => weekBudget(c, cw) > eps || effUsed(c.id) > eps || blockCatIds.has(c.id) || c.id === timedId || hasWprio(c.id));
+    const poolIP = (id) => (poolMp && poolMp.ip && poolMp.ip[id] && poolMp.ip[id][cw] != null) ? +poolMp.ip[id][cw] : 0;   // if-possible (IP) hours for this task this week
+    const hasIP = (id) => poolIP(id) > eps;
+    const shownAll = allList.filter((c) => weekBudget(c, cw) > eps || effUsed(c.id) > eps || blockCatIds.has(c.id) || c.id === timedId || hasWprio(c.id) || hasIP(c.id));
     // Immediate task = the one being timed, else the next gridded task (earliest upcoming block this week)
     let immediateId = (timedId && shownAll.some((c) => c.id === timedId)) ? timedId : null;
     if (!immediateId) { let bk = Infinity; for (const c of shownAll) { const k = futureKey[c.id]; if (k != null && k < bk) { bk = k; immediateId = c.id; } } }
@@ -2049,8 +2051,9 @@ if (IS_BROWSER) (function () {
     const sgVal = {
       prio: (c) => { const v = poolWprio(c.id); return (v === "" || v == null || isNaN(v)) ? 0 : +v; },
       open: (c) => planTimeBlocked(c) ? 0 : (weekBudget(c, cw) - effUsed(c.id)),
+      ip: (c) => poolIP(c.id),
     };
-    const sgTasks = shownAll.filter((c) => sgVal.prio(c) > 0 || Math.abs(sgVal.open(c)) >= TOL);
+    const sgTasks = shownAll.filter((c) => sgVal.prio(c) > 0 || Math.abs(sgVal.open(c)) >= TOL || sgVal.ip(c) > eps);   // also: tasks with if-possible (IP) hours this week
     const sgSort = ui.sgSort || { key: "prio", dir: -1 };
     let sgOrder;
     if (sgFrozen && Date.now() - sgFrozen.t < 3000) {   // just changed a star → keep the order for ~3s
@@ -2292,7 +2295,15 @@ if (IS_BROWSER) (function () {
     }
     renderActionBar();
   }
-  function removeBlock(id) { const w = state.weeks[state.currentWeek]; w.blocks = w.blocks.filter((b) => b.id !== id); }
+  function removeBlock(id) {
+    const w = state.weeks[state.currentWeek];
+    const blk = w.blocks.find((b) => b.id === id);
+    w.blocks = w.blocks.filter((b) => b.id !== id);
+    if (blk && (blk.event || blk.meeting)) {   // an event/meeting auto-adds a Switch ending right before it — remove that Switch too
+      const swCat = state.categories.find((c) => (c.name || "").trim().toLowerCase() === "switch");
+      if (swCat) w.blocks = w.blocks.filter((b) => !(b.catId === swCat.id && b.day === blk.day && (b.startSlot + b.lenSlots) === blk.startSlot));
+    }
+  }
   function findBlock(id) { return curBlocks().find((b) => b.id === id); }
 
   function renderActionBar() {
@@ -3258,7 +3269,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v205"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v207"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3287,7 +3298,7 @@ if (IS_BROWSER) (function () {
     const lastN = (n) => { const out = []; let d = parseYMD(date); for (let i = 0; i < Math.max(1, n); i++) { const v = entryNum(ymd(d)); if (v != null) out.push(v); d = addDays(d, -1); } return out; };
     return {
       value: value,
-      prev: entryNum(ymd(addDays(parseYMD(date), -1))),
+      prev: (() => { let d = addDays(parseYMD(date), -1); if (d.getDay() === 0) d = addDays(d, -1); return entryNum(ymd(d)); })(),   // "prev" = the last day ON the tracker (Sundays don't exist, so Monday looks back to Saturday)
       avg: (n) => { const a = lastN(n); return a.length ? a.reduce((s, x) => s + x, 0) / a.length : NaN; },
       sum: (n) => lastN(n).reduce((s, x) => s + x, 0),
       avgSince: (ds) => { let cur = parseYMD(ds); const end = parseYMD(date), acc = []; while (cur <= end) { const v = entryNum(ymd(cur)); if (v != null) acc.push(v); cur = addDays(cur, 1); } return acc.length ? acc.reduce((s, x) => s + x, 0) / acc.length : NaN; },
@@ -3327,11 +3338,12 @@ if (IS_BROWSER) (function () {
     else vs.push({ v: last.v + 1, from: eff, defs: defsSnapshot() }); // new version, effective next Monday
   }
   function commitDefs() { stampHabitChange(); commit(); renderChangelog && renderChangelog(); }
-  function mailsTimedOn(date) {   // timed (actual) hours on the exact "Mails" task that day
+  function mailsTimedOn(date) {   // timed (actual) hours that day on "Mails" + its children (hmails, wmails, fmails …)
     const cat = (state.categories || []).find((c) => (c.name || "").trim().toLowerCase() === "mails");
     if (!cat) return 0;
+    const ids = new Set([cat.id]); (state.categories || []).forEach((c) => { if (c.parent === cat.id) ids.add(c.id); });
     let s = 0;
-    for (const wk of state.weeks) for (const b of (wk.blocks || [])) { if (b.kind === "actual" && b.catId === cat.id && b.date === date && b.endMs != null) s += (b.endMs - b.startMs) / 3600000; }
+    for (const wk of state.weeks) for (const b of (wk.blocks || [])) { if (b.kind === "actual" && ids.has(b.catId) && b.date === date && b.endMs != null) s += (b.endMs - b.startMs) / 3600000; }
     return s;
   }
   function habitStatus(h, date) {
@@ -3340,7 +3352,7 @@ if (IS_BROWSER) (function () {
     const raw = h.entries ? h.entries[date] : undefined;
     if (raw === "na") return "na";
     if ((def.name || h.name || "").trim().toLowerCase() === "mails") {   // Mails: >1h timed → missed; if ≤1h and unmarked it stays blank (the morning reminder asks you to mark it); a manual "missed" sticks; a manual "achieved" flips to missed once you pass 1h
-      const over = mailsTimedOn(date) > 1.0001;
+      const over = mailsTimedOn(date) > 1.0;   // missed as soon as it exceeds 1 hour (exactly 1h is still fine)
       if (raw === "miss") return "miss";
       if (raw === "ach") return over ? "miss" : "ach";
       return over ? "miss" : null;
@@ -3690,7 +3702,7 @@ if (IS_BROWSER) (function () {
     const since = ymd(mondayOf(new Date()));
     const mailRule = 'hours("hmails",1)+hours("wmails",1)+hours("emails",1) <= 1';
     const D = {
-      "🛏️": "≥ 7.5 h. If yesterday was under 7.5, today must recover half the shortfall.",
+      "🛏️": "≥ 7.5 h. If the last tracker day (Sat before a Mon) was under 7.5, today must recover half the shortfall.",
       "🙏": "Did my prayer — tap the cell.",
       "✉️": "Tap achieved; flips to missed if hmails+wmails+emails that day is over 60 min.",
       "🌱": "Mon–Thu: the first 2 logged hours of the day are Growth. Fri–Sat: tap by hand.",
