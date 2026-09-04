@@ -67,7 +67,8 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #leftBar { width: 270px; flex-shrink: 0; display: flex; flex-direction: column; min-height: 0; box-sizing: border-box; }
 #schedRow { display: flex; align-items: center; gap: 7px; padding: 8px 11px 2px; overflow: visible; flex-shrink: 0; }
 #leftBar #cmdForm { flex: 1 1 auto; min-width: 0; padding: 0; }
-#schedRow #mpTopBtn { flex-shrink: 0; }
+#schedRow #mpTopBtn { flex-shrink: 0; border: 2px solid #9aa0a8; }
+#schedRow #cmdInput { border-width: 2px; border-color: #9aa0a8; }
 #pool { flex: 1 1 auto; min-height: 0; padding: 8px 11px 12px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
 #pool > * { flex-shrink: 0; }   /* keep every section at its natural height so the pool scrolls instead of squishing boxes (which made rows spill over the pill) */
 .poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 0; margin-bottom: 0; flex-shrink: 0; line-height: 1.55; }
@@ -109,14 +110,14 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolItem.armed { outline-color: var(--accent); }
 .poolBlackDiv { height: 4px; background: #000; border-radius: 2px; margin: 10px 2px 9px; flex-shrink: 0; }
 .cbBox { background: #fff; border: none; border-radius: 10px; padding: 6px 3px; margin: 9px 0 0; display: flex; flex-direction: column; gap: 6px; min-height: 22px; box-sizing: border-box; }   /* white, borderless container for ALL check + open/over rows */
-.pillSec { display: flex; flex-direction: column; gap: 6px; margin: 9px 0 0; }
-.poolTimerPill { display: flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #383d44; color: #fff; border: 1px solid #000; }
+.pillSec { display: flex; flex-direction: column; gap: 6px; margin: 0; }
+.poolTimerPill { display: flex; align-items: center; gap: 6px; padding: 3px 11px; border-radius: 8px; min-height: 54px; box-sizing: border-box; font-size: 11px; font-weight: 700; background: #383d44; color: #fff; border: 4px solid #000; }
 .poolTimerPill .ptName { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .poolTimerPill .runElapsed { font-variant-numeric: tabular-nums; font-weight: 800; }
 .poolTimerPill .ptBtn { border: none; background: rgba(0,0,0,0.18); color: inherit; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
 .poolTimerPill .ptBtn:hover { background: rgba(0,0,0,0.3); }
 .poolStartWrap { display: flex; }
-.poolStartIn { flex: 1; width: 100%; border: 3px solid #0f9c8d; border-radius: 8px; padding: 6px 11px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; color: #e2e6ea; background: #7a828c; box-sizing: border-box; }   /* idle timer pill: dark-grey box, teal border, light-grey “▶ Timer” — matches the task boxes */
+.poolStartIn { flex: 1; width: 100%; height: 54px; border: 4px solid #0f9c8d; border-radius: 8px; padding: 0 11px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; color: #e2e6ea; background: #7a828c; box-sizing: border-box; }   /* idle timer pill: same height/shape as the task boxes */
 .poolStartIn::placeholder { color: #e2e6ea; opacity: 0.92; }
 .poolStartIn:focus { outline: none; border-color: #12b3a3; background: #8a929c; color: #fff; }
 .taskMenu.floatMenu { position: fixed; top: auto; left: auto; }
@@ -906,7 +907,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v211 */
+/* build v213 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2111,7 +2112,7 @@ if (IS_BROWSER) (function () {
         '<th title="Timed this week">T</th><th title="Planned this week">P</th>' +
         "</tr></thead><tbody>" + body + totRow + "</tbody></table>";
     }
-    const sgWrap = document.createElement("div"); sgWrap.className = "sgWrap"; sgWrap.innerHTML = sgHtml; pool.appendChild(sgWrap);
+    const sgWrap = document.createElement("div"); sgWrap.className = "sgWrap"; sgWrap.innerHTML = sgHtml; if (!sgHtml) sgWrap.style.display = "none"; pool.appendChild(sgWrap);   // no empty box / gap when there are no Stretch-Goal tasks
     sgWrap.querySelectorAll(".sgH").forEach((th) => th.addEventListener("click", () => { const k = th.dataset.sk, cur = ui.sgSort || { key: "prio", dir: -1 }; ui.sgSort = cur.key === k ? { key: k, dir: -(cur.dir || 1) } : { key: k, dir: k === "name" ? 1 : -1 }; sgFrozen = null; saveUI(); renderPool(); }));
     sgWrap.querySelectorAll("tr[data-cat]").forEach((tr) => {
       const cat = state.categories.find((x) => x.id === tr.dataset.cat); if (!cat) return;
@@ -3286,7 +3287,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v211"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v213"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
