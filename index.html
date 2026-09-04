@@ -54,7 +54,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #cmdHelp .chEx { margin: 2px 0; color: var(--ink2); }
 #cmdHelp .chH2 { margin-top: 8px; color: var(--ink3); font-size: 11px; line-height: 1.6; }
 #cmdHelp code { background: var(--panel2); border-radius: 4px; padding: 0 4px; font-family: 'Inter', sans-serif; color: var(--ink); }
-#cmdInput::placeholder { color: var(--ink3); }
+#cmdInput::placeholder { color: #565c66; opacity: 1; font-weight: 600; }
 .iconBtn { background: transparent; border: 1px solid var(--line); color: var(--ink2); width: 34px; height: 34px; border-radius: 8px; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .iconBtn:active { background: var(--panel2); }
 #syncDot { width: 9px; height: 9px; border-radius: 50%; background: #bbb; flex-shrink: 0; cursor: pointer; }
@@ -65,7 +65,9 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 /* ── Layout ── */
 #body { display: flex; align-items: stretch; height: 100vh; height: 100dvh; overflow: hidden; }
 #leftBar { width: 270px; flex-shrink: 0; display: flex; flex-direction: column; min-height: 0; box-sizing: border-box; }
-#leftBar #cmdForm { flex: 0 0 auto; min-width: 0; padding: 8px 11px 2px; }
+#schedRow { display: flex; align-items: center; gap: 7px; padding: 8px 11px 2px; overflow: visible; flex-shrink: 0; }
+#leftBar #cmdForm { flex: 1 1 auto; min-width: 0; padding: 0; }
+#schedRow #mpTopBtn { flex-shrink: 0; }
 #pool { flex: 1 1 auto; min-height: 0; padding: 8px 11px 12px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
 #pool > * { flex-shrink: 0; }   /* keep every section at its natural height so the pool scrolls instead of squishing boxes (which made rows spill over the pill) */
 .poolSummary { font-size: 11px; color: var(--ink2); font-family: 'Inter', sans-serif; padding: 2px 3px 0; margin-bottom: 0; flex-shrink: 0; line-height: 1.55; }
@@ -114,9 +116,9 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolTimerPill .ptBtn { border: none; background: rgba(0,0,0,0.18); color: inherit; cursor: pointer; border-radius: 5px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
 .poolTimerPill .ptBtn:hover { background: rgba(0,0,0,0.3); }
 .poolStartWrap { display: flex; }
-.poolStartIn { flex: 1; width: 100%; border: 1px solid #b8bec6; border-radius: 15px; padding: 3px 11px; font-family: 'Inter', sans-serif; font-size: 11px; color: #383d44; background: #e9ebef; }   /* light-grey pill, dark-grey (legible) font + ▶ */
-.poolStartIn::placeholder { color: #383d44; opacity: 0.75; }
-.poolStartIn:focus { outline: none; border-color: #8f959d; background: #fff; color: #383d44; }
+.poolStartIn { flex: 1; width: 100%; border: 3px solid #0f9c8d; border-radius: 8px; padding: 6px 11px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; color: #e2e6ea; background: #7a828c; box-sizing: border-box; }   /* idle timer pill: dark-grey box, teal border, light-grey “▶ Timer” — matches the task boxes */
+.poolStartIn::placeholder { color: #e2e6ea; opacity: 0.92; }
+.poolStartIn:focus { outline: none; border-color: #12b3a3; background: #8a929c; color: #fff; }
 .taskMenu.floatMenu { position: fixed; top: auto; left: auto; }
 .btnBox { background: #9aa0aa; border: 3px solid #33383e; border-radius: 8px; padding: 12px 12px; margin: 10px 0 0; display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; }   /* full width, mode buttons left · launchers right */
 .poolNav { display: flex; gap: 9px; align-items: center; }
@@ -312,9 +314,9 @@ pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7p
 .mpTable td.dcol.dfNeg { color: #9c1f3d; font-weight: 400; }   /* wine-red */
 .mpTable td.dcol.dfPos { color: #2563eb; font-weight: 400; }
 .mpTable td.dcol.dfZero { color: #111; font-weight: 400; }     /* zero → black */
-.mpTable td.paceD.dfNeg { color: #9c1f3d; }
-.mpTable td.paceD.dfPos { color: #2563eb; }
-.mpTable td.paceD.dfZero { color: #111; }
+.mpTable td.paceD.dfNeg, .mpTable td.paceX.dfNeg { color: #9c1f3d; }
+.mpTable td.paceD.dfPos, .mpTable td.paceX.dfPos { color: #2563eb; }
+.mpTable td.paceD.dfZero, .mpTable td.paceX.dfZero { color: #111; }
 .mpTable input.bhPast { color: var(--ink3); }
 .mpTable td.pastCol { background: #f7f7f8; }
 .mpTable .gcol { min-width: 46px; }
@@ -521,7 +523,12 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 
 /* ── Right bar ── */
 #rightBar { position: relative; width: 264px; flex-shrink: 0; display: flex; min-height: 0; border-left: 1px solid var(--line); }
-#rbFooter { margin-top: auto; display: flex; align-items: center; gap: 9px; padding: 9px 2px 2px; border-top: 1px solid var(--line); flex-shrink: 0; }
+#rbFooter { margin-top: auto; display: flex; align-items: center; gap: 8px; padding: 9px 2px 2px; border-top: 1px solid var(--line); flex-shrink: 0; flex-wrap: wrap; }
+#rbTools { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+#rbTools .iconBtn { width: 28px; height: 28px; font-size: 13px; }
+#rbTools .pmBtn { width: 22px; height: 22px; font-size: 12px; border-radius: 5px; }
+#rbSummary { padding: 4px 8px 2px; }
+#rbSummary .poolSummary { margin: 0; }
 #rightBar.closed { display: none; }
 #rbGrip { width: 7px; flex-shrink: 0; cursor: col-resize; touch-action: none; }
 #rbGrip:hover { background: var(--line); }
@@ -663,8 +670,9 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 <body class="notranslate">
 <div id="body">
   <div id="leftBar">
+    <div id="schedRow">
     <form id="cmdForm">
-      <input id="cmdInput" placeholder='&lt;what&gt; : &lt;when&gt;  —  e.g. "Growth : mon 10-11am"' autocomplete="off">
+      <input id="cmdInput" placeholder="&#9638; Scheduler" autocomplete="off">
       <div id="cmdHelp">
         <div class="chH"><b>&lt;what&gt; : &lt;when&gt;</b> — before the colon, up to three comma-separated parts in any order: a masterplan task · a free name · the word “Event”.</div>
         <div class="chEx"><code>Growth : mon 10-11am</code> — schedule the task <b>Growth</b></div>
@@ -675,6 +683,8 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
         <div class="chH2">Time: <code>10-11am · 10:30-11 · 1030-1130 · 22:30</code> (a bare time uses the current am/pm). Days: <code>mon · mon-fri · every day</code>. Weeks: <code>this week · whole masterplan · weeks 38-51</code>. Prefix <code>delete</code> to remove.</div>
       </div>
     </form>
+    <button class="iconBtn" id="mpTopBtn" title="Masterplan &amp; tasks">🐝</button>
+    </div>
     <aside id="pool"></aside>
   </div>
   <div id="gridWrap">
@@ -693,6 +703,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
       <div class="rbPanel" id="streakPanel">
         <div id="streakBody"></div>
       </div>
+      <div id="rbSummary"></div>
       <div class="rbPanel" id="notePanel">
         <div id="noteDock"></div>
       </div>
@@ -703,6 +714,12 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
       <div id="rbFooter">
         <button class="iconBtn" id="settingsBtn" title="Settings">&#9881;</button>
         <div id="syncDot" title="Sync status"></div>
+        <div id="rbTools">
+          <button class="pmBtn pmAll" id="rbAll" title="All — the basic grouped order">A</button>
+          <button class="pmBtn pmUp" id="rbUp" title="Upcoming — order by when tasks come up on the grid">↑</button>
+          <button class="iconBtn" id="rbReports" title="Reports &amp; activity">📊</button>
+          <button class="iconBtn" id="rbUndo" title="Undo (Ctrl+Z)">&#8630;</button>
+        </div>
       </div>
     </div>
   </aside>
@@ -798,7 +815,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type a known task name to place it as a budgeted block; type any other name to drop in a one-off <b>meeting</b> (no hour budget). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: add <b>this week</b>, <b>whole masterplan</b>, or a range like <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks (e.g. <i>delete EGE:EGE-Teaching tue weeks 38-51 3pm-6pm</i>). Drag either end of a block to resize; tap a block for nudge buttons. The 🗒 button shows/hides a sticky note you can drag anywhere (Ctrl+B bold, Ctrl+I italic, Ctrl+H pink).</p>
+  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The 🗒 button shows/hides a sticky note (Ctrl+B bold, Ctrl+I italic, Ctrl+H pink).</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -889,7 +906,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v207 */
+/* build v211 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -994,7 +1011,7 @@ function groupColorFor(group, cats, exceptId) {
 }
 function usedByCat(blocks) {
   const u = {};
-  for (const b of blocks) if (!b.event && b.kind !== "actual") u[b.catId] = (u[b.catId] || 0) + b.lenSlots / SPH;
+  for (const b of blocks) if ((!b.event || b.catId) && b.kind !== "actual") u[b.catId] = (u[b.catId] || 0) + b.lenSlots / SPH;
   return u;
 }
 function layoutDay(list) {
@@ -1038,7 +1055,7 @@ function layoutDay(list) {
 /* ── Merge blocks of the SAME task that touch or overlap on the same day ── */
 function mergeAdjacent(blocks) {
   const result = [], mer = [];
-  for (const b of blocks) { if (b.event || b.meeting || b.oneoff || (b.kind || "plan") !== "plan") result.push(b); else mer.push(b); } // only merge plain plan blocks; keep actuals/events/meetings/one-offs intact
+  for (const b of blocks) { if (b.event || b.oneoff || (b.kind || "plan") !== "plan") result.push(b); else mer.push(b); } // only merge plain plan blocks; keep actuals/events/one-offs intact
   const keyOf = (b) => "c:" + b.catId + "|" + b.day;
   const groups = {};
   for (const b of mer) { (groups[keyOf(b)] = groups[keyOf(b)] || []).push(b); }
@@ -1141,7 +1158,7 @@ function weekUsage(state, weekIdx) {
         if (e <= nowSlot && !(byc[b.catId] > 0)) miss[b.catId] = true; // elapsed today, nothing tracked
       }
     } else {                            // future day → all planned
-      for (const b of wblocks) if (b.day === DAYS[d] && !b.event && b.kind !== "actual") plannedFut[b.catId] = (plannedFut[b.catId] || 0) + b.lenSlots / 4;
+      for (const b of wblocks) if (b.day === DAYS[d] && (!b.event || b.catId) && b.kind !== "actual") plannedFut[b.catId] = (plannedFut[b.catId] || 0) + b.lenSlots / 4;
     }
   }
   const used = {}, ids = new Set(Object.keys(actualRaw).concat(Object.keys(plannedFut)));
@@ -1252,8 +1269,7 @@ function parseCommand(text, categories) {
   if (isEvent) {
     const name = freeName || (taskCat ? taskCat.name : "");
     if (!name) return { error: "Give the event a name, e.g. “Fred, Event : mon 10-11am”." };
-    if (taskCat) return Object.assign({ kind: "meeting", cat: taskCat, name }, ext);
-    return Object.assign({ kind: "event", name }, ext);
+    return Object.assign({ kind: "event", cat: taskCat || null, name }, ext);   // cat set → event assigned to that task
   }
   if (taskCat) return Object.assign({ kind: "task", cat: taskCat, name: taskCat.name, label: freeName || null }, ext);
   if (!freeName) return { error: "Type a task name, e.g. “Growth : mon 10-11am”." };
@@ -1379,7 +1395,7 @@ function migrate(s) {
   if (s.weeks && Array.isArray(s.weeks)) {
     if (!s.parentsSeeded) { (s.categories || []).forEach((c) => { if ((c.group === "none" || !c.group) && /^(mail|plan)/i.test(c.name || "")) c.group = "parents"; }); s.parentsSeeded = true; }   // one-time: move existing Mails/Plann into the new Parents group
     (s.categories || []).forEach((c) => { if (!c.group) c.group = "work"; if (c.group === "termin" && !c.lockColor) c.color = EVENT_COLOR; if (c.group === "none" && !c.lockColor) c.color = GREY; if (c.group === "zug") { c.group = "none"; if (!c.lockColor) c.color = GREY; } });
-    s.weeks.forEach((w) => { w.blocks = (w.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0); w.blocks.forEach((b) => { if (!b.kind) b.kind = "plan"; }); if (!w.budgets) w.budgets = {}; });
+    s.weeks.forEach((w) => { w.blocks = (w.blocks || []).filter((b) => DAYS.indexOf(b.day) >= 0); w.blocks.forEach((b) => { if (!b.kind) b.kind = "plan"; if (b.meeting) { b.event = true; delete b.meeting; } }); if (!w.budgets) w.budgets = {}; });   // "meeting" folded into "event + assigned task (catId)"
     if (!s.weeks.length) s.weeks = [{ id: "w" + Date.now(), blocks: [], budgets: {} }];
     s.currentWeek = Math.max(0, Math.min(s.currentWeek || 0, s.weeks.length - 1));
     s.nextId = s.nextId || 1; s.version = 3;
@@ -1479,7 +1495,7 @@ if (IS_BROWSER) (function () {
         for (let d = 0; d < ND; d++) {
           const ds = ymd(dateOfCell(state.anchorMonday, wIdx, d));
           if (ds < todayStr) { for (const b of w.blocks) if (b.catId === cat.id && b.kind === "actual" && b.date === ds && b.endMs != null) s += (b.endMs - b.startMs) / 3600000; }
-          else { for (const b of w.blocks) if (b.catId === cat.id && !b.event && b.kind !== "actual" && b.day === DAYS[d]) s += b.lenSlots / 4; }
+          else { for (const b of w.blocks) if (b.catId === cat.id && (!b.event || b.catId) && b.kind !== "actual" && b.day === DAYS[d]) s += b.lenSlots / 4; }
         }
       }
       const typed = (w && w.budgets && w.budgets[cat.id] != null) ? w.budgets[cat.id] : null;
@@ -1577,7 +1593,7 @@ if (IS_BROWSER) (function () {
     const cell = cellForDate(state.anchorMonday, new Date()), wk = state.weeks[cell.weekIdx];
     const nowSlotL = (new Date().getHours() * 60 + new Date().getMinutes()) / SLOT_MIN;
     let total = 0, future = 0;
-    if (wk) for (const b of wk.blocks) if (b.catId === catId && b.day === DAYS[cell.dayIdx] && !b.event && b.kind !== "actual") {
+    if (wk) for (const b of wk.blocks) if (b.catId === catId && b.day === DAYS[cell.dayIdx] && (!b.event || b.catId) && b.kind !== "actual") {
       const end = b.startSlot + b.lenSlots; total += b.lenSlots / 4;
       if (end > nowSlotL) future += (end - Math.max(b.startSlot, nowSlotL)) / 4; // portion still ahead of now (as shown on the grid)
     }
@@ -1591,7 +1607,7 @@ if (IS_BROWSER) (function () {
   function elapsedPlanToday(catId) {  // planned hours in today's blocks that have already ended
     const cell = cellForDate(state.anchorMonday, new Date()), wk = state.weeks[cell.weekIdx];
     const nowSlot = (new Date().getHours() * 60 + new Date().getMinutes()) / SLOT_MIN;
-    let s = 0; if (wk) for (const b of wk.blocks) if (b.catId === catId && b.day === DAYS[cell.dayIdx] && !b.event && b.kind !== "actual" && (b.startSlot + b.lenSlots) <= nowSlot) s += b.lenSlots / 4;
+    let s = 0; if (wk) for (const b of wk.blocks) if (b.catId === catId && b.day === DAYS[cell.dayIdx] && (!b.event || b.catId) && b.kind !== "actual" && (b.startSlot + b.lenSlots) <= nowSlot) s += b.lenSlots / 4;
     return s;
   }
   function updateTimerDisplay() {
@@ -1767,7 +1783,7 @@ if (IS_BROWSER) (function () {
   function weekPlaced(idx) { const u = usedByCat(state.weeks[idx].blocks); return Object.values(u).reduce((a, b) => a + b, 0); }
   function planForToday() {
     const cell = cellForDate(state.anchorMonday, new Date()), wk = state.weeks[cell.weekIdx], plan = {};
-    if (wk) for (const b of wk.blocks) if (b.day === DAYS[cell.dayIdx] && !b.event && b.kind !== "actual") plan[b.catId] = (plan[b.catId] || 0) + b.lenSlots / 4;
+    if (wk) for (const b of wk.blocks) if (b.day === DAYS[cell.dayIdx] && (!b.event || b.catId) && b.kind !== "actual") plan[b.catId] = (plan[b.catId] || 0) + b.lenSlots / 4;
     return plan;
   }
   function ensureSnapshot() {
@@ -1856,7 +1872,7 @@ if (IS_BROWSER) (function () {
       if (!(di < todayIdx || bEnd <= nowSlotS)) continue;            // block hasn't ended yet
       // always-check once past: one-offs, events, assigned events, and annotated task blocks — shown by their own name
       if (b.oneoff) { checkBlocks.push({ b, name: b.name }); continue; }
-      if (b.event || b.meeting) { checkBlocks.push({ b, name: b.name }); continue; }
+      if (b.event) { checkBlocks.push({ b, name: b.name }); continue; }
       const c = chkById[b.catId]; if (!c || c.archived || c.parent) continue;
       if (b.label) { checkBlocks.push({ b, c, name: b.label + " (" + c.name + ")" }); continue; }
       const ds = chkDates[di];
@@ -1902,10 +1918,7 @@ if (IS_BROWSER) (function () {
       for (const r of rows) { const v = vals(r); h += '<tr class="' + r.c + '"><td class="sumRowLbl">' + r.l + "</td><td>" + (todayInWeek ? fmtHM(v.TD) : "") + "</td><td>" + (todayInWeek ? fmtHM(v.TW) : "") + "</td><td>" + fmtHM(v.P) + "</td></tr>"; }   // Day/Week are real-time (today / this week), so blank them when viewing any week other than the current one
       return h + "</tbody></table>";
     };
-    const summary = document.createElement("div");
-    summary.className = "poolSummary";
-    summary.innerHTML = '<div class="sumSec">' + buildTable() + "</div>";
-    pool.appendChild(summary);
+    { const rs = $("rbSummary"); if (rs) rs.innerHTML = '<div class="poolSummary"><div class="sumSec">' + buildTable() + "</div></div>"; }   // summary table lives in the right bar, just below the streak tracker
     ensureSnapshot();   // keep today's baseline captured (shown in the Reports modal)
 
     const divider = (label, cls) => { const dv = document.createElement("div"); dv.className = "poolDivider" + (cls ? " " + cls : ""); if (label) dv.textContent = label; pool.appendChild(dv); };
@@ -2032,7 +2045,7 @@ if (IS_BROWSER) (function () {
       }
     }
     // Only show tasks planned and/or gridded for THIS week
-    const blockCatIds = new Set(); for (const b of curBlocks()) { if (!b.event) blockCatIds.add(b.catId); }
+    const blockCatIds = new Set(); for (const b of curBlocks()) { if (!b.event || b.catId) blockCatIds.add(b.catId); }
     const timedId = state.timer ? state.timer.catId : null;
     const hasWprio = (id) => { const v = poolWprio(id); return v !== "" && v != null && !isNaN(v) && +v > 0; };   // a weekly priority > 0 (even with 0 planned hours) is enough to show a task
     const poolIP = (id) => (poolMp && poolMp.ip && poolMp.ip[id] && poolMp.ip[id][cw] != null) ? +poolMp.ip[id][cw] : 0;   // if-possible (IP) hours for this task this week
@@ -2141,7 +2154,7 @@ if (IS_BROWSER) (function () {
       const pill = document.createElement("div"); pill.className = "poolTimerPill";
       { const tcol = tc ? tc.color : "#888"; pill.style.background = tcol; pill.style.color = textOn(tcol); pill.style.borderColor = "#000"; }   // running pill keeps the running task's colour
       pill.innerHTML = '<span class="ptName"></span><span class="runElapsed"></span>' +
-        '<button class="ptBtn ptStop" title="Stop timer (log it)">⏸</button>' +
+        '<button class="ptBtn ptStop" title="Stop timer (log it)">⏹</button>' +
         '<button class="ptBtn ptEdit" title="Edit the start time">✎</button>' +
         '<button class="ptBtn ptDel" title="Discard the current timing (do not log it)">✕</button>';
       pill.querySelector(".ptName").textContent = tc ? tc.name : "?";
@@ -2151,25 +2164,15 @@ if (IS_BROWSER) (function () {
       pill.querySelector(".ptDel").addEventListener("click", discardTimer);
       pillSec.appendChild(pill);
     }
-    const stWrap = document.createElement("div"); stWrap.className = "poolStartWrap";
-    const stInp = document.createElement("input"); stInp.className = "poolStartIn"; stInp.placeholder = "▶ start a timer…"; stInp.setAttribute("autocomplete", "off");
-    const stMenu = document.createElement("div"); stMenu.className = "taskMenu floatMenu"; stMenu.style.display = "none"; document.body.appendChild(stMenu);
-    wireTimerInput(stInp, stMenu);
-    stWrap.appendChild(stInp); pillSec.appendChild(stWrap);
-    // SECTION 4: mode buttons (A · Upcoming) left-aligned; Reports + Masterplan launchers right-aligned, in a grey rounded box.
-    if (shownAll.length) {
-      const btnBox = document.createElement("div"); btnBox.className = "btnBox";
-      const bar = document.createElement("div"); bar.className = "poolModeBar";
-      bar.innerHTML = '<button class="pmBtn pmAll' + (mode === "" ? " on" : "") + '" title="All — the basic order, grouped (Parents · Work · Fruit · Home · Off · Event)">A</button>' +
-        '<button class="pmBtn pmUp' + (mode === "upcoming" ? " on" : "") + '" title="Upcoming — order by when tasks come up on the grid this week (others hidden)">↑</button>';
-      const nav = document.createElement("div"); nav.className = "poolNav";
-      nav.innerHTML = '<button class="navBtn pmRep" title="Reports & activity">📊</button><button class="navBtn pmMp" title="Masterplan & tasks">🐝</button>';
-      btnBox.appendChild(bar); btnBox.appendChild(nav); pool.appendChild(btnBox);
-      bar.querySelector(".pmAll").addEventListener("click", () => { ui.poolMode = ""; saveUI(); renderPool(); });
-      bar.querySelector(".pmUp").addEventListener("click", () => { ui.poolMode = "upcoming"; saveUI(); renderPool(); });
-      nav.querySelector(".pmRep").addEventListener("click", () => { renderReports(); $("reportsDialog").showModal(); });
-      nav.querySelector(".pmMp").addEventListener("click", () => { mpDlg.showModal(); renderBudgets(); });
+    if (!state.timer) {   // idle timer pill (hidden while a timer is running — just stop it and start a new one)
+      const stWrap = document.createElement("div"); stWrap.className = "poolStartWrap";
+      const stInp = document.createElement("input"); stInp.className = "poolStartIn"; stInp.placeholder = "▶ Timer"; stInp.setAttribute("autocomplete", "off");
+      const stMenu = document.createElement("div"); stMenu.className = "taskMenu floatMenu"; stMenu.style.display = "none"; document.body.appendChild(stMenu);
+      wireTimerInput(stInp, stMenu);
+      stWrap.appendChild(stInp); pillSec.appendChild(stWrap);
     }
+    // mode / reports / masterplan / undo buttons now live in the right-bar footer & scheduler row — just sync the A/↑ active state here
+    { const a = $("rbAll"), u = $("rbUp"); if (a) a.classList.toggle("on", mode === ""); if (u) u.classList.toggle("on", mode === "upcoming"); }
     // MAIN list, depending on the active mode
     if (mode === "upcoming") {
       const up = shownAll.filter((c) => futureKey[c.id] != null).sort((a, b) => futureKey[a.id] - futureKey[b.id]);
@@ -2194,8 +2197,8 @@ if (IS_BROWSER) (function () {
 
   /* ── blocks ── */
   function dispCat(b, catById) { const c = catById[b.catId]; if (!c) return null; return (c.parent && catById[c.parent]) ? catById[c.parent] : c; }   // child blocks show as their parent on the grid
-  function blockName(b, catById) { if (b.oneoff) return b.name || "?"; if (b.event || b.meeting) return b.name || "Event"; const c = dispCat(b, catById); const nm = c ? c.name : "?"; return b.label ? nm + " (" + b.label + ")" : nm; }   // annotated task → "Task (label)" on the grid
-  function blockColor(b, catById) { if (b.oneoff) return b.color || GREY; if (b.event || b.meeting) return EVENT_COLOR; const c = dispCat(b, catById); return c ? c.color : "#888"; }
+  function blockName(b, catById) { if (b.oneoff) return b.name || "?"; if (b.event) return b.name || "Event"; const c = dispCat(b, catById); const nm = c ? c.name : "?"; return b.label ? nm + " (" + b.label + ")" : nm; }   // annotated task → "Task (label)" on the grid
+  function blockColor(b, catById) { if (b.oneoff) return b.color || GREY; if (b.event) return EVENT_COLOR; const c = dispCat(b, catById); return c ? c.color : "#888"; }
 
   function renderBlocks() {
     const layer = $("blocksLayer"); if (!layer) return;
@@ -2268,7 +2271,7 @@ if (IS_BROWSER) (function () {
         const vs = vGeom[b.id].s, vl = vGeom[b.id].l;
         const hPx = isAct ? Math.max(4, vl * SLOT_PX) : (vl * SLOT_PX - 2);
         const el = document.createElement("div");
-        el.className = "block" + (b.event ? " event" : "") + (b.meeting ? " meeting" : "") + (isAct ? " actual" : " plan") + (selectedId === b.id ? " selected" : "") + (cmp < 0 ? " pastBlock" : "");
+        el.className = "block" + (b.event ? " event" : "") + (isAct ? " actual" : " plan") + (selectedId === b.id ? " selected" : "") + (cmp < 0 ? " pastBlock" : "");
         el.dataset.id = b.id;
         const frac = ci / NC + p.col / (NC * p.nCols);
         el.style.cssText =
@@ -2276,7 +2279,7 @@ if (IS_BROWSER) (function () {
           ";top:" + (vs * SLOT_PX + 1) + "px;height:" + hPx + "px" +
           ";left:calc(" + LABEL_W + "px + " + frac + " * (100% - " + LABEL_W + "px) + 1px)" +
           ";width:calc((100% - " + LABEL_W + "px) / " + (NC * p.nCols) + " - 3px);";
-        if (b.meeting && dispCat(b, catById)) el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.18), inset -8px 0 0 0 " + dispCat(b, catById).color; // red meeting with task-coloured band on the right
+        if (b.event && b.catId && dispCat(b, catById)) el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.18), inset -8px 0 0 0 " + dispCat(b, catById).color; // event assigned to a task → band on the right in that task's colour
         const nm = blockName(b, catById);
         const tLabel = isAct && b.startMs ? (clock(b.startMs) + "–" + clock(b.endMs)) : (minLabel(vs) + "–" + minLabel(vs + vl));
         let inner = '<span class="blockLabel">' + nm.replace(/</g, "&lt;") + "</span>";
@@ -2299,7 +2302,7 @@ if (IS_BROWSER) (function () {
     const w = state.weeks[state.currentWeek];
     const blk = w.blocks.find((b) => b.id === id);
     w.blocks = w.blocks.filter((b) => b.id !== id);
-    if (blk && (blk.event || blk.meeting)) {   // an event/meeting auto-adds a Switch ending right before it — remove that Switch too
+    if (blk && blk.event) {   // an event auto-adds a Switch ending right before it — remove that Switch too
       const swCat = state.categories.find((c) => (c.name || "").trim().toLowerCase() === "switch");
       if (swCat) w.blocks = w.blocks.filter((b) => !(b.catId === swCat.id && b.day === blk.day && (b.startSlot + b.lenSlots) === blk.startSlot));
     }
@@ -2405,7 +2408,9 @@ if (IS_BROWSER) (function () {
     }
   });
   function pushOverlapsDown(day, aStart, aLen, exclude) {   // Ctrl/Cmd-drop: shove only the overlapping plan blocks down, just enough (cascading); returns false if it won't fit the day
-    const others = curBlocks().filter((b) => b.day === day && b !== exclude && !b.event && !b.meeting && b.kind !== "actual").sort((x, y) => x.startSlot - y.startSlot);
+    const catById = {}; for (const c of state.categories) catById[c.id] = c;
+    const isEvent = (b) => b.event || (catById[b.catId] && catById[b.catId].group === "termin");   // never bump events (assigned or not) / Event-group tasks
+    const others = curBlocks().filter((b) => b.day === day && b !== exclude && !isEvent(b) && b.kind !== "actual").sort((x, y) => x.startSlot - y.startSlot);
     let floor = aStart + aLen; const moves = [];
     for (const b of others) {
       if (b.startSlot + b.lenSlots <= aStart) continue;   // fully above the placed block → leave it
@@ -2432,8 +2437,8 @@ if (IS_BROWSER) (function () {
       const el = $("blocksLayer").querySelector('[data-id="' + d.blockId + '"]'); if (el) el.classList.remove("dragging");
       if (!d.moved) { selectedId = selectedId === d.blockId ? null : d.blockId; renderBlocks(); }
       else if (pos) { snap(); const b = findBlock(d.blockId); if (b) {
-          let sw = null;   // a meeting drags its preceding Switch along
-          if (b.meeting) { const swCat = state.categories.find((c) => (c.name || "").trim().toLowerCase() === "switch"); if (swCat) sw = curBlocks().find((x) => x.catId === swCat.id && x.day === b.day && (x.startSlot + x.lenSlots) === b.startSlot); }
+          let sw = null;   // an event drags its preceding Switch along
+          if (b.event) { const swCat = state.categories.find((c) => (c.name || "").trim().toLowerCase() === "switch"); if (swCat) sw = curBlocks().find((x) => x.catId === swCat.id && x.day === b.day && (x.startSlot + x.lenSlots) === b.startSlot); }
           b.day = pos.day; b.startSlot = Math.max(0, Math.min(pos.slot - d.grabOffset, TOTAL_SLOTS - b.lenSlots)); syncActualMs(b);
           if (sw) { sw.day = b.day; sw.startSlot = Math.max(0, b.startSlot - sw.lenSlots); }
           if (e.ctrlKey || e.metaKey) { if (!pushOverlapsDown(b.day, b.startSlot, b.lenSlots, b)) toast("Not enough room left in the day to push the others down"); }   // Ctrl/Cmd-move → shove overlapping blocks down
@@ -2501,8 +2506,8 @@ if (IS_BROWSER) (function () {
       if (b.event) { tw.style.display = "none"; }
       else { tw.style.display = ""; $("editTask").innerHTML = state.categories.slice().sort((a, x) => (a.name || "").localeCompare(x.name || "")).map((c) => '<option value="' + c.id + '"' + (c.id === b.catId ? " selected" : "") + ">" + (c.name || "").replace(/</g, "&lt;") + "</option>").join(""); }
     }
-    { const nw = $("editNameWrap"); if (b.event || b.meeting) { nw.style.display = ""; $("editName").value = b.name || ""; } else { nw.style.display = "none"; } }
-    $("editTitle").textContent = "Edit " + ((b.event || b.meeting) ? "“" + (b.name || "Meeting") + "”" : "“" + (cat ? cat.name : "?") + "”");
+    { const nw = $("editNameWrap"); if (b.event) { nw.style.display = ""; $("editName").value = b.name || ""; } else { nw.style.display = "none"; } }
+    $("editTitle").textContent = "Edit " + (b.event ? "“" + (b.name || "Event") + "”" : "“" + (cat ? cat.name : "?") + "”");
     $("editHint").textContent = b.kind === "actual" ? "Tracked session — times are exact to the minute." : "Planned block — times snap to 15-minute steps.";
     $("editDialog").showModal();
   }
@@ -2514,7 +2519,7 @@ if (IS_BROWSER) (function () {
     const di = +$("editDay").value, sMin = parseHHMM($("editStart").value), eMin = parseHHMM($("editEnd").value);
     if (sMin == null || eMin == null) { toast("Enter start and end times"); return; }
     snap();
-    if (b.event || b.meeting) { const nm = $("editName").value.trim(); b.name = nm || b.name || "Meeting"; }
+    if (b.event) { const nm = $("editName").value.trim(); b.name = nm || b.name || "Event"; }
     if (b.split) { const mins = {}; let tot = 0; document.querySelectorAll("#editSplit .splitMin").forEach((inp) => { const v = Math.max(0, +inp.value || 0); mins[inp.dataset.k] = v; tot += v; }); if (tot > 0) { const ns = {}; for (const k in mins) if (mins[k] > 0) ns[k] = mins[k] / tot; b.split = ns; } }
     else if (!b.event) { const tv = $("editTask").value; if (tv) b.catId = tv; }
     b.day = DAYS[di];
@@ -2577,6 +2582,12 @@ if (IS_BROWSER) (function () {
     renderLog();   // Activity now lives at the bottom of the Reports modal
   }
   { const rb = $("reportsBtn"); if (rb) rb.addEventListener("click", () => { renderReports(); $("reportsDialog").showModal(); }); }   // top-bar button removed; launched from the pool buttons box
+  // right-bar footer + scheduler-row launchers
+  { const b = $("rbReports"); if (b) b.addEventListener("click", () => { renderReports(); $("reportsDialog").showModal(); }); }
+  { const b = $("rbUndo"); if (b) b.addEventListener("click", () => undo()); }
+  { const b = $("rbAll"); if (b) b.addEventListener("click", () => { ui.poolMode = ""; saveUI(); renderPool(); }); }
+  { const b = $("rbUp"); if (b) b.addEventListener("click", () => { ui.poolMode = "upcoming"; saveUI(); renderPool(); }); }
+  { const b = $("mpTopBtn"); if (b) b.addEventListener("click", () => { mpDlg.showModal(); renderBudgets(); }); }
 
   function renderLog() {
     const catById = {}; for (const c of state.categories) catById[c.id] = c;
@@ -2640,17 +2651,16 @@ if (IS_BROWSER) (function () {
       const overlaps = (b) => !r.hasTime || (b.startSlot < (r.startSlot + r.lenSlots) && r.startSlot < (b.startSlot + b.lenSlots));
       const isTarget = (b) => {
         if (!dayLabels.includes(b.day) || b.kind === "actual") return false;
-        if (r.kind === "task") return b.catId === r.cat.id && !b.meeting && !b.event && !b.oneoff && overlaps(b);
+        if (r.kind === "task") return b.catId === r.cat.id && !b.event && !b.oneoff && overlaps(b);
         if (r.kind === "oneoff") return b.oneoff && (b.name || "").toLowerCase() === (r.name || "").toLowerCase() && overlaps(b);
-        if (r.kind === "meeting") return b.meeting && b.catId === r.cat.id && (!r.name || (b.name || "").toLowerCase() === r.name.toLowerCase()) && overlaps(b);
-        return b.event && (b.name || "").toLowerCase() === (r.name || "").toLowerCase() && overlaps(b);
+        return b.event && (r.cat ? b.catId === r.cat.id : true) && (!r.name || (b.name || "").toLowerCase() === (r.name || "").toLowerCase()) && overlaps(b);   // event (assigned when r.cat set)
       };
       let removed = 0;
       for (const wi of targetWeeks) {
         const B = state.weeks[wi].blocks, gone = [];
         let keep = B.filter((b) => { if (isTarget(b)) { gone.push(b); return false; } return true; });
         removed += gone.length;
-        if (swCat && gone.some((b) => b.meeting)) keep = keep.filter((b) => !(b.catId === swCat.id && gone.some((g) => g.meeting && g.day === b.day && g.startSlot === b.startSlot + b.lenSlots)));
+        if (swCat && gone.some((b) => b.event)) keep = keep.filter((b) => !(b.catId === swCat.id && gone.some((g) => g.event && g.day === b.day && g.startSlot === b.startSlot + b.lenSlots)));
         state.weeks[wi].blocks = keep;
       }
       const nWk = targetWeeks.length;
@@ -2676,23 +2686,18 @@ if (IS_BROWSER) (function () {
           B.push({ id: state.nextId++, oneoff: true, name: r.name, color: GREY, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
           if (spill && di + 1 < ND) B.push({ id: state.nextId++, oneoff: true, name: r.name, color: GREY, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
         }
-      } else if (r.kind === "meeting") {
+      } else {   // event — plain, or assigned to a task when r.cat is set (former "meeting")
+        const asg = r.cat ? { catId: r.cat.id } : {};
         for (const di of r.days) {
-          addSw(wi, DAYS[di], r.startSlot); B.push({ id: state.nextId++, catId: r.cat.id, meeting: true, name: r.name, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
-          if (spill && di + 1 < ND) B.push({ id: state.nextId++, catId: r.cat.id, meeting: true, name: r.name, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
-        }
-      } else {
-        for (const di of r.days) {
-          addSw(wi, DAYS[di], r.startSlot); B.push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" });
-          if (spill && di + 1 < ND) B.push({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" });
+          addSw(wi, DAYS[di], r.startSlot); B.push(Object.assign({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di], startSlot: r.startSlot, lenSlots: r.lenSlots, kind: "plan" }, asg));
+          if (spill && di + 1 < ND) B.push(Object.assign({ id: state.nextId++, event: true, name: r.name, color: EVENT_COLOR, day: DAYS[di + 1], startSlot: 0, lenSlots: r.nextLen, kind: "plan" }, asg));
         }
       }
     }
     const nW = targetWeeks.length, scopeTxt = (nW > 1) ? " across " + nW + " weeks" : "";
     if (r.kind === "task") toast("Placed " + (r.days.length * nW) + " × " + fmtH((r.lenSlots + r.nextLen) / SPH) + "h of “" + r.cat.name + "”" + (r.label ? " (" + r.label + ")" : "") + scopeTxt + (spill ? " (over midnight)" : ""));
     else if (r.kind === "oneoff") toast("Added one-off “" + r.name + "”" + scopeTxt);
-    else if (r.kind === "meeting") toast("Event “" + r.name + "” → " + r.cat.name + scopeTxt + " (+ switch)");
-    else toast("Added event “" + r.name + "”" + scopeTxt + " (+ switch)");
+    else toast((r.cat ? "Event “" + r.name + "” → " + r.cat.name : "Added event “" + r.name + "”") + scopeTxt + " (+ switch)");
     $("cmdInput").value = ""; $("cmdInput").blur(); commit();
   });
   // spill the pill over the pool edge onto the grid as soon as it's focused (so the tips show immediately); snap back on blur/Enter
@@ -2908,6 +2913,17 @@ if (IS_BROWSER) (function () {
     let totVac = 0; for (const i of mpIdx) { const wk = state.weeks[i]; const hd = wk && wk.holidays ? Math.max(0, Math.min(6, wk.holidays)) : 0; totVac += hd / 6; }
     const totEff = mpIdx.length - totVac;
     const paceAll = (v) => (totEff > 0.0001 && Math.abs(v) > 0.0001) ? fmtHM(v / totEff) : "";   // per-week over ALL effective weeks of the masterplan
+    // Timed per week = timed in PAST weeks ÷ number of past weeks (holidays removed)
+    const pastIdx = mpIdx.filter((i) => i < state.currentWeek);
+    let pastVac = 0; for (const i of pastIdx) { const wk = state.weeks[i]; const hd = wk && wk.holidays ? Math.max(0, Math.min(6, wk.holidays)) : 0; pastVac += hd / 6; }
+    const pastEff = pastIdx.length - pastVac;
+    const timedPastRow = (c) => { let s = 0; for (const i of pastIdx) s += weekTracked(c, i); return s; };   // row: own + children
+    const timedPastAgg = (c) => { let s = 0; for (const i of pastIdx) s += trackedById(c.id, i); return s; };  // totals: own-only (no double count)
+    const twCell = (timedSum, plannedSum, btot) => {
+      const tw = pastEff > 0.0001 ? timedSum / pastEff : 0, pw = totEff > 0.0001 ? plannedSum / totEff : 0;
+      const cls = tw > pw + 0.0001 ? "dfNeg" : tw < pw - 0.0001 ? "dfPos" : "dfZero";   // above Planned/wk → red, below → blue
+      return '<td class="paceX keyWk' + (btot ? " btot" : "") + " " + cls + '">' + (tw > 0.0001 ? fmtHM(tw) : "") + "</td>";
+    };
     const fmtWk = (n) => (Math.round(n * 10) / 10).toString();
     const weeksWorkTxt = "Work: " + fmtWk(Math.max(0, paceDiv)) + " left / " + fmtWk(Math.max(0, totEff)) + " total";   // shown inside the Ought table (built in renderOught)
     const weeksHolTxt = "Holidays: " + fmtWk(Math.max(0, vacEq)) + " left / " + fmtWk(Math.max(0, totVac)) + " total";
@@ -2978,10 +2994,11 @@ if (IS_BROWSER) (function () {
       r += '<td class="paceT keyWk">' + paceAll(tsum) + '</td>';
       r += '<td class="paceD keyWk ' + (hasGoal ? ocls : "") + '">' + (hasGoal ? paceSigned(openVal) : "") + '</td>';
       r += '<td class="paceG keyWk">' + (hasGoal ? paceAll(goal) : "") + '</td>';
+      r += twCell(timedPastRow(c), goal, false);   // T/w — timed per past week
       // ── Total key (darker green): Timed, Committed, Open ──
       r += '<td class="keyTot ktTimed">' + (timedMP(c) > 0.0001 ? fmtHM(timedMP(c)) : "") + '</td>';
       r += '<td class="stot keyTot btot' + (over ? " over" : "") + '">' + fmtHM(tsum) + "</td>";
-      r += '<td class="dcol keyTot' + (hasGoal ? " " + ocls : "") + '">' + (hasGoal ? (openVal > 0.0001 ? "-" + fmtHM(openVal) : openVal < -0.0001 ? "+" + fmtHM(-openVal) : "0:00") : "") + "</td>";   // reversed sign
+      r += '<td class="dcol keyTot' + (hasGoal ? " " + ocls : "") + '">' + (hasGoal ? (openVal > 0.0001 ? "+" + fmtHM(openVal) : openVal < -0.0001 ? "-" + fmtHM(-openVal) : "0:00") : "") + "</td>";   // Open: positive = still to schedule (red), negative = over-committed (blue)
       // ── Planned (masterplan, lighter purple) ──
       r += '<td class="gcol gcolF planMP"><input class="bgoal" type="text" inputmode="numeric"' + (planTimeBlocked(c) ? ' readonly title="Planning is off for untracked / Off / Event tasks"' : '') + ' value="' + (goal ? fmtHM(goal) : "") + '"></td>';
       // ── ★ IP + Prio (masterplan, orange) ──
@@ -3023,30 +3040,30 @@ if (IS_BROWSER) (function () {
         return true;
       });
     }
-    const mHead = '<tr><th class="name" data-sort="name"><button class="mpAddCol" title="Add a new task">+</button>Task' + arrow("name") + '<button class="mpHdrBtn mpFeatBtn' + (ui.mpHideInfo ? "" : " on") + '" data-tog="info" title="Show/hide Info columns: Comment, Link">🗒🔗</button><button class="mpHdrBtn mpFeatBtn' + (ui.mpHideCreate ? "" : " on") + '" data-tog="create" title="Show/hide Feature columns: Group, Order, Track, Check, Auto, Later, NTH, AD, Def min, Parent, Lock">F</button><button class="mpHdrBtn mpFeatBtn' + (ui.mpHideOver ? "" : " on") + '" data-tog="over" title="Show/hide Over columns: Done, Delete">D/x</button></th><th class="feat fInfo cmtCol" title="Comment">🗒</th><th class="feat fInfo lnkCol" title="Link">🔗</th><th class="feat fCreate" data-sort="group">Group' + arrow("group") + '</th><th class="feat fCreate" data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th class="feat fCreate ckCol" data-sort="track">Track' + arrow("track") + '</th><th class="feat fCreate ckCol" title="Check — tick to add an untracked task to the pool Check list">Check</th><th class="feat fCreate ckCol" data-sort="auto">Auto' + arrow("auto") + '</th><th class="feat fCreate ckCol" title="Done for now">Later</th><th class="feat fCreate ckCol" title="Nice to have">NTH</th><th class="feat fCreate adCol" title="Amnesty deal">AD</th><th class="feat fCreate" data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th class="feat fCreate parCol">Parent</th><th class="feat fCreate">Lock</th><th class="feat fOver ckCol" title="Finished for good">Done</th><th class="feat fOver ckCol" title="Delete task">x</th><th class="paceT keyWk" title="Committed per week = Committed ÷ all weeks (holidays removed)">C/w</th><th class="paceD keyWk" title="Open per week = (Planned − Committed) ÷ future weeks (holidays removed)">O/w</th><th class="paceG keyWk" title="Planned per week = Planned ÷ all weeks (holidays removed)">P/w</th><th class="keyTot ktTimed" data-sort="timed" title="Timed — everything you have timed with the ▶ timer so far in this masterplan">Timed' + arrow("timed") + '</th><th class="stot keyTot" data-sort="total" title="Committed — timed (past weeks) + gridded (this week) + planned (future weeks)">Comm' + arrow("total") + '</th><th class="dcol keyTot" data-sort="open" title="Open = Planned − Committed (hours still to schedule)">Open' + arrow("open") + '</th><th class="gcol gcolF planMP" data-sort="goal" title="Planned — hours you plan for this task over the whole masterplan">Plan' + arrow("goal") + '<button class="mpHdrBtn mpHdrIcon planAvgBtn' + (ui.mpHidePace ? "" : " on") + '" data-tog="pace" title="Show/hide the average columns: C/w · O/w · P/w (per-week averages)">⌀</button><button class="mpHdrBtn mpHdrIcon planInfoBtn' + (ui.mpHideTotal ? "" : " on") + '" data-tog="total" title="Show/hide the masterplan info columns: Timed · Comm · Open">ⓘ</button><button class="mpHdrBtn mpHdrIcon planStarBtn' + (ui.mpHideImp ? "" : " on") + '" data-tog="imp" title="Show/hide the ★ MP columns: IP + Prio for the whole masterplan">★</button></th><th class="gcol gcolPrio starMP" data-sort="prio" title="★ Prio Masterplan — priority 1–5 (0 = none)">★' + arrow("prio") + '</th><th class="gcol gcolFip starMP" data-sort="goalip" title="★ IP Masterplan — if-possible stretch goal (hours)">IP' + arrow("goalip") + '</th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="wkHours' + (i === state.currentWeek ? " mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<button class="mpHdrBtn mpHdrIcon wkStarBtn' + (ui.wkStar && ui.wkStar[i] ? " on" : "") + '" data-tog="wkstar" data-wi="' + i + '" title="Open this week’s IP + Prio (★) columns">★</button><span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="wprioCol prioW' + i + (past ? " pastCol" : "") + '" title="★ Prio for this week (0–5)">★</th><th class="ipCol ipW' + i + (past ? " pastCol" : "") + '" title="★ IP — if-possible hours this week">IP</th>'; }).join("") + "</tr>";
+    const mHead = '<tr><th class="name" data-sort="name"><button class="mpAddCol" title="Add a new task">+</button>Task' + arrow("name") + '<button class="mpHdrBtn mpFeatBtn' + (ui.mpHideInfo ? "" : " on") + '" data-tog="info" title="Show/hide Info columns: Comment, Link">🗒🔗</button><button class="mpHdrBtn mpFeatBtn' + (ui.mpHideCreate ? "" : " on") + '" data-tog="create" title="Show/hide Feature columns: Group, Order, Track, Check, Auto, Later, NTH, AD, Def min, Parent, Lock">F</button><button class="mpHdrBtn mpFeatBtn' + (ui.mpHideOver ? "" : " on") + '" data-tog="over" title="Show/hide Over columns: Done, Delete">D/x</button></th><th class="feat fInfo cmtCol" title="Comment">🗒</th><th class="feat fInfo lnkCol" title="Link">🔗</th><th class="feat fCreate" data-sort="group">Group' + arrow("group") + '</th><th class="feat fCreate" data-sort="order" title="Order — sort key (digit by digit)">Order' + arrow("order") + '</th><th class="feat fCreate ckCol" data-sort="track">Track' + arrow("track") + '</th><th class="feat fCreate ckCol" title="Check — tick to add an untracked task to the pool Check list">Check</th><th class="feat fCreate ckCol" data-sort="auto">Auto' + arrow("auto") + '</th><th class="feat fCreate ckCol" title="Done for now">Later</th><th class="feat fCreate ckCol" title="Nice to have">NTH</th><th class="feat fCreate adCol" title="Amnesty deal">AD</th><th class="feat fCreate" data-sort="def">Def&nbsp;min' + arrow("def") + '</th><th class="feat fCreate parCol">Parent</th><th class="feat fCreate">Lock</th><th class="feat fOver ckCol" title="Finished for good">Done</th><th class="feat fOver ckCol" title="Delete task">x</th><th class="paceT keyWk" title="Committed per week = Committed ÷ all weeks (holidays removed)">C/w</th><th class="paceD keyWk" title="Open per week = (Planned − Committed) ÷ future weeks (holidays removed)">O/w</th><th class="paceG keyWk" title="Planned per week = Planned ÷ all weeks (holidays removed)">P/w</th><th class="paceX keyWk" title="Timed per week = timed in past weeks ÷ past weeks (holidays removed). Red = above Planned/wk, blue = below.">T/w</th><th class="keyTot ktTimed" data-sort="timed" title="Timed — everything you have timed with the ▶ timer so far in this masterplan">Timed' + arrow("timed") + '</th><th class="stot keyTot" data-sort="total" title="Committed — timed (past weeks) + gridded (this week) + planned (future weeks)">Comm' + arrow("total") + '</th><th class="dcol keyTot" data-sort="open" title="Open = Planned − Committed (hours still to schedule)">Open' + arrow("open") + '</th><th class="gcol gcolF planMP" data-sort="goal" title="Planned — hours you plan for this task over the whole masterplan">Plan' + arrow("goal") + '<button class="mpHdrBtn mpHdrIcon planAvgBtn' + (ui.mpHidePace ? "" : " on") + '" data-tog="pace" title="Show/hide the average columns: C/w · O/w · P/w · T/w (per-week averages)">⌀</button><button class="mpHdrBtn mpHdrIcon planInfoBtn' + (ui.mpHideTotal ? "" : " on") + '" data-tog="total" title="Show/hide the masterplan info columns: Timed · Comm · Open">ⓘ</button><button class="mpHdrBtn mpHdrIcon planStarBtn' + (ui.mpHideImp ? "" : " on") + '" data-tog="imp" title="Show/hide the ★ MP columns: IP + Prio for the whole masterplan">★</button></th><th class="gcol gcolPrio starMP" data-sort="prio" title="★ Prio Masterplan — priority 1–5 (0 = none)">★' + arrow("prio") + '</th><th class="gcol gcolFip starMP" data-sort="goalip" title="★ IP Masterplan — if-possible stretch goal (hours)">IP' + arrow("goalip") + '</th>' + mpIdx.map((i) => { const hol = (state.weeks[i] && state.weeks[i].holidays) || 0, past = i < state.currentWeek; return '<th class="wkHours' + (i === state.currentWeek ? " mpCur" : "") + (past ? " pastCol" : "") + '" data-sort="w' + i + '">W' + isoWeek(dateOfCell(state.anchorMonday, i, 0)) + arrow("w" + i) + '<button class="mpHdrBtn mpHdrIcon wkStarBtn' + (ui.wkStar && ui.wkStar[i] ? " on" : "") + '" data-tog="wkstar" data-wi="' + i + '" title="Open this week’s IP + Prio (★) columns">★</button><span class="wkHol' + (hol > 0 ? " on" : "") + '" data-wi="' + i + '" title="Holiday days this week — click to set 0–6">✈' + (hol > 0 ? hol : "") + '</span></th><th class="wprioCol prioW' + i + (past ? " pastCol" : "") + '" title="★ Prio for this week (0–5)">★</th><th class="ipCol ipW' + i + (past ? " pastCol" : "") + '" title="★ IP — if-possible hours this week">IP</th>'; }).join("") + "</tr>";
     const mFoot = (function () {
       const grpW = (c, g) => groupContribs(state, c.id)[g] || 0;
-      let gt = 0, gIP = 0, goalSum = 0, timedTot = 0, cells = "";
+      let gt = 0, gIP = 0, goalSum = 0, timedTot = 0, timedPastTot = 0, cells = "";
       for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { s += weekEffortAgg(c, i); sip += ipGet(c.id, i); } gt += s; cells += '<td class="wkHours btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + fmtHM(s) + '</td><td class="btot wprioCol prioW' + i + (isPast(i) ? " pastCol" : "") + '"></td><td class="btot ipCol ipW' + i + (isPast(i) ? " pastCol" : "") + '">' + (sip ? fmtHM(sip) : "") + '</td>'; }
-      for (const c of list) { gIP += gGet("goalIP", c.id); goalSum += gGet("goal", c.id); timedTot += timedMP(c); }
+      for (const c of list) { gIP += gGet("goalIP", c.id); goalSum += gGet("goal", c.id); timedTot += timedMP(c); timedPastTot += timedPastAgg(c); }
       const gover = goalSum > 0.0001 && gt > goalSum + 0.0001;
-      const gOpen = goalSum - gt, gCls = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "dfNeg" : gOpen < -0.0001 ? "dfPos" : "dfZero"), gTxt = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "-" + fmtHM(gOpen) : gOpen < -0.0001 ? "+" + fmtHM(-gOpen) : "0:00");   // reversed sign
+      const gOpen = goalSum - gt, gCls = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "dfNeg" : gOpen < -0.0001 ? "dfPos" : "dfZero"), gTxt = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "+" + fmtHM(gOpen) : gOpen < -0.0001 ? "-" + fmtHM(-gOpen) : "0:00");   // Open: positive = to schedule (red), negative = over (blue)
       let f = '<tr class="budFoot"><td class="name">Total</td>';
       for (let k = 0; k < 15; k++) f += '<td class="feat ' + (k < 2 ? "fInfo" : k < 13 ? "fCreate" : "fOver") + '"></td>';
-      f += '<td class="paceT keyWk btot">' + paceAll(gt) + '</td><td class="paceD keyWk btot ' + gCls + '">' + (goalSum > 0.0001 ? paceSigned(gOpen) : "") + '</td><td class="paceG keyWk btot">' + (goalSum > 0.0001 ? paceAll(goalSum) : "") + '</td>' +
+      f += '<td class="paceT keyWk btot">' + paceAll(gt) + '</td><td class="paceD keyWk btot ' + gCls + '">' + (goalSum > 0.0001 ? paceSigned(gOpen) : "") + '</td><td class="paceG keyWk btot">' + (goalSum > 0.0001 ? paceAll(goalSum) : "") + '</td>' + twCell(timedPastTot, goalSum, true) +
         '<td class="keyTot ktTimed btot">' + (timedTot > 0.0001 ? fmtHM(timedTot) : "") + '</td><td class="stot keyTot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="dcol keyTot btot ' + gCls + '">' + gTxt + '</td>' +
         '<td class="gcol gcolF planMP btot">' + (goalSum > 0.0001 ? fmtHM(goalSum) : "") + '</td>' +
         '<td class="gcol gcolPrio starMP btot"></td><td class="gcol gcolFip starMP btot">' + (gIP ? fmtHM(gIP) : "") + '</td>';
       f += cells + "</tr>";
       // Work / Fruit / Home totals — a parent's time fans out to its children's groups
       const groupRow = (g, label) => {
-        let tot = 0, goalS = 0, ipS = 0, timedS = 0, cc = "";
+        let tot = 0, goalS = 0, ipS = 0, timedS = 0, timedPastS = 0, cc = "";
         for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { const w = grpW(c, g); s += weekEffortAgg(c, i) * w; sip += ipGet(c.id, i) * w; } tot += s; cc += '<td class="wkHours btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + (s > 0.0001 ? fmtHM(s) : "") + '</td><td class="btot wprioCol prioW' + i + (isPast(i) ? " pastCol" : "") + '"></td><td class="btot ipCol ipW' + i + (isPast(i) ? " pastCol" : "") + '">' + (sip > 0.0001 ? fmtHM(sip) : "") + '</td>'; }
-        for (const c of list) { const w = grpW(c, g); goalS += gGet("goal", c.id) * w; ipS += gGet("goalIP", c.id) * w; timedS += timedMP(c) * w; }
-        const gOpenG = goalS - tot, cls = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "dfNeg" : gOpenG < -0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "-" + fmtHM(gOpenG) : gOpenG < -0.0001 ? "+" + fmtHM(-gOpenG) : "0:00");   // reversed sign
+        for (const c of list) { const w = grpW(c, g); goalS += gGet("goal", c.id) * w; ipS += gGet("goalIP", c.id) * w; timedS += timedMP(c) * w; timedPastS += timedPastAgg(c) * w; }
+        const gOpenG = goalS - tot, cls = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "dfNeg" : gOpenG < -0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "+" + fmtHM(gOpenG) : gOpenG < -0.0001 ? "-" + fmtHM(-gOpenG) : "0:00");   // Open: positive = to schedule (red), negative = over (blue)
         let g2 = '<tr class="budFoot budGrp budGrp-' + g + '"><td class="name">' + label + '</td>';
         for (let k = 0; k < 15; k++) g2 += '<td class="feat ' + (k < 2 ? "fInfo" : k < 13 ? "fCreate" : "fOver") + '"></td>';
-        g2 += '<td class="paceT keyWk btot">' + paceAll(tot) + '</td><td class="paceD keyWk btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(gOpenG) : "") + '</td><td class="paceG keyWk btot">' + (goalS > 0.0001 ? paceAll(goalS) : "") + '</td>' +
+        g2 += '<td class="paceT keyWk btot">' + paceAll(tot) + '</td><td class="paceD keyWk btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(gOpenG) : "") + '</td><td class="paceG keyWk btot">' + (goalS > 0.0001 ? paceAll(goalS) : "") + '</td>' + twCell(timedPastS, goalS, true) +
           '<td class="keyTot ktTimed btot">' + (timedS > 0.0001 ? fmtHM(timedS) : "") + '</td><td class="stot keyTot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="dcol keyTot btot ' + cls + '">' + dtxt + '</td>' +
           '<td class="gcol gcolF planMP btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td>' +
           '<td class="gcol gcolPrio starMP btot"></td><td class="gcol gcolFip starMP btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td>';
@@ -3269,7 +3286,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v207"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v211"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
