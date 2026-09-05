@@ -86,7 +86,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #pool { position: absolute; top: 52px; left: 44px; width: 272px; max-height: calc(100% - 60px); box-sizing: border-box; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.22); padding: 8px 11px 12px; display: none; flex-direction: column; gap: 6px; overflow-y: auto; z-index: 30; }
 #pool.open { display: flex; }
 /* check-off popup: floats over the grid top-left (clears the week-nav) so most of the grid stays visible */
-#checkPop { position: absolute; top: 52px; left: 44px; width: 230px; max-height: calc(100% - 60px); box-sizing: border-box; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.22); padding: 8px 9px; display: none; flex-direction: column; gap: 2px; overflow-y: auto; z-index: 28; }
+#checkPop { position: absolute; top: 52px; left: 44px; width: 230px; max-height: calc(100% - 60px); box-sizing: border-box; background: var(--bg); border: 3px solid #e60d84; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.22); padding: 8px 9px; display: none; flex-direction: column; gap: 2px; overflow-y: auto; z-index: 28; }
 #checkPop.show { display: flex; }
 #checkPop .cpHd { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink3); margin: 0 0 4px; }
 #checkPop .checkRow { padding: 6px 4px; }   /* more whitespace between items so you don't misclick */
@@ -204,6 +204,8 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #dayHeaderRow { display: flex; align-items: center; min-height: 24px; margin-bottom: 6px; }
 .dayHeader { flex: 1; text-align: center; font-size: 13px; font-weight: 700; color: var(--ink2); letter-spacing: 0.04em; font-family: 'Inter', sans-serif; text-transform: uppercase; }
 #gridScroll { flex: 1; min-height: 0; overflow: auto; border-radius: 8px; border: 1px solid var(--line); }
+#dayHeaderRow, #gridScroll { transition: margin-left .16s ease; }
+#gridWrap.poolOpen #dayHeaderRow, #gridWrap.poolOpen #gridScroll { margin-left: 322px; }   /* task-box pool is open → slide the days right so Monday sits beside the pool, not under it */
 #grid { position: relative; background: var(--grid); border-radius: 8px; touch-action: pan-y pan-x; }
 .slotLine { position: absolute; left: 0; right: 0; height: 0; pointer-events: none; }
 .timeLabel { position: absolute; left: 3px; top: -7px; font-size: 9.5px; color: var(--ink3); font-family: 'Inter', sans-serif; background: var(--grid); padding: 0 2px; }
@@ -536,6 +538,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
   #gridScroll { flex: none; max-height: calc(100vh - 300px); }
   #gridInner { min-width: 540px; }
   #dayHeaderRow { min-width: 540px; }
+  #gridWrap.poolOpen #dayHeaderRow, #gridWrap.poolOpen #gridScroll { margin-left: 0; }   /* on mobile the pool is a full-width overlay, so don't shove the grid */
   #rightBar { width: 100% !important; height: auto; border-left: none; border-top: 1px solid var(--line); }
   #rbGrip { display: none; }
 }
@@ -545,6 +548,8 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 #rbFooter { margin-top: auto; display: flex; align-items: center; gap: 8px; padding: 9px 2px 2px; border-top: 1px solid var(--line); flex-shrink: 0; flex-wrap: wrap; }
 #rbTools { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 #rbTools .iconBtn { width: 28px; height: 28px; font-size: 13px; }
+#rbZoom { display: flex; align-items: center; gap: 4px; }
+#rbZoom .zBtn { width: 28px; height: 28px; font-size: 16px; font-weight: 700; line-height: 1; }
 #rbTools .pmBtn { width: 22px; height: 22px; font-size: 12px; border-radius: 5px; }
 #rbSummary { padding: 4px 8px 2px; }
 #rbSummary .poolSummary { margin: 0; }
@@ -692,7 +697,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
   <div id="gridWrap">
     <div id="topBar">
       <button class="iconBtn" id="mpTopBtn" title="Masterplan &amp; tasks">🐝</button>
-      <button id="tbToggle" title="Show / hide the task boxes">&#9656;</button>
+      <button id="tbToggle" title="Show / hide the task boxes">&#9776;</button>
       <div id="tbTimer"></div>
       <div id="tbMails" class="tbStat" title="Mails timed today">Mails <b>0:00</b></div>
       <div id="tbGrowth" class="tbStat" title="Growth timed today">Growth <b>0:00</b></div>
@@ -738,6 +743,10 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
       <div id="rbFooter">
         <button class="iconBtn" id="settingsBtn" title="Settings">&#9881;</button>
         <div id="syncDot" title="Sync status"></div>
+        <div id="rbZoom">
+          <button class="iconBtn zBtn" id="rbZoomOut" title="Shorter cells — see more hours">&minus;</button>
+          <button class="iconBtn zBtn" id="rbZoomIn" title="Taller cells — see fewer hours">+</button>
+        </div>
         <div id="rbTools">
           <button class="pmBtn pmAll" id="rbAll" title="All — the basic grouped order">A</button>
           <button class="pmBtn pmUp" id="rbUp" title="Upcoming — order by when tasks come up on the grid">↑</button>
@@ -2620,8 +2629,9 @@ if (IS_BROWSER) (function () {
   { const b = $("rbAll"); if (b) b.addEventListener("click", () => { ui.poolMode = ""; saveUI(); renderPool(); }); }
   { const b = $("rbUp"); if (b) b.addEventListener("click", () => { ui.poolMode = "upcoming"; saveUI(); renderPool(); }); }
   { const b = $("mpTopBtn"); if (b) b.addEventListener("click", () => { mpDlg.showModal(); renderBudgets(); }); }
-  { const tg = $("tbToggle"); if (tg) tg.addEventListener("click", () => { const p = $("pool"); const open = p.classList.toggle("open"); tg.classList.toggle("on", open); tg.innerHTML = open ? "&#9662;" : "&#9656;"; }); }   // ▸ / ▾ shows-hides the task boxes over the grid
-  document.addEventListener("pointerdown", (e) => { const p = $("pool"); if (p && p.classList.contains("open") && !e.target.closest("#pool") && !e.target.closest("#tbToggle")) { p.classList.remove("open"); const tg = $("tbToggle"); if (tg) { tg.classList.remove("on"); tg.innerHTML = "&#9656;"; } } }, true);   // click outside closes the pool
+  { const tg = $("tbToggle"); if (tg) tg.addEventListener("click", () => { const p = $("pool"); const open = p.classList.toggle("open"); const gw = $("gridWrap"); if (gw) gw.classList.toggle("poolOpen", open); tg.classList.toggle("on", open); tg.innerHTML = open ? "&#10005;" : "&#9776;"; }); }   // ☰ / ✕ shows-hides the task boxes; open → grid shifts right so Monday isn't covered
+  document.addEventListener("pointerdown", (e) => { const p = $("pool"); if (p && p.classList.contains("open") && !e.target.closest("#pool") && !e.target.closest("#tbToggle")) { p.classList.remove("open"); const gw = $("gridWrap"); if (gw) gw.classList.remove("poolOpen"); const tg = $("tbToggle"); if (tg) { tg.classList.remove("on"); tg.innerHTML = "&#9776;"; } } }, true);   // click outside closes the pool
+  { const zo = $("rbZoomOut"), zi = $("rbZoomIn"); if (zo) zo.addEventListener("click", () => bumpZoom(1)); if (zi) zi.addEventListener("click", () => bumpZoom(-1)); }
 
   function renderLog() {
     const catById = {}; for (const c of state.categories) catById[c.id] = c;
@@ -2745,7 +2755,17 @@ if (IS_BROWSER) (function () {
     else if (nd < 0) { if (wk === 0) return; nd = 5; wk--; }
     viewDay = nd; state.currentWeek = wk; selectedId = null; commit();
   }
-  function setView() { SLOT_PX = viewDay >= 0 ? SLOT_PX_DAY : SLOT_PX_WEEK; $("viewBtn").textContent = viewDay >= 0 ? "Day" : "Week"; buildGrid(); renderAll(); $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8; }
+  // Week-view zoom: cell height is derived from how many hours should fit the viewport. −/+ steps through the levels.
+  const ZOOM = [{ h: 9, start: 9 }, { h: 18, start: 4 }, { h: 24, start: 0 }];   // 0: 9am–6pm · 1: 4am–10pm · 2: 0–24
+  function zoomLevel() { return Math.max(0, Math.min(ZOOM.length - 1, ui.gridZoom || 0)); }
+  function weekSlotPx() { const sc = $("gridScroll"); const visH = (sc && sc.clientHeight) || 520; const z = ZOOM[zoomLevel()]; return Math.max(6, Math.floor(visH / (z.h * SPH))); }
+  function applyGridZoom(scrollToStart) {
+    if (viewDay >= 0) return;   // day view keeps its own fixed zoom
+    SLOT_PX = weekSlotPx(); buildGrid(); renderAll();
+    if (scrollToStart) $("gridScroll").scrollTop = ZOOM[zoomLevel()].start * SPH * SLOT_PX;
+  }
+  function bumpZoom(dir) { ui.gridZoom = Math.max(0, Math.min(ZOOM.length - 1, zoomLevel() + dir)); saveUI(); applyGridZoom(true); }   // dir +1 = shorter cells / more hours, −1 = taller / fewer
+  function setView() { $("viewBtn").textContent = viewDay >= 0 ? "Day" : "Week"; if (viewDay >= 0) { SLOT_PX = SLOT_PX_DAY; buildGrid(); renderAll(); $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8; } else { applyGridZoom(true); } }
   $("viewBtn").addEventListener("click", () => {
     if (viewDay >= 0) viewDay = -1;
     else { const tc = cellForDate(state.anchorMonday, new Date()); viewDay = (tc.weekIdx === state.currentWeek && new Date().getDay() !== 0) ? tc.dayIdx : 0; }
@@ -3865,7 +3885,8 @@ if (IS_BROWSER) (function () {
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d && !mpFillGuard) d.close(); })); // click outside to close (mpFillGuard blocks the phantom click after a drag-fill)
   if (state.timer) startTimerLoop();
   setInterval(() => { if (document.visibilityState === "visible" && !drag && !noteAct) renderBlocks(); }, 15000); // advance now-line, slide plans & drop elapsed plans
-  $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8;
+  if (viewDay >= 0) $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8; else applyGridZoom(true);   // size week-view cells to the chosen hours-in-view and scroll to that range
+  window.addEventListener("resize", () => { if (viewDay < 0) applyGridZoom(false); });
   pullRemote(true);
   if (!cfg) setDot("", "Sync not set up yet — tap ⚙");
 })();
