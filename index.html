@@ -551,6 +551,8 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 #rbTools .iconBtn { width: 28px; height: 28px; font-size: 13px; }
 #rbZoom { display: flex; align-items: center; gap: 4px; }
 #rbZoom .zBtn { width: 28px; height: 28px; font-size: 16px; font-weight: 700; line-height: 1; }
+#topBar #rbZoom { flex-shrink: 0; gap: 6px; margin-left: 4px; }   /* zoom −/+ pinned to the far right of the top bar (pushed there by the flexible scheduler) */
+#topBar #rbZoom .zBtn { width: 34px; height: 34px; border: 2px solid #9aa0a8; }
 #rbTools .pmBtn { width: 22px; height: 22px; font-size: 12px; border-radius: 5px; }
 #rbSummary { padding: 4px 8px 2px; }
 #rbSummary .poolSummary { margin: 0; }
@@ -715,6 +717,10 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
         </div>
       </form>
       <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="display:none;width:auto;padding:0 9px;">Week</button>
+      <div id="rbZoom">
+        <button class="iconBtn zBtn" id="rbZoomOut" title="Shorter cells — see more hours">&minus;</button>
+        <button class="iconBtn zBtn" id="rbZoomIn" title="Taller cells — see fewer hours">+</button>
+      </div>
     </div>
     <div class="weekNav">
       <button id="weekPrev" title="Previous week">&#9664;</button>
@@ -744,10 +750,6 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
       <div id="rbFooter">
         <button class="iconBtn" id="settingsBtn" title="Settings">&#9881;</button>
         <div id="syncDot" title="Sync status"></div>
-        <div id="rbZoom">
-          <button class="iconBtn zBtn" id="rbZoomOut" title="Shorter cells — see more hours">&minus;</button>
-          <button class="iconBtn zBtn" id="rbZoomIn" title="Taller cells — see fewer hours">+</button>
-        </div>
         <div id="rbTools">
           <button class="iconBtn" id="rbReports" title="Reports &amp; activity">📊</button>
           <button class="iconBtn" id="rbUndo" title="Undo (Ctrl+Z)">&#8630;</button>
@@ -1961,8 +1963,8 @@ if (IS_BROWSER) (function () {
     { const mCat = mailCats.find((c) => !c.parent) || mailCats[0], gCat = growthCats.find((c) => !c.parent) || growthCats[0];
       const mVal = sumOf(mailCats, (c) => trackToday(c.id)), gVal = sumOf(growthCats, (c) => trackToday(c.id));
       const mEl = $("tbMails"), gEl = $("tbGrowth");
-      if (mEl) { mEl.innerHTML = "Mails: <b>" + (todayInWeek ? fmtHM(mVal) : "—") + "</b>"; mEl.style.color = mCat ? mCat.color : "#d6336c"; }
-      if (gEl) { gEl.innerHTML = "Growth: <b>" + (todayInWeek ? fmtHM(gVal) : "—") + "</b>"; gEl.style.color = gCat ? gCat.color : "#5aa2e6"; } }
+      if (mEl) { mEl.innerHTML = 'Mails <b style="color:#111">' + (todayInWeek ? fmtHM(mVal) : "—") + "</b>"; mEl.style.color = mCat ? mCat.color : "#d6336c"; }
+      if (gEl) { gEl.innerHTML = 'Growth <b style="color:#111">' + (todayInWeek ? fmtHM(gVal) : "—") + "</b>"; gEl.style.color = gCat ? gCat.color : "#5aa2e6"; } }
     ensureSnapshot();   // keep today's baseline captured (shown in the Reports modal)
 
     const divider = (label, cls) => { const dv = document.createElement("div"); dv.className = "poolDivider" + (cls ? " " + cls : ""); if (label) dv.textContent = label; pool.appendChild(dv); };
