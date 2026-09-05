@@ -1963,8 +1963,8 @@ if (IS_BROWSER) (function () {
     { const mCat = mailCats.find((c) => !c.parent) || mailCats[0], gCat = growthCats.find((c) => !c.parent) || growthCats[0];
       const mVal = sumOf(mailCats, (c) => trackToday(c.id)), gVal = sumOf(growthCats, (c) => trackToday(c.id));
       const mEl = $("tbMails"), gEl = $("tbGrowth");
-      if (mEl) { mEl.innerHTML = 'Mails <b style="color:#111">' + (todayInWeek ? fmtHM(mVal) : "—") + "</b>"; mEl.style.color = mCat ? mCat.color : "#d6336c"; }
-      if (gEl) { gEl.innerHTML = 'Growth <b style="color:#111">' + (todayInWeek ? fmtHM(gVal) : "—") + "</b>"; gEl.style.color = gCat ? gCat.color : "#5aa2e6"; } }
+      if (mEl) { mEl.style.color = "#111"; mEl.innerHTML = 'Mails <b style="margin-left:5px;color:' + (mCat ? mCat.color : "#d6336c") + '">' + (todayInWeek ? fmtHM(mVal) : "—") + "</b>"; }
+      if (gEl) { gEl.style.color = "#111"; gEl.innerHTML = 'Growth <b style="margin-left:5px;color:' + (gCat ? gCat.color : "#5aa2e6") + '">' + (todayInWeek ? fmtHM(gVal) : "—") + "</b>"; } }
     ensureSnapshot();   // keep today's baseline captured (shown in the Reports modal)
 
     const divider = (label, cls) => { const dv = document.createElement("div"); dv.className = "poolDivider" + (cls ? " " + cls : ""); if (label) dv.textContent = label; pool.appendChild(dv); };
@@ -2772,9 +2772,9 @@ if (IS_BROWSER) (function () {
     viewDay = nd; state.currentWeek = wk; selectedId = null; commit();
   }
   // Week-view zoom: cell height is derived from how many hours should fit the viewport. −/+ steps through the levels.
-  const ZOOM = [{ h: 9, start: 9 }, { h: 18, start: 4 }, { h: 24, start: 0 }];   // 0: 9am–6pm · 1: 4am–10pm · 2: 0–24
+  const ZOOM = [{ h: 9, start: 9 }, { h: 12, start: 8 }, { h: 15, start: 6 }, { h: 18, start: 4 }, { h: 21, start: 3 }, { h: 24, start: 0 }];   // +max: 9am–6pm … −max: 0–24 (5 steps between)
   function zoomLevel() { return Math.max(0, Math.min(ZOOM.length - 1, ui.gridZoom || 0)); }
-  function weekSlotPx() { const sc = $("gridScroll"); const visH = (sc && sc.clientHeight) || 520; const z = ZOOM[zoomLevel()]; return Math.max(6, Math.floor(visH / (z.h * SPH))); }
+  function weekSlotPx() { const sc = $("gridScroll"); const visH = (sc && sc.clientHeight) || 520; const z = ZOOM[zoomLevel()]; return Math.max(3, visH / (z.h * SPH)); }   // no floor → the full-day level fills the viewport exactly (no whitespace under midnight)
   function applyGridZoom(scrollToStart) {
     if (viewDay >= 0) return;   // day view keeps its own fixed zoom
     SLOT_PX = weekSlotPx(); buildGrid(); renderAll();
