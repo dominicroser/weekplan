@@ -749,8 +749,6 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
           <button class="iconBtn zBtn" id="rbZoomIn" title="Taller cells — see fewer hours">+</button>
         </div>
         <div id="rbTools">
-          <button class="pmBtn pmAll" id="rbAll" title="All — the basic grouped order">A</button>
-          <button class="pmBtn pmUp" id="rbUp" title="Upcoming — order by when tasks come up on the grid">↑</button>
           <button class="iconBtn" id="rbReports" title="Reports &amp; activity">📊</button>
           <button class="iconBtn" id="rbUndo" title="Undo (Ctrl+Z)">&#8630;</button>
         </div>
@@ -2244,6 +2242,13 @@ if (IS_BROWSER) (function () {
       commit();   // rename it in the Masterplan (task names aren't editable in the pool)
     });
     pool.appendChild(add);
+    // task-ordering buttons live at the bottom of the pool
+    const pmBar = document.createElement("div"); pmBar.className = "poolModeBar"; pmBar.style.marginTop = "10px";
+    const pmA = document.createElement("button"); pmA.id = "rbAll"; pmA.className = "pmBtn pmAll" + (mode === "" ? " on" : ""); pmA.title = "All — the basic grouped order"; pmA.textContent = "A";
+    const pmU = document.createElement("button"); pmU.id = "rbUp"; pmU.className = "pmBtn pmUp" + (mode === "upcoming" ? " on" : ""); pmU.title = "Upcoming — order by when tasks come up on the grid"; pmU.textContent = "↑";
+    pmA.addEventListener("click", () => { ui.poolMode = ""; saveUI(); renderPool(); });
+    pmU.addEventListener("click", () => { ui.poolMode = "upcoming"; saveUI(); renderPool(); });
+    pmBar.appendChild(pmA); pmBar.appendChild(pmU); pool.appendChild(pmBar);
   }
 
   /* ── blocks ── */
@@ -2636,8 +2641,7 @@ if (IS_BROWSER) (function () {
   // right-bar footer + scheduler-row launchers
   { const b = $("rbReports"); if (b) b.addEventListener("click", () => { renderReports(); $("reportsDialog").showModal(); }); }
   { const b = $("rbUndo"); if (b) b.addEventListener("click", () => undo()); }
-  { const b = $("rbAll"); if (b) b.addEventListener("click", () => { ui.poolMode = ""; saveUI(); renderPool(); }); }
-  { const b = $("rbUp"); if (b) b.addEventListener("click", () => { ui.poolMode = "upcoming"; saveUI(); renderPool(); }); }
+  // A / ↑ ordering buttons are created & wired inside renderPool (they now live at the bottom of the pool)
   { const b = $("mpTopBtn"); if (b) b.addEventListener("click", () => { mpDlg.showModal(); renderBudgets(); }); }
   { const tg = $("tbToggle"); if (tg) tg.addEventListener("click", () => { const p = $("pool"); const open = p.classList.toggle("open"); const gw = $("gridWrap"); if (gw) gw.classList.toggle("poolOpen", open); tg.classList.toggle("on", open); tg.innerHTML = open ? "&#10005;" : "&#9776;"; }); }   // ☰ / ✕ shows-hides the task boxes; open → grid shifts right so Monday isn't covered
   document.addEventListener("pointerdown", (e) => { const p = $("pool"); if (p && p.classList.contains("open") && !e.target.closest("#pool") && !e.target.closest("#tbToggle")) { p.classList.remove("open"); const gw = $("gridWrap"); if (gw) gw.classList.remove("poolOpen"); const tg = $("tbToggle"); if (tg) { tg.classList.remove("on"); tg.innerHTML = "&#9776;"; } } }, true);   // click outside closes the pool
