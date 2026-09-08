@@ -699,7 +699,6 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 <div id="body">
   <div id="gridWrap">
     <div id="topBar">
-      <button class="iconBtn" id="mpTopBtn" title="Masterplan &amp; tasks">🐝</button>
       <button id="tbToggle" title="Show / hide the task boxes">&#9776;</button>
       <div id="tbTimer"></div>
       <div id="tbMails" class="tbStat" title="Mails timed today">Mails <b>0:00</b></div>
@@ -721,6 +720,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
         <button class="iconBtn zBtn" id="rbZoomOut" title="Shorter cells — see more hours">&minus;</button>
         <button class="iconBtn zBtn" id="rbZoomIn" title="Taller cells — see fewer hours">+</button>
       </div>
+      <button class="iconBtn" id="mpTopBtn" title="Masterplan &amp; tasks">🐝</button>
     </div>
     <div class="weekNav">
       <button id="weekPrev" title="Previous week">&#9664;</button>
@@ -3446,7 +3446,7 @@ if (IS_BROWSER) (function () {
     }
     if (type === "binary") { if (raw === "ach") { const r = (def.rule || "").trim() ? evalHabitRule(h, date, null) : null; return r === false ? "miss" : "ach"; } return raw === "miss" ? "miss" : null; }
     const today = ymd(new Date());
-    if (type === "numeric") { if (raw === "ach" || raw === "miss") return raw; if (typeof raw !== "number") return null; const r = evalHabitRule(h, date, raw); if (r == null) return null; if (r) return "ach"; return date < today ? "miss" : null; }   // manual ach/miss overrides the rule; else only a past day counts as missed
+    if (type === "numeric") { if (raw === "ach" || raw === "miss") return raw; if (typeof raw !== "number") return null; const r = evalHabitRule(h, date, raw); if (r == null) return null; if (r) return "ach"; const ceiling = /ethanol/i.test(def.name || h.name || ""); return (date < today || ceiling) ? "miss" : null; }   // manual ach/miss overrides the rule; else only a past day counts as missed — except a "ceiling" habit like Ethanol, where a failing value can't be undone, so it's missed straight away
     if (type === "hours") { if (raw === "ach" || raw === "miss") return raw; if (date > today) return null; const r = evalHabitRule(h, date, null); if (r == null) return null; if (r) return "ach"; return date < today ? "miss" : null; }   // today can still be met by logging more, so it isn't "missed" until it's past
     return null;
   }
