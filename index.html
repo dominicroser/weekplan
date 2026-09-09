@@ -1689,6 +1689,7 @@ if (IS_BROWSER) (function () {
     if (menu.classList.contains("floatMenu")) { const r = inp.getBoundingClientRect(); menu.style.left = r.left + "px"; menu.style.top = (r.bottom + 3) + "px"; menu.style.minWidth = r.width + "px"; }
   }
   function wireTimerInput(inp, menu) {
+    if (menu) menu.style.display = "none";   // autocomplete now happens inline, inside the timer field — no dropdown
     inp.addEventListener("change", (e) => {
       const v = e.target.value.trim(); e.target.value = ""; if (!v) return;
       const c = state.categories.find((x) => (x.name || "").toLowerCase() === v.toLowerCase()) || state.categories.find((x) => (x.name || "").toLowerCase().startsWith(v.toLowerCase()));
@@ -1696,10 +1697,14 @@ if (IS_BROWSER) (function () {
       if (c.noTrack) { toast("“" + c.name + "” is set to not-tracked."); return; }
       toggleTimer(c.id);
     });
-    inp.addEventListener("focus", () => fillTaskMenu(inp, menu));
-    inp.addEventListener("input", () => fillTaskMenu(inp, menu));
-    inp.addEventListener("blur", () => setTimeout(() => { menu.style.display = "none"; }, 150));
-    menu.addEventListener("mousedown", (e) => { const o = e.target.closest(".taskOpt"); if (!o) return; e.preventDefault(); const c = state.categories.find((x) => x.id === o.dataset.id); inp.value = ""; menu.style.display = "none"; if (c) toggleTimer(c.id); });
+    // inline autocomplete: as you type, fill in the first matching task and select the rest so you can keep typing or press Enter
+    inp.addEventListener("input", (e) => {
+      if (e.inputType && e.inputType.indexOf("delete") >= 0) return;   // don't re-expand while deleting
+      const q = inp.value; if (!q) return;
+      const ql = q.toLowerCase();
+      const c = eligibleTasks().find((x) => { const n = (x.name || "").toLowerCase(); return n.startsWith(ql) && n.length > ql.length; });
+      if (c) { const full = c.name; inp.value = full; try { inp.setSelectionRange(q.length, full.length); } catch (_) {} }
+    });
   }
   function showTaskMenu() { fillTaskMenu($("startTimerInput"), $("taskMenu")); }
   function discardTimer() {
@@ -1931,7 +1936,7 @@ if (IS_BROWSER) (function () {
     const gContribs = (c) => groupContribs(state, c.id);
     const wsum = (metric, wt) => sumCats.reduce((s, c) => s + (metric(c) || 0) * wt(c), 0);
     const gwt = (g) => (c) => gContribs(c)[g] || 0;
-    const twt = (c) => { const w = gContribs(c); return (w.work || 0) + (w.fruit || 0) + (w.home || 0); };
+    const twt = (c) => { const w = gContribs(c); return (w.work || 0) + (w.fruit || 0); };   // Total = Work + Fruit only (Home excluded)
     const wsumVals = (wt, scope) => {
       if (scope === "day") { const T = wsum((c) => trackToday(c.id), wt), A = wsum((c) => aheadToday[c.id], wt), E = wsum((c) => elapsedToday[c.id], wt); const P = E + A, C = T + A; return { T: T, A: A, C: C, P: P, O: P - C }; }
       if (scope === "week") { const T = wsum((c) => trackWeek(c.id), wt), C = wsum((c) => used[c.id], wt), P = wsum((c) => weekBudget(c, cw), wt); return { T: T, A: C - T, C: C, P: P, O: P - C }; }
@@ -1948,8 +1953,8 @@ if (IS_BROWSER) (function () {
       const rows = [
         { c: "trW", l: "Work", wt: gwt("work") },
         { c: "trF", l: "Fruit", wt: gwt("fruit") },
-        { c: "trH", l: "Home", wt: gwt("home") },
         { c: "trT", l: "Total", wt: twt },
+        { c: "trH", l: "Home", wt: gwt("home") },
       ];
       const vals = (r) => r.wt
         ? { TD: wsum((c) => trackToday(c.id), r.wt), TW: wsum((c) => trackWeek(c.id), r.wt), P: wsum((c) => weekBudget(c, cw), r.wt) }
