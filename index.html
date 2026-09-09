@@ -3144,7 +3144,23 @@ if (IS_BROWSER) (function () {
           '<td class="gcol gcolPrio starMP btot"></td><td class="gcol gcolFip starMP btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td>';
         return g2 + cc + "</tr>";
       };
-      return f + groupRow("work", "Work") + groupRow("fruit", "Fruit") + groupRow("home", "Home");
+      // combined Work+Fruit total row (sits just under the grand Total)
+      const wfRow = (function () {
+        const wf = (c) => grpW(c, "work") + grpW(c, "fruit");
+        let tot = 0, goalS = 0, ipS = 0, timedS = 0, timedPastS = 0, cc = "";
+        for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { const w = wf(c); s += weekEffortAgg(c, i) * w; sip += ipGet(c.id, i) * w; } tot += s; cc += '<td class="wkHours btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + (s > 0.0001 ? fmtHM(s) : "") + '</td><td class="btot wprioCol prioW' + i + (isPast(i) ? " pastCol" : "") + '"></td><td class="btot ipCol ipW' + i + (isPast(i) ? " pastCol" : "") + '">' + (sip > 0.0001 ? fmtHM(sip) : "") + '</td>'; }
+        for (const c of list) { const w = wf(c); goalS += gGet("goal", c.id) * w; ipS += gGet("goalIP", c.id) * w; timedS += timedMP(c) * w; timedPastS += timedPastAgg(c) * w; }
+        const gOpenWF = goalS - tot, cls = goalS <= 0.0001 ? "" : (gOpenWF > 0.0001 ? "dfNeg" : gOpenWF < -0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (gOpenWF > 0.0001 ? "+" + fmtHM(gOpenWF) : gOpenWF < -0.0001 ? "-" + fmtHM(-gOpenWF) : "0:00");
+        const label = 'Total <span style="color:#12388f">Work</span>+<span style="color:#15803d">Fruit</span>';
+        let g2 = '<tr class="budFoot budGrp budGrp-wf"><td class="name">' + label + '</td>';
+        for (let k = 0; k < 15; k++) g2 += '<td class="feat ' + (k < 2 ? "fInfo" : k < 13 ? "fCreate" : "fOver") + '"></td>';
+        g2 += '<td class="paceT keyWk btot">' + paceAll(tot) + '</td><td class="paceD keyWk btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(gOpenWF) : "") + '</td><td class="paceG keyWk btot">' + (goalS > 0.0001 ? paceAll(goalS) : "") + '</td>' + twCell(timedPastS, goalS, true) +
+          '<td class="keyTot ktTimed btot">' + (timedS > 0.0001 ? fmtHM(timedS) : "") + '</td><td class="stot keyTot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="dcol keyTot btot ' + cls + '">' + dtxt + '</td>' +
+          '<td class="gcol gcolF planMP btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td>' +
+          '<td class="gcol gcolPrio starMP btot"></td><td class="gcol gcolFip starMP btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td>';
+        return g2 + cc + "</tr>";
+      })();
+      return f + wfRow + groupRow("work", "Work") + groupRow("fruit", "Fruit") + groupRow("home", "Home");
     })();
     const mCls = "budTable mpTable" + (ui.mpHideInfo ? " hideInfo" : "") + (ui.mpHideCreate ? " hideCreate" : "") + (ui.mpHideOver ? " hideOver" : "") + (ui.mpHidePace ? " hidePace" : "") + (ui.mpHideTotal ? " hideTotal" : "") + (ui.mpHideImp ? " hideImp" : "") + (ui.mpHidePast ? " hidePast" : "");
     let wkColCss = "";   // per-week IP + Prio columns are hidden by default; each week's ★ button opens that week's pair
