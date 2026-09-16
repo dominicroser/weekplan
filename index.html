@@ -116,8 +116,6 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolSummary .l2 { color: var(--ink); }
 .poolSummary .l3 { color: var(--ink); margin-top: 2px; }
 .poolSummary .l3 b { color: var(--ink); font-weight: 700; }
-.sheetBtn { display: block; width: 100%; margin-top: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink2); padding: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; }
-.sheetBtn:active { background: var(--panel2); }
 .poolItem { position: relative; background: transparent; border: 4px solid #9aa0a8; border-radius: 8px; padding: 6px 10px 7px 11px; transition: opacity .15s, outline-color .15s; outline: 2px solid transparent; cursor: grab; touch-action: pan-y; display: flex; align-items: center; gap: 7px; }
 .poolRight { flex-shrink: 0; margin-left: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }   /* right-hand column: star on top, play below — extra gap from the body */
 .poolRight .prioStar { font-size: 18px; }
@@ -272,7 +270,7 @@ dialog input[type=text], dialog input[type=password] { width: 100%; background: 
 .btnGhost { background: #fff; border: 1px solid var(--line); color: var(--ink); padding: 7px 13px; border-radius: 7px; font-size: 12.5px; cursor: pointer; }
 .muted { font-size: 11.5px; color: var(--ink2); font-family: 'Inter', sans-serif; line-height: 1.5; }
 pre { background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 10px; font-size: 10.5px; overflow-x: auto; user-select: text; -webkit-user-select: text; white-space: pre-wrap; }
-#syncStatus, #sheetStatus { font-size: 11.5px; font-family: 'Inter', sans-serif; margin-top: 8px; min-height: 16px; }
+#syncStatus { font-size: 11.5px; font-family: 'Inter', sans-serif; margin-top: 8px; min-height: 16px; }
 #masterplanDialog { max-width: 960px; }
 .mpBar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
 .mpBar select { flex: 1; min-width: 180px; padding: 6px 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 7px; font-size: 13px; }
@@ -712,7 +710,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
           <div class="chEx"><code>Growth, Fred, Event : mon 10-11am</code> — an <b>event “Fred”</b> on the Growth task (+ switch)</div>
           <div class="chEx"><code>Fred, Event : mon 10-11am</code> — a plain <b>event “Fred”</b> (+ switch)</div>
           <div class="chEx"><code>chairs : mon 10-11am</code> — a one-off <b>“Off”</b> task “chairs”</div>
-          <div class="chH2">Time: <code>10-11am · 10:30-11 · 1030-1130 · 22:30</code> (a bare time uses the current am/pm). Days: <code>mon · mon-fri · every day</code>. Weeks: <code>this week · whole masterplan · weeks 38-51</code>. Prefix <code>delete</code> to remove.</div>
+          <div class="chH2">Time: <code>10-11am · 10:30-11 · 1030-1130 · 22:30</code> (a bare time is 24-hour: 630 = 6:30, 1830 = 18:30). Days: <code>mon · mon-fri · every day</code>. Weeks: <code>this week · whole masterplan · weeks 38-51</code>. Prefix <code>delete</code> to remove.</div>
         </div>
       </form>
       <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="display:none;width:auto;padding:0 9px;">Week</button>
@@ -940,7 +938,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v214 */
+/* build v217 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1273,9 +1271,8 @@ function parseCommand(text, categories) {
   const tr = parseTimeRange(src);
   if (!tr && !del) return { error: "No time after the colon. E.g. “Growth : mon 10-11am”." };
   if (tr && tr.error) return { error: "That time looks off (end must be after start)." };
-  // bare 12-hour times with no am/pm adopt the current half of the day (e.g. “9-10” at 8pm → 9pm–10pm)
+  // bare times with no am/pm are read as 24-hour (630 → 6:30, 1830 → 18:30) — no current-half-of-day adjustment
   let sMin = tr ? tr.startMin : 0, eMin = tr ? tr.endMin : 0;
-  if (tr && !tr.hadMeridiem && sMin < 720 && eMin <= 720 && new Date().getHours() >= 12) { sMin += 720; eMin += 720; }
   const dayStr = tr ? src.replace(tr.raw, " ") : src;
   const pd = parseDays(dayStr);
   if (!pd.days.length) {   // no day given → default to today (Mon–Sat); only Sundays still ask
@@ -1350,79 +1347,6 @@ function csvToRows(text) {
   }
   return out;
 }
-function applySheet(categories, rows) {
-  const cats = categories.map((c) => Object.assign({}, c));
-  let updated = 0, added = 0, n = 0;
-  for (const row of rows) {
-    const name = (row.name || "").trim();
-    if (!name) continue;
-    const ex = cats.find((c) => c.name.toLowerCase() === name.toLowerCase());
-    if (ex) {
-      if (typeof row.hours === "number" && !isNaN(row.hours)) ex.hours = Math.max(0, row.hours);
-      if (row.color) ex.color = row.color;
-      updated++;
-    } else {
-      cats.push({ id: "cat" + Date.now() + (n++), name, hours: (typeof row.hours === "number" && !isNaN(row.hours)) ? Math.max(0, row.hours) : 1, color: row.color || pickColor(cats) });
-      added++;
-    }
-  }
-  return { cats, updated, added };
-}
-
-/* ── multi-week sheet: Task | Week 1 | Week 2 | … (or a single Hours column) ── */
-function csvToWeeks(text) {
-  const grid = parseCSV(text);
-  if (!grid.length) return { weekCount: 0, rows: [] };
-  const header = grid[0].map((h) => (h || "").trim());
-  const low = header.map((h) => h.toLowerCase());
-  let ni = low.findIndex((h) => /task|name|categor|activity|project/.test(h));
-  const ci = low.findIndex((h) => /colou?r|hex/.test(h));
-  const WEEKRE = /week|wk|hour|hrs|budget/; // only columns naming a week (or hours) count
-  const RESERVEDROW = /^(sum|subtotal|total|totals|average|avg|mean|median|count|comments?|notes?|n\/a)$/i;
-  const looksHeaderless = ni === -1 && ci === -1 && !low.some((h) => WEEKRE.test(h));
-  let start = 1, valueCols = [];
-  if (looksHeaderless) {
-    ni = 0; start = 0;
-    for (let j = 1; j < grid[0].length; j++) valueCols.push(j);
-  } else {
-    if (ni === -1) ni = 0;
-    for (let j = 0; j < header.length; j++) { if (j === ni || j === ci) continue; if (WEEKRE.test(low[j])) valueCols.push(j); }
-  }
-  const rows = [];
-  for (let r = start; r < grid.length; r++) {
-    const cells = grid[r];
-    const name = ((cells[ni] != null ? cells[ni] : "")).trim();
-    if (!name || RESERVEDROW.test(name)) continue;
-    const color = ci >= 0 && cells[ci] && cells[ci].trim() ? cells[ci].trim() : undefined;
-    const hours = valueCols.map((j) => { const v = parseFloat(String(cells[j] == null ? "" : cells[j]).replace(",", ".")); return isNaN(v) ? null : Math.max(0, v); });
-    rows.push({ name, color, hours });
-  }
-  return { weekCount: valueCols.length, rows };
-}
-function applySheetWeeks(state, parsed) {
-  const cats = state.categories;
-  let updated = 0, added = 0, weeksCreated = 0, n = 0;
-  if (parsed.weekCount > 1) {
-    while (state.weeks.length < parsed.weekCount) { state.weeks.push({ id: "w" + Date.now() + (n++), blocks: [], budgets: {} }); weeksCreated++; }
-  }
-  for (const row of parsed.rows) {
-    const name = (row.name || "").trim();
-    if (!name) continue;
-    let cat = cats.find((c) => c.name.toLowerCase() === name.toLowerCase());
-    if (!cat) { cat = { id: "cat" + Date.now() + (n++), name, hours: 1, color: row.color || pickColor(cats) }; cats.push(cat); added++; }
-    else { if (row.color) cat.color = row.color; updated++; }
-    const firstVal = row.hours.find((h) => h != null);
-    if (firstVal != null) cat.hours = firstVal;
-    if (parsed.weekCount > 1) {
-      for (let j = 0; j < parsed.weekCount; j++) {
-        const h = row.hours[j];
-        if (h != null) { const w = state.weeks[j]; if (!w.budgets) w.budgets = {}; w.budgets[cat.id] = h; }
-      }
-    }
-  }
-  return { updated, added, weeksCreated };
-}
-
 /* ── migration ── */
 function migrate(s) {
   if (!s) return null;
@@ -1455,7 +1379,7 @@ function migrate(s) {
 }
 
 if (!IS_BROWSER && typeof module !== "undefined") {
-  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, mergeAdjacent, usedByCat, fmtH, fmtHM, slotLabel, textOn, pickColor, groupColorFor, GROUPS, GROUP_ORDER, parseCSV, csvToRows, applySheet, csvToWeeks, applySheetWeeks, migrate, defaultNote, ymd, parseYMD, mondayOf, weekDayIdx, cellForDate, dateOfCell, sessionToSlots, actualSlots, msAt, buildReport, weekUsage, groupContribs, TOTAL_SLOTS, DAYS };
+  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, mergeAdjacent, usedByCat, fmtH, fmtHM, slotLabel, textOn, pickColor, groupColorFor, GROUPS, GROUP_ORDER, parseCSV, csvToRows, migrate, defaultNote, ymd, parseYMD, mondayOf, weekDayIdx, cellForDate, dateOfCell, sessionToSlots, actualSlots, msAt, buildReport, weekUsage, groupContribs, TOTAL_SLOTS, DAYS };
 }
 
 /* ═══════════════ Browser app ═══════════════ */
@@ -1465,7 +1389,7 @@ if (IS_BROWSER) (function () {
   let budSort = { key: null, dir: 1 };
   const recentNewTask = {}; let mpNewTaskTimer = null;   // a freshly-created task pins to the first Masterplan row for ~1 min
   let viewDay = -1; // -1 = week view; 0..5 = single-day view of that weekday
-  let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, sheetUrl = "", pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null, previewEl = null;
+  let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null, previewEl = null;
   const recentlyUnprio = {};   // catId → { t, pv } : in priority sort, a task whose star was just cleared lingers ~3s before dropping out
   let sgFrozen = null, sgLastOrder = [];   // Stretch Goal table: after a star change, hold the row order ~3s before re-sorting
 
@@ -1545,10 +1469,10 @@ if (IS_BROWSER) (function () {
       if (!raw) { const old = localStorage.getItem(OLD_KEY); if (old) { const od = JSON.parse(old); state = migrate(od.state || od); } }
       else { const d = JSON.parse(raw); if (d.state) { state = migrate(d.state); localUpdatedAt = d.localUpdatedAt || 0; } }
     } catch (e) {}
-    try { const c = localStorage.getItem(CFG_KEY); if (c) { cfg = JSON.parse(c); sheetUrl = (cfg && cfg.sheet) || ""; } } catch (e) {}
+    try { const c = localStorage.getItem(CFG_KEY); if (c) { cfg = JSON.parse(c); } } catch (e) {}
   }
   function saveLocal() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, localUpdatedAt })); } catch (e) {} }
-  function saveCfg() { try { localStorage.setItem(CFG_KEY, JSON.stringify(Object.assign({}, cfg, { sheet: sheetUrl }))); } catch (e) {} }
+  function saveCfg() { try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg || {})); } catch (e) {} }
 
   /* ── Supabase ── */
   function sbHeaders() { return { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json" }; }
@@ -2862,27 +2786,6 @@ if (IS_BROWSER) (function () {
   $("stickyNote").addEventListener("pointerup", endNoteAct);
   $("stickyNote").addEventListener("pointercancel", endNoteAct);
 
-  /* ── sheet import ── */
-  async function doSheetImport() {
-    if (!sheetUrl) { toast("No sheet link set — open ⚙."); return; }
-    const status = $("sheetStatus"); if (status) status.textContent = "Importing…";
-    try {
-      const r = await fetch(sheetUrl);
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      const text = await r.text();
-      if (/<html/i.test(text)) throw new Error("got a web page, not CSV — make sure you published as CSV");
-      const parsed = csvToWeeks(text);
-      if (!parsed.rows.length) throw new Error("no task rows found");
-      snap();
-      const res = applySheetWeeks(state, parsed);
-      commit();
-      let msg = "Imported: " + res.updated + " updated, " + res.added + " added";
-      if (parsed.weekCount > 1) msg += " · " + parsed.weekCount + " week-columns";
-      if (res.weeksCreated) msg += " · " + res.weeksCreated + " new week(s)";
-      msg += ".";
-      toast(msg); if (status) status.textContent = "✅ " + msg;
-    } catch (e) { toast("Sheet import failed: " + e.message); if (status) status.textContent = "❌ " + e.message; }
-  }
 
   /* ── settings ── */
   const dlg = $("settingsDialog");
@@ -2960,6 +2863,7 @@ if (IS_BROWSER) (function () {
   }
   function renderBudgets() {
     const W = state.weeks.length;
+    const openHalfCls = (v) => (v > 0.5 ? "dfNeg" : v < -0.5 ? "dfPos" : "dfZero");   // Open column: only colour when more than half an hour above/below zero
     const gi = (g) => { const i = GROUP_ORDER.indexOf(g || "work"); return i < 0 ? 99 : i; };
     const arrow = (k) => budSort.key === k ? (budSort.dir > 0 ? " ▲" : " ▼") : "";
     const mp = activeMasterplan();
@@ -3073,7 +2977,7 @@ if (IS_BROWSER) (function () {
       // ── Total key (darker green): Timed, Committed, Open ──
       r += '<td class="keyTot ktTimed">' + (timedMP(c) > 0.0001 ? fmtHM(timedMP(c)) : "") + '</td>';
       r += '<td class="stot keyTot btot' + (over ? " over" : "") + '">' + fmtHM(tsum) + "</td>";
-      r += '<td class="dcol keyTot' + (hasGoal ? " " + ocls : "") + '">' + (hasGoal ? (openVal > 0.0001 ? "+" + fmtHM(openVal) : openVal < -0.0001 ? "-" + fmtHM(-openVal) : "0:00") : "") + "</td>";   // Open: positive = still to schedule (red), negative = over-committed (blue)
+      r += '<td class="dcol keyTot' + (hasGoal ? " " + openHalfCls(openVal) : "") + '">' + (hasGoal ? (openVal > 0.0001 ? "+" + fmtHM(openVal) : openVal < -0.0001 ? "-" + fmtHM(-openVal) : "0:00") : "") + "</td>";   // Open: red only if >½h to schedule, blue only if >½h over-committed
       // ── Planned (masterplan, lighter purple) ──
       r += '<td class="gcol gcolF planMP"><input class="bgoal" type="text" inputmode="numeric"' + (planTimeBlocked(c) ? ' readonly title="Planning is off for untracked / Off / Event tasks"' : '') + ' value="' + (goal ? fmtHM(goal) : "") + '"></td>';
       // ── ★ IP + Prio (masterplan, orange) ──
@@ -3126,7 +3030,7 @@ if (IS_BROWSER) (function () {
       let f = '<tr class="budFoot"><td class="name">Total</td>';
       for (let k = 0; k < 15; k++) f += '<td class="feat ' + (k < 2 ? "fInfo" : k < 13 ? "fCreate" : "fOver") + '"></td>';
       f += '<td class="paceT keyWk btot">' + paceAll(gt) + '</td><td class="paceD keyWk btot ' + gCls + '">' + (goalSum > 0.0001 ? paceSigned(gOpen) : "") + '</td><td class="paceG keyWk btot">' + (goalSum > 0.0001 ? paceAll(goalSum) : "") + '</td>' + twCell(timedPastTot, goalSum, true) +
-        '<td class="keyTot ktTimed btot">' + (timedTot > 0.0001 ? fmtHM(timedTot) : "") + '</td><td class="stot keyTot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="dcol keyTot btot ' + gCls + '">' + gTxt + '</td>' +
+        '<td class="keyTot ktTimed btot">' + (timedTot > 0.0001 ? fmtHM(timedTot) : "") + '</td><td class="stot keyTot btot' + (gover ? " over" : "") + '">' + fmtHM(gt) + '</td><td class="dcol keyTot btot ' + (goalSum > 0.0001 ? openHalfCls(gOpen) : "") + '">' + gTxt + '</td>' +
         '<td class="gcol gcolF planMP btot">' + (goalSum > 0.0001 ? fmtHM(goalSum) : "") + '</td>' +
         '<td class="gcol gcolPrio starMP btot"></td><td class="gcol gcolFip starMP btot">' + (gIP ? fmtHM(gIP) : "") + '</td>';
       f += cells + "</tr>";
@@ -3139,7 +3043,7 @@ if (IS_BROWSER) (function () {
         let g2 = '<tr class="budFoot budGrp budGrp-' + g + '"><td class="name">' + label + '</td>';
         for (let k = 0; k < 15; k++) g2 += '<td class="feat ' + (k < 2 ? "fInfo" : k < 13 ? "fCreate" : "fOver") + '"></td>';
         g2 += '<td class="paceT keyWk btot">' + paceAll(tot) + '</td><td class="paceD keyWk btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(gOpenG) : "") + '</td><td class="paceG keyWk btot">' + (goalS > 0.0001 ? paceAll(goalS) : "") + '</td>' + twCell(timedPastS, goalS, true) +
-          '<td class="keyTot ktTimed btot">' + (timedS > 0.0001 ? fmtHM(timedS) : "") + '</td><td class="stot keyTot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="dcol keyTot btot ' + cls + '">' + dtxt + '</td>' +
+          '<td class="keyTot ktTimed btot">' + (timedS > 0.0001 ? fmtHM(timedS) : "") + '</td><td class="stot keyTot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="dcol keyTot btot ' + openHalfCls(goalS - tot) + '">' + dtxt + '</td>' +
           '<td class="gcol gcolF planMP btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td>' +
           '<td class="gcol gcolPrio starMP btot"></td><td class="gcol gcolFip starMP btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td>';
         return g2 + cc + "</tr>";
@@ -3155,7 +3059,7 @@ if (IS_BROWSER) (function () {
         let g2 = '<tr class="budFoot budGrp budGrp-wf"><td class="name">' + label + '</td>';
         for (let k = 0; k < 15; k++) g2 += '<td class="feat ' + (k < 2 ? "fInfo" : k < 13 ? "fCreate" : "fOver") + '"></td>';
         g2 += '<td class="paceT keyWk btot">' + paceAll(tot) + '</td><td class="paceD keyWk btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(gOpenWF) : "") + '</td><td class="paceG keyWk btot">' + (goalS > 0.0001 ? paceAll(goalS) : "") + '</td>' + twCell(timedPastS, goalS, true) +
-          '<td class="keyTot ktTimed btot">' + (timedS > 0.0001 ? fmtHM(timedS) : "") + '</td><td class="stot keyTot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="dcol keyTot btot ' + cls + '">' + dtxt + '</td>' +
+          '<td class="keyTot ktTimed btot">' + (timedS > 0.0001 ? fmtHM(timedS) : "") + '</td><td class="stot keyTot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="dcol keyTot btot ' + openHalfCls(goalS - tot) + '">' + dtxt + '</td>' +
           '<td class="gcol gcolF planMP btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td>' +
           '<td class="gcol gcolPrio starMP btot"></td><td class="gcol gcolFip starMP btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td>';
         return g2 + cc + "</tr>";
@@ -3334,7 +3238,7 @@ if (IS_BROWSER) (function () {
   $("commentCancel").addEventListener("click", () => $("commentDialog").close());
   function editLink(id) { const c = state.categories.find((x) => x.id === id); if (!c) return; const v = prompt("Link for this task (leave blank to remove):", c.link || ""); if (v === null) return; const t = v.trim(); snap(); if (!t) delete c.link; else c.link = /^https?:\/\//i.test(t) ? t : ("https://" + t); commit(); renderBudgets(); }
   $("sbSave").addEventListener("click", async () => {
-    cfg = { url: $("sbUrl").value.trim(), key: $("sbKey").value.trim(), pid: $("sbPid").value.trim(), sheet: sheetUrl };
+    cfg = { url: $("sbUrl").value.trim(), key: $("sbKey").value.trim(), pid: $("sbPid").value.trim() };
     saveCfg(); $("syncStatus").textContent = "Testing…";
     const row = await pullRemote(false);
     if ($("syncDot").className === "err") $("syncStatus").textContent = "❌ Connection failed — check URL/key and that the SQL was run.";
@@ -3343,13 +3247,13 @@ if (IS_BROWSER) (function () {
   });
   $("sbLink").addEventListener("click", () => {
     if (!cfg || !cfg.url) { $("syncStatus").textContent = "Save the sync settings first."; return; }
-    const payload = Object.assign({}, cfg, { sheet: sheetUrl });
+    const payload = Object.assign({}, cfg);
     const link = location.origin + location.pathname + "#s=" + btoa(JSON.stringify(payload));
     navigator.clipboard.writeText(link).then(() => ($("syncStatus").textContent = "Link copied — open it once on your phone, then add to home screen."), () => prompt("Copy this link:", link));
   });
 
   if (location.hash.indexOf("#s=") === 0) {
-    try { cfg = JSON.parse(atob(location.hash.slice(3))); sheetUrl = cfg.sheet || ""; saveCfg(); history.replaceState(null, "", location.pathname); toast("Sync settings imported from link"); } catch (e) {}
+    try { cfg = JSON.parse(atob(location.hash.slice(3))); saveCfg(); history.replaceState(null, "", location.pathname); toast("Sync settings imported from link"); } catch (e) {}
   }
 
   /* ── export / import / clear ── */
@@ -3377,7 +3281,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v214"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v217"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3454,16 +3358,37 @@ if (IS_BROWSER) (function () {
     for (const wk of state.weeks) for (const b of (wk.blocks || [])) { if (b.kind === "actual" && ids.has(b.catId) && b.date === date && b.endMs != null) s += (b.endMs - b.startMs) / 3600000; }
     return s;
   }
+  function firstTimedIsGrowth(date) {   // was the first task you timed that day the "Growth" task (or a child of it)?
+    let best = null, bestMs = Infinity;
+    for (const wk of state.weeks) for (const b of (wk.blocks || [])) {
+      if (b.kind === "actual" && b.date === date && b.startMs != null && b.startMs < bestMs) { bestMs = b.startMs; best = b; }
+    }
+    if (!best) return null;   // nothing timed yet that day → undecided
+    const g = (state.categories || []).find((c) => (c.name || "").trim().toLowerCase() === "growth");
+    if (!g) return false;
+    if (best.catId === g.id) return true;
+    const c = (state.categories || []).find((x) => x.id === best.catId);
+    return !!(c && c.parent === g.id);
+  }
   function habitStatus(h, date) {
     const def = defFor(h.id, date) || { type: h.type || "binary", rule: h.rule || "" };
     const type = def.type || "binary";
     const raw = h.entries ? h.entries[date] : undefined;
     if (raw === "na") return "na";
-    if ((def.name || h.name || "").trim().toLowerCase() === "mails") {   // Mails: >1h timed → missed; if ≤1h and unmarked it stays blank (the morning reminder asks you to mark it); a manual "missed" sticks; a manual "achieved" flips to missed once you pass 1h
-      const over = mailsTimedOn(date) > 1.0;   // missed as soon as it exceeds 1 hour (exactly 1h is still fine)
+    const hName = (def.name || h.name || "").trim().toLowerCase();
+    if (hName === "mails") {   // Mails: >1h timed → auto-missed; ≤1h & unmarked stays blank; a manual ach/miss always wins (you can override)
       if (raw === "miss") return "miss";
-      if (raw === "ach") return over ? "miss" : "ach";
-      return over ? "miss" : null;
+      if (raw === "ach") return "ach";
+      return mailsTimedOn(date) > 1.0 ? "miss" : null;   // missed as soon as it exceeds 1 hour (exactly 1h is still fine)
+    }
+    if (/hour|growth/.test(hName)) {   // "Hour": Mon–Thu, if the first timed task of the day isn't Growth → auto-missed; a manual ach/miss always wins
+      if (raw === "miss") return "miss";
+      if (raw === "ach") return "ach";
+      const dow = parseYMD(date).getDay();   // 0 Sun · 1 Mon … 4 Thu … 6 Sat
+      if (dow < 1 || dow > 4) return null;    // only Mon–Thu are auto-evaluated
+      const fg = firstTimedIsGrowth(date);
+      if (fg === null) return null;           // nothing timed yet → blank
+      return fg ? "ach" : "miss";
     }
     if (type === "binary") { if (raw === "ach") { const r = (def.rule || "").trim() ? evalHabitRule(h, date, null) : null; return r === false ? "miss" : "ach"; } return raw === "miss" ? "miss" : null; }
     const today = ymd(new Date());
@@ -3629,7 +3554,7 @@ if (IS_BROWSER) (function () {
       "</div>";
     if (ui.streakNext) h += streakWeekHtml(state.currentWeek + 1);
     host.innerHTML = h;
-    host.querySelectorAll(".stCell").forEach((c) => c.addEventListener("click", () => { const hb = (state.habits || []).find((x) => x.id === c.dataset.h); if (!hb) return; const def = defFor(hb.id, c.dataset.d) || {}; const ty = def.type || hb.type || "binary"; if (ty === "numeric" || +hb.fill > 0) inlineHabitEdit(hb, c.dataset.d, c); else editHabitCell(hb, c.dataset.d); }));
+    host.querySelectorAll(".stCell").forEach((c) => c.addEventListener("click", () => { const hb = (state.habits || []).find((x) => x.id === c.dataset.h); if (!hb) return; const def = defFor(hb.id, c.dataset.d) || {}; const nm = (def.name || hb.name || "").trim().toLowerCase(); const ty = def.type || hb.type || "binary"; if (nm === "mails" || /hour|growth/.test(nm)) { cycleHabit(hb, c.dataset.d); return; } if (ty === "numeric" || +hb.fill > 0) inlineHabitEdit(hb, c.dataset.d, c); else editHabitCell(hb, c.dataset.d); }));   // auto habits (Mails / Hour) just cycle the manual override on click
     const br = host.querySelector(".stBtnRow");
     br.querySelector(".stCfg").addEventListener("click", openHabits);
     br.querySelector(".stNext").addEventListener("click", () => { ui.streakNext = !ui.streakNext; saveUI(); renderStreak(); });
