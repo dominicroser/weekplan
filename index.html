@@ -710,7 +710,8 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
           <div class="chEx"><code>Growth, Fred, Event : mon 10-11am</code> — an <b>event “Fred”</b> on the Growth task (+ switch)</div>
           <div class="chEx"><code>Fred, Event : mon 10-11am</code> — a plain <b>event “Fred”</b> (+ switch)</div>
           <div class="chEx"><code>chairs : mon 10-11am</code> — a one-off <b>“Off”</b> task “chairs”</div>
-          <div class="chH2">Time: <code>10-11am · 10:30-11 · 1030-1130 · 22:30</code> (a bare time is 24-hour: 630 = 6:30, 1830 = 18:30). Days: <code>mon · mon-fri · every day</code>. Weeks: <code>this week · whole masterplan · weeks 38-51</code>. Prefix <code>delete</code> to remove.</div>
+          <div class="chEx"><code>move Admin-Call : Thu 12:15-13:00 to Fri 7-8am</code> — <b>move</b> a block (add <code>weeks 39-51</code> to scope). Omit the target day to keep the same day.</div>
+          <div class="chH2">Time: <code>10-11am · 10:30-11 · 1030-1130 · 22:30</code> (a bare time is 24-hour: 630 = 6:30, 1830 = 18:30). Days: <code>mon · mon-fri · every day</code>. Weeks: <code>this week · whole masterplan · weeks 38-51</code>. Prefix <code>delete</code> to remove. No space needed before the colon.</div>
         </div>
       </form>
       <button class="iconBtn" id="viewBtn" title="Switch between week and single-day view" style="display:none;width:auto;padding:0 9px;">Week</button>
@@ -938,7 +939,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v217 */
+/* build v219 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2618,6 +2619,64 @@ if (IS_BROWSER) (function () {
     e.preventDefault();
     const text = $("cmdInput").value.trim(); if (!text) return;
     if (text.toLowerCase() === "party") { $("cmdInput").value = ""; $("cmdInput").blur(); partyTime(); return; }
+    { const mv = text.match(/^\s*move\s+/i);   // move <name> : <from-when> to <to-when>  (keeps events as events, brings the Switch)
+      if (mv) {
+        const body = text.slice(mv[0].length);
+        const ci = body.indexOf(":");
+        if (ci < 0) { toast("Move needs a colon: move <name> : <from> to <to>."); return; }
+        const whatPart = body.slice(0, ci).trim();
+        const rest = body.slice(ci + 1);
+        const sep = rest.match(/\s+to\s+/i);   // first " to " splits the two whens (use dashes for ranges: mon-fri, 7-8am, weeks 39-51)
+        if (!sep) { toast("Move needs “ to ”: move <name> : <from> to <to>."); return; }
+        const fromWhen = rest.slice(0, sep.index).replace(/^\s*from\s+/i, "").trim();
+        const toWhen = rest.slice(sep.index + sep[0].length).trim();
+        const fromR = parseCommand(whatPart + " : " + fromWhen, state.categories);
+        if (fromR.error) { toast("From — " + fromR.error); return; }
+        const toR = parseCommand(whatPart + " : " + toWhen, state.categories);
+        if (toR.error) { toast("To — " + toR.error); return; }
+        if (!toR.hasTime) { toast("Give a target time after “to”, e.g. “… to Fri 7-8am”."); return; }
+        const toDaysGiven = parseDays(toWhen).days.length > 0;   // destination day: explicit on the to-side, else keep each block's own day
+        let mWeeks;
+        if (fromR.scope === "all") { const amp = activeMasterplan(); if (amp) { ensureWeeksForMP(amp); mWeeks = mpWeekIndices(amp); } else mWeeks = state.weeks.map((_, i) => i); }
+        else if (fromR.scope === "range") {
+          const lo = Math.min(fromR.wkFrom, fromR.wkTo), hi = Math.max(fromR.wkFrom, fromR.wkTo);
+          const anchorIso = isoWeek(dateOfCell(state.anchorMonday, 0, 0));
+          if (hi >= anchorIso && (hi - anchorIso) < 70) { const maxIdx = hi - anchorIso; while (state.weeks.length <= maxIdx) state.weeks.push({ id: "w" + Date.now() + "_" + state.weeks.length, blocks: [], budgets: {} }); }
+          mWeeks = []; for (let i = 0; i < state.weeks.length; i++) { const wk = isoWeek(dateOfCell(state.anchorMonday, i, 0)); if (wk >= lo && wk <= hi) mWeeks.push(i); }
+          if (!mWeeks.length) { toast("No weeks " + lo + "–" + hi + " found in this plan."); return; }
+        } else mWeeks = [state.currentWeek];
+        snap();
+        const fromLabels = fromR.days.map((di) => DAYS[di]);
+        const overlapsFrom = (b) => !fromR.hasTime || (b.startSlot < (fromR.startSlot + fromR.lenSlots) && fromR.startSlot < (b.startSlot + b.lenSlots));
+        const tName = (fromR.name || "").trim().toLowerCase(), tCat = fromR.cat ? fromR.cat.id : null;
+        const matchFrom = (b) => { if (!fromLabels.includes(b.day) || b.kind === "actual") return false; if (!overlapsFrom(b)) return false; return (tCat && b.catId === tCat) || (tName && (b.name || "").trim().toLowerCase() === tName); };
+        const swCat = state.categories.find((c) => (c.name || "").trim().toLowerCase() === "switch");
+        const pushSw = (arr, dayLabel, startSlot) => { if (startSlot <= 0) return; let sw = state.categories.find((c) => c.name.trim().toLowerCase() === "switch"); if (!sw) { sw = { id: "cat" + Date.now() + "s", name: "Switch", hours: 0, group: "work", defaultMin: 15, noTrack: true, color: groupColorFor("work", state.categories, null) }; state.categories.push(sw); } arr.push({ id: state.nextId++, catId: sw.id, day: dayLabel, startSlot: startSlot - 1, lenSlots: 1, kind: "plan" }); };
+        let moved = 0;
+        for (const wi of mWeeks) {
+          let B = state.weeks[wi].blocks;
+          const matched = B.filter(matchFrom);
+          if (!matched.length) continue;
+          const goneIds = new Set(matched.map((b) => b.id));
+          B = B.filter((b) => !goneIds.has(b.id));
+          if (swCat) B = B.filter((b) => !(b.catId === swCat.id && matched.some((g) => g.event && g.day === b.day && g.startSlot === b.startSlot + b.lenSlots)));   // drop each moved event's old Switch
+          for (const mb of matched) {
+            const destLabels = toDaysGiven ? toR.days.map((di) => DAYS[di]) : [mb.day];
+            for (const dl of destLabels) {
+              const nb = Object.assign({}, mb, { id: state.nextId++, day: dl, startSlot: toR.startSlot, lenSlots: toR.lenSlots });
+              delete nb.startMs; delete nb.endMs; delete nb.date;
+              B.push(nb);
+              if (nb.event) pushSw(B, dl, toR.startSlot);
+            }
+            moved++;
+          }
+          state.weeks[wi].blocks = B;
+        }
+        const nWk = mWeeks.length;
+        toast(moved ? ("Moved " + moved + " block(s)" + (nWk > 1 ? " across " + nWk + " weeks" : "")) : "No matching blocks found to move");
+        $("cmdInput").value = ""; $("cmdInput").blur(); commit(); return;
+      }
+    }
     const r = parseCommand(text, state.categories);
     if (r.error) { toast(r.error); return; }
     snap();
@@ -2638,11 +2697,14 @@ if (IS_BROWSER) (function () {
       const dayLabels = r.days.map((di) => DAYS[di]);
       const swCat = state.categories.find((c) => (c.name || "").trim().toLowerCase() === "switch");
       const overlaps = (b) => !r.hasTime || (b.startSlot < (r.startSlot + r.lenSlots) && r.startSlot < (b.startSlot + b.lenSlots));
+      // permissive delete: match by task (covers plan blocks + events assigned to it) OR by name (covers free events + one-offs), so you don't need the "Event" keyword to delete an event
+      const tName = (r.name || "").trim().toLowerCase(), tCat = r.cat ? r.cat.id : null;
       const isTarget = (b) => {
         if (!dayLabels.includes(b.day) || b.kind === "actual") return false;
-        if (r.kind === "task") return b.catId === r.cat.id && !b.event && !b.oneoff && overlaps(b);
-        if (r.kind === "oneoff") return b.oneoff && (b.name || "").toLowerCase() === (r.name || "").toLowerCase() && overlaps(b);
-        return b.event && (r.cat ? b.catId === r.cat.id : true) && (!r.name || (b.name || "").toLowerCase() === (r.name || "").toLowerCase()) && overlaps(b);   // event (assigned when r.cat set)
+        if (!overlaps(b)) return false;
+        const byCat = tCat && b.catId === tCat;
+        const byName = tName && (b.name || "").trim().toLowerCase() === tName;
+        return byCat || byName;
       };
       let removed = 0;
       for (const wi of targetWeeks) {
@@ -3281,7 +3343,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v217"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v219"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
