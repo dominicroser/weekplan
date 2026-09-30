@@ -939,7 +939,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v219 */
+/* build v220 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -3343,7 +3343,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v219"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v220"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3420,41 +3420,46 @@ if (IS_BROWSER) (function () {
     for (const wk of state.weeks) for (const b of (wk.blocks || [])) { if (b.kind === "actual" && ids.has(b.catId) && b.date === date && b.endMs != null) s += (b.endMs - b.startMs) / 3600000; }
     return s;
   }
-  function firstTimedIsGrowth(date) {   // was the first task you timed that day the "Growth" task (or a child of it)?
-    let best = null, bestMs = Infinity;
-    for (const wk of state.weeks) for (const b of (wk.blocks || [])) {
-      if (b.kind === "actual" && b.date === date && b.startMs != null && b.startMs < bestMs) { bestMs = b.startMs; best = b; }
-    }
-    if (!best) return null;   // nothing timed yet that day → undecided
+  function growthTimedFirstHour(date) {   // Hour habit: is the FIRST full hour of the day entirely "Growth" (task or child)? → 'ok' | 'fail' | 'pending'
     const g = (state.categories || []).find((c) => (c.name || "").trim().toLowerCase() === "growth");
-    if (!g) return false;
-    if (best.catId === g.id) return true;
-    const c = (state.categories || []).find((x) => x.id === best.catId);
-    return !!(c && c.parent === g.id);
+    if (!g) return "fail";
+    const ids = new Set([g.id]); (state.categories || []).forEach((c) => { if (c.parent === g.id) ids.add(c.id); });
+    const blocks = [];
+    for (const wk of state.weeks) for (const b of (wk.blocks || [])) if (b.kind === "actual" && b.date === date && b.startMs != null && b.endMs != null) blocks.push(b);
+    if (!blocks.length) return "pending";   // nothing timed yet
+    blocks.sort((a, b) => a.startMs - b.startMs);
+    let acc = 0;
+    for (const b of blocks) {
+      if (acc >= 1 - 1e-6) break;
+      if (!ids.has(b.catId)) return "fail";   // a non-Growth task is timed before a full hour of Growth
+      acc += (b.endMs - b.startMs) / 3600000;
+    }
+    return acc >= 1 - 1e-6 ? "ok" : "pending";   // a full Growth-first hour is in, or you could still add more
   }
   function habitStatus(h, date) {
     const def = defFor(h.id, date) || { type: h.type || "binary", rule: h.rule || "" };
     const type = def.type || "binary";
     const raw = h.entries ? h.entries[date] : undefined;
     if (raw === "na") return "na";
-    const hName = (def.name || h.name || "").trim().toLowerCase();
-    if (hName === "mails") {   // Mails: >1h timed → auto-missed; ≤1h & unmarked stays blank; a manual ach/miss always wins (you can override)
+    const liveName = (h.name || "").trim().toLowerCase();   // match on the habit's current name (stable across weekly versions / emoji prefixes)
+    if (liveName.indexOf("mail") >= 0) {   // Mails: >1h timed → auto-missed; ≤1h & unmarked stays blank; a manual ach/miss always wins (you can override)
       if (raw === "miss") return "miss";
       if (raw === "ach") return "ach";
       return mailsTimedOn(date) > 1.0 ? "miss" : null;   // missed as soon as it exceeds 1 hour (exactly 1h is still fine)
     }
-    if (/hour|growth/.test(hName)) {   // "Hour": Mon–Thu, if the first timed task of the day isn't Growth → auto-missed; a manual ach/miss always wins
+    if (/hour|growth/.test(liveName)) {   // "Hour": Mon–Thu, achieved only if the first full hour timed is all Growth; else auto-missed; a manual ach/miss always wins
       if (raw === "miss") return "miss";
       if (raw === "ach") return "ach";
       const dow = parseYMD(date).getDay();   // 0 Sun · 1 Mon … 4 Thu … 6 Sat
       if (dow < 1 || dow > 4) return null;    // only Mon–Thu are auto-evaluated
-      const fg = firstTimedIsGrowth(date);
-      if (fg === null) return null;           // nothing timed yet → blank
-      return fg ? "ach" : "miss";
+      const s = growthTimedFirstHour(date);
+      if (s === "ok") return "ach";
+      if (s === "fail") return "miss";
+      return date < ymd(new Date()) ? "miss" : null;   // pending: a past day that never got its Growth-first hour → missed; today → blank (still possible)
     }
     if (type === "binary") { if (raw === "ach") { const r = (def.rule || "").trim() ? evalHabitRule(h, date, null) : null; return r === false ? "miss" : "ach"; } return raw === "miss" ? "miss" : null; }
     const today = ymd(new Date());
-    if (type === "numeric") { if (raw === "ach" || raw === "miss") return raw; if (typeof raw !== "number") return null; const r = evalHabitRule(h, date, raw); if (r == null) return null; if (r) return "ach"; const ceiling = /ethanol/i.test(def.name || h.name || ""); return (date < today || ceiling) ? "miss" : null; }   // manual ach/miss overrides the rule; else only a past day counts as missed — except a "ceiling" habit like Ethanol, where a failing value can't be undone, so it's missed straight away
+    if (type === "numeric") { if (raw === "ach" || raw === "miss") return raw; if (typeof raw !== "number") return null; const r = evalHabitRule(h, date, raw); if (r == null) return null; return r ? "ach" : "miss"; }   // once a value is entered, evaluate the rule right away: below target → red now; raise it to meet the target → green. Manual ach/miss overrides.
     if (type === "hours") { if (raw === "ach" || raw === "miss") return raw; if (date > today) return null; const r = evalHabitRule(h, date, null); if (r == null) return null; if (r) return "ach"; return date < today ? "miss" : null; }   // today can still be met by logging more, so it isn't "missed" until it's past
     return null;
   }
@@ -3520,7 +3525,7 @@ if (IS_BROWSER) (function () {
       const raw = inp.value.trim(), t = raw.toLowerCase();
       if (t === "na" || t === "ach" || t === "miss") { snap(); if (!h.entries) h.entries = {}; h.entries[date] = t; commit(); return; }
       if (t === "") { if (!(h.entries && h.entries[date] != null)) { renderStreak(); return; } snap(); delete h.entries[date]; commit(); return; }
-      if (+h.fill > 0) { const num = parseFloat(raw.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, na/ach/miss, or blank."); renderStreak(); return; } distributeFill(h, date, num); return; }
+      if (+h.fill > 0) { const num = parseFloat(raw.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, na/ach/miss, or blank."); renderStreak(); return; } if (num === 0) { snap(); if (!h.entries) h.entries = {}; h.entries[date] = 0; commit(); return; } distributeFill(h, date, num); return; }   // 0 sets the day to 0 (distributeFill only spreads positive amounts)
       const num = (h.hm || raw.indexOf(":") >= 0) ? parseHM(raw) : parseFloat(raw.replace(",", ".")); if (isNaN(num)) { toast("Enter a number" + (h.hm ? " as h:mm" : "") + ", na/ach/miss, or blank."); renderStreak(); return; }
       snap(); if (!h.entries) h.entries = {}; h.entries[date] = num; commit();
     };
