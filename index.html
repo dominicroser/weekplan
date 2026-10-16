@@ -249,7 +249,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteBody li.hasKids::before { content: "\25BE"; position: absolute; left: -16px; top: 0; width: 15px; text-align: center; font-size: 12px; color: #8a7c2e; cursor: pointer; user-select: none; -webkit-user-select: none; }
 #noteBody ol > li.hasKids::before { left: -30px; }
 #noteBody li.hasKids.collapsed::before { content: "\25B8"; color: #3a3320; font-weight: 700; }
-#noteBody li.collapsed > ul, #noteBody li.collapsed > ol { display: none; }
+#noteBody li.collapsed > ul, #noteBody li.collapsed > ol, #noteBody li.collapsed + ul, #noteBody li.collapsed + ol { display: none; }   /* Chrome puts indented sub-lists NEXT TO the bullet (li + ul), Firefox inside it (li > ul) — handle both */
 
 /* ── Action bar ── */
 #actionBar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 50; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 7px 9px; display: none; align-items: center; gap: 5px; box-shadow: 0 6px 24px rgba(0,0,0,0.18); flex-wrap: wrap; max-width: 94vw; justify-content: center; }
@@ -946,7 +946,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v221 */
+/* build v222 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2814,7 +2814,28 @@ if (IS_BROWSER) (function () {
   /* ── collapsible bullets ──
      A <li> that contains a nested list gets class "hasKids" (CSS swaps its dot for ▾/▸). Class "collapsed" hides its nested list.
      Both classes live in the note's HTML, so the fold state is saved and synced with the note itself. */
-  function noteKidList(li) { for (const ch of li.children) if ((ch.tagName === "UL" || ch.tagName === "OL") && ch.querySelector("li")) return ch; return null; }
+  const isList = (el) => !!el && (el.tagName === "UL" || el.tagName === "OL");
+  // A bullet's sub-list is either inside it (<li>…<ul>) or — what Chrome's indent produces — the list right after it (<li>…</li><ul>)
+  function noteKidList(li) {
+    for (const ch of li.children) if (isList(ch) && ch.querySelector("li")) return ch;
+    const nx = li.nextElementSibling; return (isList(nx) && nx.querySelector("li")) ? nx : null;
+  }
+  // The bullets that logically contain node n, innermost first (a sibling sub-list counts as belonging to the bullet before it)
+  function noteLiChain(n) {
+    const body = $("noteBody"), out = [];
+    let el = n && (n.nodeType === 1 ? n : n.parentElement);
+    while (el && el !== body) {
+      if (el.tagName === "LI") out.push(el);
+      if (isList(el) && el.previousElementSibling && el.previousElementSibling.tagName === "LI") { el = el.previousElementSibling; continue; }
+      el = el.parentElement;
+    }
+    return out;
+  }
+  function caretToLineEnd(li) {   // end of the bullet's own text (before an inner sub-list, if any)
+    const kids = noteKidList(li), r = document.createRange(); r.selectNodeContents(li);
+    if (kids && kids.parentElement === li) r.setEndBefore(kids);
+    r.collapse(false); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  }
   function decorateNoteLists() {
     const body = $("noteBody"); if (!body) return;
     body.querySelectorAll("li").forEach((li) => {
@@ -2827,11 +2848,9 @@ if (IS_BROWSER) (function () {
   function noteCaretNode() { const sel = window.getSelection && window.getSelection(); if (!sel || !sel.rangeCount) return null; const n = sel.getRangeAt(0).startContainer; return $("noteBody").contains(n) ? n : null; }
   // If the caret has ended up inside a folded (hidden) sub-list — e.g. Tab under a folded bullet, or Backspace merging into its last child — unfold so you can see what you type.
   function revealNoteCaret() {
-    const body = $("noteBody"); let n = noteCaretNode(); if (!n) return false;
+    const n = noteCaretNode(); if (!n) return false;
     let changed = false;
-    for (let el = n.nodeType === 1 ? n : n.parentElement; el && el !== body; el = el.parentElement) {
-      if ((el.tagName === "UL" || el.tagName === "OL") && el.parentElement && el.parentElement.tagName === "LI" && el.parentElement.classList.contains("collapsed")) { el.parentElement.classList.remove("collapsed"); changed = true; }
-    }
+    for (const li of noteLiChain(n)) { if (!li.classList.contains("collapsed")) continue; const kids = noteKidList(li); if (kids && kids.contains(n)) { li.classList.remove("collapsed"); changed = true; } }
     return changed;
   }
   function placeCaret(node, atEnd) { const r = document.createRange(); r.selectNodeContents(node); r.collapse(!atEnd); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }
@@ -2840,14 +2859,14 @@ if (IS_BROWSER) (function () {
     li.classList.toggle("collapsed", fold);
     if (fold) {   // don't leave the caret stranded in the now-hidden children → park it at the end of the bullet's own line
       const n = noteCaretNode(), kids = noteKidList(li);
-      if (n && kids.contains(n)) { const r = document.createRange(); r.selectNodeContents(li); r.setEndBefore(kids); r.collapse(false); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+      if (n && kids.contains(n)) caretToLineEnd(li);
     }
     state.note.html = $("noteBody").innerHTML; saveNoteSoon();
   }
   // Ctrl/Cmd+↑ folds, Ctrl/Cmd+↓ unfolds the nearest bullet (at the caret, or its parent) that has sub-bullets
   function foldAtCaret(fold) {
-    const body = $("noteBody"); let n = noteCaretNode(); if (!n) return;
-    for (let el = n.nodeType === 1 ? n : n.parentElement; el && el !== body; el = el.parentElement) if (el.tagName === "LI" && noteKidList(el)) { setNoteFold(el, fold); return; }
+    const n = noteCaretNode(); if (!n) return;
+    for (const li of noteLiChain(n)) if (noteKidList(li)) { setNoteFold(li, fold); return; }
   }
   // Toggle by clicking the ▾/▸ marker (it sits just left of the bullet's text box). pointerdown so the caret doesn't jump.
   $("noteBody").addEventListener("pointerdown", (e) => {
@@ -2866,11 +2885,13 @@ if (IS_BROWSER) (function () {
     const kids = noteKidList(li); if (!kids || kids.contains(n)) return false;
     e.preventDefault();
     if (!r0.collapsed) r0.deleteContents();
-    const tail = document.createRange(); tail.setStart(r0.startContainer, r0.startOffset); tail.setEndBefore(kids);
+    const inner = kids.parentElement === li;
+    const tail = document.createRange(); tail.setStart(r0.startContainer, r0.startOffset);
+    if (inner) tail.setEndBefore(kids); else { tail.setEnd(li, li.childNodes.length); }
     const frag = tail.extractContents();
     const nli = document.createElement("li"); nli.appendChild(frag);
     if (!nli.textContent.trim() && !nli.querySelector("img")) nli.innerHTML = "<br>";
-    li.parentNode.insertBefore(nli, li.nextSibling);
+    li.parentNode.insertBefore(nli, inner ? li.nextSibling : kids.nextSibling);   // new line goes after the (hidden) children, which stay with this bullet
     placeCaret(nli, false);
     decorateNoteLists();
     state.note.html = $("noteBody").innerHTML; saveNoteSoon();
@@ -3418,7 +3439,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v221"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v222"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
