@@ -249,7 +249,100 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteBody li.hasKids::before { content: "\25BE"; position: absolute; left: -16px; top: 0; width: 15px; text-align: center; font-size: 12px; color: #8a7c2e; cursor: pointer; user-select: none; -webkit-user-select: none; }
 #noteBody ol > li.hasKids::before { left: -30px; }
 #noteBody li.hasKids.collapsed::before { content: "\25B8"; color: #3a3320; font-weight: 700; }
-#noteBody li.collapsed > ul, #noteBody li.collapsed > ol, #noteBody li.collapsed + ul, #noteBody li.collapsed + ol { display: none; }   /* Chrome puts indented sub-lists NEXT TO the bullet (li + ul), Firefox inside it (li > ul) — handle both */
+#noteBody li.collapsed > ul, #noteBody li.collapsed > ol, #noteBody li.collapsed + ul, #noteBody li.collapsed + ol { display: none; }
+/* tick boxes (v227): a <li class="chk"> shows an empty box in its own left padding; ticking moves the item to the dump note's "Ticked" section */
+#noteBody li.chk { list-style: none; padding-left: 19px; }
+#noteBody li.chk::after { content: ""; position: absolute; left: 1px; top: 0.27em; width: 0.9em; height: 0.9em; border: 1.5px solid #6b6230; border-radius: 3px; background: rgba(255,255,255,0.55); box-sizing: border-box; cursor: pointer; }
+/* ── note tabs (v227): several coloured notes ── */
+#notePanel { position: relative; gap: 0; }
+#noteTop { display: flex; flex-direction: column-reverse; align-items: stretch; gap: 3px; }   /* tool buttons on a small row above the tabs; tabs sit right on the note */
+#noteTabs { display: flex; flex-wrap: nowrap; gap: 3px; flex: 1; min-width: 0; align-items: flex-end; overflow-x: auto; scrollbar-width: none; }
+#noteTabs::-webkit-scrollbar { display: none; }
+.nTab { flex-shrink: 0; border: 1px solid rgba(0,0,0,0.12); border-bottom: none; border-radius: 7px 7px 0 0; padding: 2px 8px; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; color: #3a3320; cursor: pointer; opacity: 0.72; max-width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
+.nTab.on { opacity: 1; font-weight: 800; padding-top: 4px; box-shadow: 0 -1px 0 rgba(0,0,0,0.05); }
+.nTab.add { background: var(--panel); color: var(--ink2); opacity: 1; font-weight: 700; }
+#noteTools2 { display: flex; gap: 2px; align-self: flex-end; flex-shrink: 0; }
+#noteTools2 button { width: 22px; height: 20px; border: 1px solid var(--line); background: var(--panel); border-radius: 5px; cursor: pointer; font-size: 11px; line-height: 1; color: var(--ink2); padding: 0; }
+#noteTools2 button:hover { background: var(--panel2); }
+#noteDock #noteBody { border-radius: 0 6px 6px 6px; }
+.nPop { position: absolute; top: 26px; left: 0; z-index: 70; background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 26px rgba(0,0,0,0.2); padding: 10px; width: 230px; font-size: 12px; display: flex; flex-direction: column; gap: 8px; }
+.nPop input[type=text] { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; font: inherit; font-size: 13px; }
+.nPop .nSw { display: flex; flex-wrap: wrap; gap: 5px; }
+.nPop .nSw button { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+.nPop .nSw button.on { border-color: #333; }
+.nPop label { display: flex; align-items: center; gap: 6px; color: var(--ink2); }
+.nPop .nPopBtns { display: flex; justify-content: space-between; }
+.nPop .nPopBtns button { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 3px 9px; cursor: pointer; font-size: 12px; }
+.nPop .nPopBtns .nDel { color: #c53030; }
+/* Ticked section (dump note) */
+#tickedWrap { margin-top: 6px; font-family: 'Inter', sans-serif; font-size: 12px; }
+#tickedWrap:empty { display: none; }
+.tkHead { cursor: pointer; color: var(--ink2); font-weight: 700; user-select: none; padding: 2px 0; display: flex; align-items: center; gap: 6px; }
+.tkHead .tkArch { margin-left: auto; font-weight: 500; border: 1px solid var(--line); background: var(--panel); border-radius: 5px; font-size: 10.5px; padding: 1px 6px; cursor: pointer; color: var(--ink2); }
+.tkRow { display: flex; align-items: flex-start; gap: 6px; padding: 2px 0; color: #8b8f96; cursor: pointer; line-height: 1.4; }
+.tkRow:hover .tkTxt { color: var(--ink2); }
+.tkBox { flex-shrink: 0; width: 0.95em; height: 0.95em; margin-top: 0.2em; border: 1.5px solid #9aa0a8; border-radius: 3px; background: #9aa0a8; color: #fff; font-size: 10px; line-height: 0.95em; text-align: center; box-sizing: border-box; }
+.tkBox::after { content: "\2713"; font-weight: 800; }
+.tkTxt { text-decoration: line-through; flex: 1; min-width: 0; word-break: break-word; }
+.tkTxt .tkPath { text-decoration: none; display: inline; }
+.tkPath { color: #a3a7ad; text-decoration: none; }
+.tkFrom { flex-shrink: 0; font-size: 10.5px; color: #a3a7ad; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; max-width: 45%; overflow: hidden; text-overflow: ellipsis; }
+.tkDot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0; }
+.tkKids { margin-left: 16px; }
+.tkNote { color: var(--ink3); font-size: 10.5px; margin-top: 4px; }
+#archiveDialog { max-width: 560px; }
+/* ── phone views (v227): ?view=note | habits | timer — one panel full-screen, opened from the three home-screen shortcuts ── */
+#mvHead, #mvHabits, #mvTimer { display: none; }
+body.mv #gridWrap, body.mv #rbGrip, body.mv #rbFooter, body.mv #sgPanel, body.mv #streakPanel, body.mv #rbSummary, body.mv #deadlinePanel, body.mv #notePanel, body.mv #checkPop, body.mv #pool, body.mv #actionBar { display: none !important; }
+body.mv-note #notePanel, body.mv-habits #mvHabits, body.mv-timer #mvTimer { display: flex !important; }
+body.mv #body { height: 100vh; height: 100dvh; flex-direction: column; overflow: hidden; }
+body.mv #rightBar { width: 100% !important; flex: 1; min-height: 0; height: auto; border: none; display: flex; }
+body.mv #rbInner { padding: calc(6px + env(safe-area-inset-top)) 14px 28px; gap: 12px; }
+body.mv #mvHead { display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 6px 0 8px; border-bottom: 1px solid var(--line); }
+.mvBack { text-decoration: none; color: var(--ink2); font-weight: 700; font-size: 14px; white-space: nowrap; }
+.mvTitle { font-weight: 800; font-size: 18px; flex: 1; }
+.mvSync { font-size: 12px; color: var(--ink3); }
+#mvRefresh { width: 38px; height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: 17px; color: var(--ink2); cursor: pointer; }
+body.mvBusy #rbInner > :not(#mvHead) { opacity: 0.5; pointer-events: none; }
+body.mvBusy .mvSync::after { content: "syncing…"; }
+body.mv-note #noteDock #noteBody { height: auto !important; min-height: 55vh; resize: none; font-size: 16px; line-height: 1.5; padding: 10px 12px; }
+body.mv-note #noteBody li.chk { padding-left: 25px; }
+body.mv-note #noteBody li.hasKids::before { font-size: 15px; left: -20px; width: 18px; }
+body.mv-note #noteBody ul { margin-left: 22px; }
+body.mv-note .nTab { font-size: 14px; padding: 5px 12px; max-width: 150px; }
+body.mv-note .nTab.on { padding-top: 7px; }
+body.mv-note #noteTop { gap: 8px; }
+body.mv-note #noteTools2 { gap: 6px; }
+body.mv-note #noteTools2 button { width: 40px; height: 34px; font-size: 16px; }
+body.mv-note #tickedWrap { font-size: 15px; }
+body.mv-note .nPop { width: min(300px, 90vw); font-size: 14px; }
+.mvDayNav { display: flex; align-items: center; gap: 10px; }
+.mvDayNav button { width: 46px; height: 42px; font-size: 22px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); cursor: pointer; }
+.mvDayNav button:disabled { opacity: 0.3; }
+.mvDay { flex: 1; text-align: center; font-weight: 800; font-size: 17px; }
+.mvScore { font-size: 13px; font-weight: 700; text-align: center; }
+.mvScore.ok { color: #1f9d55; } .mvScore.bad { color: #d64545; }
+.mvHRow { display: flex; align-items: center; gap: 12px; padding: 5px 0; border-bottom: 1px solid var(--line2); }
+.mvHName { flex: 1; font-size: 16px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.mvCell.stCell { width: 96px; height: 46px; font-size: 16px; border-radius: 9px; flex-shrink: 0; }
+.mvCell.stCell .stCellIn { font-size: 17px; }
+.mvStats { display: flex; gap: 10px; flex-wrap: wrap; }
+.mvStats .tbStat { height: 32px; font-size: 13px; }
+.mvRun { border-radius: 14px; padding: 14px 16px; border: 3px solid #000; display: flex; flex-direction: column; gap: 6px; }
+.mvRunName { font-size: 20px; font-weight: 800; }
+.mvRunTime { font-size: 44px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.mvRunBtns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.mvRunBtns button { flex: 1; min-width: 92px; height: 44px; border-radius: 9px; border: none; background: rgba(0,0,0,0.2); color: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.mvIdle { color: var(--ink2); font-size: 15px; padding: 6px 0; }
+.mvTaskHd { font-size: 12px; font-weight: 800; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.05em; }
+.mvTasks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mvTask { min-height: 50px; border: 1px solid var(--line); border-left: 7px solid #999; border-radius: 9px; background: var(--panel); font-size: 15px; font-weight: 700; text-align: left; padding: 6px 10px; color: var(--ink); cursor: pointer; overflow: hidden; text-overflow: ellipsis; }
+.mvTask.on { background: #383d44; color: #fff; }
+#archSearch { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; font: inherit; font-size: 13px; margin: 6px 0 10px; }
+.archMonth { font-weight: 800; font-size: 12px; color: var(--ink2); margin: 12px 0 4px; }
+.archRow { font-size: 12.5px; padding: 2px 0; display: flex; gap: 8px; }
+.archRow .archDate { color: var(--ink3); font-variant-numeric: tabular-nums; flex-shrink: 0; width: 46px; }
+.archRow .archKids { color: var(--ink2); font-size: 11.5px; }   /* Chrome puts indented sub-lists NEXT TO the bullet (li + ul), Firefox inside it (li > ul) — handle both */
 
 /* ── Action bar ── */
 #actionBar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 50; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 7px 9px; display: none; align-items: center; gap: 5px; box-shadow: 0 6px 24px rgba(0,0,0,0.18); flex-wrap: wrap; max-width: 94vw; justify-content: center; }
@@ -743,13 +836,18 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
   <aside id="rightBar">
     <div id="rbGrip" title="Drag to change the side-bar width"></div>
     <div id="rbInner">
+      <div id="mvHead"><a class="mvBack" href="./">&lsaquo; Plapp</a><span class="mvTitle"></span><span class="mvSync"></span><button id="mvRefresh" title="Refresh from the cloud">&#10227;</button></div>
+      <div class="rbPanel" id="mvHabits"></div>
+      <div class="rbPanel" id="mvTimer"></div>
       <div class="rbPanel" id="sgPanel"></div>
       <div class="rbPanel" id="streakPanel">
         <div id="streakBody"></div>
       </div>
       <div id="rbSummary"></div>
       <div class="rbPanel" id="notePanel">
+        <div id="noteTop"><div id="noteTabs"></div><div id="noteTools2"><button data-nc="bullet" title="Bullet list (Ctrl+Shift+8)">&bull;</button><button data-nc="check" title="Tick box (Ctrl+Shift+9)">&#9744;</button><button data-nc="outdent" title="Outdent (Shift+Tab)">&#8676;</button><button data-nc="indent" title="Indent (Tab)">&#8677;</button></div></div>
         <div id="noteDock"></div>
+        <div id="tickedWrap"></div>
       </div>
       <div class="rbPanel" id="deadlinePanel">
         <div class="rbHd"><button class="rbAdd" id="dlAdd" title="Add deadline">+</button></div>
@@ -776,6 +874,14 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
   <div id="histWrap"></div>
   <h3 style="margin-top:18px;">Change log</h3>
   <div id="changelogWrap"></div>
+</dialog>
+
+<dialog id="archiveDialog">
+  <h2>Ticked-items archive</h2>
+  <p class="muted">Ticked items older than 3 months move here automatically (stored in your cloud sync, not in the browser).</p>
+  <input id="archSearch" placeholder="Search…" autocomplete="off">
+  <div id="archBody"></div>
+  <div class="btnRow" style="margin-top:12px;"><button class="btnGhost" id="archClose">Close</button></div>
 </dialog>
 
 <dialog id="habitReviewDialog">
@@ -857,7 +963,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The note in the side bar: Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold.</p>
+  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it, + for a new note). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it.</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -948,7 +1054,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v226 */
+/* build v227 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1368,6 +1474,12 @@ function migrate(s) {
     s.currentWeek = Math.max(0, Math.min(s.currentWeek || 0, s.weeks.length - 1));
     s.nextId = s.nextId || 1; s.version = 3;
     if (!s.note) s.note = defaultNote();
+    if (!Array.isArray(s.notes) || !s.notes.length) {   // v227: several coloured notes; the old single note becomes note 1, plus a "Dump" note for ticked items
+      s.notes = [{ id: "n1", name: "Note", color: "yellow", html: (s.note && s.note.html) || "" }, { id: "n2", name: "Dump", color: "grey", html: "" }];
+      s.dumpNote = "n2";
+    }
+    if (!s.notes.some((n) => n.id === s.dumpNote)) s.dumpNote = s.notes[s.notes.length - 1].id;
+    if (!Array.isArray(s.ticked)) s.ticked = [];
     if (!s.anchorMonday) s.anchorMonday = ymd(mondayOf(new Date()));
     if (s.timer === undefined) s.timer = null;
     if (!Array.isArray(s.deadlines)) s.deadlines = [];
@@ -1416,6 +1528,9 @@ if (IS_BROWSER) (function () {
   // device-local UI prefs (collapsible sections) — not synced
   let ui = {}; try { ui = JSON.parse(localStorage.getItem("weekplan-ui") || "{}"); } catch (e) { ui = {}; }
   function saveUI() { try { localStorage.setItem("weekplan-ui", JSON.stringify(ui)); } catch (e) {} }
+  // phone views (v227): the home-screen shortcuts open ./?view=note | habits | timer — one panel, full screen
+  const MV = (function () { try { const v = new URLSearchParams(location.search).get("view"); return ["note", "habits", "timer"].indexOf(v) >= 0 ? v : ""; } catch (e) { return ""; } })();
+  if (MV) document.body.classList.add("mv", "mv-" + MV);
 
   // ── editable tracked-session helpers (shared by inline log + popup) ──
   function findBlock(id) { for (const wk of state.weeks) { const b = (wk.blocks || []).find((x) => String(x.id) === String(id)); if (b) return { b: b, wk: wk }; } return null; }
@@ -1580,7 +1695,8 @@ if (IS_BROWSER) (function () {
   }
   function updateTimerDisplay() {
     if (!state.timer) return;
-    const el = document.querySelector(".runElapsed"); if (el) el.textContent = fmtClock(Date.now() - state.timer.startMs);   // runElapsed now lives in the top-bar timer pill
+    document.querySelectorAll(".runElapsed").forEach((el) => { el.textContent = fmtClock(Date.now() - state.timer.startMs); });   // top-bar timer pill (h:mm)
+    document.querySelectorAll(".runElapsedS").forEach((el) => { el.textContent = fmtDur(Date.now() - state.timer.startMs); });  // phone timer view (with seconds)
     const item = pool.querySelector('.poolItem.tier1[data-cat="' + state.timer.catId + '"]');
     if (item) { const hp = item.querySelector(".poolHours"); if (hp) { const r = liveDayRemaining(state.timer.catId), eps = 0.001, over = r.done - r.dayPlan > eps, dn = !over && r.left <= eps && r.done >= r.dayPlan - eps; hp.className = "poolHours " + (over ? "isover" : dn ? "isdone" : ""); hp.textContent = over ? fmtHM(r.done - r.dayPlan) + " over" : dn ? "✓ done" : fmtHM(r.left) + " left"; } }
     const lb = $("liveBlock");
@@ -1728,7 +1844,10 @@ if (IS_BROWSER) (function () {
     el.style.left = nt.x + "px"; el.style.top = nt.y + "px";
     el.style.width = nt.w + "px"; el.style.height = nt.h + "px";
     el.classList.toggle("open", !!nt.open);
-    if (force || document.activeElement !== body) { body.innerHTML = nt.html || ""; decorateNoteLists(); }
+    const cn = curNote();
+    body.style.background = noteBg(cn.color);
+    if (force || document.activeElement !== body || body.dataset.nid !== cn.id) { body.innerHTML = cn.html || ""; body.dataset.nid = cn.id; decorateNoteLists(); }
+    renderNoteTabs(); renderTicked();
   }
 
   /* ── grid scaffold ── */
@@ -2327,7 +2446,7 @@ if (IS_BROWSER) (function () {
     let lbl;
     if (viewDay >= 0) { const cl = colList(), a = cl[0], b = cl[cl.length - 1]; const da = dateOfCell(state.anchorMonday, state.currentWeek, a).getDate(); lbl = DAYS[a] + " " + da + (b !== a ? " – " + DAYS[b] + " " + dateOfCell(state.anchorMonday, state.currentWeek, b).getDate() : ""); }
     else lbl = "" + isoWeek(dateOfCell(state.anchorMonday, state.currentWeek, 0));
-    $("weekLabel").textContent = lbl; renderDayHeaders(); renderPool(); renderBlocks(); renderNote(false); updateRunBar(); renderRightBar();
+    $("weekLabel").textContent = lbl; renderDayHeaders(); renderPool(); renderBlocks(); renderNote(false); updateRunBar(); renderRightBar(); renderMv();
   }
 
   /* ── pointer ── */
@@ -2803,16 +2922,247 @@ if (IS_BROWSER) (function () {
 
   /* ── sticky note wiring ── */
   function noteCmd(cmd) {
-    $("noteBody").focus();
+    const nb = $("noteBody"), sel0 = window.getSelection(), keep = sel0 && sel0.rangeCount && nb.contains(sel0.getRangeAt(0).startContainer) ? sel0.getRangeAt(0).cloneRange() : null;
+    if (document.activeElement !== nb) { nb.focus(); if (keep) { const sl = window.getSelection(); sl.removeAllRanges(); sl.addRange(keep); } }
     if (cmd === "bold") document.execCommand("bold");
     else if (cmd === "italic") document.execCommand("italic");
     else if (cmd === "pink") document.execCommand("foreColor", false, PINK);
     else if (cmd === "bullet") document.execCommand("insertUnorderedList");
     else if (cmd === "indent") document.execCommand("indent");
     else if (cmd === "outdent") document.execCommand("outdent");
+    else if (cmd === "check") toggleCheckLines();
     decorateNoteLists(); revealNoteCaret();
-    state.note.html = $("noteBody").innerHTML; saveNoteSoon();
+    saveNoteHtml();
   }
+  /* ── several coloured notes (v227) ──
+     state.notes = [{ id, name, color, html }]; state.dumpNote = the note that collects ticked items; which tab is open is per device (ui.activeNote). */
+  const NOTE_COLORS = { yellow: ["#f2d84b", "#f0e39c"], pink: ["#f48fb1", "#f9d3e1"], blue: ["#7fb3e6", "#d3e5f7"], green: ["#8fd19e", "#d6f0d9"], orange: ["#f6b26b", "#fbe0c2"], purple: ["#b39ddb", "#e4dbf4"], teal: ["#6fd0c4", "#cfefeb"], grey: ["#b0b6bd", "#e6e8eb"] };
+  const noteTabCol = (c) => (NOTE_COLORS[c] || NOTE_COLORS.yellow)[0];
+  const noteBg = (c) => (NOTE_COLORS[c] || NOTE_COLORS.yellow)[1];
+  function curNote() {
+    if (!Array.isArray(state.notes) || !state.notes.length) { state.notes = [{ id: "n1", name: "Note", color: "yellow", html: "" }]; state.dumpNote = "n1"; }
+    return state.notes.find((n) => n.id === ui.activeNote) || state.notes[0];
+  }
+  function dumpNote() { return (state.notes || []).find((n) => n.id === state.dumpNote) || curNote(); }
+  function saveNoteHtml() { curNote().html = $("noteBody").innerHTML; saveNoteSoon(); }
+  function switchNote(id) { if (document.activeElement === $("noteBody")) saveNoteHtml(); ui.activeNote = id; saveUI(); closeNotePop(); renderNote(true); }
+  function renderNoteTabs() {
+    const host = $("noteTabs"); if (!host) return;
+    const cn = curNote();
+    host.innerHTML = state.notes.map((n) => '<div class="nTab' + (n.id === cn.id ? " on" : "") + '" data-nid="' + n.id + '" style="background:' + (n.id === cn.id ? noteBg(n.color) : noteTabCol(n.color)) + '" title="' + esc(n.name || "Note") + (n.id === cn.id ? " — click again to rename / recolour / delete" : "") + '">' + esc(n.name || "Note") + "</div>").join("") +
+      '<div class="nTab add" title="New note">+</div>';
+    host.querySelectorAll(".nTab[data-nid]").forEach((t) => t.addEventListener("click", () => { if (t.dataset.nid === curNote().id) openNotePop(); else switchNote(t.dataset.nid); }));
+    host.querySelector(".nTab.add").addEventListener("click", () => {
+      snap(); const used = new Set(state.notes.map((n) => n.color)); const color = Object.keys(NOTE_COLORS).find((c) => !used.has(c)) || "yellow";
+      const n = { id: "n" + Date.now().toString(36), name: "Note " + (state.notes.length + 1), color, html: "" };
+      state.notes.push(n); ui.activeNote = n.id; saveUI(); commit(); renderNote(true); openNotePop(true);
+    });
+  }
+  function closeNotePop() { const p = document.querySelector(".nPop"); if (p) p.remove(); }
+  function openNotePop(focusName) {
+    closeNotePop();
+    const n = curNote(), pop = document.createElement("div"); pop.className = "nPop";
+    pop.innerHTML = '<input type="text" class="nName" value="' + esc(n.name || "") + '" placeholder="Name">' +
+      '<div class="nSw">' + Object.keys(NOTE_COLORS).map((c) => '<button data-c="' + c + '" class="' + (c === n.color ? "on" : "") + '" style="background:' + noteTabCol(c) + '" title="' + c + '"></button>').join("") + "</div>" +
+      '<label><input type="checkbox" class="nDump"' + (state.dumpNote === n.id ? " checked disabled" : "") + '> Dump note — collects all ticked items</label>' +
+      '<div class="nPopBtns"><button class="nDel"' + (state.notes.length < 2 ? " disabled" : "") + '>Delete note</button><button class="nOk">Done</button></div>';
+    $("notePanel").appendChild(pop);
+    const nm = pop.querySelector(".nName");
+    nm.addEventListener("change", () => { snap(); n.name = nm.value.trim() || "Note"; commit(); });
+    nm.addEventListener("keydown", (e) => { if (e.key === "Enter") { nm.blur(); closeNotePop(); } });
+    pop.querySelectorAll(".nSw button").forEach((b) => b.addEventListener("click", () => { snap(); n.color = b.dataset.c; commit(); renderNote(true); openNotePop(); }));
+    pop.querySelector(".nDump").addEventListener("change", (e) => { if (e.target.checked) { snap(); state.dumpNote = n.id; commit(); renderNote(true); openNotePop(); } });
+    pop.querySelector(".nOk").addEventListener("click", () => { if (nm.value.trim() && nm.value.trim() !== n.name) { snap(); n.name = nm.value.trim(); commit(); } closeNotePop(); });
+    pop.querySelector(".nDel").addEventListener("click", () => {
+      if (state.notes.length < 2) return;
+      if (!confirm('Delete the note "' + (n.name || "Note") + '" and everything in it?')) return;
+      snap(); state.notes = state.notes.filter((x) => x.id !== n.id);
+      if (state.dumpNote === n.id) state.dumpNote = state.notes[0].id;   // the dump role moves to the first remaining note
+      ui.activeNote = state.notes[0].id; saveUI(); closeNotePop(); commit(); renderNote(true);
+    });
+    if (focusName) { nm.focus(); nm.select(); }
+  }
+  document.addEventListener("pointerdown", (e) => { const p = document.querySelector(".nPop"); if (p && !e.target.closest(".nPop") && !e.target.closest(".nTab.on") && !e.target.closest(".nTab.add")) closeNotePop(); });
+  $("noteTools2").querySelectorAll("button").forEach((b) => {
+    b.addEventListener("pointerdown", (e) => e.preventDefault());   // keep the caret/selection in the note (and the phone keyboard up)
+    b.addEventListener("click", () => noteCmd(b.dataset.nc));
+  });
+
+  /* ── tick boxes (v227) ──
+     A <li class="chk"> is a tick box. Ticking moves the line (with its sub-items) out of its note into state.ticked;
+     the dump note shows them in a "Ticked" section at the bottom. Unticking puts the line back where it came from
+     (under its old parent / after its old neighbour, found by the data-k ids we stamp on those lines). */
+  function kOf(li) { if (!li.dataset.k) li.dataset.k = Math.random().toString(36).slice(2, 9); return li.dataset.k; }
+  function ownText(li) { const c = li.cloneNode(true); c.querySelectorAll("ul,ol").forEach((x) => x.remove()); return (c.textContent || "").replace(/\s+/g, " ").trim(); }
+  function linesInSelection() {   // the <li> lines touched by the selection: innermost line at the start … at the end, in document order
+    const body = $("noteBody"), sel = window.getSelection(); if (!sel || !sel.rangeCount) return [];
+    const r = sel.getRangeAt(0), lis = Array.from(body.querySelectorAll("li"));
+    const at = (n) => { const el = n && (n.nodeType === 1 ? n : n.parentElement); return el && body.contains(el) ? el.closest("li") : null; };
+    const a = at(r.startContainer), b = at(r.endContainer);
+    if (!a || !b) return a ? [a] : b ? [b] : [];
+    const i = lis.indexOf(a), j = lis.indexOf(b);
+    return i < 0 || j < 0 ? [a] : lis.slice(Math.min(i, j), Math.max(i, j) + 1);
+  }
+  function toggleCheckLines() {
+    let lines = linesInSelection();
+    if (!lines.length) { document.execCommand("insertUnorderedList"); lines = linesInSelection(); }   // plain text → make it a list first
+    if (!lines.length) return;
+    const allChk = lines.every((li) => li.classList.contains("chk"));
+    lines.forEach((li) => li.classList.toggle("chk", !allChk));
+  }
+  function tickCore(li, note) {
+    const chain = noteLiChain(li), parent = chain[1] || null;
+    let prev = li.previousElementSibling; while (prev && prev.tagName !== "LI") prev = prev.previousElementSibling;
+    let next = li.nextElementSibling; while (next && next.tagName !== "LI") next = next.nextElementSibling;
+    if (parent) kOf(parent); if (prev) kOf(prev); if (next) kOf(next);
+    const k = kOf(li), kids = noteKidList(li), sib = kids && kids.parentElement !== li ? kids : null;
+    const e = { id: "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), note: note.id, k, parentK: parent ? parent.dataset.k : null, prevK: prev ? prev.dataset.k : null, nextK: next ? next.dataset.k : null,
+      path: parent ? ownText(parent).slice(0, 40) : "", li: li.outerHTML, sib: sib ? sib.outerHTML : "", ts: Date.now() };
+    for (const t of state.ticked) if (t.note === note.id && t.parentK === k && !t.under) t.under = e.id;   // its sub-items ticked earlier → group them under it
+    const list = li.parentElement;
+    li.remove(); if (sib) sib.remove();
+    if (isList(list) && !list.querySelector("li")) list.remove();
+    state.ticked.push(e);
+    return parent;
+  }
+  function tickItem(li) {
+    const body = $("noteBody"), note = curNote(); if (!state.ticked) state.ticked = [];
+    snap();
+    let parent = tickCore(li, note);
+    while (parent && body.contains(parent) && parent.classList.contains("chk") && !noteKidList(parent)) parent = tickCore(parent, note);   // last sub-item ticked → its tick-box parent is done too
+    decorateNoteLists(); saveNoteHtml(); commit();
+  }
+  function withNoteDom(noteId, fn) {   // edit a note's HTML: live in the editor if it's the open note, else on a detached copy
+    const n = state.notes.find((x) => x.id === noteId); if (!n) return;
+    if (n.id === curNote().id) { const body = $("noteBody"); fn(body); decorateNoteLists(); n.html = body.innerHTML; return; }
+    const div = document.createElement("div"); div.innerHTML = n.html || ""; fn(div); n.html = div.innerHTML;
+  }
+  function insertRestored(root, e) {
+    const tpl = document.createElement("div"); tpl.innerHTML = (e.li || "") + (e.sib || "");
+    const nodes = Array.from(tpl.children); if (!nodes.length) return;
+    const parent = e.parentK ? root.querySelector('li[data-k="' + e.parentK + '"]') : null;
+    const prev = e.prevK ? root.querySelector('li[data-k="' + e.prevK + '"]') : null;
+    const next = !prev && e.nextK ? root.querySelector('li[data-k="' + e.nextK + '"]') : null;   // old neighbour above gone → use the one below
+    const after = (li) => (isList(li.nextElementSibling) ? li.nextElementSibling.nextSibling : li.nextSibling);   // skip a sibling sub-list that belongs to li
+    let box, ref;
+    if (parent) {
+      box = noteKidList(parent); if (!box) { box = document.createElement("ul"); parent.appendChild(box); }
+      ref = prev && prev.parentElement === box ? after(prev) : next && next.parentElement === box ? next : (e.prevK ? null : box.firstChild);   // neighbours gone: was first → at the start, else at the end
+      if (parent.classList.contains("collapsed")) parent.classList.remove("collapsed");
+    } else if (prev) { box = prev.parentElement; ref = after(prev); }
+    else if (next) { box = next.parentElement; ref = next; }
+    else {
+      const lists = Array.from(root.children).filter((c) => isList(c));
+      box = e.prevK ? lists[lists.length - 1] : lists[0];
+      if (!box) { box = document.createElement("ul"); root.appendChild(box); }
+      ref = e.prevK ? null : box.firstChild;
+    }
+    nodes.forEach((nd) => box.insertBefore(nd, ref));
+  }
+  function tickedGroup(top) {   // an entry + everything grouped under it, parents before children
+    const out = [top];
+    for (let i = 0; i < out.length; i++) state.ticked.filter((t) => t.under === out[i].id).sort((a, b) => a.ts - b.ts).forEach((t) => out.push(t));
+    return out;
+  }
+  function untickEntry(id) {
+    const top = (state.ticked || []).find((t) => t.id === id); if (!top) return;
+    snap();
+    const group = tickedGroup(top).sort((a, b) => b.ts - a.ts), gone = new Set(group.map((t) => t.id));   // newest first = exact reverse of the ticking → every remembered neighbour is back in place when needed
+    for (const t of group) {
+      const target = state.notes.some((n) => n.id === t.note) ? t.note : dumpNote().id;   // origin note deleted → back into the dump note
+      withNoteDom(target, (root) => insertRestored(root, t));
+    }
+    state.ticked = state.ticked.filter((t) => !gone.has(t.id));
+    commit(); renderNote(true);
+  }
+  function liTreeHtml(html, sib) {   // the sub-items inside a ticked entry, as indented read-only rows
+    const tpl = document.createElement("div"); tpl.innerHTML = (html || "") + (sib || "");
+    const li = tpl.firstElementChild; if (!li) return "";
+    const kidsOf = (x) => { const k = []; Array.from(x.children).forEach((c) => { if (isList(c)) Array.from(c.children).forEach((g) => { if (g.tagName === "LI") k.push(g); }); }); const nx = x.nextElementSibling; if (isList(nx)) Array.from(nx.children).forEach((g) => { if (g.tagName === "LI") k.push(g); }); return k; };
+    const walk = (x) => kidsOf(x).map((c) => '<div class="tkRow"><span class="tkBox"></span><span class="tkTxt">' + esc(ownText(c)) + '</span></div>' + (kidsOf(c).length ? '<div class="tkKids">' + walk(c) + "</div>" : "")).join("");
+    return walk(li);
+  }
+  function tickedRowHtml(t, nested) {
+    const src = state.notes.find((n) => n.id === t.note);
+    const tpl = document.createElement("div"); tpl.innerHTML = t.li || ""; const txt = tpl.firstElementChild ? ownText(tpl.firstElementChild) : "";
+    const dot = !nested && src && src.id !== state.dumpNote ? '<span class="tkFrom"><span class="tkDot" style="background:' + noteTabCol(src.color) + '" title="from ' + esc(src.name || "") + '"></span></span>' : "";
+    const path = !nested && t.path ? '<span class="tkPath">' + esc(t.path) + " › </span>" : "";   // its parent is still in the note → say where it belonged
+    const kids = liTreeHtml(t.li, t.sib) + state.ticked.filter((x) => x.under === t.id).sort((a, b) => a.ts - b.ts).map((x) => tickedRowHtml(x, true)).join("");
+    return '<div class="tkRow" data-t="' + t.id + '"><span class="tkBox"></span><span class="tkTxt">' + path + (esc(txt) || "&nbsp;") + "</span>" + dot + "</div>" + (kids ? '<div class="tkKids">' + kids + "</div>" : "");
+  }
+  function renderTicked() {
+    const host = $("tickedWrap"); if (!host) return;
+    const list = (state.ticked || []).filter((t) => !t.under || !state.ticked.some((x) => x.id === t.under));
+    if (curNote().id !== state.dumpNote || (!list.length && !(state.ticked || []).length && !cfg)) { host.innerHTML = ""; return; }
+    const open = ui.tickedOpen !== false;
+    list.sort((a, b) => b.ts - a.ts);   // most recently ticked first
+    let h = '<div class="tkHead"><span>' + (open ? "▾" : "▸") + " " + list.length + " ticked</span>" + (cfg && cfg.url ? '<button class="tkArch" title="Ticked items older than 3 months">Archive</button>' : "") + "</div>";
+    if (open) h += '<div class="tkList">' + list.map((t) => '<div class="tkGroup" data-top="' + t.id + '">' + tickedRowHtml(t) + "</div>").join("") + "</div>" + (list.length ? '<div class="tkNote">Click an item to untick it (it goes back where it was). Items ticked more than 3 months ago move to the archive.</div>' : "");
+    host.innerHTML = h;
+    host.querySelector(".tkHead").addEventListener("click", (e) => { if (e.target.closest(".tkArch")) return; ui.tickedOpen = !open; saveUI(); renderTicked(); });
+    const ab = host.querySelector(".tkArch"); if (ab) ab.addEventListener("click", openArchive);
+    host.querySelectorAll(".tkGroup").forEach((g) => g.addEventListener("click", () => untickEntry(g.dataset.top)));
+  }
+
+  /* ── archive of old ticked items (v227) ──
+     Top-level ticked entries older than 3 months (with everything grouped under them) are written to the cloud as their own rows
+     in the same Supabase table (id "<plan code>-archive-<date>-<random>": a row per batch, so two devices never overwrite each other)
+     and then removed from the everyday state. "Archive" in the Ticked section reads them back. */
+  let archiving = false;
+  async function archiveOldTicked() {
+    if (archiving || !cfg || !cfg.url || !cfg.key || !cfg.pid || !(state.ticked || []).length) return;
+    const cut = new Date(); cut.setMonth(cut.getMonth() - 3); const cutMs = cut.getTime();
+    const tops = state.ticked.filter((t) => (!t.under || !state.ticked.some((x) => x.id === t.under)) && t.ts < cutMs);
+    if (!tops.length) return;
+    const batch = []; tops.forEach((t) => tickedGroup(t).forEach((x) => batch.push(x)));
+    archiving = true;
+    try {
+      const notes = {}; (state.notes || []).forEach((n) => { notes[n.id] = { name: n.name, color: n.color }; });
+      const id = cfg.pid + "-archive-" + ymd(new Date()) + "-" + Math.random().toString(36).slice(2, 7);
+      const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans", { method: "POST", headers: Object.assign(sbHeaders(), { Prefer: "resolution=merge-duplicates" }), body: JSON.stringify([{ id, data: { kind: "ticked-archive", entries: batch, notes }, updated_at: new Date().toISOString() }]) });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const gone = new Set(batch.map((x) => x.id));
+      state.ticked = state.ticked.filter((x) => !gone.has(x.id));
+      commit();
+    } catch (e) { /* stays in the Ticked section; we try again next time */ }
+    finally { archiving = false; }
+  }
+  let archCache = null;
+  async function openArchive() {
+    const dlg = $("archiveDialog"), body = $("archBody");
+    $("archSearch").value = ""; body.innerHTML = '<p class="muted">Loading…</p>'; dlg.showModal();
+    if (!cfg || !cfg.url) { body.innerHTML = '<p class="muted">Sync isn\'t set up, so there is no cloud archive.</p>'; return; }
+    try {
+      const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans?id=like." + encodeURIComponent(cfg.pid + "-archive-") + "*&select=data", { headers: sbHeaders() });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const rows = await r.json(), seen = new Set(), all = [], notes = {};
+      rows.forEach((row) => { const d = row.data || {}; Object.assign(notes, d.notes || {}); (d.entries || []).forEach((t) => { if (!seen.has(t.id)) { seen.add(t.id); all.push(t); } }); });
+      archCache = { all, notes };
+      renderArchive();
+    } catch (e) { body.innerHTML = '<p class="muted">Couldn\'t load the archive (' + esc(e.message) + ").</p>"; }
+  }
+  function renderArchive() {
+    const body = $("archBody"); if (!archCache) return;
+    const q = $("archSearch").value.trim().toLowerCase(), { all, notes } = archCache;
+    const tops = all.filter((t) => !t.under || !all.some((x) => x.id === t.under)).sort((a, b) => b.ts - a.ts);
+    const textOf = (t) => { const d = document.createElement("div"); d.innerHTML = (t.li || "") + (t.sib || ""); return (d.textContent || "").replace(/\s+/g, " ").trim(); };
+    let h = "", month = "";
+    for (const t of tops) {
+      const group = [t]; for (let i = 0; i < group.length; i++) all.filter((x) => x.under === group[i].id).forEach((x) => group.push(x));
+      const full = group.map(textOf).join(" · ");
+      if (q && full.toLowerCase().indexOf(q) < 0) continue;
+      const d = new Date(t.ts), m = DL_MON[d.getMonth()] + " " + d.getFullYear();
+      if (m !== month) { month = m; h += '<div class="archMonth">' + m + "</div>"; }
+      const tpl = document.createElement("div"); tpl.innerHTML = t.li || ""; const main = tpl.firstElementChild ? ownText(tpl.firstElementChild) : "";
+      const rest = full.slice(main.length).replace(/^\s*·?\s*/, "");
+      const src = notes[t.note];
+      h += '<div class="archRow"><span class="archDate">' + d.getDate() + " " + DL_MON[d.getMonth()] + '</span><span>' + (src ? '<span class="tkDot" style="background:' + noteTabCol(src.color) + '" title="' + esc(src.name || "") + '"></span> ' : "") + (t.path ? '<span class="muted">' + esc(t.path) + " › </span>" : "") + esc(main) + (rest ? '<div class="archKids">' + esc(rest) + "</div>" : "") + "</span></div>";
+    }
+    body.innerHTML = h || '<p class="muted">' + (q ? "Nothing matches." : "The archive is empty so far.") + "</p>";
+  }
+  $("archSearch").addEventListener("input", renderArchive);
+  $("archClose").addEventListener("click", () => $("archiveDialog").close());
+
   /* ── collapsible bullets ──
      A <li> that contains a nested list gets class "hasKids" (CSS swaps its dot for ▾/▸). Class "collapsed" hides its nested list.
      Both classes live in the note's HTML, so the fold state is saved and synced with the note itself. */
@@ -2840,7 +3190,9 @@ if (IS_BROWSER) (function () {
   }
   function decorateNoteLists() {
     const body = $("noteBody"); if (!body) return;
+    const seenK = new Set();
     body.querySelectorAll("li").forEach((li) => {
+      if (li.dataset.k) { if (seenK.has(li.dataset.k)) delete li.dataset.k; else seenK.add(li.dataset.k); }   // Enter copies attributes → keep the id on the original line only
       const has = !!noteKidList(li);
       if (li.classList.contains("hasKids") !== has) li.classList.toggle("hasKids", has);   // only touch the DOM when something changed
       if (!has && li.classList.contains("collapsed")) li.classList.remove("collapsed");
@@ -2863,7 +3215,7 @@ if (IS_BROWSER) (function () {
       const n = noteCaretNode(), kids = noteKidList(li);
       if (n && kids.contains(n)) caretToLineEnd(li);
     }
-    state.note.html = $("noteBody").innerHTML; saveNoteSoon();
+    saveNoteHtml();
   }
   // Ctrl/Cmd+↑ folds, Ctrl/Cmd+↓ unfolds the nearest bullet (at the caret, or its parent) that has sub-bullets
   function foldAtCaret(fold) {
@@ -2871,13 +3223,23 @@ if (IS_BROWSER) (function () {
     for (const li of noteLiChain(n)) if (noteKidList(li)) { setNoteFold(li, fold); return; }
   }
   // Toggle by clicking the ▾/▸ marker (it sits just left of the bullet's text box). pointerdown so the caret doesn't jump.
+  let noteKeepBlur = false;   // a tap on a marker must not pop up the phone keyboard
   $("noteBody").addEventListener("pointerdown", (e) => {
     const li = e.target.closest && e.target.closest("li");
-    if (!li || !li.classList.contains("hasKids") || e.target !== li) return;
-    if (e.clientX >= li.getBoundingClientRect().left) return;   // click was on the text, not the marker
+    if (!li || e.target !== li) return;
+    const r = li.getBoundingClientRect(), body = $("noteBody");
+    const onFold = li.classList.contains("hasKids") && e.clientX < r.left;   // ▾/▸ sits just left of the line
+    const lh = parseFloat(getComputedStyle(li).lineHeight) || 18;
+    const padL = parseFloat(getComputedStyle(li).paddingLeft) || 19;
+    const onBox = li.classList.contains("chk") && e.clientX >= r.left && e.clientX < r.left + padL && e.clientY < r.top + lh;   // the box sits in the line's own left padding (first line only)
+    if (!onFold && !onBox) return;
     e.preventDefault(); e.stopPropagation();
-    setNoteFold(li, !li.classList.contains("collapsed"));
+    noteKeepBlur = document.activeElement !== body;
+    if (onFold) setNoteFold(li, !li.classList.contains("collapsed"));
+    else tickItem(li);
   });
+  $("noteBody").addEventListener("focus", () => { if (noteKeepBlur) { noteKeepBlur = false; setTimeout(() => $("noteBody").blur(), 0); } });
+  document.addEventListener("pointerup", () => setTimeout(() => { noteKeepBlur = false; }, 400));
   // Enter inside a folded bullet: split it ourselves so its hidden children stay with it (the browser would hand them to the new line)
   function noteEnterInFolded(e) {
     const sel = window.getSelection(); if (!sel || !sel.rangeCount) return false;
@@ -2896,16 +3258,17 @@ if (IS_BROWSER) (function () {
     li.parentNode.insertBefore(nli, inner ? li.nextSibling : kids.nextSibling);   // new line goes after the (hidden) children, which stay with this bullet
     placeCaret(nli, false);
     decorateNoteLists();
-    state.note.html = $("noteBody").innerHTML; saveNoteSoon();
+    saveNoteHtml();
     return true;
   }
-  $("noteBody").addEventListener("input", () => { decorateNoteLists(); revealNoteCaret(); state.note.html = $("noteBody").innerHTML; saveNoteSoon(); });
+  $("noteBody").addEventListener("input", () => { decorateNoteLists(); revealNoteCaret(); saveNoteHtml(); });
   $("noteBody").addEventListener("keydown", (e) => {
     if (e.key === "Tab") { e.preventDefault(); noteCmd(e.shiftKey ? "outdent" : "indent"); return; }
     if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && noteEnterInFolded(e)) return;
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) { e.preventDefault(); foldAtCaret(e.key === "ArrowUp"); return; }
     if (e.ctrlKey || e.metaKey) {
       if (e.shiftKey && (e.key === "8" || e.key === "*" || e.code === "Digit8")) { e.preventDefault(); noteCmd("bullet"); return; }
+      if (e.shiftKey && (e.key === "9" || e.key === "(" || e.code === "Digit9")) { e.preventDefault(); noteCmd("check"); return; }
       if (e.shiftKey) return;
       const k = e.key.toLowerCase();
       if (k === "b") { e.preventDefault(); noteCmd("bold"); }
@@ -3436,12 +3799,12 @@ if (IS_BROWSER) (function () {
   });
   $("clearBtn").addEventListener("click", () => { if (!confirm("Clear all blocks in this week? Task budgets stay.")) return; snap(); state.weeks[state.currentWeek].blocks = []; commit(); dlg.close(); });
 
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && Date.now() - lastPull > 8000 && !pushTimer) pullRemote(true); });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && (MV || Date.now() - lastPull > 8000) && !pushTimer) guardedPull().then(() => archiveOldTicked()); });
   window.addEventListener("focus", () => { if (Date.now() - lastPull > 8000 && !pushTimer) pullRemote(true); });
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v226"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v227"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3634,6 +3997,13 @@ if (IS_BROWSER) (function () {
     commit();
   }
   // numeric / fill habits: type straight into the streak cell instead of a pop-up (still accepts na / ach / miss / blank)
+  function habitCellClick(c) {   // a streak cell was tapped (week grid or phone Habits view)
+    const hb = (state.habits || []).find((x) => x.id === c.dataset.h); if (!hb) return;
+    const def = defFor(hb.id, c.dataset.d) || {}; const ty = def.type || hb.type || "binary";
+    if (builtinKind(hb)) { cycleHabit(hb, c.dataset.d); return; }   // auto habits (Mails / Hour) just cycle the manual override
+    if (ty === "numeric" || +hb.fill > 0) inlineHabitEdit(hb, c.dataset.d, c); else editHabitCell(hb, c.dataset.d);
+  }
+  function rerenderHabitCells() { renderStreak(); renderMv(); }
   function inlineHabitEdit(h, date, cell) {
     if (!cell || cell.querySelector("input")) return;
     const cur = h.entries && h.entries[date] != null ? h.entries[date] : "";
@@ -3643,18 +4013,72 @@ if (IS_BROWSER) (function () {
     cell.textContent = ""; cell.appendChild(inp); inp.focus(); inp.select();
     let done = false;
     const finish = () => {
-      if (done) return; done = true;
+      if (done) return; done = true; inp.dataset.done = "1";   // finished → the phone view may re-render this cell
       const raw = inp.value.trim(), t = raw.toLowerCase();
       if (t === "na" || t === "ach" || t === "miss") { snap(); if (!h.entries) h.entries = {}; h.entries[date] = t; commit(); return; }
-      if (t === "") { if (!(h.entries && h.entries[date] != null)) { renderStreak(); return; } snap(); delete h.entries[date]; commit(); return; }
-      if (+h.fill > 0) { const num = parseFloat(raw.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, na/ach/miss, or blank."); renderStreak(); return; } if (num === 0) { snap(); if (!h.entries) h.entries = {}; h.entries[date] = 0; commit(); return; } distributeFill(h, date, num); return; }   // 0 sets the day to 0 (distributeFill only spreads positive amounts)
-      const num = (h.hm || raw.indexOf(":") >= 0) ? parseHM(raw) : parseFloat(raw.replace(",", ".")); if (isNaN(num)) { toast("Enter a number" + (h.hm ? " as h:mm" : "") + ", na/ach/miss, or blank."); renderStreak(); return; }
+      if (t === "") { if (!(h.entries && h.entries[date] != null)) { rerenderHabitCells(); return; } snap(); delete h.entries[date]; commit(); return; }
+      if (+h.fill > 0) { const num = parseFloat(raw.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, na/ach/miss, or blank."); rerenderHabitCells(); return; } if (num === 0) { snap(); if (!h.entries) h.entries = {}; h.entries[date] = 0; commit(); return; } distributeFill(h, date, num); return; }   // 0 sets the day to 0 (distributeFill only spreads positive amounts)
+      const num = (h.hm || raw.indexOf(":") >= 0) ? parseHM(raw) : parseFloat(raw.replace(",", ".")); if (isNaN(num)) { toast("Enter a number" + (h.hm ? " as h:mm" : "") + ", na/ach/miss, or blank."); rerenderHabitCells(); return; }
       snap(); if (!h.entries) h.entries = {}; h.entries[date] = num; commit();
     };
-    inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); finish(); } else if (e.key === "Escape") { done = true; renderStreak(); } });
+    inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); finish(); } else if (e.key === "Escape") { done = true; inp.dataset.done = "1"; rerenderHabitCells(); } });
     inp.addEventListener("blur", finish);
     inp.addEventListener("click", (e) => e.stopPropagation());
   }
+  /* ── phone views (v227) ── */
+  let mvDay = null;
+  function mvToday() { const d = new Date(); if (d.getDay() === 0) d.setDate(d.getDate() - 1); return ymd(d); }   // Sunday isn't tracked → Saturday
+  function renderMv() {
+    if (!MV) return;
+    const t = document.querySelector("#mvHead .mvTitle"); if (t) t.textContent = MV === "note" ? "Notes" : MV === "habits" ? "Habits" : "Timer";
+    if (MV === "habits") renderMvHabits(); else if (MV === "timer") renderMvTimer();
+  }
+  function renderMvHabits() {
+    const host = $("mvHabits"); if (!host) return;
+    if (host.querySelector(".stCellIn:not([data-done])")) return;   // don't wipe a number you're still typing (e.g. when a sync arrives)
+    const today = mvToday(); if (!mvDay) mvDay = today;
+    const wi = cellForDate(state.anchorMonday, parseYMD(mvDay)).weekIdx, s = computeWeekStats(wi);
+    let h = '<div class="mvDayNav"><button class="mvPrev" title="Previous day">&lsaquo;</button><div class="mvDay">' + (mvDay === today ? "Today · " : "") + esc(fmtDeadline(mvDay)) + '</div><button class="mvNext" title="Next day"' + (mvDay >= today ? " disabled" : "") + ">&rsaquo;</button></div>";
+    h += '<div class="mvScore ' + (s.achieved ? "ok" : "bad") + '">This week: ' + s.miss + " missed · Joker " + fmtJoker(s.joker) + "</div>";
+    if (!s.habits.length) h += '<p class="muted">No habits this week.</p>';
+    for (const hb of s.habits) {
+      const def = defFor(hb.id, mvDay) || {}, nm = def.name || hb.name, ty = def.type || hb.type || "binary";
+      const st = habitStatus(hb, mvDay), val = (hb.entries || {})[mvDay];
+      const cls = st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";
+      const glyph = st === "na" ? "NA" : (ty === "numeric" && typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : st === "ach" ? "✓" : st === "miss" ? "✕" : "");
+      h += '<div class="mvHRow"><div class="mvHName">' + esc(nm) + '</div><div class="stCell mvCell ' + cls + '" data-h="' + hb.id + '" data-d="' + mvDay + '">' + glyph + "</div></div>";
+    }
+    host.innerHTML = h;
+    const step = (dir) => { const d = parseYMD(mvDay); do { d.setDate(d.getDate() + dir); } while (d.getDay() === 0); const ds = ymd(d); if (ds > today) return; mvDay = ds; renderMvHabits(); };
+    host.querySelector(".mvPrev").addEventListener("click", () => step(-1));
+    host.querySelector(".mvNext").addEventListener("click", () => step(1));
+    host.querySelectorAll(".mvCell").forEach((c) => c.addEventListener("click", () => habitCellClick(c)));
+  }
+  function renderMvTimer() {
+    const host = $("mvTimer"); if (!host) return;
+    let h = '<div class="mvStats"><div class="tbStat">' + $("tbMails").innerHTML + '</div><div class="tbStat">' + $("tbGrowth").innerHTML + "</div></div>";
+    const run = state.timer && state.categories.find((x) => x.id === state.timer.catId);
+    if (state.timer) {
+      const col = run ? run.color : "#888";
+      h += '<div class="mvRun" style="background:' + col + ";color:" + textOn(col) + '"><div class="mvRunName">' + esc(run ? run.name : "?") + '</div><div class="mvRunTime runElapsedS">' + fmtDur(Date.now() - state.timer.startMs) + "</div>" +
+        '<div class="mvRunBtns"><button data-a="stop">⏹ Stop</button><button data-a="edit">✎ Start time</button><button data-a="discard">✕ Discard</button></div></div>';
+    } else h += '<div class="mvIdle">No timer running — tap a task to start one.</div>';
+    const list = eligibleTasks();
+    h += '<div class="mvTaskHd">' + (state.timer ? "Switch to" : "Start") + '</div><div class="mvTasks">' + list.map((c) => '<button class="mvTask' + (state.timer && state.timer.catId === c.id ? " on" : "") + '" data-id="' + c.id + '" style="border-left-color:' + c.color + '">' + esc(c.name) + "</button>").join("") + "</div>";
+    if (!list.length) h += '<p class="muted">No timeable tasks with hours this week.</p>';
+    host.innerHTML = h;
+    host.querySelectorAll(".mvRunBtns button").forEach((b) => b.addEventListener("click", () => { const a = b.dataset.a; if (a === "stop") toggleTimer(state.timer.catId); else if (a === "edit") adjustTimerStart(); else if (a === "discard") { if (confirm("Discard this timing? Nothing will be logged.")) discardTimer(); } }));
+    host.querySelectorAll(".mvTask").forEach((b) => b.addEventListener("click", () => toggleTimer(b.dataset.id)));
+  }
+  // On the phone: get the latest data from the cloud BEFORE you can tap anything, so a quick tap can't overwrite newer changes from the computer
+  function guardedPull() {
+    if (!MV || !cfg || !cfg.url) return pullRemote(true);
+    document.body.classList.add("mvBusy");
+    let done = false; const fin = () => { if (done) return; done = true; document.body.classList.remove("mvBusy"); };
+    setTimeout(fin, 4000);
+    return pullRemote(true).finally(fin);
+  }
+  { const rb = $("mvRefresh"); if (rb) rb.addEventListener("click", () => guardedPull()); }
   function weekHabitsFor(weekIdx) {
     const dates = habitWeekDates(weekIdx);
     return (state.habits || []).filter((h) => {
@@ -3743,7 +4167,7 @@ if (IS_BROWSER) (function () {
       "</div>";
     if (ui.streakNext) h += streakWeekHtml(state.currentWeek + 1);
     host.innerHTML = h;
-    host.querySelectorAll(".stCell").forEach((c) => c.addEventListener("click", () => { const hb = (state.habits || []).find((x) => x.id === c.dataset.h); if (!hb) return; const def = defFor(hb.id, c.dataset.d) || {}; const ty = def.type || hb.type || "binary"; if (builtinKind(hb)) { cycleHabit(hb, c.dataset.d); return; } if (ty === "numeric" || +hb.fill > 0) inlineHabitEdit(hb, c.dataset.d, c); else editHabitCell(hb, c.dataset.d); }));   // auto habits (Mails / Hour) just cycle the manual override on click
+    host.querySelectorAll(".stCell").forEach((c) => c.addEventListener("click", () => habitCellClick(c)));
     const br = host.querySelector(".stBtnRow");
     br.querySelector(".stCfg").addEventListener("click", openHabits);
     br.querySelector(".stNext").addEventListener("click", () => { ui.streakNext = !ui.streakNext; saveUI(); renderStreak(); });
@@ -3895,6 +4319,7 @@ if (IS_BROWSER) (function () {
     }));
   }
   function checkReminder() {
+    if (MV) return;   // phone views open for one quick thing — the daily "fill in your habits" popup only shows in the full app
     if (!(state.habits || []).length) return;
     const today = ymd(new Date());
     if (ui.lastRemind === today) return;
@@ -4046,7 +4471,7 @@ if (IS_BROWSER) (function () {
   setInterval(() => { if (document.visibilityState === "visible" && !drag && !noteAct) renderBlocks(); }, 15000); // advance now-line, slide plans & drop elapsed plans
   if (viewDay >= 0) $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8; else applyGridZoom(true);   // size week-view cells to the chosen hours-in-view and scroll to that range
   window.addEventListener("resize", () => { if (viewDay < 0) applyGridZoom(false); positionCheckPop(); });
-  pullRemote(true);
+  guardedPull().then(() => archiveOldTicked());
   if (!cfg) setDot("", "Sync not set up yet — tap ⚙");
 })();
 </script>

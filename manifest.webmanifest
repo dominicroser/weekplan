@@ -1,16 +1,22 @@
 {
-  "name": "Week Plan",
-  "short_name": "Week Plan",
-  "description": "Visual weekly task planner with hour budgets",
+  "name": "Plapp",
+  "short_name": "Plapp",
+  "description": "Weekly planner in hours, timer and habit streaks",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#16181d",
-  "theme_color": "#16181d",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Notes", "short_name": "Notes", "url": "./?view=note", "icons": [{ "src": "icon-note.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Habits", "short_name": "Habits", "url": "./?view=habits", "icons": [{ "src": "icon-habits.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Timer", "short_name": "Timer", "url": "./?view=timer", "icons": [{ "src": "icon-timer.png", "sizes": "192x192", "type": "image/png" }] }
   ]
 }
