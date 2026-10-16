@@ -946,7 +946,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v222 */
+/* build v225 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -3439,7 +3439,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v222"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v225"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3508,6 +3508,7 @@ if (IS_BROWSER) (function () {
     else vs.push({ v: last.v + 1, from: eff, defs: defsSnapshot() }); // new version, effective next Monday
   }
   function commitDefs() { stampHabitChange(); commit(); renderChangelog && renderChangelog(); }
+  const MAILS_RULE2_FROM = "2026-10-19";   // Mails habit: from Mon 19 Oct 2026 on, the auto-red limit is "91 min or more" instead of "more than 60 min" (owner request 16 Oct 2026)
   function mailsTimedOn(date) {   // timed (actual) hours that day on "Mails" + its children (hmails, wmails, fmails …)
     const cat = (state.categories || []).find((c) => (c.name || "").trim().toLowerCase() === "mails");
     if (!cat) return 0;
@@ -3538,10 +3539,12 @@ if (IS_BROWSER) (function () {
     const raw = h.entries ? h.entries[date] : undefined;
     if (raw === "na") return "na";
     const liveName = (h.name || "").trim().toLowerCase();   // match on the habit's current name (stable across weekly versions / emoji prefixes)
-    if (liveName.indexOf("mail") >= 0) {   // Mails: >1h timed → auto-missed; ≤1h & unmarked stays blank; a manual ach/miss always wins (you can override)
+    if (liveName.indexOf("mail") >= 0) {   // Mails — a manual ach/miss always wins (you can override)
       if (raw === "miss") return "miss";
       if (raw === "ach") return "ach";
-      return mailsTimedOn(date) > 1.0 ? "miss" : null;   // missed as soon as it exceeds 1 hour (exactly 1h is still fine)
+      const min = mailsTimedOn(date) * 60;
+      const over = date < MAILS_RULE2_FROM ? min > 60 : min >= 91;   // before 19 Oct 2026: more than 60 min (kept for past days so history/scores don't change) · from then on: 91 min or more
+      return over ? "miss" : null;   // over the limit → auto-missed; within it → blank, and you click achieved yourself (the two daily emails)
     }
     if (/hour|growth/.test(liveName)) {   // "Hour": Mon–Thu, achieved only if the first full hour timed is all Growth; else auto-missed; a manual ach/miss always wins
       if (raw === "miss") return "miss";
