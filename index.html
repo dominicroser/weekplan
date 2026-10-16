@@ -243,6 +243,13 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteBody:empty:before { content: 'Quick notes…'; color: #b3a86a; }
 #noteBody ul { margin: 2px 0 2px 18px; padding: 0; }
 #noteBody ul ul { margin-left: 16px; }
+/* collapsible bullets: a bullet with sub-bullets shows ▾ (open) / ▸ (folded) instead of the dot; click it to fold */
+#noteBody li { position: relative; }
+#noteBody ul > li.hasKids { list-style: none; }
+#noteBody li.hasKids::before { content: "\25BE"; position: absolute; left: -16px; top: 0; width: 15px; text-align: center; font-size: 12px; color: #8a7c2e; cursor: pointer; user-select: none; -webkit-user-select: none; }
+#noteBody ol > li.hasKids::before { left: -30px; }
+#noteBody li.hasKids.collapsed::before { content: "\25B8"; color: #3a3320; font-weight: 700; }
+#noteBody li.collapsed > ul, #noteBody li.collapsed > ol { display: none; }
 
 /* ── Action bar ── */
 #actionBar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 50; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 7px 9px; display: none; align-items: center; gap: 5px; box-shadow: 0 6px 24px rgba(0,0,0,0.18); flex-wrap: wrap; max-width: 94vw; justify-content: center; }
@@ -848,7 +855,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The 🗒 button shows/hides a sticky note (Ctrl+B bold, Ctrl+I italic, Ctrl+H pink).</p>
+  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The note in the side bar: Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold.</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -939,7 +946,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v220 */
+/* build v221 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1719,7 +1726,7 @@ if (IS_BROWSER) (function () {
     el.style.left = nt.x + "px"; el.style.top = nt.y + "px";
     el.style.width = nt.w + "px"; el.style.height = nt.h + "px";
     el.classList.toggle("open", !!nt.open);
-    if (force || document.activeElement !== body) body.innerHTML = nt.html || "";
+    if (force || document.activeElement !== body) { body.innerHTML = nt.html || ""; decorateNoteLists(); }
   }
 
   /* ── grid scaffold ── */
@@ -2801,11 +2808,79 @@ if (IS_BROWSER) (function () {
     else if (cmd === "bullet") document.execCommand("insertUnorderedList");
     else if (cmd === "indent") document.execCommand("indent");
     else if (cmd === "outdent") document.execCommand("outdent");
+    decorateNoteLists(); revealNoteCaret();
     state.note.html = $("noteBody").innerHTML; saveNoteSoon();
   }
-  $("noteBody").addEventListener("input", () => { state.note.html = $("noteBody").innerHTML; saveNoteSoon(); });
+  /* ── collapsible bullets ──
+     A <li> that contains a nested list gets class "hasKids" (CSS swaps its dot for ▾/▸). Class "collapsed" hides its nested list.
+     Both classes live in the note's HTML, so the fold state is saved and synced with the note itself. */
+  function noteKidList(li) { for (const ch of li.children) if ((ch.tagName === "UL" || ch.tagName === "OL") && ch.querySelector("li")) return ch; return null; }
+  function decorateNoteLists() {
+    const body = $("noteBody"); if (!body) return;
+    body.querySelectorAll("li").forEach((li) => {
+      const has = !!noteKidList(li);
+      if (li.classList.contains("hasKids") !== has) li.classList.toggle("hasKids", has);   // only touch the DOM when something changed
+      if (!has && li.classList.contains("collapsed")) li.classList.remove("collapsed");
+      if (li.getAttribute("class") === "") li.removeAttribute("class");
+    });
+  }
+  function noteCaretNode() { const sel = window.getSelection && window.getSelection(); if (!sel || !sel.rangeCount) return null; const n = sel.getRangeAt(0).startContainer; return $("noteBody").contains(n) ? n : null; }
+  // If the caret has ended up inside a folded (hidden) sub-list — e.g. Tab under a folded bullet, or Backspace merging into its last child — unfold so you can see what you type.
+  function revealNoteCaret() {
+    const body = $("noteBody"); let n = noteCaretNode(); if (!n) return false;
+    let changed = false;
+    for (let el = n.nodeType === 1 ? n : n.parentElement; el && el !== body; el = el.parentElement) {
+      if ((el.tagName === "UL" || el.tagName === "OL") && el.parentElement && el.parentElement.tagName === "LI" && el.parentElement.classList.contains("collapsed")) { el.parentElement.classList.remove("collapsed"); changed = true; }
+    }
+    return changed;
+  }
+  function placeCaret(node, atEnd) { const r = document.createRange(); r.selectNodeContents(node); r.collapse(!atEnd); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+  function setNoteFold(li, fold) {
+    if (!li || !noteKidList(li)) return;
+    li.classList.toggle("collapsed", fold);
+    if (fold) {   // don't leave the caret stranded in the now-hidden children → park it at the end of the bullet's own line
+      const n = noteCaretNode(), kids = noteKidList(li);
+      if (n && kids.contains(n)) { const r = document.createRange(); r.selectNodeContents(li); r.setEndBefore(kids); r.collapse(false); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+    }
+    state.note.html = $("noteBody").innerHTML; saveNoteSoon();
+  }
+  // Ctrl/Cmd+↑ folds, Ctrl/Cmd+↓ unfolds the nearest bullet (at the caret, or its parent) that has sub-bullets
+  function foldAtCaret(fold) {
+    const body = $("noteBody"); let n = noteCaretNode(); if (!n) return;
+    for (let el = n.nodeType === 1 ? n : n.parentElement; el && el !== body; el = el.parentElement) if (el.tagName === "LI" && noteKidList(el)) { setNoteFold(el, fold); return; }
+  }
+  // Toggle by clicking the ▾/▸ marker (it sits just left of the bullet's text box). pointerdown so the caret doesn't jump.
+  $("noteBody").addEventListener("pointerdown", (e) => {
+    const li = e.target.closest && e.target.closest("li");
+    if (!li || !li.classList.contains("hasKids") || e.target !== li) return;
+    if (e.clientX >= li.getBoundingClientRect().left) return;   // click was on the text, not the marker
+    e.preventDefault(); e.stopPropagation();
+    setNoteFold(li, !li.classList.contains("collapsed"));
+  });
+  // Enter inside a folded bullet: split it ourselves so its hidden children stay with it (the browser would hand them to the new line)
+  function noteEnterInFolded(e) {
+    const sel = window.getSelection(); if (!sel || !sel.rangeCount) return false;
+    const r0 = sel.getRangeAt(0), n = noteCaretNode(); if (!n) return false;
+    const li = (n.nodeType === 1 ? n : n.parentElement).closest("li");
+    if (!li || !li.classList.contains("collapsed")) return false;
+    const kids = noteKidList(li); if (!kids || kids.contains(n)) return false;
+    e.preventDefault();
+    if (!r0.collapsed) r0.deleteContents();
+    const tail = document.createRange(); tail.setStart(r0.startContainer, r0.startOffset); tail.setEndBefore(kids);
+    const frag = tail.extractContents();
+    const nli = document.createElement("li"); nli.appendChild(frag);
+    if (!nli.textContent.trim() && !nli.querySelector("img")) nli.innerHTML = "<br>";
+    li.parentNode.insertBefore(nli, li.nextSibling);
+    placeCaret(nli, false);
+    decorateNoteLists();
+    state.note.html = $("noteBody").innerHTML; saveNoteSoon();
+    return true;
+  }
+  $("noteBody").addEventListener("input", () => { decorateNoteLists(); revealNoteCaret(); state.note.html = $("noteBody").innerHTML; saveNoteSoon(); });
   $("noteBody").addEventListener("keydown", (e) => {
     if (e.key === "Tab") { e.preventDefault(); noteCmd(e.shiftKey ? "outdent" : "indent"); return; }
+    if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && noteEnterInFolded(e)) return;
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) { e.preventDefault(); foldAtCaret(e.key === "ArrowUp"); return; }
     if (e.ctrlKey || e.metaKey) {
       if (e.shiftKey && (e.key === "8" || e.key === "*" || e.code === "Digit8")) { e.preventDefault(); noteCmd("bullet"); return; }
       if (e.shiftKey) return;
@@ -3343,7 +3418,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v220"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v221"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
