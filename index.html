@@ -661,6 +661,8 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .mpAddCol:hover { background: var(--panel2); }
 .hbTable .hbRule { width: 100%; min-width: 200px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace; }
 .hbTable .hbRule:disabled { opacity: .4; }
+.hbTable .hbBuiltin { min-width: 200px; border: 1px dashed var(--line); background: var(--panel2); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 12px; line-height: 1.4; cursor: default; }   /* read-only: rule/note of a habit decided by built-in code */
+.hbTable .hbTag { display: inline-block; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #fff; background: #8a9099; border-radius: 3px; padding: 0 4px; margin-right: 5px; vertical-align: 1px; }
 #habitsDialog code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--panel2); padding: 0 3px; border-radius: 3px; font-size: 11.5px; }
 #habitReviewDialog { max-width: 660px; }
 .hbReview { max-height: 60vh; overflow: auto; margin-top: 6px; }
@@ -946,7 +948,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v225 */
+/* build v226 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -3439,7 +3441,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v225"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v226"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -3533,20 +3535,41 @@ if (IS_BROWSER) (function () {
     }
     return acc >= 1 - 1e-6 ? "ok" : "pending";   // a full Growth-first hour is in, or you could still add more
   }
+  // Which habits are decided by built-in code instead of their stored formula. habitStatus AND the habit dialogs both use this,
+  // so what the dialogs show can't drift away from what actually colours the cells.
+  function builtinKind(h) { const n = ((h && h.name) || "").trim().toLowerCase(); if (n.indexOf("mail") >= 0) return "mails"; if (/hour|growth/.test(n)) return "hour"; return null; }
+  // Plain-language rule + note for a built-in habit, as it applies on `date` (default: today). null for normal habits.
+  function builtinRule(h, date) {
+    const k = builtinKind(h); if (!k) return null;
+    const d = date || ymd(new Date());
+    if (k === "mails") {
+      const newLim = "91 min or more", oldLim = "more than 60 min";
+      const lim = d < MAILS_RULE2_FROM ? oldLim : newLim;
+      const later = d < MAILS_RULE2_FROM ? " (from " + fmtDeadline(MAILS_RULE2_FROM) + ": " + newLim + ")" : "";
+      return {
+        rule: "Built-in: missed when Mails timed that day (the Mails task + its sub-tasks, all sessions added up) is " + lim + later + "; otherwise blank — you click achieved.",
+        desc: "Turns red by itself once you've timed " + lim + " of mail in a day" + later + ". Below that it stays blank: mark it achieved yourself when you've also done the two daily emails. A manual mark always wins.",
+      };
+    }
+    return {
+      rule: "Built-in (Mon–Thu): the first full hour timed that day must be all Growth (task or sub-task). Growth hour first → achieved; anything else timed first → missed; not yet → blank today, missed once the day is over. Fri–Sat: click.",
+      desc: "Mon–Thu, start the working day with a full hour of Growth before timing anything else. Turns green or red by itself; a manual mark always wins. Fri and Sat you mark yourself.",
+    };
+  }
   function habitStatus(h, date) {
     const def = defFor(h.id, date) || { type: h.type || "binary", rule: h.rule || "" };
     const type = def.type || "binary";
     const raw = h.entries ? h.entries[date] : undefined;
     if (raw === "na") return "na";
-    const liveName = (h.name || "").trim().toLowerCase();   // match on the habit's current name (stable across weekly versions / emoji prefixes)
-    if (liveName.indexOf("mail") >= 0) {   // Mails — a manual ach/miss always wins (you can override)
+    const bk = builtinKind(h);
+    if (bk === "mails") {   // Mails — a manual ach/miss always wins (you can override)
       if (raw === "miss") return "miss";
       if (raw === "ach") return "ach";
       const min = mailsTimedOn(date) * 60;
       const over = date < MAILS_RULE2_FROM ? min > 60 : min >= 91;   // before 19 Oct 2026: more than 60 min (kept for past days so history/scores don't change) · from then on: 91 min or more
       return over ? "miss" : null;   // over the limit → auto-missed; within it → blank, and you click achieved yourself (the two daily emails)
     }
-    if (/hour|growth/.test(liveName)) {   // "Hour": Mon–Thu, achieved only if the first full hour timed is all Growth; else auto-missed; a manual ach/miss always wins
+    if (bk === "hour") {   // "Hour": Mon–Thu, achieved only if the first full hour timed is all Growth; else auto-missed; a manual ach/miss always wins
       if (raw === "miss") return "miss";
       if (raw === "ach") return "ach";
       const dow = parseYMD(date).getDay();   // 0 Sun · 1 Mon … 4 Thu … 6 Sat
@@ -3720,7 +3743,7 @@ if (IS_BROWSER) (function () {
       "</div>";
     if (ui.streakNext) h += streakWeekHtml(state.currentWeek + 1);
     host.innerHTML = h;
-    host.querySelectorAll(".stCell").forEach((c) => c.addEventListener("click", () => { const hb = (state.habits || []).find((x) => x.id === c.dataset.h); if (!hb) return; const def = defFor(hb.id, c.dataset.d) || {}; const nm = (def.name || hb.name || "").trim().toLowerCase(); const ty = def.type || hb.type || "binary"; if (nm === "mails" || /hour|growth/.test(nm)) { cycleHabit(hb, c.dataset.d); return; } if (ty === "numeric" || +hb.fill > 0) inlineHabitEdit(hb, c.dataset.d, c); else editHabitCell(hb, c.dataset.d); }));   // auto habits (Mails / Hour) just cycle the manual override on click
+    host.querySelectorAll(".stCell").forEach((c) => c.addEventListener("click", () => { const hb = (state.habits || []).find((x) => x.id === c.dataset.h); if (!hb) return; const def = defFor(hb.id, c.dataset.d) || {}; const ty = def.type || hb.type || "binary"; if (builtinKind(hb)) { cycleHabit(hb, c.dataset.d); return; } if (ty === "numeric" || +hb.fill > 0) inlineHabitEdit(hb, c.dataset.d, c); else editHabitCell(hb, c.dataset.d); }));   // auto habits (Mails / Hour) just cycle the manual override on click
     const br = host.querySelector(".stBtnRow");
     br.querySelector(".stCfg").addEventListener("click", openHabits);
     br.querySelector(".stNext").addEventListener("click", () => { ui.streakNext = !ui.streakNext; saveUI(); renderStreak(); });
@@ -3773,10 +3796,11 @@ if (IS_BROWSER) (function () {
     if (!list.length) { host.innerHTML = '<p class="muted">No active habits.</p>'; return; }
     let h = "";
     for (const hb of list) {
-      const ty = hb.type || "binary";
-      let block = '<div class="hbrItem"><div class="hbrName">' + esc(hb.name) + '<span class="hbrType">' + ty + '</span></div>' +
-           '<div class="hbrDesc">' + (hb.desc ? esc(hb.desc) : '<span class="muted">— no note —</span>') + '</div>' +
-           '<div class="hbrRule">' + (hb.rule ? esc(hb.rule) : '<span class="muted">' + (ty === "binary" ? "click — no formula" : "—") + "</span>") + "</div>";
+      const ty = hb.type || "binary", bi = builtinRule(hb);
+      let block = '<div class="hbrItem"><div class="hbrName">' + esc(hb.name) + '<span class="hbrType">' + (bi ? "built-in" : ty) + '</span></div>' +
+           (bi ? '<div class="hbrDesc">' + esc(bi.desc) + '</div><div class="hbrRule">' + esc(bi.rule) + "</div>"
+               : '<div class="hbrDesc">' + (hb.desc ? esc(hb.desc) : '<span class="muted">— no note —</span>') + '</div>' +
+                 '<div class="hbrRule">' + (hb.rule ? esc(hb.rule) : '<span class="muted">' + (ty === "binary" ? "click — no formula" : "—") + "</span>") + "</div>");
       if (ruleUsesAvg(hb)) { const a = habitAllAvg(hb); block += '<div class="hbrAvg">Ø of all entered values: ' + (a ? a.avg.toFixed(2) + ' <span class="muted">(' + a.n + ' entr' + (a.n === 1 ? "y" : "ies") + ')</span>' : '<span class="muted">no numeric entries yet</span>') + "</div>"; }
       h += block + "</div>";
     }
@@ -3784,7 +3808,7 @@ if (IS_BROWSER) (function () {
   }
   function habitReviewText() {
     const list = (state.habits || []).filter((h) => !h.archived);
-    return list.map((hb) => { const ty = hb.type || "binary"; let t = "HABIT: " + hb.name + " (" + ty + ")\nNote: " + (hb.desc || "—") + "\nFormula: " + (hb.rule || (ty === "binary" ? "click — no formula" : "—")); if (ruleUsesAvg(hb)) { const a = habitAllAvg(hb); t += "\nØ all entered values: " + (a ? a.avg.toFixed(2) + " (" + a.n + " entries)" : "none yet"); } return t; }).join("\n\n----------------------------------------\n\n");
+    return list.map((hb) => { const ty = hb.type || "binary", bi = builtinRule(hb); let t = bi ? ("HABIT: " + hb.name + " (built-in)\nNote: " + bi.desc + "\nRule: " + bi.rule) : ("HABIT: " + hb.name + " (" + ty + ")\nNote: " + (hb.desc || "—") + "\nFormula: " + (hb.rule || (ty === "binary" ? "click — no formula" : "—"))); if (ruleUsesAvg(hb)) { const a = habitAllAvg(hb); t += "\nØ all entered values: " + (a ? a.avg.toFixed(2) + " (" + a.n + " entries)" : "none yet"); } return t; }).join("\n\n----------------------------------------\n\n");
   }
   function renderHabitsTable() {
     const host = $("habitsTableWrap"); if (!host) return;
@@ -3798,8 +3822,14 @@ if (IS_BROWSER) (function () {
       h += '<tr data-id="' + hb.id + '"><td><input class="hbName" value="' + esc(hb.name) + '"></td>';
       h += '<td><select class="hbType"><option value="binary"' + (ty === "binary" ? " selected" : "") + '>Click</option><option value="numeric"' + (ty === "numeric" ? " selected" : "") + '>Number</option><option value="hours"' + (ty === "hours" ? " selected" : "") + '>Hours</option></select>' + (ty === "numeric" ? '<label class="hbHmL" title="Enter & show values as h:mm (6:50 = 6h50m)"><input type="checkbox" class="hbHm"' + (hb.hm ? " checked" : "") + '> h:mm</label>' : "") + '</td>';
       const ph = ty === "hours" ? 'hours(&quot;Mails&quot;, 6) &lt;= 6' : ty === "numeric" ? 'value &gt;= 15' : 'optional guard, e.g. hours(&quot;Mails&quot;,1) &lt;= 1';
-      h += '<td><input class="hbRule" placeholder="' + ph + '" value="' + esc(hb.rule || "") + '"></td>';
-      h += '<td><input class="hbDesc" placeholder="what it means" value="' + esc(hb.desc || "") + '"></td>';
+      const bi = builtinRule(hb);
+      if (bi) {   // decided by built-in code → show what really happens, not editable (the stored formula/note are ignored and kept untouched)
+        h += '<td><div class="hbBuiltin" title="Built into the app — the stored formula is ignored for this habit"><span class="hbTag">built-in</span>' + esc(bi.rule.replace(/^Built-in[^:]*:\s*/, "")) + "</div></td>";
+        h += '<td><div class="hbBuiltin">' + esc(bi.desc) + "</div></td>";
+      } else {
+        h += '<td><input class="hbRule" placeholder="' + ph + '" value="' + esc(hb.rule || "") + '"></td>';
+        h += '<td><input class="hbDesc" placeholder="what it means" value="' + esc(hb.desc || "") + '"></td>';
+      }
       h += '<td style="white-space:nowrap;"><input class="hbFill" type="number" min="0" step="5" placeholder="/day" value="' + (hb.fill ? hb.fill : "") + '" style="width:52px;" title="Target per day"> <input class="hbFillMax" type="text" placeholder="max" value="' + esc(hb.fillMax || "") + '" style="width:48px;" title="Max reach: a number of days, the word week, or blank = no limit"></td>';
       h += '<td><button class="hbArch">' + (hb.archived ? "archived" : "active") + '</button></td><td><button class="hbDel">Delete</button></td></tr>';
     }
@@ -3824,7 +3854,8 @@ if (IS_BROWSER) (function () {
     let h = "";
     for (const v of vs) {
       h += '<div class="clVer"><div class="clHd">v' + v.v + ' · effective ' + esc(fmtDeadline(v.from)) + '</div><table class="clTable"><tbody>';
-      for (const id in v.defs) { const d = v.defs[id]; if (!d) continue; h += '<tr><td class="clName">' + esc(d.name) + (d.archived ? " ·arch" : "") + '</td><td class="clRule">' + (d.rule ? esc(d.rule) : (d.type === "binary" ? "click" : "—")) + '</td><td class="clDesc">' + esc(d.desc || "") + "</td></tr>"; }
+      for (const id in v.defs) { const d = v.defs[id]; if (!d) continue; const live = (state.habits || []).find((x) => x.id === id), bi = live ? builtinRule(live, v.from) : null;   // built-in habit: show the built-in rule as it applied from this version's start
+        h += '<tr><td class="clName">' + esc(d.name) + (d.archived ? " ·arch" : "") + '</td><td class="clRule">' + (bi ? esc(bi.rule) : (d.rule ? esc(d.rule) : (d.type === "binary" ? "click" : "—"))) + '</td><td class="clDesc">' + esc(bi ? bi.desc : (d.desc || "")) + "</td></tr>"; }
       h += "</tbody></table></div>";
     }
     host.innerHTML = h;
