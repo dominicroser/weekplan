@@ -260,7 +260,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteBody li.sIt { font-style: italic; } #noteBody li.sIt li:not(.sIt) { font-style: normal; }
 #noteBody li.sHl { background-color: var(--hl); border-radius: 4px; }
 #noteBody li.sHl > ul, #noteBody li.sHl > ol { background-color: var(--nbg, #f0e39c); margin: 0; padding: 2px 0 2px 16px; }
-#noteBody { --hl: rgba(255, 238, 0, 0.62); --gw: 16px; --grip: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='12'%3E%3Cg fill='%237a6e2a' fill-opacity='.65'%3E%3Ccircle cx='2' cy='2' r='1.2'/%3E%3Ccircle cx='6' cy='2' r='1.2'/%3E%3Ccircle cx='2' cy='6' r='1.2'/%3E%3Ccircle cx='6' cy='6' r='1.2'/%3E%3Ccircle cx='2' cy='10' r='1.2'/%3E%3Ccircle cx='6' cy='10' r='1.2'/%3E%3C/g%3E%3C/svg%3E"); }
+#noteBody { --hl: rgba(255, 255, 255, 0.62); --gw: 16px; --grip: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='12'%3E%3Cg fill='%237a6e2a' fill-opacity='.65'%3E%3Ccircle cx='2' cy='2' r='1.2'/%3E%3Ccircle cx='6' cy='2' r='1.2'/%3E%3Ccircle cx='2' cy='6' r='1.2'/%3E%3Ccircle cx='6' cy='6' r='1.2'/%3E%3Ccircle cx='2' cy='10' r='1.2'/%3E%3Ccircle cx='6' cy='10' r='1.2'/%3E%3C/g%3E%3C/svg%3E"); }
 /* drag grip ⠿ (v228): drawn as a background image in the line's own right padding (no extra DOM in the editable note); hover-only with a mouse, always shown on touch */
 #noteBody li { padding-right: var(--gw); background-repeat: no-repeat; background-position: right 3px top 0.3em; background-size: 8px 12px; }
 #noteBody li > ul, #noteBody li > ol { margin-right: calc(-1 * var(--gw)); }
@@ -278,7 +278,9 @@ body.noteDragging, body.noteDragging * { cursor: grabbing !important; user-selec
 .sPop .sPr0 { background: #fff; color: #888; border-color: var(--line); font-size: 13px; }
 .sPop .sTg { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 12px; font-family: inherit; color: var(--ink); }
 .sPop .sTg.on { background: #2b2b2b; color: #fff; border-color: #2b2b2b; }
-.sPop .sTg .hlSw { background: rgba(255, 238, 0, 0.75); padding: 0 3px; border-radius: 3px; color: var(--ink); }
+.sPop .sTg .hlSw { background: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18); padding: 0 4px; border-radius: 3px; color: var(--ink); }
+.sPop .sTg.on .hlSw { color: #222; }
+.sPop .sTg { min-width: 38px; }
 .sPop .sHint { font-size: 10.5px; color: var(--ink3); line-height: 1.4; }
 #noteTools2 button[data-nc=style] { font-weight: 800; font-size: 10.5px; }
 #noteBody li.chk::after { content: ""; position: absolute; left: 1px; top: 0.27em; width: 0.9em; height: 0.9em; border: 1.5px solid #6b6230; border-radius: 3px; background: rgba(255,255,255,0.55); box-sizing: border-box; cursor: pointer; }
@@ -301,6 +303,11 @@ body.noteDragging, body.noteDragging * { cursor: grabbing !important; user-selec
 .nPop .nSw button.on { border-color: #333; }
 .nPop label { display: flex; align-items: center; gap: 6px; color: var(--ink2); }
 .nPop .nPopBtns { display: flex; justify-content: space-between; }
+.nPop .nMv { display: flex; align-items: center; gap: 5px; color: var(--ink2); }
+.nPop .nMv span { flex: 1; }
+.nPop .nMv button { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 12px; font-family: inherit; color: var(--ink); }
+.nPop .nMv button:disabled { opacity: 0.35; cursor: default; }
+body.mv-note .nPop .nMv button { padding: 7px 12px; font-size: 14px; }
 .nPop .nPopBtns button { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 3px 9px; cursor: pointer; font-size: 12px; }
 .nPop .nPopBtns .nDel { color: #c53030; }
 /* Ticked section (dump note) */
@@ -880,7 +887,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
       </div>
       <div id="rbSummary"></div>
       <div class="rbPanel" id="notePanel">
-        <div id="noteTop"><div id="noteTabs"></div><div id="noteTools2"><button data-nc="bullet" title="Bullet list (Ctrl+Shift+8)">&bull;</button><button data-nc="check" title="Tick box (Ctrl+Shift+9)">&#9744;</button><button data-nc="outdent" title="Outdent (Shift+Tab)">&#8676;</button><button data-nc="indent" title="Indent (Tab)">&#8677;</button><button data-nc="up" title="Move line up (Alt+Shift+&#8593;) — or drag the &#10303; grip at the line's right end">&#8593;</button><button data-nc="down" title="Move line down (Alt+Shift+&#8595;)">&#8595;</button><button data-nc="style" title="Priority colour, bold (today), highlight (discuss), italics">Aa</button></div></div>
+        <div id="noteTop"><div id="noteTabs"></div><div id="noteTools2"><button data-nc="bullet" title="Bullet list (Ctrl+Shift+8)">&bull;</button><button data-nc="check" title="Tick box (Ctrl+Shift+9)">&#9744;</button><button data-nc="outdent" title="Outdent (Shift+Tab)">&#8676;</button><button data-nc="indent" title="Indent (Tab)">&#8677;</button><button data-nc="up" title="Move line up (Alt+Shift+&#8593;) — or drag the &#10303; grip at the line's right end">&#8593;</button><button data-nc="down" title="Move line down (Alt+Shift+&#8595;)">&#8595;</button><button data-nc="style" title="Priority colour, bold, highlight, italics">Aa</button></div></div>
         <div id="noteDock"></div>
         <div id="tickedWrap"></div>
       </div>
@@ -998,7 +1005,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it, + for a new note). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip at its right end (drag left below the last sub-item to take it a level up), or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold = today (Alt+B), highlight = discuss (Alt+H), italics (Alt+I).</p>
+  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it, + for a new note). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip at its right end (drag left below the last sub-item to take it a level up), or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I).</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -1089,7 +1096,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v228 */
+/* build v229 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2974,13 +2981,15 @@ if (IS_BROWSER) (function () {
   const NOTE_COLORS = { yellow: ["#f2d84b", "#f0e39c"], pink: ["#f48fb1", "#f9d3e1"], blue: ["#7fb3e6", "#d3e5f7"], green: ["#8fd19e", "#d6f0d9"], orange: ["#f6b26b", "#fbe0c2"], purple: ["#b39ddb", "#e4dbf4"], teal: ["#6fd0c4", "#cfefeb"], grey: ["#b0b6bd", "#e6e8eb"] };
   const noteTabCol = (c) => (NOTE_COLORS[c] || NOTE_COLORS.yellow)[0];
   const noteBg = (c) => (NOTE_COLORS[c] || NOTE_COLORS.yellow)[1];
+  let mvLeftmost = MV === "note";   // phone note view: start on the leftmost tab (also after the first sync), until a tab is chosen
   function curNote() {
     if (!Array.isArray(state.notes) || !state.notes.length) { state.notes = [{ id: "n1", name: "Note", color: "yellow", html: "" }]; state.dumpNote = "n1"; }
+    if (mvLeftmost) ui.activeNote = state.notes[0].id;
     return state.notes.find((n) => n.id === ui.activeNote) || state.notes[0];
   }
   function dumpNote() { return (state.notes || []).find((n) => n.id === state.dumpNote) || curNote(); }
   function saveNoteHtml() { curNote().html = $("noteBody").innerHTML; saveNoteSoon(); }
-  function switchNote(id) { if (document.activeElement === $("noteBody")) saveNoteHtml(); ui.activeNote = id; saveUI(); closeNotePop(); renderNote(true); }
+  function switchNote(id) { mvLeftmost = false; if (document.activeElement === $("noteBody")) saveNoteHtml(); ui.activeNote = id; saveUI(); closeNotePop(); renderNote(true); }
   function renderNoteTabs() {
     const host = $("noteTabs"); if (!host) return;
     const cn = curNote();
@@ -2990,7 +2999,7 @@ if (IS_BROWSER) (function () {
     host.querySelector(".nTab.add").addEventListener("click", () => {
       snap(); const used = new Set(state.notes.map((n) => n.color)); const color = Object.keys(NOTE_COLORS).find((c) => !used.has(c)) || "yellow";
       const n = { id: "n" + Date.now().toString(36), name: "Note " + (state.notes.length + 1), color, html: "" };
-      state.notes.push(n); ui.activeNote = n.id; saveUI(); commit(); renderNote(true); openNotePop(true);
+      state.notes.push(n); mvLeftmost = false; ui.activeNote = n.id; saveUI(); commit(); renderNote(true); openNotePop(true);
     });
   }
   function closeNotePop() { const p = document.querySelector(".nPop"); if (p) p.remove(); }
@@ -2999,6 +3008,7 @@ if (IS_BROWSER) (function () {
     const n = curNote(), pop = document.createElement("div"); pop.className = "nPop";
     pop.innerHTML = '<input type="text" class="nName" value="' + esc(n.name || "") + '" placeholder="Name">' +
       '<div class="nSw">' + Object.keys(NOTE_COLORS).map((c) => '<button data-c="' + c + '" class="' + (c === n.color ? "on" : "") + '" style="background:' + noteTabCol(c) + '" title="' + c + '"></button>').join("") + "</div>" +
+      '<div class="nMv"><span>Position</span><button data-m="first"' + (state.notes[0] === n ? " disabled" : "") + ' title="Make it the leftmost tab (the phone opens this one)">&#8676; first</button><button data-m="-1"' + (state.notes[0] === n ? " disabled" : "") + ' title="One to the left">&#9664;</button><button data-m="1"' + (state.notes[state.notes.length - 1] === n ? " disabled" : "") + ' title="One to the right">&#9654;</button></div>' +
       '<label><input type="checkbox" class="nDump"' + (state.dumpNote === n.id ? " checked disabled" : "") + '> Dump note — collects all ticked items</label>' +
       '<div class="nPopBtns"><button class="nDel"' + (state.notes.length < 2 ? " disabled" : "") + '>Delete note</button><button class="nOk">Done</button></div>';
     $("notePanel").appendChild(pop);
@@ -3006,6 +3016,12 @@ if (IS_BROWSER) (function () {
     nm.addEventListener("change", () => { snap(); n.name = nm.value.trim() || "Note"; commit(); });
     nm.addEventListener("keydown", (e) => { if (e.key === "Enter") { nm.blur(); closeNotePop(); } });
     pop.querySelectorAll(".nSw button").forEach((b) => b.addEventListener("click", () => { snap(); n.color = b.dataset.c; commit(); renderNote(true); openNotePop(); }));
+    pop.querySelectorAll(".nMv button").forEach((b) => b.addEventListener("click", () => {   // tab order = state.notes order (synced)
+      const i = state.notes.indexOf(n), m = b.dataset.m, j = m === "first" ? 0 : Math.max(0, Math.min(state.notes.length - 1, i + +m));
+      if (i < 0 || j === i) return;
+      snap(); state.notes.splice(i, 1); state.notes.splice(j, 0, n); commit(); openNotePop();
+      const t = document.querySelector('.nTab[data-nid="' + n.id + '"]'); if (t) t.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }));
     pop.querySelector(".nDump").addEventListener("change", (e) => { if (e.target.checked) { snap(); state.dumpNote = n.id; commit(); renderNote(true); openNotePop(); } });
     pop.querySelector(".nOk").addEventListener("click", () => { if (nm.value.trim() && nm.value.trim() !== n.name) { snap(); n.name = nm.value.trim(); commit(); } closeNotePop(); });
     pop.querySelector(".nDel").addEventListener("click", () => {
@@ -3263,8 +3279,8 @@ if (IS_BROWSER) (function () {
     for (const li of noteLiChain(n)) if (noteKidList(li)) { setNoteFold(li, fold); return; }
   }
   /* ── line styles (v228) ──
-     Classes on the <li>: pr1..pr5 = priority colour (purple, dark blue, blue, dark green, green), sBold = to do today,
-     sHl = to discuss with others, sIt = italics. They are part of the note HTML → saved, synced, kept through tick/untick. */
+     Classes on the <li>: pr1..pr5 = priority colour (purple, dark blue, blue, dark green, green), sBold = bold, sHl = highlight,
+     sIt = italics (meanings are the owner's to choose — no labels in the UI). They are part of the note HTML → saved, synced, kept through tick/untick. */
   const PRIO_CLS = ["pr1", "pr2", "pr3", "pr4", "pr5"], STYLE_CLS = PRIO_CLS.concat(["sBold", "sHl", "sIt"]);
   const PRIO_COL = ["#7b1fa2", "#1a3a8f", "#1f74c9", "#1b6630", "#2e8b38"];
   const STYLE_TG = { bold: "sBold", hl: "sHl", it: "sIt" };
@@ -3295,7 +3311,7 @@ if (IS_BROWSER) (function () {
   // Those spans would make a line style stick (Alt+B could no longer remove it), so unwrap any span whose inline style is only our line-style
   // values (or the plain defaults): the merged text simply takes its line's style, as in Google Docs / Keep. Pasted styles with other values stay.
   const LINE_STYLE_VAL = { "color": ["rgb(58, 51, 32)", "rgb(123, 31, 162)", "rgb(26, 58, 143)", "rgb(31, 116, 201)", "rgb(27, 102, 48)", "rgb(46, 139, 56)"],
-    "font-weight": ["400", "700", "normal", "bold"], "font-style": ["normal", "italic"], "background-color": ["rgba(255, 238, 0, 0.62)", "transparent", "rgba(0, 0, 0, 0)"] };
+    "font-weight": ["400", "700", "normal", "bold"], "font-style": ["normal", "italic"], "background-color": ["rgba(255, 255, 255, 0.62)", "rgba(255, 238, 0, 0.62)", "transparent", "rgba(0, 0, 0, 0)"] };
   function unwrapLineStyleSpans() {
     const sel = window.getSelection(), r0 = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
     const keep = r0 ? [r0.startContainer, r0.startOffset, r0.endContainer, r0.endOffset] : null;
@@ -3313,7 +3329,7 @@ if (IS_BROWSER) (function () {
     const pop = document.createElement("div"); pop.className = "nPop sPop";
     pop.innerHTML = '<div class="sRow"><button class="sPr sPr0" data-p="0" title="No priority colour (Alt+0)">&#8856;</button>' +
       PRIO_COL.map((c, i) => '<button class="sPr" data-p="' + (i + 1) + '" style="background:' + c + '" title="Priority ' + (i + 1) + (i === 0 ? " (highest)" : i === 4 ? " (lowest)" : "") + " — Alt+" + (i + 1) + '">' + (i + 1) + "</button>").join("") + "</div>" +
-      '<div class="sRow"><button class="sTg" data-s="bold" title="Alt+B"><b>B</b> today</button><button class="sTg" data-s="hl" title="Alt+H"><span class="hlSw">ab</span> discuss</button><button class="sTg" data-s="it" title="Alt+I"><i>I</i> italic</button></div>' +
+      '<div class="sRow"><button class="sTg" data-s="bold" title="Bold — Alt+B"><b>B</b></button><button class="sTg" data-s="hl" title="Highlight — Alt+H"><span class="hlSw">ab</span></button><button class="sTg" data-s="it" title="Italics — Alt+I"><i>I</i></button></div>' +
       '<div class="sHint">For the line(s) at the cursor. Same button again = off. Keys: Alt+1…5 / Alt+0, Alt+B, Alt+H, Alt+I. Move a line: drag its &#10303; grip, or Alt+Shift+&#8593;/&#8595;.</div>';
     $("notePanel").appendChild(pop);
     pop.querySelectorAll("button").forEach((b) => {
@@ -4077,7 +4093,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v228"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v229"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
