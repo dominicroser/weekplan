@@ -252,6 +252,35 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteBody li.collapsed > ul, #noteBody li.collapsed > ol, #noteBody li.collapsed + ul, #noteBody li.collapsed + ol { display: none; }
 /* tick boxes (v227): a <li class="chk"> shows an empty box in its own left padding; ticking moves the item to the dump note's "Ticked" section */
 #noteBody li.chk { list-style: none; padding-left: 19px; }
+/* line styles (v228): priority colour pr1..pr5, sBold = "today", sHl = "discuss with others", sIt = italic — classes on the <li>, so they save and sync with the note.
+   Nested lines inside a styled line (Firefox's li>ul structure) are reset so a style never leaks to sub-items. */
+#noteBody li.pr1 { color: #7b1fa2; } #noteBody li.pr2 { color: #1a3a8f; } #noteBody li.pr3 { color: #1f74c9; } #noteBody li.pr4 { color: #1b6630; } #noteBody li.pr5 { color: #2e8b38; }
+#noteBody li:is(.pr1,.pr2,.pr3,.pr4,.pr5) li:not(.pr1,.pr2,.pr3,.pr4,.pr5) { color: #3a3320; }
+#noteBody li.sBold { font-weight: 700; } #noteBody li.sBold li:not(.sBold) { font-weight: 400; }
+#noteBody li.sIt { font-style: italic; } #noteBody li.sIt li:not(.sIt) { font-style: normal; }
+#noteBody li.sHl { background-color: var(--hl); border-radius: 4px; }
+#noteBody li.sHl > ul, #noteBody li.sHl > ol { background-color: var(--nbg, #f0e39c); margin: 0; padding: 2px 0 2px 16px; }
+#noteBody { --hl: rgba(255, 238, 0, 0.62); --gw: 16px; --grip: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='12'%3E%3Cg fill='%237a6e2a' fill-opacity='.65'%3E%3Ccircle cx='2' cy='2' r='1.2'/%3E%3Ccircle cx='6' cy='2' r='1.2'/%3E%3Ccircle cx='2' cy='6' r='1.2'/%3E%3Ccircle cx='6' cy='6' r='1.2'/%3E%3Ccircle cx='2' cy='10' r='1.2'/%3E%3Ccircle cx='6' cy='10' r='1.2'/%3E%3C/g%3E%3C/svg%3E"); }
+/* drag grip ⠿ (v228): drawn as a background image in the line's own right padding (no extra DOM in the editable note); hover-only with a mouse, always shown on touch */
+#noteBody li { padding-right: var(--gw); background-repeat: no-repeat; background-position: right 3px top 0.3em; background-size: 8px 12px; }
+#noteBody li > ul, #noteBody li > ol { margin-right: calc(-1 * var(--gw)); }
+@media (hover: hover) { #noteBody li:hover { background-image: var(--grip); } }
+@media (hover: none) { #noteBody li { background-image: var(--grip); } }
+#noteBody li.ndSrc { opacity: 0.35; }
+#noteBody li.ndSrc + ul, #noteBody li.ndSrc + ol { opacity: 0.35; }
+#noteDrop { position: fixed; height: 0; border-top: 2.5px solid #1f74c9; z-index: 90; pointer-events: none; display: none; }
+#noteDrop::before { content: ""; position: absolute; left: -4px; top: -5.5px; width: 7px; height: 7px; border-radius: 50%; background: #1f74c9; }
+body.noteDragging, body.noteDragging * { cursor: grabbing !important; user-select: none !important; -webkit-user-select: none !important; }
+.sPop { left: auto; right: 0; width: 236px; }
+.sPop .sRow { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.sPop .sPr { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; color: #fff; font-size: 10px; font-weight: 800; font-family: inherit; }
+.sPop .sPr.on { border-color: #222; box-shadow: 0 0 0 2px #fff inset; }
+.sPop .sPr0 { background: #fff; color: #888; border-color: var(--line); font-size: 13px; }
+.sPop .sTg { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 12px; font-family: inherit; color: var(--ink); }
+.sPop .sTg.on { background: #2b2b2b; color: #fff; border-color: #2b2b2b; }
+.sPop .sTg .hlSw { background: rgba(255, 238, 0, 0.75); padding: 0 3px; border-radius: 3px; color: var(--ink); }
+.sPop .sHint { font-size: 10.5px; color: var(--ink3); line-height: 1.4; }
+#noteTools2 button[data-nc=style] { font-weight: 800; font-size: 10.5px; }
 #noteBody li.chk::after { content: ""; position: absolute; left: 1px; top: 0.27em; width: 0.9em; height: 0.9em; border: 1.5px solid #6b6230; border-radius: 3px; background: rgba(255,255,255,0.55); box-sizing: border-box; cursor: pointer; }
 /* ── note tabs (v227): several coloured notes ── */
 #notePanel { position: relative; gap: 0; }
@@ -307,6 +336,12 @@ body.mvBusy #rbInner > :not(#mvHead) { opacity: 0.5; pointer-events: none; }
 body.mvBusy .mvSync::after { content: "syncing…"; }
 body.mv-note #noteDock #noteBody { height: auto !important; min-height: 55vh; resize: none; font-size: 16px; line-height: 1.5; padding: 10px 12px; }
 body.mv-note #noteBody li.chk { padding-left: 25px; }
+body.mv-note #noteBody { --gw: 30px; }
+body.mv-note #noteBody li { background-position: right 6px top 0.28em; background-size: 11px 16px; }
+body.mv-note .sPop { width: min(310px, 92vw); }
+body.mv-note .sPop .sPr { width: 34px; height: 34px; font-size: 12px; }
+body.mv-note .sPop .sTg { padding: 7px 12px; font-size: 15px; }
+body.mv-note .sPop .sHint { display: none; }
 body.mv-note #noteBody li.hasKids::before { font-size: 15px; left: -20px; width: 18px; }
 body.mv-note #noteBody ul { margin-left: 22px; }
 body.mv-note .nTab { font-size: 14px; padding: 5px 12px; max-width: 150px; }
@@ -845,7 +880,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
       </div>
       <div id="rbSummary"></div>
       <div class="rbPanel" id="notePanel">
-        <div id="noteTop"><div id="noteTabs"></div><div id="noteTools2"><button data-nc="bullet" title="Bullet list (Ctrl+Shift+8)">&bull;</button><button data-nc="check" title="Tick box (Ctrl+Shift+9)">&#9744;</button><button data-nc="outdent" title="Outdent (Shift+Tab)">&#8676;</button><button data-nc="indent" title="Indent (Tab)">&#8677;</button></div></div>
+        <div id="noteTop"><div id="noteTabs"></div><div id="noteTools2"><button data-nc="bullet" title="Bullet list (Ctrl+Shift+8)">&bull;</button><button data-nc="check" title="Tick box (Ctrl+Shift+9)">&#9744;</button><button data-nc="outdent" title="Outdent (Shift+Tab)">&#8676;</button><button data-nc="indent" title="Indent (Tab)">&#8677;</button><button data-nc="up" title="Move line up (Alt+Shift+&#8593;) — or drag the &#10303; grip at the line's right end">&#8593;</button><button data-nc="down" title="Move line down (Alt+Shift+&#8595;)">&#8595;</button><button data-nc="style" title="Priority colour, bold (today), highlight (discuss), italics">Aa</button></div></div>
         <div id="noteDock"></div>
         <div id="tickedWrap"></div>
       </div>
@@ -963,7 +998,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it, + for a new note). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it.</p>
+  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it, + for a new note). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip at its right end (drag left below the last sub-item to take it a level up), or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold = today (Alt+B), highlight = discuss (Alt+H), italics (Alt+I).</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -1054,7 +1089,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v227 */
+/* build v228 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1845,7 +1880,7 @@ if (IS_BROWSER) (function () {
     el.style.width = nt.w + "px"; el.style.height = nt.h + "px";
     el.classList.toggle("open", !!nt.open);
     const cn = curNote();
-    body.style.background = noteBg(cn.color);
+    body.style.background = noteBg(cn.color); body.style.setProperty("--nbg", noteBg(cn.color));
     if (force || document.activeElement !== body || body.dataset.nid !== cn.id) { body.innerHTML = cn.html || ""; body.dataset.nid = cn.id; decorateNoteLists(); }
     renderNoteTabs(); renderTicked();
   }
@@ -2982,10 +3017,15 @@ if (IS_BROWSER) (function () {
     });
     if (focusName) { nm.focus(); nm.select(); }
   }
-  document.addEventListener("pointerdown", (e) => { const p = document.querySelector(".nPop"); if (p && !e.target.closest(".nPop") && !e.target.closest(".nTab.on") && !e.target.closest(".nTab.add")) closeNotePop(); });
+  document.addEventListener("pointerdown", (e) => { const p = document.querySelector(".nPop"); if (p && !e.target.closest(".nPop") && !e.target.closest(".nTab.on") && !e.target.closest(".nTab.add") && !e.target.closest("[data-nc=style]")) closeNotePop(); });
   $("noteTools2").querySelectorAll("button").forEach((b) => {
     b.addEventListener("pointerdown", (e) => e.preventDefault());   // keep the caret/selection in the note (and the phone keyboard up)
-    b.addEventListener("click", () => noteCmd(b.dataset.nc));
+    b.addEventListener("click", () => {
+      const c = b.dataset.nc;
+      if (c === "up" || c === "down") moveNoteLine(c === "up" ? -1 : 1);
+      else if (c === "style") toggleStylePop();
+      else noteCmd(c);
+    });
   });
 
   /* ── tick boxes (v227) ──
@@ -3222,12 +3262,217 @@ if (IS_BROWSER) (function () {
     const n = noteCaretNode(); if (!n) return;
     for (const li of noteLiChain(n)) if (noteKidList(li)) { setNoteFold(li, fold); return; }
   }
+  /* ── line styles (v228) ──
+     Classes on the <li>: pr1..pr5 = priority colour (purple, dark blue, blue, dark green, green), sBold = to do today,
+     sHl = to discuss with others, sIt = italics. They are part of the note HTML → saved, synced, kept through tick/untick. */
+  const PRIO_CLS = ["pr1", "pr2", "pr3", "pr4", "pr5"], STYLE_CLS = PRIO_CLS.concat(["sBold", "sHl", "sIt"]);
+  const PRIO_COL = ["#7b1fa2", "#1a3a8f", "#1f74c9", "#1b6630", "#2e8b38"];
+  const STYLE_TG = { bold: "sBold", hl: "sHl", it: "sIt" };
+  function styleNoteLines(kind, val) {
+    if (!noteCaretNode()) { toast("Tap the line you want to mark first"); return; }
+    let lines = linesInSelection();
+    if (!lines.length) { document.execCommand("insertUnorderedList"); lines = linesInSelection(); }   // plain text → make it a bullet first (like ☐)
+    if (!lines.length) return;
+    snap();
+    if (kind === "prio") {
+      const c = val ? "pr" + val : null, all = c && lines.every((li) => li.classList.contains(c));   // same colour again = remove it
+      lines.forEach((li) => { PRIO_CLS.forEach((x) => li.classList.remove(x)); if (c && !all) li.classList.add(c); });
+    } else {
+      const c = STYLE_TG[kind]; if (!c) return;
+      const all = lines.every((li) => li.classList.contains(c));
+      lines.forEach((li) => li.classList.toggle(c, !all));
+    }
+    decorateNoteLists(); saveNoteHtml(); commit(); paintStylePop();
+  }
+  // Enter copies the line's classes (Chrome) — the new, empty line starts plain (a tick box stays a tick box)
+  function plainNewLine() {
+    const n = noteCaretNode(); if (!n) return;
+    const li = (n.nodeType === 1 ? n : n.parentElement).closest("li"); if (!li) return;
+    let prev = li.previousElementSibling; while (prev && prev.tagName !== "LI") prev = prev.previousElementSibling;
+    [li, prev].forEach((x) => { if (x && !ownText(x) && STYLE_CLS.some((c) => x.classList.contains(c))) STYLE_CLS.forEach((c) => x.classList.remove(c)); });
+  }
+  // Chrome "preserves" a line's look when lines merge (Backspace/Delete) or split by wrapping text in <span style="color:…; font-weight:700…">.
+  // Those spans would make a line style stick (Alt+B could no longer remove it), so unwrap any span whose inline style is only our line-style
+  // values (or the plain defaults): the merged text simply takes its line's style, as in Google Docs / Keep. Pasted styles with other values stay.
+  const LINE_STYLE_VAL = { "color": ["rgb(58, 51, 32)", "rgb(123, 31, 162)", "rgb(26, 58, 143)", "rgb(31, 116, 201)", "rgb(27, 102, 48)", "rgb(46, 139, 56)"],
+    "font-weight": ["400", "700", "normal", "bold"], "font-style": ["normal", "italic"], "background-color": ["rgba(255, 238, 0, 0.62)", "transparent", "rgba(0, 0, 0, 0)"] };
+  function unwrapLineStyleSpans() {
+    const sel = window.getSelection(), r0 = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+    const keep = r0 ? [r0.startContainer, r0.startOffset, r0.endContainer, r0.endOffset] : null;
+    let changed = false;
+    $("noteBody").querySelectorAll("li span[style]").forEach((sp) => {
+      const st = sp.style; if (!st.length) return;
+      for (let i = 0; i < st.length; i++) { const k = st[i], ok = LINE_STYLE_VAL[k]; if (!ok || ok.indexOf(st.getPropertyValue(k).trim()) < 0) return; }
+      sp.replaceWith(...sp.childNodes); changed = true;
+    });
+    if (changed && keep && keep[0].isConnected && keep[2].isConnected) { try { const r = document.createRange(); r.setStart(keep[0], keep[1]); r.setEnd(keep[2], keep[3]); sel.removeAllRanges(); sel.addRange(r); } catch (e) {} }
+  }
+  function toggleStylePop() {
+    const open = document.querySelector(".sPop");
+    closeNotePop(); if (open) return;
+    const pop = document.createElement("div"); pop.className = "nPop sPop";
+    pop.innerHTML = '<div class="sRow"><button class="sPr sPr0" data-p="0" title="No priority colour (Alt+0)">&#8856;</button>' +
+      PRIO_COL.map((c, i) => '<button class="sPr" data-p="' + (i + 1) + '" style="background:' + c + '" title="Priority ' + (i + 1) + (i === 0 ? " (highest)" : i === 4 ? " (lowest)" : "") + " — Alt+" + (i + 1) + '">' + (i + 1) + "</button>").join("") + "</div>" +
+      '<div class="sRow"><button class="sTg" data-s="bold" title="Alt+B"><b>B</b> today</button><button class="sTg" data-s="hl" title="Alt+H"><span class="hlSw">ab</span> discuss</button><button class="sTg" data-s="it" title="Alt+I"><i>I</i> italic</button></div>' +
+      '<div class="sHint">For the line(s) at the cursor. Same button again = off. Keys: Alt+1…5 / Alt+0, Alt+B, Alt+H, Alt+I. Move a line: drag its &#10303; grip, or Alt+Shift+&#8593;/&#8595;.</div>';
+    $("notePanel").appendChild(pop);
+    pop.querySelectorAll("button").forEach((b) => {
+      b.addEventListener("pointerdown", (e) => e.preventDefault());   // keep the caret in the note (and the phone keyboard as it is)
+      b.addEventListener("click", () => { if (b.dataset.p != null) styleNoteLines("prio", +b.dataset.p); else styleNoteLines(b.dataset.s); });
+    });
+    const tb = $("noteTools2"); pop.style.top = (tb.offsetTop + tb.offsetHeight + 4) + "px";
+    paintStylePop();
+  }
+  function paintStylePop() {   // show the state of the line at the cursor
+    const pop = document.querySelector(".sPop"); if (!pop) return;
+    const li = noteCaretNode() ? linesInSelection()[0] : null;
+    pop.querySelectorAll(".sPr").forEach((b) => { const v = +b.dataset.p; b.classList.toggle("on", !!li && (v ? li.classList.contains("pr" + v) : !PRIO_CLS.some((c) => li.classList.contains(c)))); });
+    pop.querySelectorAll(".sTg").forEach((b) => b.classList.toggle("on", !!li && li.classList.contains(STYLE_TG[b.dataset.s])));
+  }
+  document.addEventListener("selectionchange", () => { if (document.querySelector(".sPop")) paintStylePop(); });
+
+  /* ── moving lines (v228) ──
+     A "unit" = the line + its sub-items (its inner sub-list, or — Chrome's structure — the sibling list right after it).
+     Drag the ⠿ grip (right end of the line), or Alt+Shift+↑/↓ / the ↑ ↓ buttons for one step within the same level. */
+  const afterUnit = (li) => (isList(li.nextElementSibling) ? li.nextElementSibling.nextSibling : li.nextSibling);
+  function unitOf(li) { const k = noteKidList(li); return { li, sib: k && k.parentElement !== li ? k : null }; }
+  function ownerLi(li) {   // the bullet whose sub-list this line sits in
+    const l = li.parentElement; if (!isList(l)) return null;
+    if (l.parentElement && l.parentElement.tagName === "LI") return l.parentElement;
+    const p = l.previousElementSibling; return p && p.tagName === "LI" ? p : null;
+  }
+  function placeUnit(u, box, ref) {
+    const old = u.li.parentElement;
+    if (u.sib && ref === u.sib) ref = u.sib.nextSibling;
+    box.insertBefore(u.li, ref); if (u.sib) box.insertBefore(u.sib, u.li.nextSibling);
+    if (isList(old) && old !== box && !old.querySelector("li")) old.remove();
+  }
+  function moveNoteLine(dir) {
+    const n = noteCaretNode(); if (!n) { toast("Tap the line you want to move first"); return; }
+    const li = noteLiChain(n)[0]; if (!li) return;
+    const u = unitOf(li), box = li.parentElement;
+    const sel = window.getSelection(), r0 = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+    const keep = r0 ? [r0.startContainer, r0.startOffset, r0.endContainer, r0.endOffset] : null;   // plain node+offset: a live Range would collapse when its line is moved
+    let ref;
+    if (dir < 0) { let p = li.previousElementSibling; while (p && p.tagName !== "LI") p = p.previousElementSibling; if (!p) return; ref = p; }
+    else { let nx = (u.sib || li).nextElementSibling; while (nx && nx.tagName !== "LI") nx = nx.nextElementSibling; if (!nx) return; ref = afterUnit(nx); }
+    snap();
+    placeUnit(u, box, ref);
+    if (keep) { try { const r = document.createRange(); r.setStart(keep[0], keep[1]); r.setEnd(keep[2], keep[3]); sel.removeAllRanges(); sel.addRange(r); } catch (e) {} }
+    decorateNoteLists(); saveNoteHtml(); commit();
+    const r = li.getBoundingClientRect(), br = $("noteBody").getBoundingClientRect();   // keep the moved line in view
+    if (r.top < br.top || r.bottom > br.bottom) li.scrollIntoView({ block: "nearest" });
+  }
+  function gripHit(li, x, y) {
+    const r = li.getBoundingClientRect(), cs = getComputedStyle(li);
+    const gw = parseFloat(cs.paddingRight) || 0, lh = parseFloat(cs.lineHeight) || 18;
+    return gw > 0 && x >= r.right - gw - 2 && x <= r.right + 2 && y >= r.top && y < r.top + lh + 3;
+  }
+  let lineDrag = null;
+  function noteScroller() {   // what scrolls while dragging near the edge: the note itself, else the panel/page around it
+    const body = $("noteBody");
+    if (body.scrollHeight > body.clientHeight + 1) return body;
+    for (let el = body.parentElement; el && el !== document.body; el = el.parentElement) { const oy = getComputedStyle(el).overflowY; if ((oy === "auto" || oy === "scroll") && el.scrollHeight > el.clientHeight + 1) return el; }
+    return document.scrollingElement || document.documentElement;
+  }
+  function startLineDrag(li, e) {
+    const u = unitOf(li);
+    lineDrag = { u, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, moved: false, drop: null, pid: e.pointerId, raf: 0 };
+    try { $("noteBody").setPointerCapture(e.pointerId); } catch (err) {}
+  }
+  function inUnit(u, l) { return l === u.li || u.li.contains(l) || (u.sib && u.sib.contains(l)); }
+  function ownBottom(l) { const k = noteKidList(l); if (k && k.parentElement === l && k.getClientRects().length) return k.getBoundingClientRect().top; return l.getBoundingClientRect().bottom; }
+  function unitBottom(l) { const k = noteKidList(l); if (k && k.getClientRects().length) return Math.max(l.getBoundingClientRect().bottom, k.getBoundingClientRect().bottom); return l.getBoundingClientRect().bottom; }
+  function noteDropAt(x, y) {
+    const body = $("noteBody"), u = lineDrag.u;
+    const cands = Array.from(body.querySelectorAll("li")).filter((l) => l.getClientRects().length && !inUnit(u, l));
+    if (!cands.length) return null;
+    let t = null, best = Infinity;
+    for (const l of cands) {
+      const top = l.getBoundingClientRect().top, bot = ownBottom(l);
+      if (y >= top && y < bot) { t = l; best = 0; break; }
+      const d = y < top ? top - y : y - bot; if (d < best) { best = d; t = l; }
+    }
+    const tr = t.getBoundingClientRect(), mid = (tr.top + ownBottom(t)) / 2;
+    if (y < mid) return { mode: "before", t };
+    const k = noteKidList(t);
+    if (k && !t.classList.contains("collapsed") && k.querySelector("li") && Array.from(k.querySelectorAll("li")).some((l) => !inUnit(u, l))) return { mode: "first", t };
+    let d = { mode: "after", t };
+    for (;;) {   // dragged left of the last line of a group → drop one level up (after its parent)
+      let nx = afterUnit(d.t); while (nx && !(nx.nodeType === 1 && nx.tagName === "LI" && !inUnit(u, nx))) nx = nx && nx.nextSibling;
+      if (nx) break;
+      const o = ownerLi(d.t); if (!o || x >= d.t.getBoundingClientRect().left - 10) break;
+      d = { mode: "after", t: o };
+    }
+    return d;
+  }
+  function showNoteDrop(d) {
+    let ln = $("noteDrop"); if (!ln) { ln = document.createElement("div"); ln.id = "noteDrop"; document.body.appendChild(ln); }
+    if (!d) { ln.style.display = "none"; return; }
+    const br = $("noteBody").getBoundingClientRect(), tr = d.t.getBoundingClientRect();
+    let y, left = tr.left;
+    if (d.mode === "before") y = tr.top;
+    else if (d.mode === "first") { y = ownBottom(d.t); left = tr.left + 16; }
+    else y = unitBottom(d.t);
+    y = Math.max(br.top, Math.min(br.bottom, y));
+    ln.style.display = "block"; ln.style.top = (y - 1) + "px"; ln.style.left = left + "px"; ln.style.width = Math.max(30, br.right - 10 - left) + "px";
+  }
+  function lineDragTick() {
+    if (!lineDrag || !lineDrag.moved) return;
+    const sc = noteScroller(), isDoc = sc === document.scrollingElement || sc === document.documentElement;
+    const r = isDoc ? { top: 0, bottom: window.innerHeight } : sc.getBoundingClientRect(), edge = 36, y = lineDrag.y;
+    let dy = 0; if (y < r.top + edge) dy = -Math.ceil((r.top + edge - y) / 4); else if (y > r.bottom - edge) dy = Math.ceil((y - r.bottom + edge) / 4);
+    if (dy) { const before = sc.scrollTop; sc.scrollTop += dy; if (sc.scrollTop !== before) { lineDrag.drop = noteDropAt(lineDrag.x, lineDrag.y); showNoteDrop(lineDrag.drop); } }
+    lineDrag.raf = requestAnimationFrame(lineDragTick);
+  }
+  document.addEventListener("pointermove", (e) => {
+    if (!lineDrag || (lineDrag.pid != null && e.pointerId !== lineDrag.pid)) return;
+    lineDrag.x = e.clientX; lineDrag.y = e.clientY;
+    if (!lineDrag.moved) {
+      if (Math.abs(e.clientY - lineDrag.sy) < 5 && Math.abs(e.clientX - lineDrag.sx) < 5) return;
+      lineDrag.moved = true; lineDrag.u.li.classList.add("ndSrc"); document.body.classList.add("lineDragging");
+      lineDrag.raf = requestAnimationFrame(lineDragTick);
+    }
+    e.preventDefault();
+    lineDrag.drop = noteDropAt(e.clientX, e.clientY); showNoteDrop(lineDrag.drop);
+  });
+  function endNoteDrag(apply) {
+    if (!lineDrag) return;
+    const d = lineDrag; lineDrag = null;
+    cancelAnimationFrame(d.raf); showNoteDrop(null);
+    d.u.li.classList.remove("ndSrc"); if (!d.u.li.getAttribute("class")) d.u.li.removeAttribute("class");
+    document.body.classList.remove("lineDragging");
+    if (!apply || !d.moved || !d.drop) return;
+    const t = d.drop.t; let box, ref;
+    if (d.drop.mode === "before") { box = t.parentElement; ref = t; }
+    else if (d.drop.mode === "after") { box = t.parentElement; ref = afterUnit(t); }
+    else { box = noteKidList(t); ref = box.firstChild; }
+    if (!box || inUnit(d.u, box)) return;
+    snap();
+    placeUnit(d.u, box, ref);
+    decorateNoteLists(); saveNoteHtml(); commit();
+  }
+  document.addEventListener("pointerup", (e) => { if (lineDrag && (lineDrag.pid == null || e.pointerId === lineDrag.pid)) endNoteDrag(true); });
+  document.addEventListener("pointercancel", () => endNoteDrag(false));
+  document.addEventListener("keydown", (e) => { if (lineDrag && e.key === "Escape") endNoteDrag(false); }, true);
+  // touch: a finger on the grip must drag the line, not scroll the note or open the keyboard
+  $("noteBody").addEventListener("touchstart", (e) => {
+    const t = e.touches[0], el = t && document.elementFromPoint(t.clientX, t.clientY), li = el && el.closest && el.closest("li");
+    if (li && el === li && $("noteBody").contains(li) && gripHit(li, t.clientX, t.clientY)) e.preventDefault();
+  }, { passive: false });
+  document.addEventListener("touchmove", (e) => { if (lineDrag) e.preventDefault(); }, { passive: false });
+
   // Toggle by clicking the ▾/▸ marker (it sits just left of the bullet's text box). pointerdown so the caret doesn't jump.
   let noteKeepBlur = false;   // a tap on a marker must not pop up the phone keyboard
   $("noteBody").addEventListener("pointerdown", (e) => {
     const li = e.target.closest && e.target.closest("li");
     if (!li || e.target !== li) return;
     const r = li.getBoundingClientRect(), body = $("noteBody");
+    if (gripHit(li, e.clientX, e.clientY)) {   // ⠿ grip → drag the line (with its sub-items)
+      e.preventDefault(); e.stopPropagation();   // no focus → no phone keyboard (touchstart is cancelled too, so no synthetic click follows)
+      startLineDrag(li, e);
+      return;
+    }
     const onFold = li.classList.contains("hasKids") && e.clientX < r.left;   // ▾/▸ sits just left of the line
     const lh = parseFloat(getComputedStyle(li).lineHeight) || 18;
     const padL = parseFloat(getComputedStyle(li).paddingLeft) || 19;
@@ -3261,10 +3506,38 @@ if (IS_BROWSER) (function () {
     saveNoteHtml();
     return true;
   }
-  $("noteBody").addEventListener("input", () => { decorateNoteLists(); revealNoteCaret(); saveNoteHtml(); });
+  // Backspace at the start of a line whose line above is empty (or Delete at the end of an empty line): just drop the empty line,
+  // so the remaining line keeps its own style (the browser would merge it into the empty, unstyled line).
+  $("noteBody").addEventListener("beforeinput", (e) => {
+    if (e.inputType !== "deleteContentBackward" && e.inputType !== "deleteContentForward") return;
+    const sel = window.getSelection(); if (!sel || !sel.rangeCount || !sel.isCollapsed) return;
+    const n = noteCaretNode(); if (!n) return;
+    const li = (n.nodeType === 1 ? n : n.parentElement).closest("li"); if (!li) return;
+    const kids = noteKidList(li);
+    const empty = (x) => x && !ownText(x) && !noteKidList(x) && !x.querySelector("img");
+    const r = document.createRange(); r.selectNodeContents(li);
+    if (e.inputType === "deleteContentBackward") {
+      r.setEnd(sel.anchorNode, sel.anchorOffset); if (r.toString() !== "") return;   // caret not at the start of the line
+      const prev = li.previousElementSibling; if (!prev || prev.tagName !== "LI" || !empty(prev) || prev.classList.contains("chk") !== li.classList.contains("chk")) return;
+      e.preventDefault(); prev.remove();
+    } else {
+      if (!empty(li) || (kids && kids.parentElement === li)) return;
+      const next = li.nextElementSibling; if (!next || next.tagName !== "LI") return;
+      e.preventDefault(); li.remove(); placeCaret(next, false);
+    }
+    decorateNoteLists(); saveNoteHtml();
+  });
+  $("noteBody").addEventListener("input", (e) => { if (e && e.inputType === "insertParagraph") plainNewLine(); if (e && /^(delete|insertParagraph)/.test(e.inputType || "")) unwrapLineStyleSpans(); decorateNoteLists(); revealNoteCaret(); saveNoteHtml(); });
   $("noteBody").addEventListener("keydown", (e) => {
     if (e.key === "Tab") { e.preventDefault(); noteCmd(e.shiftKey ? "outdent" : "indent"); return; }
     if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && noteEnterInFolded(e)) return;
+    if (e.shiftKey && (e.altKey || e.ctrlKey || e.metaKey) && (e.key === "ArrowUp" || e.key === "ArrowDown")) { e.preventDefault(); moveNoteLine(e.key === "ArrowUp" ? -1 : 1); return; }
+    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {   // e.code, so it also works where Alt+letter types a special character (Mac, Swiss layout)
+      const m = /^(?:Digit|Numpad)([0-5])$/.exec(e.code || "");
+      if (m) { e.preventDefault(); styleNoteLines("prio", +m[1]); return; }
+      const sk = { KeyB: "bold", KeyH: "hl", KeyI: "it" }[e.code];
+      if (sk) { e.preventDefault(); styleNoteLines(sk); return; }
+    }
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) { e.preventDefault(); foldAtCaret(e.key === "ArrowUp"); return; }
     if (e.ctrlKey || e.metaKey) {
       if (e.shiftKey && (e.key === "8" || e.key === "*" || e.code === "Digit8")) { e.preventDefault(); noteCmd("bullet"); return; }
@@ -3804,7 +4077,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v227"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v228"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
