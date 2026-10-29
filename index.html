@@ -327,6 +327,12 @@ body.mv-note .nPop .nMv button { padding: 7px 12px; font-size: 14px; }
 .tkKids { margin-left: 16px; }
 .tkNote { color: var(--ink3); font-size: 10.5px; margin-top: 4px; }
 #archiveDialog { max-width: 560px; }
+#bkDialog { max-width: 600px; }
+.bkRow { display: grid; grid-template-columns: auto 1fr auto auto; gap: 4px 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line, #eee); font-size: 12.5px; }
+.bkRow .bkWhen { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
+.bkRow .bkWhat { min-width: 0; color: var(--ink2); }
+.bkRow .bkWhat small { display: block; color: var(--ink3); }
+@media (max-width: 560px) { .bkRow { grid-template-columns: 1fr auto auto; } .bkRow .bkWhen { grid-column: 1 / -1; } }
 /* ── phone views (v227): ?view=note | habits | timer — one panel full-screen, opened from the three home-screen shortcuts ── */
 #mvHead, #mvHabits, #mvTimer { display: none; }
 body.mv #gridWrap, body.mv #rbGrip, body.mv #rbFooter, body.mv #sgPanel, body.mv #streakPanel, body.mv #rbSummary, body.mv #deadlinePanel, body.mv #notePanel, body.mv #checkPop, body.mv #pool, body.mv #actionBar { display: none !important; }
@@ -900,7 +906,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
         <div id="syncDot" title="Sync status"></div>
         <div id="rbTools">
           <button class="iconBtn" id="rbReports" title="Reports &amp; activity">📊</button>
-          <button class="iconBtn" id="rbUndo" title="Undo (Ctrl+Z)">&#8630;</button>
+          <button class="iconBtn" id="rbUndo" title="Undo (Ctrl+Z) — redo: Ctrl+Y">&#8630;</button>
         </div>
       </div>
     </div>
@@ -916,6 +922,13 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
   <div id="histWrap"></div>
   <h3 style="margin-top:18px;">Change log</h3>
   <div id="changelogWrap"></div>
+</dialog>
+
+<dialog id="bkDialog">
+  <h2>Earlier versions on this device</h2>
+  <p class="muted">Kept in this browser whenever another device's changes replaced or were merged into the plan here (newest 30). <b>Restore</b> puts that version back as your current plan (Ctrl+Z undoes it); <b>Download</b> saves it as a file you can Import.</p>
+  <div id="bkList"></div>
+  <div class="btnRow" style="margin-top:12px;"><button class="btnGhost" id="bkClose">Close</button></div>
 </dialog>
 
 <dialog id="archiveDialog">
@@ -980,7 +993,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
   <h2>Settings <span id="buildInfo" style="font-size:11px;font-weight:400;color:var(--ink3);"></span></h2>
 
   <h3>Sync (Supabase)</h3>
-  <p class="muted">Enter the same three values on every device, or use the setup link.</p>
+  <p class="muted">Enter the same three values on every device, or use the setup link. Changes made on two devices are merged; whenever a device replaces or merges its plan, its previous version is kept under Data → Earlier versions.</p>
   <label>Project URL</label>
   <input type="text" id="sbUrl" placeholder="https://xxxx.supabase.co" autocomplete="off">
   <label>Publishable / anon key</label>
@@ -1005,13 +1018,14 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it, + for a new note). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip at its right end (drag left below the last sub-item to take it a level up), or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I).</p>
+  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it, + for a new note). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip at its right end (drag left below the last sub-item to take it a level up), or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I). Undo / redo: <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (or Ctrl+Shift+Z) — with the cursor outside the note; inside the note they undo / redo your typing.</p>
 
   <h3>Data</h3>
   <div class="btnRow">
     <button class="btnGhost" id="exportBtn">&darr; Export JSON</button>
     <button class="btnGhost" id="importBtn">&uarr; Import</button>
     <button class="btnGhost" id="clearBtn">Clear this week</button>
+    <button class="btnGhost" id="bkBtn">&#128339; Earlier versions on this device</button>
   </div>
   <input type="file" id="fileInput" accept="application/json,.json" style="display:none">
 
@@ -1096,7 +1110,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v229 */
+/* build v231 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1542,8 +1556,159 @@ function migrate(s) {
   return { version: 3, categories: cats0, weeks: [{ id: "w" + Date.now(), blocks, budgets: {} }], currentWeek: 0, nextId: s.nextId || 1, note: defaultNote(), anchorMonday: ymd(mondayOf(new Date())), timer: null };
 }
 
+/* ═══════════════ Sync merge (v231) ═══════════════
+   Plapp keeps the whole plan as ONE blob in the cloud. Until v230 whichever device saved last simply replaced it, so a device that
+   saved before it had fetched the latest version (slow phone network, a save still pending from before, a laptop tab closed right
+   after an edit, a laptop window that never lost focus while you used the phone…) silently erased the other device's newer changes.
+   From v231 a device never overwrites a cloud version it hasn't seen: if the cloud changed since its last sync, it first does a
+   3-way merge — base = the version both devices last agreed on, local = this device, remote = the cloud — so changes made on both
+   sides survive. Rules:
+   • a field changed on one side only → that side's value;
+   • arrays of items with an `id` (tasks, blocks, habits, notes, deadlines, ticked lines, masterplans) → merged item by item;
+     an item deleted on one side but edited on the other is KEPT (an edit beats a deletion); new items from both sides are kept;
+     two blocks created independently with the same numeric id (both devices used the same nextId) → the local one gets a new id;
+   • weeks → merged by position (week index = calendar week), never shortened;
+   • texts with markup or line breaks (note HTML, week notes, comments) → merged line/tag-wise (diff3); edits to different
+     lines both survive, lines added at the same spot are both kept;
+   • a genuine clash (the same value changed differently on both sides) → this device's edit wins, recorded in `conflicts`
+     (the caller keeps both full versions as local backups, so nothing is unrecoverable). */
+function syncDeepEq(a, b) {
+  if (a === b) return true;
+  if (a === null || b === null || typeof a !== "object" || typeof b !== "object") return a !== a && b !== b;   // NaN === NaN
+  const aa = Array.isArray(a); if (aa !== Array.isArray(b)) return false;
+  if (aa) { if (a.length !== b.length) return false; for (let i = 0; i < a.length; i++) if (!syncDeepEq(a[i], b[i])) return false; return true; }
+  const ka = Object.keys(a).filter((k) => a[k] !== undefined), kb = Object.keys(b).filter((k) => b[k] !== undefined);
+  if (ka.length !== kb.length) return false;
+  for (const k of ka) if (!syncDeepEq(a[k], b[k])) return false;
+  return true;
+}
+const SYNC_ATOMIC = { timer: 1, habitVersions: 1 };              // replaced as a whole when both sides changed them
+const SYNC_QUIET = { currentWeek: 1, currentMasterplan: 1, version: 1, nextId: 1, id: 1, note: 1, snapshot: 1 };   // clashes here aren't worth reporting (view state, per-device geometry of the old floating note, the daily plan snapshot)
+function syncIdArray(a) {
+  if (!Array.isArray(a)) return false;
+  const seen = new Set();
+  for (const x of a) { if (!x || typeof x !== "object" || Array.isArray(x) || (typeof x.id !== "string" && typeof x.id !== "number")) return false; const k = String(x.id); if (seen.has(k)) return false; seen.add(k); }
+  return true;
+}
+function syncTexty(s) { return typeof s === "string" && (s.indexOf("<") >= 0 || s.indexOf("\n") >= 0); }
+function syncTokens(s) { return s ? s.split(/(?=<)|(?<=>)|(?<=\n)/) : []; }
+// index pairs of a longest common subsequence of token arrays a, b (common prefix/suffix trimmed first); null if too big
+function syncLcs(a, b) {
+  let s = 0; while (s < a.length && s < b.length && a[s] === b[s]) s++;
+  let e = 0; while (e < a.length - s && e < b.length - s && a[a.length - 1 - e] === b[b.length - 1 - e]) e++;
+  const pairs = []; for (let i = 0; i < s; i++) pairs.push([i, i]);
+  const n = a.length - s - e, m = b.length - s - e;
+  if (n > 0 && m > 0) {
+    if (n * m > 4e6) return null;
+    const W = m + 1, L = new Uint32Array((n + 1) * W);
+    for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i * W + j] = a[s + i] === b[s + j] ? L[(i + 1) * W + j + 1] + 1 : Math.max(L[(i + 1) * W + j], L[i * W + j + 1]);
+    let i = 0, j = 0;
+    while (i < n && j < m) { if (a[s + i] === b[s + j]) { pairs.push([s + i, s + j]); i++; j++; } else if (L[(i + 1) * W + j] >= L[i * W + j + 1]) i++; else j++; }
+  }
+  for (let k = e; k > 0; k--) pairs.push([a.length - k, b.length - k]);
+  return pairs;
+}
+// classic diff3 over tokens; returns { value, conflict }
+function syncMergeText(base, local, remote) {
+  const O = syncTokens(base), A = syncTokens(local), B = syncTokens(remote);
+  const pa = syncLcs(O, A), pb = syncLcs(O, B);
+  if (!pa || !pb) return { value: local, conflict: true };
+  const MA = new Int32Array(O.length).fill(-1), MB = new Int32Array(O.length).fill(-1);
+  pa.forEach(([o, x]) => { MA[o] = x; }); pb.forEach(([o, x]) => { MB[o] = x; });
+  const out = []; let io = 0, ia = 0, ib = 0, conflict = false;
+  const same = (x, y) => x.length === y.length && x.every((t, i) => t === y[i]);
+  for (let guard = 0; guard < 1e6; guard++) {
+    let k = 0; while (io + k < O.length && MA[io + k] === ia + k && MB[io + k] === ib + k) k++;
+    if (k > 0) { for (let t = 0; t < k; t++) out.push(O[io + t]); io += k; ia += k; ib += k; continue; }
+    let o = io; while (o < O.length && (MA[o] < 0 || MB[o] < 0)) o++;
+    const end = o >= O.length;
+    const cO = O.slice(io, end ? O.length : o), cA = A.slice(ia, end ? A.length : MA[o]), cB = B.slice(ib, end ? B.length : MB[o]);
+    if (same(cA, cO)) out.push(...cB);
+    else if (same(cB, cO) || same(cA, cB)) out.push(...cA);
+    else if (!cO.length) out.push(...cA, ...cB);           // both inserted at the same spot → keep both
+    else { out.push(...cA); conflict = true; }
+    if (end) break;
+    io = o; ia = MA[o]; ib = MB[o];
+  }
+  return { value: out.join(""), conflict };
+}
+function syncMaxBlockId(s) { let m = 0; ((s && s.weeks) || []).forEach((w) => ((w && w.blocks) || []).forEach((b) => { if (typeof b.id === "number" && b.id > m) m = b.id; })); return m; }
+function syncMerge3(base, local, remote) {
+  const nid = (s) => (s && typeof s.nextId === "number" ? s.nextId : 1);
+  const ctx = { conflicts: [], nextId: Math.max(nid(local), nid(remote), syncMaxBlockId(local) + 1, syncMaxBlockId(remote) + 1), renumbered: 0 };
+  const v = syncM3(base, local, remote, "", ctx);
+  if (v && typeof v === "object" && !Array.isArray(v)) v.nextId = ctx.nextId;
+  return { value: v, conflicts: ctx.conflicts, renumbered: ctx.renumbered };
+}
+function syncM3(b, l, r, path, ctx) {
+  if (syncDeepEq(l, r)) return l;
+  if (syncDeepEq(b, l)) return r;
+  if (syncDeepEq(b, r)) return l;
+  if (l === undefined) return r;                          // deleted here, edited there → keep the edit
+  if (r === undefined) return l;
+  const key = path.slice(path.lastIndexOf(".") + 1);
+  const isObj = (x) => x !== null && typeof x === "object" && !Array.isArray(x);
+  if (!SYNC_ATOMIC[path]) {
+    if (isObj(l) && isObj(r)) return syncMergeObj(isObj(b) ? b : {}, l, r, path, ctx);
+    if (Array.isArray(l) && Array.isArray(r)) {
+      if (path === "weeks") return syncMergeByIndex(Array.isArray(b) ? b : [], l, r, path, ctx);
+      if (syncIdArray(l) && syncIdArray(r) && (b == null || syncIdArray(b))) return syncMergeById(Array.isArray(b) ? b : [], l, r, path, ctx);
+    }
+    if (typeof l === "string" && typeof r === "string" && (b === undefined || typeof b === "string") && (syncTexty(b) || syncTexty(l) || syncTexty(r))) {
+      const t = syncMergeText(b || "", l, r); if (t.conflict) ctx.conflicts.push(path); return t.value;   // (no base: text written on both sides → both kept)
+    }
+  }
+  if (!SYNC_QUIET[key] && !SYNC_QUIET[path.split(".")[0]]) ctx.conflicts.push(path);
+  return l;                                                // genuine clash → this device's edit wins
+}
+function syncMergeObj(b, l, r, path, ctx) {
+  const out = {};
+  const keys = new Set(Object.keys(l).concat(Object.keys(r), Object.keys(b)));
+  keys.forEach((k) => { const v = syncM3(b[k], l[k], r[k], path ? path + "." + k : k, ctx); if (v !== undefined) out[k] = v; });
+  return out;
+}
+function syncMergeByIndex(b, l, r, path, ctx) {
+  const out = [], n = Math.max(l.length, r.length);
+  for (let i = 0; i < n; i++) {
+    if (l[i] === undefined) out.push(r[i]);
+    else if (r[i] === undefined) out.push(l[i]);
+    else out.push(syncM3(b[i], l[i], r[i], path + "." + i, ctx));
+  }
+  return out;
+}
+function syncMergeById(b, l, r, path, ctx) {
+  const K = (x) => String(x.id);
+  const B = new Map(b.map((x) => [K(x), x])), Lm = new Map(l.map((x) => [K(x), x])), Rm = new Map(r.map((x) => [K(x), x]));
+  const res = new Map(), renum = new Map();
+  for (const id of new Set([...Lm.keys(), ...Rm.keys()])) {
+    const bi = B.get(id), li = Lm.get(id), ri = Rm.get(id);
+    if (li && ri) {
+      if (!bi && !syncDeepEq(li, ri) && typeof li.id === "number") {   // same new numeric id on both devices → two different items
+        res.set(id, ri); const nl = Object.assign({}, li, { id: ctx.nextId++ }); ctx.renumbered++;
+        renum.set(id, K(nl)); res.set(K(nl), nl);
+      } else res.set(id, syncM3(bi, li, ri, path + "." + id, ctx));
+    } else if (li) { if (!(bi && syncDeepEq(bi, li))) res.set(id, li); }   // deleted there and untouched here → gone
+    else { if (!(bi && syncDeepEq(bi, ri))) res.set(id, ri); }
+  }
+  // order: keep the order of the side that reordered (local if both), then weave in items only the other side has
+  const seqL = l.map((x) => renum.get(K(x)) || K(x)), seqR = r.map(K), seqB = b.map(K);
+  const rel = (seq) => seq.filter((id) => B.has(id) && res.has(id) && Lm.has(id) && Rm.has(id));
+  const baseRel = rel(seqB), localRel = rel(seqL);
+  const localReordered = baseRel.length !== localRel.length || baseRel.some((id, i) => id !== localRel[i]);
+  const primary = localReordered ? seqL : seqR, secondary = localReordered ? seqR : seqL;
+  const order = primary.filter((id) => res.has(id)), placed = new Set(order);
+  let next = null;                                         // an item only the other side has goes right before its successor there (or at the end)
+  for (let i = secondary.length - 1; i >= 0; i--) {
+    const id = secondary[i]; if (!res.has(id)) continue;
+    if (!placed.has(id)) { if (next == null) order.push(id); else order.splice(order.indexOf(next), 0, id); placed.add(id); }
+    next = id;
+  }
+  for (const id of res.keys()) if (!placed.has(id)) order.push(id);
+  return order.map((id) => res.get(id));
+}
+
 if (!IS_BROWSER && typeof module !== "undefined") {
-  module.exports = { parseTimeRange, parseDays, parseCommand, layoutDay, mergeAdjacent, usedByCat, fmtH, fmtHM, slotLabel, textOn, pickColor, groupColorFor, GROUPS, GROUP_ORDER, parseCSV, csvToRows, migrate, defaultNote, ymd, parseYMD, mondayOf, weekDayIdx, cellForDate, dateOfCell, sessionToSlots, actualSlots, msAt, buildReport, weekUsage, groupContribs, TOTAL_SLOTS, DAYS };
+  module.exports = { syncMerge3, syncMergeText, syncDeepEq, parseTimeRange, parseDays, parseCommand, layoutDay, mergeAdjacent, usedByCat, fmtH, fmtHM, slotLabel, textOn, pickColor, groupColorFor, GROUPS, GROUP_ORDER, parseCSV, csvToRows, migrate, defaultNote, ymd, parseYMD, mondayOf, weekDayIdx, cellForDate, dateOfCell, sessionToSlots, actualSlots, msAt, buildReport, weekUsage, groupContribs, TOTAL_SLOTS, DAYS };
 }
 
 /* ═══════════════ Browser app ═══════════════ */
@@ -1553,7 +1718,7 @@ if (IS_BROWSER) (function () {
   let budSort = { key: null, dir: 1 };
   const recentNewTask = {}; let mpNewTaskTimer = null;   // a freshly-created task pins to the first Masterplan row for ~1 min
   let viewDay = -1; // -1 = week view; 0..5 = single-day view of that weekday
-  let localUpdatedAt = 0, undoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null, previewEl = null;
+  let localUpdatedAt = 0, undoStack = [], redoStack = [], drag = null, armedCat = null, selectedId = null, cfg = null, pushTimer = null, lastPull = 0, noteTimer = null, noteDrag = null, previewEl = null;
   const recentlyUnprio = {};   // catId → { t, pv } : in priority sort, a task whose star was just cleared lingers ~3s before dropping out
   let sgFrozen = null, sgLastOrder = [];   // Stretch Goal table: after a star change, hold the row order ~3s before re-sorting
 
@@ -1575,11 +1740,13 @@ if (IS_BROWSER) (function () {
   if (MV) document.body.classList.add("mv", "mv-" + MV);
 
   // ── editable tracked-session helpers (shared by inline log + popup) ──
-  function findBlock(id) { for (const wk of state.weeks) { const b = (wk.blocks || []).find((x) => String(x.id) === String(id)); if (b) return { b: b, wk: wk }; } return null; }
+  // findSession searches ALL weeks and returns {b, wk}. (Until v229 it was called findBlock and was shadowed by the grid's later
+  // function findBlock(id) — current week only, strict id match — so editing / deleting in Reports → Activity silently did nothing.)
+  function findSession(id) { for (const wk of state.weeks) { const b = (wk.blocks || []).find((x) => String(x.id) === String(id)); if (b) return { b: b, wk: wk }; } return null; }
   function msFromDateTime(dateStr, hhmm) { const d = parseYMD(dateStr); const p = String(hhmm).split(":").map(Number); if (isNaN(p[0])) return null; d.setHours(p[0] || 0, p[1] || 0, 0, 0); return d.getTime(); }
   function reslotSession(b) { const ss = actualSlots(b.startMs, b.endMs); b.startSlot = ss.startSlot; b.lenSlots = ss.lenSlots; }
   function editSessionTime(id, which, hhmm) {
-    const f = findBlock(id); if (!f) return false; const b = f.b;
+    const f = findSession(id); if (!f) return false; const b = f.b;
     const ms = msFromDateTime(b.date, hhmm); if (ms == null) { toast("Use HH:MM, e.g. 9:30"); return false; }
     if (which === "start" && ms >= b.endMs) { toast("Start must be before end."); return false; }
     if (which === "end" && ms <= b.startMs) { toast("End must be after start."); return false; }
@@ -1587,8 +1754,8 @@ if (IS_BROWSER) (function () {
     if (which === "start") b.startMs = ms; else b.endMs = ms;
     reslotSession(b); commit(); return true;
   }
-  function editSessionCat(id, catId) { const f = findBlock(id); if (!f) return; snap(); f.b.catId = catId; commit(); }
-  function deleteSession(id) { const f = findBlock(id); if (!f) return; snap(); f.wk.blocks = f.wk.blocks.filter((x) => String(x.id) !== String(id)); commit(); }
+  function editSessionCat(id, catId) { const f = findSession(id); if (!f) return; snap(); f.b.catId = catId; commit(); }
+  function deleteSession(id) { const f = findSession(id); if (!f) return; snap(); f.wk.blocks = f.wk.blocks.filter((x) => String(x.id) !== String(id)); commit(); }
   function catOptions(sel) { return state.categories.map((c) => '<option value="' + c.id + '"' + (c.id === sel ? " selected" : "") + ">" + (c.name || "").replace(/</g, "&lt;") + "</option>").join(""); }
   function sessionRowHtml(b) {
     return '<div class="logRow" data-id="' + b.id + '">' +
@@ -1601,7 +1768,7 @@ if (IS_BROWSER) (function () {
   function wireSessionRows(container, after) {
     container.querySelectorAll(".logRow").forEach((row) => {
       const id = row.dataset.id;
-      row.querySelectorAll(".logTime").forEach((inp) => inp.addEventListener("change", () => { if (!editSessionTime(id, inp.dataset.f, inp.value)) { const f = findBlock(id); if (f) inp.value = clock(inp.dataset.f === "start" ? f.b.startMs : f.b.endMs); } after(); }));
+      row.querySelectorAll(".logTime").forEach((inp) => inp.addEventListener("change", () => { if (!editSessionTime(id, inp.dataset.f, inp.value)) { const f = findSession(id); if (f) inp.value = clock(inp.dataset.f === "start" ? f.b.startMs : f.b.endMs); } after(); }));
       row.querySelector(".logCat").addEventListener("change", (e) => { editSessionCat(id, e.target.value); after(); });
       row.querySelector(".logDel").addEventListener("click", () => { deleteSession(id); after(); });
     });
@@ -1630,55 +1797,162 @@ if (IS_BROWSER) (function () {
   }
 
   /* ── persistence ── */
+  // v231: besides the plan, each device keeps (a) syncedAt — the cloud version (its updated_at) it last fetched or wrote; only ever
+  // compared for equality (as a time value, because the cloud echoes "…Z" back as "…+00:00"), never against another device's clock;
+  // (b) dirty — it has changes the cloud doesn't have yet; (c) BASE_KEY — the plan as of syncedAt, the common ancestor for merging.
+  // All three survive a reload, so a change made just before a tab was closed / a phone was put away is merged in next time.
+  const BASE_KEY = STORAGE_KEY + "-base";
+  let syncedAt = null, dirty = false, editSeq = 0, baseJson = null, provisionalBase = null, loadedUpdatedAt = 0, linkConnect = false, syncGen = 0;
   function loadLocal() {
     try {
       let raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) { const old = localStorage.getItem(OLD_KEY); if (old) { const od = JSON.parse(old); state = migrate(od.state || od); } }
-      else { const d = JSON.parse(raw); if (d.state) { state = migrate(d.state); localUpdatedAt = d.localUpdatedAt || 0; } }
+      else { const d = JSON.parse(raw); if (d.state) { state = migrate(d.state); localUpdatedAt = d.localUpdatedAt || 0; syncedAt = d.syncedAt || null; dirty = !!d.dirty; } }
+      baseJson = syncedAt ? localStorage.getItem(BASE_KEY) : null;
     } catch (e) {}
     try { const c = localStorage.getItem(CFG_KEY); if (c) { cfg = JSON.parse(c); } } catch (e) {}
+    loadedUpdatedAt = localUpdatedAt;
+    if (linkConnect) { syncedAt = null; baseJson = null; dirty = false; loadedUpdatedAt = 0; }   // opened via a setup link → this device joins the cloud plan
+    if (!syncedAt) provisionalBase = JSON.stringify(state);   // first sync ahead (new device, or upgrade from ≤ v230)
   }
-  function saveLocal() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, localUpdatedAt })); } catch (e) {} }
+  function saveLocal() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, localUpdatedAt, syncedAt, dirty })); } catch (e) {} }
+  function saveBase(json) { baseJson = json; try { localStorage.setItem(BASE_KEY, json); } catch (e) { try { localStorage.removeItem(BASE_KEY); } catch (e2) {} } }   // too big for storage → kept in memory for this session
   function saveCfg() { try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg || {})); } catch (e) {} }
 
   /* ── Supabase ── */
   function sbHeaders() { return { apikey: cfg.key, Authorization: "Bearer " + cfg.key, "Content-Type": "application/json" }; }
   function setDot(cls, title) { const d = $("syncDot"); d.className = cls || ""; d.title = title || "Sync status"; }
+  const syncOn = () => !!(cfg && cfg.url && cfg.key && cfg.pid);
+  const sameVer = (a, b) => !!a && !!b && Date.parse(a) === Date.parse(b);
+  async function fetchRow(cols) {
+    const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans?id=eq." + encodeURIComponent(cfg.pid) + "&select=" + cols, { headers: sbHeaders(), cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const rows = await r.json(); return rows[0] || null;
+  }
   async function pullRemote(apply) {
-    if (!cfg || !cfg.url || !cfg.key || !cfg.pid) { setDot("", "Sync not configured — open ⚙"); return null; }
-    let rows;
-    try {
-      const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans?id=eq." + encodeURIComponent(cfg.pid) + "&select=data,updated_at", { headers: sbHeaders() });
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      rows = await r.json(); setDot("ok", "Synced"); lastPull = Date.now();
-    } catch (e) { setDot("err", "Sync error: " + e.message); return null; }
+    if (!syncOn()) { setDot("", "Sync not configured — open ⚙"); return null; }
+    let row; const gen = syncGen;
+    try { row = await fetchRow("data,updated_at"); lastPull = Date.now(); setDot("ok", "Synced"); }
+    catch (e) { setDot("err", "Sync error: " + e.message + (dirty ? " — your changes stay on this device and are merged in once the connection works" : "")); return null; }
     // render OUTSIDE the network try/catch, so a render bug surfaces (not silently swallowed as a "sync error")
-    if (rows.length && apply) {
-      const remoteAt = Date.parse(rows[0].updated_at);
-      if (remoteAt > localUpdatedAt) { state = migrate(rows[0].data); localUpdatedAt = remoteAt; saveLocal(); renderAll(); }
+    if (apply && gen === syncGen) applyRemote(row);   // (a save of ours finished meanwhile → this answer is already outdated)
+    return row;
+  }
+  // Bring a fetched cloud row into this device without losing anything. Returns what happened: "same" | "took" | "merged" | "upload".
+  //  • cloud unchanged since our last sync → nothing to do (push our own changes, if any);
+  //  • no unsaved changes here → take the cloud version (ours is backed up first if it differs);
+  //  • changes on both sides → 3-way merge (syncMerge3; both inputs are backed up first), then push the result.
+  function applyRemote(row) {
+    if (!row) { if (dirty || !syncedAt) { dirty = true; armPush(); } return "upload"; }   // nothing in the cloud yet → upload ours
+    if (sameVer(row.updated_at, syncedAt)) { if (dirty) armPush(); return "same"; }
+    const remote = migrate(row.data), remoteJson = JSON.stringify(remote), localJson = JSON.stringify(state);
+    let base = baseJson;
+    if (!syncedAt) {        // first sync: no common ancestor recorded yet
+      if (loadedUpdatedAt > Date.parse(row.updated_at)) { base = remoteJson; dirty = true; }   // (≤ v230 upgrade) this device had newer, unsent changes → keep them
+      else base = provisionalBase;                                                           // only what was changed since this page loaded counts as ours
     }
-    return rows[0] || null;
+    const prevHtml = (curNote() || {}).html;
+    if (!dirty) {
+      if (!syncDeepEq(state, remote)) backupState("Before an update from another device", localJson);
+      state = remote; syncedAt = row.updated_at; syncGen++; saveBase(remoteJson); provisionalBase = null; saveLocal();
+      afterRemote(prevHtml, null, true); return "took";
+    }
+    const res = syncMerge3(base ? JSON.parse(base) : null, JSON.parse(localJson), JSON.parse(remoteJson));
+    backupState("This device's version, before merging in another device's changes", localJson);
+    backupState("The other device's version, before it was merged with this one" + (res.conflicts.length ? " (both changed: " + res.conflicts.slice(0, 3).join(", ") + (res.conflicts.length > 3 ? " …" : "") + ")" : ""), remoteJson);
+    state = migrate(res.value); syncedAt = row.updated_at; syncGen++; saveBase(remoteJson); provisionalBase = null;
+    dirty = !syncDeepEq(state, remote); editSeq++; saveLocal();
+    afterRemote(prevHtml, res, !syncDeepEq(state, JSON.parse(localJson)));
+    if (dirty) armPush();
+    return "merged";
   }
+  function afterRemote(prevHtml, res, changedHere) {
+    if (changedHere) { undoStack.length = 0; redoStack.length = 0; }   // undo must not quietly revert another device's changes
+    renderAll(); refreshFocusedNote(prevHtml);
+    if (res && (changedHere || res.conflicts.length)) { try { if (typeof console !== "undefined") console.log("[sync] merged", res.conflicts.length ? "clashes: " + res.conflicts.join(", ") : "cleanly", res.renumbered ? "(" + res.renumbered + " block ids renumbered)" : ""); } catch (e) {}
+      toast(res.conflicts.length ? "Merged changes from another device. " + res.conflicts.length + " item" + (res.conflicts.length > 1 ? "s were" : " was") + " changed on both — kept this device's; the other is under ⚙ → Earlier versions." : "Merged changes from another device."); }
+  }
+  // the note you're typing in isn't normally re-rendered (that would clobber the typing) — but if another device changed it,
+  // show the merged text (which includes everything typed here) and put the caret back where it was
+  function refreshFocusedNote(prevHtml) {
+    const body = $("noteBody"); if (!body || document.activeElement !== body) return;
+    const cn = curNote(); if (!cn || body.dataset.nid !== cn.id || cn.html === prevHtml) return;
+    let off = -1;
+    try { const sel = getSelection(); if (sel.rangeCount) { const r = sel.getRangeAt(0); if (body.contains(r.startContainer)) { const pre = document.createRange(); pre.selectNodeContents(body); pre.setEnd(r.startContainer, r.startOffset); off = pre.toString().length; } } } catch (e) {}
+    body.innerHTML = cn.html || ""; decorateNoteLists();
+    if (off < 0) return;
+    try { const w = document.createTreeWalker(body, NodeFilter.SHOW_TEXT); let n, acc = 0; while ((n = w.nextNode())) { if (acc + n.length >= off) { const r = document.createRange(); r.setStart(n, off - acc); r.collapse(true); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); return; } acc += n.length; } } catch (e) {}
+  }
+  // Save to the cloud — but never blindly: first check that the cloud is still at the version this device last synced with;
+  // if another device saved in between, fetch that and merge before writing. Failed saves are retried (and merged) later.
+  let pushing = false, pushAgain = false, retryTimer = null, retryDelay = 0;
   async function pushRemote() {
-    pushTimer = null;
-    if (!cfg || !cfg.url || !cfg.key || !cfg.pid) return;
-    setDot("saving", "Saving…");
+    if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }
+    if (!syncOn() || !dirty) return;
+    if (pushing) { pushAgain = true; return; }
+    pushing = true; setDot("saving", "Saving…");
     try {
-      const now = new Date().toISOString();
-      const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans", { method: "POST", headers: Object.assign(sbHeaders(), { Prefer: "resolution=merge-duplicates" }), body: JSON.stringify([{ id: cfg.pid, data: state, updated_at: now }]) });
+      const head = await fetchRow("updated_at");
+      if (head && !sameVer(head.updated_at, syncedAt)) {
+        const gen = syncGen, row = await fetchRow("data,updated_at"); lastPull = Date.now();
+        if (gen !== syncGen) { pushAgain = true; return; }   // something else synced meanwhile → start over
+        applyRemote(row);
+        if (!dirty) { setDot("ok", "Synced"); return; }
+      }
+      const seq = editSeq, json = JSON.stringify(state), now = new Date().toISOString();
+      const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans", { method: "POST", headers: Object.assign(sbHeaders(), { Prefer: "resolution=merge-duplicates" }), body: '[{"id":' + JSON.stringify(cfg.pid) + ',"data":' + json + ',"updated_at":"' + now + '"}]' });
       if (!r.ok) throw new Error("HTTP " + r.status);
-      localUpdatedAt = Date.parse(now); saveLocal(); setDot("ok", "Synced");
-    } catch (e) { setDot("err", "Cloud save failed: " + e.message + " (kept locally)"); }
+      syncedAt = now; syncGen++; saveBase(json); provisionalBase = null; localUpdatedAt = Date.parse(now);
+      if (editSeq === seq) dirty = false;
+      saveLocal(); retryDelay = 0; setDot("ok", "Synced");
+    } catch (e) {
+      setDot("err", "Not saved to the cloud yet (" + e.message + ") — kept on this device; retrying, and merged with other devices' changes when it gets through");
+      retryDelay = Math.min(120000, retryDelay ? retryDelay * 2 : 5000);
+      if (retryTimer) clearTimeout(retryTimer);
+      retryTimer = setTimeout(() => { retryTimer = null; pushRemote(); }, retryDelay);
+    } finally {
+      pushing = false;
+      if (pushAgain || (dirty && !pushTimer && !retryTimer)) { pushAgain = false; armPush(); }
+    }
   }
-  function schedulePush() { if (pushTimer) clearTimeout(pushTimer); pushTimer = setTimeout(pushRemote, 900); }
+  function armPush() { if (pushTimer) clearTimeout(pushTimer); pushTimer = setTimeout(pushRemote, 900); }
+  function markDirty() { editSeq++; if (!dirty) { dirty = true; saveLocal(); } }
+  function schedulePush() { markDirty(); armPush(); }   // every local change ends up here (directly or via commit)
+
+  /* ── local backups (v231) — whenever this device replaces or merges its plan with another device's version, the version it had
+     is kept in this browser (IndexedDB, newest 30). ⚙ Settings → "Earlier versions on this device" restores or downloads one. ── */
+  const BK_MAX = 30; let bkSeq = 0;
+  function bkDb() { return new Promise((ok, no) => { if (typeof indexedDB === "undefined") return no(new Error("no IndexedDB")); const rq = indexedDB.open("plapp-backups", 1); rq.onupgradeneeded = () => { const db = rq.result; db.createObjectStore("meta", { keyPath: "k" }); db.createObjectStore("data", { keyPath: "k" }); }; rq.onsuccess = () => ok(rq.result); rq.onerror = () => no(rq.error); }); }
+  function bkSummary(json) {
+    try { const st = JSON.parse(json); let blocks = 0; (st.weeks || []).forEach((w) => { blocks += (w.blocks || []).length; });
+      const lines = (st.notes || []).reduce((n, x) => n + ((x.html || "").match(/<li/g) || []).length, 0);
+      return blocks + " blocks · " + lines + " note lines · " + (st.deadlines || []).length + " deadlines" + (st.timer ? " · timer running" : ""); } catch (e) { return ""; }
+  }
+  async function backupState(reason, json) {
+    try {
+      const db = await bkDb();
+      const last = await new Promise((ok) => { const c = db.transaction("meta").objectStore("meta").openCursor(null, "prev"); c.onsuccess = () => ok(c.result ? c.result.value : null); c.onerror = () => ok(null); });
+      if (last && last.size === json.length) { const prev = await new Promise((ok) => { const g = db.transaction("data").objectStore("data").get(last.k); g.onsuccess = () => ok(g.result ? g.result.json : null); g.onerror = () => ok(null); }); if (prev === json) return; }   // identical to the newest backup
+      const k = Date.now() * 1000 + (bkSeq++ % 1000);
+      await new Promise((ok, no) => {
+        const tx = db.transaction(["meta", "data"], "readwrite");
+        tx.objectStore("meta").put({ k, t: Date.now(), reason, size: json.length, summary: bkSummary(json) }); tx.objectStore("data").put({ k, json });
+        const ks = tx.objectStore("meta").getAllKeys(); ks.onsuccess = () => { const all = ks.result.sort((x, y) => x - y); all.slice(0, Math.max(0, all.length + 1 - BK_MAX)).forEach((old) => { tx.objectStore("meta").delete(old); tx.objectStore("data").delete(old); }); };
+        tx.oncomplete = ok; tx.onerror = () => no(tx.error);
+      });
+    } catch (e) {}
+  }
+  async function listBackups() { const db = await bkDb(); return new Promise((ok, no) => { const g = db.transaction("meta").objectStore("meta").getAll(); g.onsuccess = () => ok(g.result.sort((x, y) => y.k - x.k)); g.onerror = () => no(g.error); }); }
+  async function backupJson(k) { const db = await bkDb(); return new Promise((ok, no) => { const g = db.transaction("data").objectStore("data").get(k); g.onsuccess = () => ok(g.result ? g.result.json : null); g.onerror = () => no(g.error); }); }
 
   function commit() {
     state.weeks.forEach((w) => { w.blocks = mergeAdjacent(w.blocks); });
     if (selectedId != null && !curBlocks().some((b) => b.id === selectedId)) selectedId = null;
     localUpdatedAt = Date.now(); saveLocal(); schedulePush(); renderAll();
   }
-  function snap() { undoStack.push(JSON.stringify(state)); if (undoStack.length > 60) undoStack.shift(); }
-  function undo() { if (!undoStack.length) { toast("Nothing to undo"); return; } state = migrate(JSON.parse(undoStack.pop())); selectedId = null; commit(); renderNote(true); }
+  function snap() { undoStack.push(JSON.stringify(state)); if (undoStack.length > 60) undoStack.shift(); redoStack.length = 0; }   // a new change ends the redo chain
+  function undo() { if (!undoStack.length) { toast("Nothing to undo"); return; } redoStack.push(JSON.stringify(state)); if (redoStack.length > 60) redoStack.shift(); state = migrate(JSON.parse(undoStack.pop())); selectedId = null; commit(); renderNote(true); }
+  function redo() { if (!redoStack.length) { toast("Nothing to redo"); return; } undoStack.push(JSON.stringify(state)); if (undoStack.length > 60) undoStack.shift(); state = migrate(JSON.parse(redoStack.pop())); selectedId = null; commit(); renderNote(true); }
 
   // Yes/Cancel confirmation popup. Falls back to a plain window.confirm if the dialog element isn't available.
   function confirmBox(msg, cb) {
@@ -1869,7 +2143,7 @@ if (IS_BROWSER) (function () {
   }
 
   /* ── sticky note ── */
-  function saveNoteSoon() { localUpdatedAt = Date.now(); if (noteTimer) clearTimeout(noteTimer); noteTimer = setTimeout(() => { saveLocal(); schedulePush(); }, 600); }
+  function saveNoteSoon() { localUpdatedAt = Date.now(); markDirty(); if (noteTimer) clearTimeout(noteTimer); noteTimer = setTimeout(() => { saveLocal(); schedulePush(); }, 600); }
   function renderNote(force) {
     const el = $("stickyNote"), body = $("noteBody");
     if (!state.note) state.note = defaultNote();
@@ -2953,10 +3227,12 @@ if (IS_BROWSER) (function () {
   $("weekNext").onclick = () => { if (viewDay >= 0) { stepDay(1); return; } if (state.currentWeek < state.weeks.length - 1) { state.currentWeek++; selectedId = null; commit(); } else { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); } };
 
   /* ── undo / keys ── */
-  // Undo button removed from the top bar — Ctrl/Cmd+Z still undoes
+  // Undo button removed from the top bar — Ctrl/Cmd+Z still undoes; Ctrl+Y (or Ctrl/Cmd+Shift+Z) redoes
   document.addEventListener("keydown", (e) => {
     if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable)) return;
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); }
+    { const k = (e.key || "").toLowerCase();   // e.key, not e.code: on Swiss/German QWERTZ the Y and Z keys are swapped
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && ((k === "y" && !e.shiftKey) || (k === "z" && e.shiftKey))) { e.preventDefault(); redo(); return; }
+      if ((e.ctrlKey || e.metaKey) && k === "z") { e.preventDefault(); undo(); return; } }
     if (e.key === "Escape") { armedCat = null; selectedId = null; renderAll(); }
     if (e.key === "ArrowLeft" && !e.ctrlKey && !e.metaKey) $("weekPrev").click();
     if (e.key === "ArrowRight" && !e.ctrlKey && !e.metaKey) { if (state.currentWeek < state.weeks.length - 1) $("weekNext").click(); }
@@ -4052,10 +4328,13 @@ if (IS_BROWSER) (function () {
   $("sbSave").addEventListener("click", async () => {
     cfg = { url: $("sbUrl").value.trim(), key: $("sbKey").value.trim(), pid: $("sbPid").value.trim() };
     saveCfg(); $("syncStatus").textContent = "Testing…";
-    const row = await pullRemote(false);
-    if ($("syncDot").className === "err") $("syncStatus").textContent = "❌ Connection failed — check URL/key and that the SQL was run.";
-    else if (row) { const remoteAt = Date.parse(row.updated_at); if (remoteAt > localUpdatedAt) { state = migrate(row.data); localUpdatedAt = remoteAt; saveLocal(); renderAll(); renderNote(true); $("syncStatus").textContent = "✅ Connected — loaded existing plan from cloud."; } else { $("syncStatus").textContent = "✅ Connected."; schedulePush(); } }
-    else { $("syncStatus").textContent = "✅ Connected — saving your current plan to cloud."; schedulePush(); }
+    // (re)connecting = this device joins whatever plan is in the cloud (its own current plan is backed up first, see Earlier versions)
+    syncedAt = null; baseJson = null; dirty = false; loadedUpdatedAt = 0; provisionalBase = JSON.stringify(state); saveLocal();
+    let row;
+    try { row = await fetchRow("data,updated_at"); lastPull = Date.now(); setDot("ok", "Synced"); }
+    catch (e) { setDot("err", "Sync error: " + e.message); $("syncStatus").textContent = "❌ Connection failed — check URL/key and that the SQL was run."; return; }
+    const how = applyRemote(row); renderNote(true);
+    $("syncStatus").textContent = how === "upload" ? "✅ Connected — saving your current plan to cloud." : how === "took" ? "✅ Connected — loaded existing plan from cloud." : "✅ Connected.";
   });
   $("sbLink").addEventListener("click", () => {
     if (!cfg || !cfg.url) { $("syncStatus").textContent = "Save the sync settings first."; return; }
@@ -4065,7 +4344,7 @@ if (IS_BROWSER) (function () {
   });
 
   if (location.hash.indexOf("#s=") === 0) {
-    try { cfg = JSON.parse(atob(location.hash.slice(3))); saveCfg(); history.replaceState(null, "", location.pathname); toast("Sync settings imported from link"); } catch (e) {}
+    try { cfg = JSON.parse(atob(location.hash.slice(3))); saveCfg(); linkConnect = true; history.replaceState(null, "", location.pathname); toast("Sync settings imported from link"); } catch (e) {}
   }
 
   /* ── export / import / clear ── */
@@ -4077,6 +4356,24 @@ if (IS_BROWSER) (function () {
     a.click(); URL.revokeObjectURL(a.href);
   });
   $("importBtn").addEventListener("click", () => $("fileInput").click());
+  async function openBackups() {
+    const d = $("bkDialog"), host = $("bkList"); host.innerHTML = '<p class="muted">Loading…</p>'; d.showModal();
+    let list = [];
+    try { list = await listBackups(); } catch (e) { host.innerHTML = '<p class="muted">This browser can\'t keep backups (' + esc(e.message || "no storage") + ").</p>"; return; }
+    if (!list.length) { host.innerHTML = '<p class="muted">None yet — a version is kept here the first time another device\'s changes replace or merge into the plan on this device.</p>'; return; }
+    const fmt = (t) => { const x = new Date(t); return x.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) + " " + String(x.getHours()).padStart(2, "0") + ":" + String(x.getMinutes()).padStart(2, "0"); };
+    host.innerHTML = list.map((b) => '<div class="bkRow"><span class="bkWhen">' + fmt(b.t) + '</span><span class="bkWhat">' + esc(b.reason) + "<small>" + esc(b.summary || "") + '</small></span><button class="btnGhost" data-k="' + b.k + '" data-a="dl">Download</button><button class="btn" data-k="' + b.k + '" data-a="restore">Restore</button></div>').join("");
+    host.querySelectorAll("button[data-k]").forEach((btn) => btn.addEventListener("click", async () => {
+      const k = +btn.dataset.k, meta = list.find((x) => x.k === k), json = await backupJson(k).catch(() => null);
+      if (!json) { toast("That version can't be read any more."); return; }
+      if (btn.dataset.a === "dl") { const blob = new Blob([json], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "plapp-version-" + ymd(new Date(meta.t)) + "-" + String(new Date(meta.t).getHours()).padStart(2, "0") + String(new Date(meta.t).getMinutes()).padStart(2, "0") + ".json"; a.click(); URL.revokeObjectURL(a.href); return; }
+      if (!confirm("Replace your current plan with the version from " + fmt(meta.t) + "?\n(Ctrl+Z undoes this. Your current plan is kept as an earlier version too.)")) return;
+      backupState("Before restoring the version from " + fmt(meta.t), JSON.stringify(state));
+      snap(); state = migrate(JSON.parse(json)); selectedId = null; commit(); renderNote(true); d.close(); dlg.close(); toast("Restored the version from " + fmt(meta.t));
+    }));
+  }
+  $("bkBtn").addEventListener("click", openBackups);
+  $("bkClose").addEventListener("click", () => $("bkDialog").close());
   $("fileInput").addEventListener("change", (e) => {
     const f = e.target.files && e.target.files[0]; if (!f) return;
     const reader = new FileReader();
@@ -4088,12 +4385,24 @@ if (IS_BROWSER) (function () {
   });
   $("clearBtn").addEventListener("click", () => { if (!confirm("Clear all blocks in this week? Task budgets stay.")) return; snap(); state.weeks[state.currentWeek].blocks = []; commit(); dlg.close(); });
 
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && (MV || Date.now() - lastPull > 8000) && !pushTimer) guardedPull().then(() => archiveOldTicked()); });
-  window.addEventListener("focus", () => { if (Date.now() - lastPull > 8000 && !pushTimer) pullRemote(true); });
+  // leaving the page/app: save right away instead of in 0.9 s; coming back: fetch (and merge) before anything else
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") { if (dirty) pushRemote(); return; }
+    if (dirty || MV || Date.now() - lastPull > 8000) guardedPull().then(() => archiveOldTicked());
+  });
+  window.addEventListener("focus", () => { if (dirty) pushRemote(); else if (Date.now() - lastPull > 8000) pullRemote(true); });
+  window.addEventListener("online", () => { if (dirty) pushRemote(); });
+  window.addEventListener("pagehide", () => { if (dirty) pushRemote(); });
+  // while the page is open and idle, look for other devices' changes about once a minute (a tiny request: just the version stamp)
+  setInterval(async () => {
+    if (document.visibilityState !== "visible" || !syncOn() || pushing || dirty || Date.now() - lastPull < 40000) return;
+    if (drag || lineDrag || document.querySelector("dialog[open]")) return;   // don't swap the plan under an open edit box or a drag
+    try { const h = await fetchRow("updated_at"); lastPull = Date.now(); if (h && !sameVer(h.updated_at, syncedAt)) pullRemote(true); } catch (e) {}
+  }, 45000);
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v229"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v231"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -4361,11 +4670,12 @@ if (IS_BROWSER) (function () {
   }
   // On the phone: get the latest data from the cloud BEFORE you can tap anything, so a quick tap can't overwrite newer changes from the computer
   function guardedPull() {
-    if (!MV || !cfg || !cfg.url) return pullRemote(true);
+    const job = () => (dirty && syncOn() ? pushRemote() : pullRemote(true));   // a pending change of ours is merged with the cloud, never pushed over it
+    if (!MV || !cfg || !cfg.url) return job();
     document.body.classList.add("mvBusy");
     let done = false; const fin = () => { if (done) return; done = true; document.body.classList.remove("mvBusy"); };
-    setTimeout(fin, 4000);
-    return pullRemote(true).finally(fin);
+    setTimeout(fin, 4000);   // (since v231 a tap after this can't overwrite anything — it gets merged — so giving up the wait is safe)
+    return job().finally(fin);
   }
   { const rb = $("mvRefresh"); if (rb) rb.addEventListener("click", () => guardedPull()); }
   function weekHabitsFor(weekIdx) {
@@ -4760,6 +5070,7 @@ if (IS_BROWSER) (function () {
   setInterval(() => { if (document.visibilityState === "visible" && !drag && !noteAct) renderBlocks(); }, 15000); // advance now-line, slide plans & drop elapsed plans
   if (viewDay >= 0) $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8; else applyGridZoom(true);   // size week-view cells to the chosen hours-in-view and scroll to that range
   window.addEventListener("resize", () => { if (viewDay < 0) applyGridZoom(false); positionCheckPop(); });
+  if (!syncedAt) { provisionalBase = JSON.stringify(state); dirty = false; }   // first sync ahead: only edits made from here on count as this device's
   guardedPull().then(() => archiveOldTicked());
   if (!cfg) setDot("", "Sync not set up yet — tap ⚙");
 })();
