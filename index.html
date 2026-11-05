@@ -241,13 +241,12 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteClose { width: 22px; height: 22px; border: none; background: transparent; cursor: pointer; font-size: 15px; line-height: 1; color: #8a7c2e; padding: 0; }
 #noteBody { position: absolute; inset: 7px; padding: 5px 7px; overflow: auto; background: #f0e39c; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); font-family: 'Inter', sans-serif; font-size: 12.5px; line-height: 1.45; color: #3a3320; outline: none; -webkit-user-select: text; user-select: text; cursor: text; }
 #noteBody:empty:before { content: 'Quick notes…'; color: #b3a86a; }
-#noteBody ul { margin: 2px 0 2px 18px; padding: 0; }
+#noteBody ul { margin: 2px 0 2px 21px; padding: 0; }
 #noteBody ul ul { margin-left: 16px; }
 /* collapsible bullets: a bullet with sub-bullets shows ▾ (open) / ▸ (folded) instead of the dot; click it to fold */
 #noteBody li { position: relative; }
 #noteBody ul > li.hasKids { list-style: none; }
-#noteBody li.hasKids::before { content: "\25BE"; position: absolute; left: -16px; top: 0; width: 15px; text-align: center; font-size: 12px; color: #8a7c2e; cursor: pointer; user-select: none; -webkit-user-select: none; }
-#noteBody ol > li.hasKids::before { left: -30px; }
+#noteBody li.hasKids::before { content: "\25BE"; position: absolute; left: calc(-1 * var(--gx)); top: 0; width: calc(var(--gx) - var(--tx) + var(--tw)); padding-left: calc(var(--gx) - var(--tx)); box-sizing: border-box; text-align: center; font-size: 12px; color: #8a7c2e; cursor: pointer; user-select: none; -webkit-user-select: none; }
 #noteBody li.hasKids.collapsed::before { content: "\25B8"; color: #3a3320; font-weight: 700; }
 #noteBody li.collapsed > ul, #noteBody li.collapsed > ol, #noteBody li.collapsed + ul, #noteBody li.collapsed + ol { display: none; }
 /* tick boxes (v227): a <li class="chk"> shows an empty box in its own left padding; ticking moves the item to the dump note's "Ticked" section */
@@ -260,12 +259,17 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteBody li.sIt { font-style: italic; } #noteBody li.sIt li:not(.sIt) { font-style: normal; }
 #noteBody li.sHl { background-color: var(--hl); border-radius: 4px; }
 #noteBody li.sHl > ul, #noteBody li.sHl > ol { background-color: var(--nbg, #f0e39c); margin: 0; padding: 2px 0 2px 16px; }
-#noteBody { --hl: rgba(255, 255, 255, 0.62); --gw: 16px; --grip: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='12'%3E%3Cg fill='%237a6e2a' fill-opacity='.65'%3E%3Ccircle cx='2' cy='2' r='1.2'/%3E%3Ccircle cx='6' cy='2' r='1.2'/%3E%3Ccircle cx='2' cy='6' r='1.2'/%3E%3Ccircle cx='6' cy='6' r='1.2'/%3E%3Ccircle cx='2' cy='10' r='1.2'/%3E%3Ccircle cx='6' cy='10' r='1.2'/%3E%3C/g%3E%3C/svg%3E"); }
-/* drag grip ⠿ (v228): drawn as a background image in the line's own right padding (no extra DOM in the editable note); hover-only with a mouse, always shown on touch */
-#noteBody li { padding-right: var(--gw); background-repeat: no-repeat; background-position: right 3px top 0.3em; background-size: 8px 12px; }
-#noteBody li > ul, #noteBody li > ol { margin-right: calc(-1 * var(--gw)); }
-@media (hover: hover) { #noteBody li:hover { background-image: var(--grip); } }
-@media (hover: none) { #noteBody li { background-image: var(--grip); } }
+#noteBody { --hl: rgba(255, 255, 255, 0.62); --grip: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='12'%3E%3Cg fill='%237a6e2a' fill-opacity='.65'%3E%3Ccircle cx='2' cy='2' r='1.2'/%3E%3Ccircle cx='6' cy='2' r='1.2'/%3E%3Ccircle cx='2' cy='6' r='1.2'/%3E%3Ccircle cx='6' cy='6' r='1.2'/%3E%3Ccircle cx='2' cy='10' r='1.2'/%3E%3Ccircle cx='6' cy='10' r='1.2'/%3E%3C/g%3E%3C/svg%3E"); }
+/* drag grip ⠿ (v233: moved from the right end to the LEFT of the bullet / ▾ / tick box). Drawn by the line's ::before (no extra DOM in the editable note):
+   the ::before box reaches from the grip (--gx left of the line) to the line's own left edge, so hover stays continuous; for a ▾ line the same ::before also carries the ▾.
+   --gx = grip's left offset, --gh = grip hit width, --tx / --tw = ▾ left offset / width. Hover-only with a mouse, always shown on touch. gripHit() reads the same variables. */
+#noteBody li { --gx: 27px; --gh: 11px; --tx: 16px; --tw: 15px; --gsz: 8px 12px; --gpos: left 1.5px top 0.3em; }
+#noteBody li.chk:not(.hasKids) { --gx: 13px; }
+#noteBody ol > li { --gx: 40px; --tx: 30px; }
+#noteBody li:not(.hasKids)::before { content: ""; position: absolute; left: calc(-1 * var(--gx)); top: 0; width: calc(var(--gx) - 1px); height: 1.45em; height: 1lh; }
+#noteBody li::before { background-repeat: no-repeat; background-position: var(--gpos); background-size: var(--gsz); }
+@media (hover: hover) { #noteBody li:hover::before { background-image: var(--grip); } }
+@media (hover: none) { #noteBody li::before { background-image: var(--grip); } }
 #noteBody li.ndSrc { opacity: 0.35; }
 #noteBody li.ndSrc + ul, #noteBody li.ndSrc + ol { opacity: 0.35; }
 #noteDrop { position: fixed; height: 0; border-top: 2.5px solid #1f74c9; z-index: 90; pointer-events: none; display: none; }
@@ -349,14 +353,17 @@ body.mvBusy #rbInner > :not(#mvHead) { opacity: 0.5; pointer-events: none; }
 body.mvBusy .mvSync::after { content: "syncing…"; }
 body.mv-note #noteDock #noteBody { height: auto !important; min-height: 55vh; resize: none; font-size: 16px; line-height: 1.5; padding: 10px 12px; }
 body.mv-note #noteBody li.chk { padding-left: 25px; }
-body.mv-note #noteBody { --gw: 30px; }
-body.mv-note #noteBody li { background-position: right 6px top 0.28em; background-size: 11px 16px; }
+body.mv-note #noteDock #noteBody { padding-left: 8px; }
+body.mv-note #noteBody li { --gx: 38px; --gh: 18px; --tx: 20px; --tw: 18px; --gsz: 11px 16px; --gpos: left 3.5px top 0.28em; }
+body.mv-note #noteBody li.chk:not(.hasKids) { --gx: 21px; }
+body.mv-note #noteBody ol > li { --gx: 48px; --tx: 30px; }
 body.mv-note .sPop { width: min(310px, 92vw); }
 body.mv-note .sPop .sPr { width: 34px; height: 34px; font-size: 12px; }
 body.mv-note .sPop .sTg { padding: 7px 12px; font-size: 15px; }
 body.mv-note .sPop .sHint { display: none; }
-body.mv-note #noteBody li.hasKids::before { font-size: 15px; left: -20px; width: 18px; }
+body.mv-note #noteBody li.hasKids::before { font-size: 15px; }
 body.mv-note #noteBody ul { margin-left: 22px; }
+body.mv-note #noteBody ul:not(ul ul, ol ul) { margin-left: 30px; }   /* top level: room for the grip left of the bullet */
 body.mv-note .nTab { font-size: 14px; padding: 5px 12px; max-width: 150px; }
 body.mv-note .nTab.on { padding-top: 7px; }
 body.mv-note #noteTop { gap: 8px; }
@@ -893,7 +900,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
       </div>
       <div id="rbSummary"></div>
       <div class="rbPanel" id="notePanel">
-        <div id="noteTop"><div id="noteTabs"></div><div id="noteTools2"><button data-nc="bullet" title="Bullet list (Ctrl+Shift+8)">&bull;</button><button data-nc="check" title="Tick box (Ctrl+Shift+9)">&#9744;</button><button data-nc="outdent" title="Outdent (Shift+Tab)">&#8676;</button><button data-nc="indent" title="Indent (Tab)">&#8677;</button><button data-nc="up" title="Move line up (Alt+Shift+&#8593;) — or drag the &#10303; grip at the line's right end">&#8593;</button><button data-nc="down" title="Move line down (Alt+Shift+&#8595;)">&#8595;</button><button data-nc="style" title="Priority colour, bold, highlight, italics">Aa</button></div></div>
+        <div id="noteTop"><div id="noteTabs"></div><div id="noteTools2"><button data-nc="bullet" title="Bullet list (Ctrl+Shift+8)">&bull;</button><button data-nc="check" title="Tick box (Ctrl+Shift+9)">&#9744;</button><button data-nc="outdent" title="Outdent (Shift+Tab)">&#8676;</button><button data-nc="indent" title="Indent (Tab)">&#8677;</button><button data-nc="up" title="Move line up (Alt+Shift+&#8593;) — or drag the &#10303; grip left of the line (tap it: bold / highlight / italics / plain)">&#8593;</button><button data-nc="down" title="Move line down (Alt+Shift+&#8595;)">&#8595;</button><button data-nc="style" title="Priority colour, bold, highlight, italics">Aa</button></div></div>
         <div id="noteDock"></div>
         <div id="tickedWrap"></div>
       </div>
@@ -1018,7 +1025,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it, + for a new note). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip at its right end (drag left below the last sub-item to take it a level up), or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I). Undo / redo: <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (or Ctrl+Shift+Z) — with the cursor outside the note; inside the note they undo / redo your typing.</p>
+  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it, + for a new note). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip left of its bullet (drag left below the last sub-item to take it a level up); a tap on the grip cycles that line bold → highlight → italics → plain, or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I). Undo / redo: <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (or Ctrl+Shift+Z) — with the cursor outside the note; inside the note they undo / redo your typing.</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -1110,7 +1117,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v232 */
+/* build v234 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -3576,6 +3583,15 @@ if (IS_BROWSER) (function () {
     }
     decorateNoteLists(); saveNoteHtml(); commit(); paintStylePop();
   }
+  // v234: a tap on a line's ⠿ grip cycles bold → highlight → italics → plain (only that line; priority colour untouched).
+  // A combination set via Aa / Alt-keys moves on from its "highest" member: anything bold → highlight, else highlight → italics, else italics → plain.
+  function cycleLineStyle(li) {
+    const c = li.classList, next = c.contains("sBold") ? "sHl" : c.contains("sHl") ? "sIt" : c.contains("sIt") ? null : "sBold";
+    snap();
+    c.remove("sBold", "sHl", "sIt"); if (next) c.add(next);
+    if (!li.getAttribute("class")) li.removeAttribute("class");
+    decorateNoteLists(); saveNoteHtml(); commit(); paintStylePop();
+  }
   // Enter copies the line's classes (Chrome) — the new, empty line starts plain (a tick box stays a tick box)
   function plainNewLine() {
     const n = noteCaretNode(); if (!n) return;
@@ -3606,7 +3622,7 @@ if (IS_BROWSER) (function () {
     pop.innerHTML = '<div class="sRow"><button class="sPr sPr0" data-p="0" title="No priority colour (Alt+0)">&#8856;</button>' +
       PRIO_COL.map((c, i) => '<button class="sPr" data-p="' + (i + 1) + '" style="background:' + c + '" title="Priority ' + (i + 1) + (i === 0 ? " (highest)" : i === 4 ? " (lowest)" : "") + " — Alt+" + (i + 1) + '">' + (i + 1) + "</button>").join("") + "</div>" +
       '<div class="sRow"><button class="sTg" data-s="bold" title="Bold — Alt+B"><b>B</b></button><button class="sTg" data-s="hl" title="Highlight — Alt+H"><span class="hlSw">ab</span></button><button class="sTg" data-s="it" title="Italics — Alt+I"><i>I</i></button></div>' +
-      '<div class="sHint">For the line(s) at the cursor. Same button again = off. Keys: Alt+1…5 / Alt+0, Alt+B, Alt+H, Alt+I. Move a line: drag its &#10303; grip, or Alt+Shift+&#8593;/&#8595;.</div>';
+      '<div class="sHint">For the line(s) at the cursor. Same button again = off. Keys: Alt+1…5 / Alt+0, Alt+B, Alt+H, Alt+I. Move a line: drag its &#10303; grip, or Alt+Shift+&#8593;/&#8595;. Tap the grip: bold &rarr; highlight &rarr; italics &rarr; plain.</div>';
     $("notePanel").appendChild(pop);
     pop.querySelectorAll("button").forEach((b) => {
       b.addEventListener("pointerdown", (e) => e.preventDefault());   // keep the caret in the note (and the phone keyboard as it is)
@@ -3625,7 +3641,7 @@ if (IS_BROWSER) (function () {
 
   /* ── moving lines (v228) ──
      A "unit" = the line + its sub-items (its inner sub-list, or — Chrome's structure — the sibling list right after it).
-     Drag the ⠿ grip (right end of the line), or Alt+Shift+↑/↓ / the ↑ ↓ buttons for one step within the same level. */
+     Drag the ⠿ grip (left of the bullet), or Alt+Shift+↑/↓ / the ↑ ↓ buttons for one step within the same level. */
   const afterUnit = (li) => (isList(li.nextElementSibling) ? li.nextElementSibling.nextSibling : li.nextSibling);
   function unitOf(li) { const k = noteKidList(li); return { li, sib: k && k.parentElement !== li ? k : null }; }
   function ownerLi(li) {   // the bullet whose sub-list this line sits in
@@ -3655,10 +3671,10 @@ if (IS_BROWSER) (function () {
     const r = li.getBoundingClientRect(), br = $("noteBody").getBoundingClientRect();   // keep the moved line in view
     if (r.top < br.top || r.bottom > br.bottom) li.scrollIntoView({ block: "nearest" });
   }
-  function gripHit(li, x, y) {
+  function gripHit(li, x, y) {   // the ⠿ grip sits --gx left of the line (left of its bullet / ▾ / tick box), first line only
     const r = li.getBoundingClientRect(), cs = getComputedStyle(li);
-    const gw = parseFloat(cs.paddingRight) || 0, lh = parseFloat(cs.lineHeight) || 18;
-    return gw > 0 && x >= r.right - gw - 2 && x <= r.right + 2 && y >= r.top && y < r.top + lh + 3;
+    const gx = parseFloat(cs.getPropertyValue("--gx")) || 0, gh = parseFloat(cs.getPropertyValue("--gh")) || 11, lh = parseFloat(cs.lineHeight) || 18;
+    return gx > 0 && x >= r.left - gx - 2 && x <= r.left - gx + gh && y >= r.top && y < r.top + lh + 3;
   }
   let lineDrag = null;
   function noteScroller() {   // what scrolls while dragging near the edge: the note itself, else the panel/page around it
@@ -3669,7 +3685,7 @@ if (IS_BROWSER) (function () {
   }
   function startLineDrag(li, e) {
     const u = unitOf(li);
-    lineDrag = { u, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, moved: false, drop: null, pid: e.pointerId, raf: 0 };
+    lineDrag = { u, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, moved: false, drop: null, pid: e.pointerId, raf: 0, t0: Date.now() };
     try { $("noteBody").setPointerCapture(e.pointerId); } catch (err) {}
   }
   function inUnit(u, l) { return l === u.li || u.li.contains(l) || (u.sib && u.sib.contains(l)); }
@@ -3734,6 +3750,7 @@ if (IS_BROWSER) (function () {
     cancelAnimationFrame(d.raf); showNoteDrop(null);
     d.u.li.classList.remove("ndSrc"); if (!d.u.li.getAttribute("class")) d.u.li.removeAttribute("class");
     document.body.classList.remove("lineDragging");
+    if (apply && !d.moved && Date.now() - d.t0 < 700) { cycleLineStyle(d.u.li); return; }   // a tap on the grip (no movement) cycles the line's style
     if (!apply || !d.moved || !d.drop) return;
     const t = d.drop.t; let box, ref;
     if (d.drop.mode === "before") { box = t.parentElement; ref = t; }
@@ -3765,7 +3782,7 @@ if (IS_BROWSER) (function () {
       startLineDrag(li, e);
       return;
     }
-    const onFold = li.classList.contains("hasKids") && e.clientX < r.left;   // ▾/▸ sits just left of the line
+    const onFold = li.classList.contains("hasKids") && e.clientX < r.left && e.clientX >= r.left - (parseFloat(getComputedStyle(li).getPropertyValue("--tx")) || 16) - 2;   // ▾/▸ sits just left of the line
     const lh = parseFloat(getComputedStyle(li).lineHeight) || 18;
     const padL = parseFloat(getComputedStyle(li).paddingLeft) || 19;
     const onBox = li.classList.contains("chk") && e.clientX >= r.left && e.clientX < r.left + padL && e.clientY < r.top + lh;   // the box sits in the line's own left padding (first line only)
@@ -4403,7 +4420,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v232"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v234"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
