@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="google" content="notranslate">
 <meta name="robots" content="notranslate">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Plapp</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -241,33 +241,46 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteClose { width: 22px; height: 22px; border: none; background: transparent; cursor: pointer; font-size: 15px; line-height: 1; color: #8a7c2e; padding: 0; }
 #noteBody { position: absolute; inset: 7px; padding: 5px 7px; overflow: auto; background: #f0e39c; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); font-family: 'Inter', sans-serif; font-size: 12.5px; line-height: 1.45; color: #3a3320; outline: none; -webkit-user-select: text; user-select: text; cursor: text; }
 #noteBody:empty:before { content: 'Quick notes…'; color: #b3a86a; }
-#noteBody ul { margin: 2px 0 2px 21px; padding: 0; }
-#noteBody ul ul { margin-left: 16px; }
-/* collapsible bullets: a bullet with sub-bullets shows ▾ (open) / ▸ (folded) instead of the dot; click it to fold */
-#noteBody li { position: relative; }
-#noteBody ul > li.hasKids { list-style: none; }
-#noteBody li.hasKids::before { content: "\25BE"; position: absolute; left: calc(-1 * var(--gx)); top: 0; width: calc(var(--gx) - var(--tx) + var(--tw)); padding-left: calc(var(--gx) - var(--tx)); box-sizing: border-box; text-align: center; font-size: 12px; color: #8a7c2e; cursor: pointer; user-select: none; -webkit-user-select: none; }
-#noteBody li.hasKids.collapsed::before { content: "\25B8"; color: #3a3320; font-weight: 700; }
+/* ── note layout (v236): one column grid for every kind of line ──
+   [grip --gw][fold --fd][marker --mk] text. Every <li> draws its own marker in its left padding (--mk wide), so all text of one level
+   starts on one vertical line whatever the marker (dot, ▾/▸, tick box, number). A sub-list is indented by exactly one marker column,
+   so a child's marker starts where its parent's text starts. ::after = the marker; ::before = the grip (hover) + the fold column,
+   which carries ▾/▸ only for lines whose marker is something else (a tick box or a number) — a plain bullet with sub-items shows ▾/▸
+   as its marker. gripHit() and the click handler read the same three variables. */
+#noteBody { --mk: 19px; --fd: 12px; --gw: 11px; --gsz: 8px 12px; --gpos: left 1px center; --mkfs: 12.5px; --bx: 0.85em; --bxg: 4px; }
+#noteBody ul, #noteBody ol { margin: 2px 0 2px calc(var(--gw) + var(--fd)); padding: 0; }   /* top level: room for grip + fold column */
+#noteBody li > ul, #noteBody li > ol { margin: 0; }                                                     /* inner sub-list (li > ul): the li's padding already indents it */
+#noteBody ul > ul, #noteBody ul > ol, #noteBody ol > ul, #noteBody ol > ol { margin: 0 0 0 var(--mk); }   /* Chrome's sibling sub-list (li + ul) */
+#noteBody li { position: relative; list-style: none; padding-left: var(--mk); }
+#noteBody li::after { content: ""; position: absolute; left: 0; top: 0; width: var(--mk); height: 1.45em; height: 1lh; box-sizing: border-box;
+  background: radial-gradient(circle at 50% 50%, currentColor 0 2.2px, transparent 2.6px); font-size: var(--mkfs); font-weight: 400; font-style: normal; text-align: center; user-select: none; -webkit-user-select: none; }
+#noteBody ul ul li::after, #noteBody ol ul li::after { background: radial-gradient(circle at 50% 50%, transparent 0 1.5px, currentColor 1.8px 2.6px, transparent 3px); }   /* level 2: ring */
+#noteBody ul ul ul li::after, #noteBody ol ul ul li::after { background: linear-gradient(currentColor, currentColor) center / 4.5px 4.5px no-repeat; }   /* level 3+: square */
+#noteBody ol { counter-reset: nli; }
+#noteBody ol > li { counter-increment: nli; }
+#noteBody ol > li:not(.chk)::after { content: counter(nli) "."; background: none; text-align: right; padding-right: 4px; width: calc(var(--mk) + 12px); left: -12px; }
+/* collapsible bullets: a bullet with sub-bullets shows ▾ (open) / ▸ (folded) as its marker; click it to fold */
+#noteBody ul > li.hasKids:not(.chk)::after { content: "\25BE"; background: none; color: #8a7c2e; cursor: pointer; }
+#noteBody ul > li.hasKids.collapsed:not(.chk)::after { content: "\25B8"; color: #3a3320; font-weight: 700; }
 #noteBody li.collapsed > ul, #noteBody li.collapsed > ol, #noteBody li.collapsed + ul, #noteBody li.collapsed + ol { display: none; }
-/* tick boxes (v227): a <li class="chk"> shows an empty box in its own left padding; ticking moves the item to the dump note's "Ticked" section */
-#noteBody li.chk { list-style: none; padding-left: 19px; }
+/* tick boxes (v227): a <li class="chk"> shows an empty box as its marker; ticking moves the item to the dump note's "Ticked" section */
+#noteBody li.chk::after { content: ""; left: calc(var(--mk) - var(--bxg) - var(--bx)); top: 0.3em; top: calc((1lh - var(--bx)) / 2); width: var(--bx); height: var(--bx); border: 1.5px solid #6b6230; border-radius: 3px; background: rgba(255,255,255,0.55); padding: 0; cursor: pointer; }
 /* line styles (v228): priority colour pr1..pr5, sBold = "today", sHl = "discuss with others", sIt = italic — classes on the <li>, so they save and sync with the note.
    Nested lines inside a styled line (Firefox's li>ul structure) are reset so a style never leaks to sub-items. */
 #noteBody li.pr1 { color: #7b1fa2; } #noteBody li.pr2 { color: #1a3a8f; } #noteBody li.pr3 { color: #1f74c9; } #noteBody li.pr4 { color: #1b6630; } #noteBody li.pr5 { color: #2e8b38; }
 #noteBody li:is(.pr1,.pr2,.pr3,.pr4,.pr5) li:not(.pr1,.pr2,.pr3,.pr4,.pr5) { color: #3a3320; }
 #noteBody li.sBold { font-weight: 700; } #noteBody li.sBold li:not(.sBold) { font-weight: 400; }
 #noteBody li.sIt { font-style: italic; } #noteBody li.sIt li:not(.sIt) { font-style: normal; }
-#noteBody li.sHl { background-color: var(--hl); border-radius: 4px; }
-#noteBody li.sHl > ul, #noteBody li.sHl > ol { background-color: var(--nbg, #f0e39c); margin: 0; padding: 2px 0 2px 16px; }
+#noteBody li.sHl { background-color: var(--hl); background-clip: content-box; border-radius: 4px; }
+#noteBody li.sHl > ul, #noteBody li.sHl > ol { background-color: var(--nbg, #f0e39c); }
 #noteBody { --hl: rgba(255, 255, 255, 0.62); --grip: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='12'%3E%3Cg fill='%237a6e2a' fill-opacity='.65'%3E%3Ccircle cx='2' cy='2' r='1.2'/%3E%3Ccircle cx='6' cy='2' r='1.2'/%3E%3Ccircle cx='2' cy='6' r='1.2'/%3E%3Ccircle cx='6' cy='6' r='1.2'/%3E%3Ccircle cx='2' cy='10' r='1.2'/%3E%3Ccircle cx='6' cy='10' r='1.2'/%3E%3C/g%3E%3C/svg%3E"); }
-/* drag grip ⠿ (v233: moved from the right end to the LEFT of the bullet / ▾ / tick box). Drawn by the line's ::before (no extra DOM in the editable note):
-   the ::before box reaches from the grip (--gx left of the line) to the line's own left edge, so hover stays continuous; for a ▾ line the same ::before also carries the ▾.
-   --gx = grip's left offset, --gh = grip hit width, --tx / --tw = ▾ left offset / width. Hover-only with a mouse, always shown on touch. gripHit() reads the same variables. */
-#noteBody li { --gx: 27px; --gh: 11px; --tx: 16px; --tw: 15px; --gsz: 8px 12px; --gpos: left 1.5px top 0.3em; }
-#noteBody li.chk:not(.hasKids) { --gx: 13px; }
-#noteBody ol > li { --gx: 40px; --tx: 30px; }
-#noteBody li:not(.hasKids)::before { content: ""; position: absolute; left: calc(-1 * var(--gx)); top: 0; width: calc(var(--gx) - 1px); height: 1.45em; height: 1lh; }
-#noteBody li::before { background-repeat: no-repeat; background-position: var(--gpos); background-size: var(--gsz); }
+/* drag grip ⠿ + fold column, drawn by the line's ::before (no extra DOM in the editable note). The box reaches from the grip to the line's own
+   left edge, so hover stays continuous. Hover-only with a mouse, always shown on touch. */
+#noteBody li::before { content: ""; position: absolute; left: calc(-1 * (var(--gw) + var(--fd))); top: 0; width: calc(var(--gw) + var(--fd)); height: 1.45em; height: 1lh;
+  padding-left: var(--gw); box-sizing: border-box; text-align: center; font-size: var(--mkfs); font-weight: 400; font-style: normal; color: #8a7c2e; user-select: none; -webkit-user-select: none;
+  background-repeat: no-repeat; background-position: var(--gpos); background-size: var(--gsz); }
+#noteBody li.chk.hasKids::before, #noteBody ol > li.hasKids::before { content: "\25BE"; cursor: pointer; }   /* ▾ for lines whose marker is a box / number */
+#noteBody li.chk.hasKids.collapsed::before, #noteBody ol > li.hasKids.collapsed::before { content: "\25B8"; color: #3a3320; font-weight: 700; }
 @media (hover: hover) { #noteBody li:hover::before { background-image: var(--grip); } }
 @media (hover: none) { #noteBody li::before { background-image: var(--grip); } }
 #noteBody li.ndSrc { opacity: 0.35; }
@@ -287,7 +300,6 @@ body.noteDragging, body.noteDragging * { cursor: grabbing !important; user-selec
 .sPop .sTg { min-width: 38px; }
 .sPop .sHint { font-size: 10.5px; color: var(--ink3); line-height: 1.4; }
 #noteTools2 button[data-nc=style] { font-weight: 800; font-size: 10.5px; }
-#noteBody li.chk::after { content: ""; position: absolute; left: 1px; top: 0.27em; width: 0.9em; height: 0.9em; border: 1.5px solid #6b6230; border-radius: 3px; background: rgba(255,255,255,0.55); box-sizing: border-box; cursor: pointer; }
 /* ── note tabs (v227): several coloured notes ── */
 #notePanel { position: relative; gap: 0; }
 #noteTop { display: flex; flex-direction: column-reverse; align-items: stretch; gap: 3px; }   /* tool buttons on a small row above the tabs; tabs sit right on the note */
@@ -296,10 +308,22 @@ body.noteDragging, body.noteDragging * { cursor: grabbing !important; user-selec
 .nTab { flex-shrink: 0; border: 1px solid rgba(0,0,0,0.12); border-bottom: none; border-radius: 7px 7px 0 0; padding: 2px 8px; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; color: #3a3320; cursor: pointer; opacity: 0.72; max-width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
 .nTab.on { opacity: 1; font-weight: 800; padding-top: 4px; box-shadow: 0 -1px 0 rgba(0,0,0,0.05); }
 .nTab.add { background: var(--panel); color: var(--ink2); opacity: 1; font-weight: 700; }
+.nTab.nTabDrag { position: relative; z-index: 5; opacity: 1; box-shadow: 0 3px 10px rgba(0,0,0,0.25); cursor: grabbing; }
+body.tabDragging, body.tabDragging * { cursor: grabbing !important; }
 #noteTools2 { display: flex; gap: 2px; align-self: flex-end; flex-shrink: 0; }
 #noteTools2 button { width: 22px; height: 20px; border: 1px solid var(--line); background: var(--panel); border-radius: 5px; cursor: pointer; font-size: 11px; line-height: 1; color: var(--ink2); padding: 0; }
 #noteTools2 button:hover { background: var(--panel2); }
 #noteDock #noteBody { border-radius: 0 6px 6px 6px; }
+#noteTools2 button[data-nc=big] { font-size: 12px; }
+body.mv #noteTools2 button[data-nc=big] { display: none; }
+/* v237: the large note over the grid (⤢) */
+body.noteBig #notePanel { position: fixed; z-index: 85; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 14px 44px rgba(0,0,0,0.3); padding: 10px 14px 14px; box-sizing: border-box; display: flex; flex-direction: column; }
+body.noteBig #noteDock { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+body.noteBig #noteDock #noteBody { height: auto !important; flex: 1 1 auto; min-height: 0; resize: none; font-size: 14px; padding: 12px 16px; --mk: 21px; --fd: 13px; --gw: 12px; --mkfs: 14px; --bx: 0.86em; --bxg: 5px; }
+body.noteBig #noteBody li { margin: 2px 0; }
+body.noteBig #tickedWrap { max-height: 28%; overflow: auto; flex-shrink: 0; }
+body.noteBig #noteTools2 button { width: 26px; height: 23px; font-size: 12px; }
+body.noteBig .nTab { font-size: 12px; padding: 3px 10px; max-width: 160px; }
 .nPop { position: absolute; top: 26px; left: 0; z-index: 70; background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 26px rgba(0,0,0,0.2); padding: 10px; width: 230px; font-size: 12px; display: flex; flex-direction: column; gap: 8px; }
 .nPop input[type=text] { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; font: inherit; font-size: 13px; }
 .nPop .nSw { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -331,6 +355,21 @@ body.mv-note .nPop .nMv button { padding: 7px 12px; font-size: 14px; }
 .tkKids { margin-left: 16px; }
 .tkNote { color: var(--ink3); font-size: 10.5px; margin-top: 4px; }
 #archiveDialog { max-width: 560px; }
+#noteHistDialog { max-width: 640px; }
+#noteHistDialog h2 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#noteHistDialog h2 select { font: inherit; font-size: 13px; font-weight: 500; border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; background: var(--panel); }
+#nhSearch { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; font: inherit; font-size: 13px; margin: 0 0 8px; }
+.nhRow { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line2); font-size: 12.5px; }
+.nhRow .nhWhen { color: var(--ink3); font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; width: 108px; font-size: 11.5px; padding-top: 1px; }
+.nhRow .nhTxt { flex: 1; min-width: 0; word-break: break-word; }
+.nhRow .nhPath { color: var(--ink3); }
+.nhRow button, .nhVerBtns button { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 2px 8px; cursor: pointer; font-size: 11.5px; font-family: inherit; color: var(--ink); white-space: nowrap; }
+.nhVer { padding: 4px 0; border-bottom: 1px solid var(--line2); font-size: 12.5px; cursor: pointer; display: flex; gap: 10px; }
+.nhVer:hover, .nhVer.on { background: var(--panel); }
+.nhVer .nhWhen { font-variant-numeric: tabular-nums; width: 128px; flex-shrink: 0; }
+.nhPrev { margin: 6px 0 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: 12.5px; line-height: 1.5; max-height: 40vh; overflow: auto; white-space: pre-wrap; }
+.nhVerBtns { display: flex; gap: 6px; margin-bottom: 4px; }
+.nhMore { border: none; background: none; color: var(--accent); cursor: pointer; font-size: 12px; padding: 4px 0; }
 #bkDialog { max-width: 600px; }
 .bkRow { display: grid; grid-template-columns: auto 1fr auto auto; gap: 4px 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line, #eee); font-size: 12.5px; }
 .bkRow .bkWhen { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
@@ -343,30 +382,42 @@ body.mv #gridWrap, body.mv #rbGrip, body.mv #rbFooter, body.mv #sgPanel, body.mv
 body.mv-note #notePanel, body.mv-habits #mvHabits, body.mv-timer #mvTimer { display: flex !important; }
 body.mv #body { height: 100vh; height: 100dvh; flex-direction: column; overflow: hidden; }
 body.mv #rightBar { width: 100% !important; flex: 1; min-height: 0; height: auto; border: none; display: flex; }
-body.mv #rbInner { padding: calc(6px + env(safe-area-inset-top)) 14px 28px; gap: 12px; }
-body.mv #mvHead { display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 6px 0 8px; border-bottom: 1px solid var(--line); }
+body.mv #rbInner { padding: 0 14px 28px; gap: 12px; }   /* (the top padding lives in the sticky header, so nothing scrolls by above it) */
+body.mv #mvHead { display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 5; background: var(--bg); padding: calc(12px + env(safe-area-inset-top)) 0 8px; border-bottom: 1px solid var(--line); }
 .mvBack { text-decoration: none; color: var(--ink2); font-weight: 700; font-size: 14px; white-space: nowrap; }
 .mvTitle { font-weight: 800; font-size: 18px; flex: 1; }
 .mvSync { font-size: 12px; color: var(--ink3); }
-#mvRefresh { width: 38px; height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: 17px; color: var(--ink2); cursor: pointer; }
+#mvRefresh, .mvHBtn { width: 38px; height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: 17px; color: var(--ink2); cursor: pointer; }
 body.mvBusy #rbInner > :not(#mvHead) { opacity: 0.5; pointer-events: none; }
 body.mvBusy .mvSync::after { content: "syncing…"; }
-body.mv-note #noteDock #noteBody { height: auto !important; min-height: 55vh; resize: none; font-size: 16px; line-height: 1.5; padding: 10px 12px; }
-body.mv-note #noteBody li.chk { padding-left: 25px; }
+body.mv-note #noteDock #noteBody { height: auto !important; min-height: 55vh; resize: none; font-size: 17px; line-height: 1.5; padding: 10px 12px; }
 body.mv-note #noteDock #noteBody { padding-left: 8px; }
-body.mv-note #noteBody li { --gx: 38px; --gh: 18px; --tx: 20px; --tw: 18px; --gsz: 11px 16px; --gpos: left 3.5px top 0.28em; }
-body.mv-note #noteBody li.chk:not(.hasKids) { --gx: 21px; }
-body.mv-note #noteBody ol > li { --gx: 48px; --tx: 30px; }
+body.mv-note #noteBody { --mk: 27px; --fd: 15px; --gw: 19px; --gsz: 11px 16px; --gpos: left 4px center; --mkfs: 17px; --bx: 0.88em; --bxg: 6px; }   /* phone: wider grip / fold / marker columns = bigger targets */
+body.mv-note #noteBody li { margin: 5px 0; }   /* more air between lines → easier to hit the right one */
+@media (pointer: fine) {   /* v237: ?view=note opened with a mouse (a second window next to Plapp on the laptop): laptop-sized text and targets */
+  html body.mv-note #noteDock #noteBody { font-size: 14px; padding: 10px 14px; min-height: calc(100vh - 150px); }
+  html body.mv-note #noteBody { --mk: 21px; --fd: 13px; --gw: 12px; --gsz: 8px 12px; --gpos: left 2px center; --mkfs: 14px; --bx: 0.86em; --bxg: 5px; }
+  html body.mv-note #noteBody li { margin: 2px 0; }
+  html body.mv-note #noteBody ul > li:not(.chk):not(.hasKids)::after { background: radial-gradient(circle at 50% 50%, currentColor 0 2.4px, transparent 2.8px); }
+  html body.mv-note #noteBody ul ul > li:not(.chk):not(.hasKids)::after, html body.mv-note #noteBody ol ul > li:not(.chk):not(.hasKids)::after { background: radial-gradient(circle at 50% 50%, transparent 0 1.6px, currentColor 1.9px 2.8px, transparent 3.2px); }
+  html body.mv-note #noteBody ul ul ul > li:not(.chk):not(.hasKids)::after { background: linear-gradient(currentColor, currentColor) center / 5px 5px no-repeat; }
+  html body.mv-note #noteTools2 button { width: 28px; height: 25px; font-size: 12px; }
+  html body.mv-note .nTab { font-size: 12.5px; padding: 3px 10px; } html body.mv-note .nTab.on { padding-top: 5px; }
+  html body.mv-note .mvTitle { font-size: 16px; }
+  html body.mv-note #mvRefresh, html body.mv-note .mvHBtn { width: 30px; height: 28px; font-size: 14px; }
+  html body.mv-note .sPop .sPr { width: 26px; height: 26px; } html body.mv-note .sPop .sTg { padding: 3px 9px; font-size: 13px; }
+}
+body.mv-note #noteBody li::after { background-size: auto; }
+body.mv-note #noteBody ul > li:not(.chk):not(.hasKids)::after { background: radial-gradient(circle at 50% 50%, currentColor 0 3px, transparent 3.4px); }
+body.mv-note #noteBody ul ul > li:not(.chk):not(.hasKids)::after, body.mv-note #noteBody ol ul > li:not(.chk):not(.hasKids)::after { background: radial-gradient(circle at 50% 50%, transparent 0 2px, currentColor 2.3px 3.3px, transparent 3.7px); }
+body.mv-note #noteBody ul ul ul > li:not(.chk):not(.hasKids)::after { background: linear-gradient(currentColor, currentColor) center / 6px 6px no-repeat; }
 body.mv-note .sPop { width: min(310px, 92vw); }
 body.mv-note .sPop .sPr { width: 34px; height: 34px; font-size: 12px; }
 body.mv-note .sPop .sTg { padding: 7px 12px; font-size: 15px; }
 body.mv-note .sPop .sHint { display: none; }
-body.mv-note #noteBody li.hasKids::before { font-size: 15px; }
-body.mv-note #noteBody ul { margin-left: 22px; }
-body.mv-note #noteBody ul:not(ul ul, ol ul) { margin-left: 30px; }   /* top level: room for the grip left of the bullet */
 body.mv-note .nTab { font-size: 14px; padding: 5px 12px; max-width: 150px; }
 body.mv-note .nTab.on { padding-top: 7px; }
-body.mv-note #noteTop { gap: 8px; }
+body.mv-note #noteTop { gap: 8px; position: sticky; top: var(--mvh, 52px); z-index: 4; background: var(--bg); padding-top: 4px; }   /* tools + tabs stay in reach while you scroll / type far down */
 body.mv-note #noteTools2 { gap: 6px; }
 body.mv-note #noteTools2 button { width: 40px; height: 34px; font-size: 16px; }
 body.mv-note #tickedWrap { font-size: 15px; }
@@ -377,6 +428,8 @@ body.mv-note .nPop { width: min(300px, 90vw); font-size: 14px; }
 .mvDay { flex: 1; text-align: center; font-weight: 800; font-size: 17px; }
 .mvScore { font-size: 13px; font-weight: 700; text-align: center; }
 .mvScore.ok { color: #1f9d55; } .mvScore.bad { color: #d64545; }
+.mvCut { align-self: center; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--ink2); cursor: pointer; }
+.mvCut.cut { color: #b4690e; font-weight: 700; }
 .mvHRow { display: flex; align-items: center; gap: 12px; padding: 5px 0; border-bottom: 1px solid var(--line2); }
 .mvHName { flex: 1; font-size: 16px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .mvCell.stCell { width: 96px; height: 46px; font-size: 16px; border-radius: 9px; flex-shrink: 0; }
@@ -742,6 +795,10 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .stGrid { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; table-layout: fixed; }
 .stGrid th { font-size: 9.5px; font-weight: 700; color: var(--ink3); padding: 1px 0; text-align: center; }
 .stGrid th.stNameH { text-align: left; width: 54px; }
+.stGrid th.stDayH { cursor: pointer; border-radius: 3px; }
+.stGrid th.stDayH:hover { background: var(--panel2); }
+.stGrid th.stDayH.cut { color: #b4690e; }
+.stGrid th.stDayH sup { font-size: 7px; font-weight: 600; margin-left: 1px; vertical-align: 3px; }
 .stGrid td.stName { font-size: 10px; color: var(--ink); padding: 1px 4px 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 54px; }
 .stGrid th.stAvgH { width: 34px; font-size: 8px; }
 .stGrid td.stAvg { font-size: 8px; font-weight: 700; text-align: center; color: var(--ink3); padding: 0 2px; }
@@ -891,7 +948,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
   <aside id="rightBar">
     <div id="rbGrip" title="Drag to change the side-bar width"></div>
     <div id="rbInner">
-      <div id="mvHead"><a class="mvBack" href="./">&lsaquo; Plapp</a><span class="mvTitle"></span><span class="mvSync"></span><button id="mvRefresh" title="Refresh from the cloud">&#10227;</button></div>
+      <div id="mvHead"><a class="mvBack" href="./">&lsaquo; Plapp</a><span class="mvTitle"></span><span class="mvSync"></span><button id="mvUndo" class="mvHBtn" title="Undo">&#8630;</button><button id="mvRedo" class="mvHBtn" title="Redo">&#8631;</button><button id="mvRefresh" title="Refresh from the cloud">&#10227;</button></div>
       <div class="rbPanel" id="mvHabits"></div>
       <div class="rbPanel" id="mvTimer"></div>
       <div class="rbPanel" id="sgPanel"></div>
@@ -899,21 +956,22 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
         <div id="streakBody"></div>
       </div>
       <div id="rbSummary"></div>
-      <div class="rbPanel" id="notePanel">
-        <div id="noteTop"><div id="noteTabs"></div><div id="noteTools2"><button data-nc="bullet" title="Bullet list (Ctrl+Shift+8)">&bull;</button><button data-nc="check" title="Tick box (Ctrl+Shift+9)">&#9744;</button><button data-nc="outdent" title="Outdent (Shift+Tab)">&#8676;</button><button data-nc="indent" title="Indent (Tab)">&#8677;</button><button data-nc="up" title="Move line up (Alt+Shift+&#8593;) — or drag the &#10303; grip left of the line (tap it: bold / highlight / italics / plain)">&#8593;</button><button data-nc="down" title="Move line down (Alt+Shift+&#8595;)">&#8595;</button><button data-nc="style" title="Priority colour, bold, highlight, italics">Aa</button></div></div>
-        <div id="noteDock"></div>
-        <div id="tickedWrap"></div>
-      </div>
       <div class="rbPanel" id="deadlinePanel">
         <div class="rbHd"><button class="rbAdd" id="dlAdd" title="Add deadline">+</button></div>
         <div id="deadlineBody"></div>
+      </div>
+      <div class="rbPanel" id="notePanel">
+        <div id="noteTop"><div id="noteTabs"></div><div id="noteTools2"><button data-nc="bullet" title="Bullet list (Ctrl+Shift+8)">&bull;</button><button data-nc="check" title="Tick box (Ctrl+Shift+9)">&#9744;</button><button data-nc="outdent" title="Outdent (Shift+Tab)">&#8676;</button><button data-nc="indent" title="Indent (Tab)">&#8677;</button><button data-nc="up" title="Move line up (Alt+Shift+&#8593;) — or drag the &#10303; grip left of the line (tap it: bold / highlight / italics / plain)">&#8593;</button><button data-nc="down" title="Move line down (Alt+Shift+&#8595;)">&#8595;</button><button data-nc="style" title="Priority colour, bold, highlight, italics">Aa</button><button data-nc="big" title="Open the note large, over the grid (Esc closes)">&#10530;</button></div></div>
+        <div id="noteDock"></div>
+        <div id="tickedWrap"></div>
       </div>
       <div id="rbFooter">
         <button class="iconBtn" id="settingsBtn" title="Settings">&#9881;</button>
         <div id="syncDot" title="Sync status"></div>
         <div id="rbTools">
           <button class="iconBtn" id="rbReports" title="Reports &amp; activity">📊</button>
-          <button class="iconBtn" id="rbUndo" title="Undo (Ctrl+Z) — redo: Ctrl+Y">&#8630;</button>
+          <button class="iconBtn" id="rbUndo" title="Undo (Ctrl+Z)">&#8630;</button>
+          <button class="iconBtn" id="rbRedo" title="Redo (Ctrl+Y)">&#8631;</button>
         </div>
       </div>
     </div>
@@ -936,6 +994,17 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
   <p class="muted">Kept in this browser whenever another device's changes replaced or were merged into the plan here (newest 30). <b>Restore</b> puts that version back as your current plan (Ctrl+Z undoes it); <b>Download</b> saves it as a file you can Import.</p>
   <div id="bkList"></div>
   <div class="btnRow" style="margin-top:12px;"><button class="btnGhost" id="bkClose">Close</button></div>
+</dialog>
+
+<dialog id="noteHistDialog">
+  <h2>Note history <select id="nhNote" title="Which note"></select></h2>
+  <p class="muted">While you edit, this device keeps a copy of each note about once a minute (and before you delete or cut several lines). Lines that disappeared without being ticked are listed first — <b>Put back</b> adds one to its note again (under its old parent if that is still there). Kept in this browser only: the laptop and the phone each keep their own, up to a year.</p>
+  <h3>Removed lines</h3>
+  <input id="nhSearch" placeholder="Search removed lines…" autocomplete="off">
+  <div id="nhGone"></div>
+  <h3>Earlier versions</h3>
+  <div id="nhVers"></div>
+  <div class="btnRow" style="margin-top:12px;"><button class="btnGhost" id="nhClose">Close</button></div>
 </dialog>
 
 <dialog id="archiveDialog">
@@ -1025,7 +1094,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it, + for a new note). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip left of its bullet (drag left below the last sub-item to take it a level up); a tap on the grip cycles that line bold → highlight → italics → plain, or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I). Undo / redo: <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (or Ctrl+Shift+Z) — with the cursor outside the note; inside the note they undo / redo your typing.</p>
+  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it or see its 🕘 History — removed lines and earlier versions; drag a tab to reorder — on the phone hold it first; + for a new note). ⤢ (right end of the note's toolbar) opens the note large over the grid; Esc, ⤡ or a click outside puts it back. For a second window with just the notes, open this page with <b>?view=note</b> at the end of the address (sticky-note tab icon). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip left of its bullet (drag left below the last sub-item to take it a level up); a tap on the grip cycles that line bold → highlight → italics → plain, or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I). Cut / copy / paste and Tab / Shift+Tab take a folded line's hidden sub-items along. Undo / redo: <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (or Ctrl+Shift+Z) or ↶ ↷ — one history for everything, also inside the note (in a text field you are still typing in, the field's own undo). Habits: tap a day letter above the streak grid to let that day start later (up to 5:00) — time before then counts for the day before.</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -1117,7 +1186,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v234 */
+/* build v237 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1875,6 +1944,7 @@ if (IS_BROWSER) (function () {
   }
   function afterRemote(prevHtml, res, changedHere) {
     if (changedHere) { undoStack.length = 0; redoStack.length = 0; }   // undo must not quietly revert another device's changes
+    (state.notes || []).forEach((n) => nhDirty.add(n.id));   // note history: keep a copy of what arrived (lines deleted elsewhere show up as removed)
     renderAll(); refreshFocusedNote(prevHtml);
     if (res && (changedHere || res.conflicts.length)) { try { if (typeof console !== "undefined") console.log("[sync] merged", res.conflicts.length ? "clashes: " + res.conflicts.join(", ") : "cleanly", res.renumbered ? "(" + res.renumbered + " block ids renumbered)" : ""); } catch (e) {}
       toast(res.conflicts.length ? "Merged changes from another device. " + res.conflicts.length + " item" + (res.conflicts.length > 1 ? "s were" : " was") + " changed on both — kept this device's; the other is under ⚙ → Earlier versions." : "Merged changes from another device."); }
@@ -1957,9 +2027,63 @@ if (IS_BROWSER) (function () {
     if (selectedId != null && !curBlocks().some((b) => b.id === selectedId)) selectedId = null;
     localUpdatedAt = Date.now(); saveLocal(); schedulePush(); renderAll();
   }
-  function snap() { undoStack.push(JSON.stringify(state)); if (undoStack.length > 60) undoStack.shift(); redoStack.length = 0; }   // a new change ends the redo chain
-  function undo() { if (!undoStack.length) { toast("Nothing to undo"); return; } redoStack.push(JSON.stringify(state)); if (redoStack.length > 60) redoStack.shift(); state = migrate(JSON.parse(undoStack.pop())); selectedId = null; commit(); renderNote(true); }
-  function redo() { if (!redoStack.length) { toast("Nothing to redo"); return; } undoStack.push(JSON.stringify(state)); if (undoStack.length > 60) undoStack.shift(); state = migrate(JSON.parse(redoStack.pop())); selectedId = null; commit(); renderNote(true); }
+  /* ── one undo history for everything (v236) ──
+     Entries are either a whole-plan snapshot (a JSON string, taken by snap() before any Plapp-level change: grid, tasks, habits, ticking,
+     moving / styling note lines …) or a light note entry { note, html, caret } = one note's HTML before a burst of typing, a fold, a cut,
+     a paste … (taken by noteSnap()). Ctrl+Z / Ctrl+Y (and the ↶ ↷ buttons) walk this one history wherever the cursor is — also inside the
+     note, where the browser's own undo used to apply and knew nothing about moves, folds or ticks. */
+  const UNDO_MAX = 100;
+  let noteBurst = null;   // { id, kind, t } — the typing burst that the newest note entry belongs to
+  function pushUndo(e) { undoStack.push(e); if (undoStack.length > UNDO_MAX) undoStack.shift(); redoStack.length = 0; }   // a new change ends the redo chain
+  function snap() { pushUndo(JSON.stringify(state)); noteBurst = null; }
+  // before a change to the open note: remember its HTML. Typing of one kind (letters / deletions) within 1.5 s of the last keystroke is one step.
+  function noteSnap(kind, force) {
+    const body = $("noteBody"), cn = curNote(); if (!body || body.dataset.nid !== cn.id) return;
+    const now = Date.now();
+    if (!force && noteBurst && noteBurst.id === cn.id && noteBurst.kind === kind && now - noteBurst.t < 1500) { noteBurst.t = now; return; }
+    pushUndo({ note: cn.id, html: body.innerHTML, caret: noteCaretOffset() });
+    noteBurst = force ? null : { id: cn.id, kind, t: now };
+  }
+  function noteCaretOffset() {   // caret position in the open note as a text offset (survives replacing the note's HTML); -1 if not in the note
+    const body = $("noteBody");
+    try { const sel = getSelection(); if (!sel.rangeCount) return -1; const r = sel.getRangeAt(0); if (!body.contains(r.startContainer)) return -1; const pre = document.createRange(); pre.selectNodeContents(body); pre.setEnd(r.startContainer, r.startOffset); return pre.toString().length; } catch (e) { return -1; }
+  }
+  function setNoteCaretOffset(off) {
+    const body = $("noteBody"); if (off < 0) return;
+    try { const w = document.createTreeWalker(body, NodeFilter.SHOW_TEXT); let n, acc = 0, last = null;
+      while ((n = w.nextNode())) { last = n; if (acc + n.length >= off) { const r = document.createRange(); r.setStart(n, off - acc); r.collapse(true); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); revealNoteCaret(); return; } acc += n.length; }
+      if (last) placeCaret(last.parentElement || body, true); } catch (e) {}
+  }
+  function stepHistory(from, to, label) {
+    for (;;) {
+      if (!from.length) { toast("Nothing to " + label); return; }
+      const e = from.pop(), body = $("noteBody"), hadFocus = document.activeElement === body, off = hadFocus ? noteCaretOffset() : -1;
+      if (hadFocus && body.dataset.nid === curNote().id) curNote().html = body.innerHTML;   // the open note's latest typing is part of "now"
+      if (typeof e === "string") {   // whole-plan snapshot
+        to.push(JSON.stringify(state)); if (to.length > UNDO_MAX) to.shift();
+        state = migrate(JSON.parse(e)); selectedId = null; noteBurst = null; commit(); renderNote(true);
+        if (hadFocus) { body.focus(); setNoteCaretOffset(off); }
+      } else {                       // one note's HTML
+        const n = (state.notes || []).find((x) => x.id === e.note); if (!n) continue;   // that note was deleted since → skip this step
+        const open = curNote().id === n.id && body.dataset.nid === n.id;
+        to.push({ note: n.id, html: open ? body.innerHTML : n.html, caret: open && hadFocus ? off : -1 }); if (to.length > UNDO_MAX) to.shift();
+        n.html = e.html; noteBurst = null;
+        if (!open) { mvLeftmost = false; ui.activeNote = n.id; saveUI(); }   // show the note the step happened in
+        renderNote(true); localUpdatedAt = Date.now(); saveLocal(); schedulePush();
+        if (hadFocus || e.caret >= 0) { if (hadFocus) body.focus(); if (document.activeElement === body) setNoteCaretOffset(e.caret >= 0 ? e.caret : off); }
+      }
+      refreshOpenDialogs(); return;
+    }
+  }
+  function undo() { stepHistory(undoStack, redoStack, "undo"); }
+  function redo() { stepHistory(redoStack, undoStack, "redo"); }
+  function refreshOpenDialogs() {   // an undo/redo while a dialog is open: show its new state
+    try {
+      if ($("masterplanDialog").open) renderBudgets();
+      if ($("habitsDialog").open) { renderHabitsTable(); renderHistory(); renderChangelog(); }
+      if ($("reportsDialog").open) renderReports();
+    } catch (e) {}
+  }
 
   // Yes/Cancel confirmation popup. Falls back to a plain window.confirm if the dialog element isn't available.
   function confirmBox(msg, cb) {
@@ -2027,8 +2151,19 @@ if (IS_BROWSER) (function () {
     const rbe = $("rbElapsed"); if (rbe) rbe.textContent = fmtClock(Date.now() - state.timer.startMs);
   }
   let _favColor = "";
+  function drawNoteIcon(ctx) {   // v237: favicon of the ?view=note window — a little yellow sticky note with a folded corner
+    ctx.fillStyle = "#f2cf3a"; ctx.beginPath(); ctx.moveTo(8, 6); ctx.lineTo(56, 6); ctx.lineTo(56, 42); ctx.lineTo(42, 58); ctx.lineTo(8, 58); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#c9a516"; ctx.beginPath(); ctx.moveTo(56, 42); ctx.lineTo(42, 42); ctx.lineTo(42, 58); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "#7a6512"; ctx.lineWidth = 4; ctx.lineCap = "round";
+    [19, 30, 41].forEach((y, i) => { ctx.beginPath(); ctx.moveTo(16, y); ctx.lineTo(i === 2 ? 34 : 48, y); ctx.stroke(); });
+  }
   function updateFavicon() {
     try {
+      if (MV === "note") {
+        if (_favColor === "note") return; _favColor = "note";
+        let link = $("favicon"); if (!link) { link = document.createElement("link"); link.id = "favicon"; link.rel = "icon"; document.head.appendChild(link); }
+        const cv = document.createElement("canvas"); cv.width = 64; cv.height = 64; drawNoteIcon(cv.getContext("2d")); link.href = cv.toDataURL("image/png"); return;
+      }
       const timing = !!state.timer; let color = "";
       if (timing) { const c = state.categories.find((x) => x.id === state.timer.catId); color = c ? c.color : "#2b6cb0"; }
       const key = timing ? color : "idle"; if (key === _favColor) return; _favColor = key;
@@ -2169,7 +2304,7 @@ if (IS_BROWSER) (function () {
     el.classList.toggle("open", !!nt.open);
     const cn = curNote();
     body.style.background = noteBg(cn.color); body.style.setProperty("--nbg", noteBg(cn.color));
-    if (force || document.activeElement !== body || body.dataset.nid !== cn.id) { body.innerHTML = cn.html || ""; body.dataset.nid = cn.id; decorateNoteLists(); }
+    if (force || document.activeElement !== body || body.dataset.nid !== cn.id) { body.innerHTML = cn.html || ""; body.dataset.nid = cn.id; decorateNoteLists(); if (cleanNoteStyles(body)) { cn.html = body.innerHTML; saveNoteSoon(); } }   // v235: old pasted-in layout junk is removed once, and saved
     renderNoteTabs(); renderTicked();
   }
 
@@ -2342,7 +2477,8 @@ if (IS_BROWSER) (function () {
     { const rs = $("rbSummary"); if (rs) rs.innerHTML = '<div class="poolSummary"><div class="sumSec">' + buildTable() + "</div></div>"; }   // summary table lives in the right bar, just below the streak tracker
     // Mails & Growth today → top-bar fields (in each task's own colour); the two rows were dropped from the summary table above
     { const mCat = mailCats.find((c) => !c.parent) || mailCats[0], gCat = growthCats.find((c) => !c.parent) || growthCats[0];
-      const mVal = sumOf(mailCats, (c) => trackToday(c.id)), gVal = sumOf(growthCats, (c) => trackToday(c.id));
+      const hToday = habitToday(), habitDaySum = (cats) => { const ids = new Set(cats.map((c) => c.id)); let t = 0; for (const w of state.weeks) for (const b of (w.blocks || [])) if (b.kind === "actual" && b.endMs != null && ids.has(b.catId) && habitDayOf(b) === hToday) t += (b.endMs - b.startMs) / 3600000; return t; };
+      const mVal = habitDaySum(mailCats), gVal = habitDaySum(growthCats);   // the habit day: after midnight but before the day's start time it's still yesterday's totals
       const mEl = $("tbMails"), gEl = $("tbGrowth");
       if (mEl) { mEl.style.color = "#111"; mEl.innerHTML = 'Mails <b style="margin-left:5px;color:' + (mCat ? mCat.color : "#d6336c") + '">' + (todayInWeek ? fmtHM(mVal) : "—") + "</b>"; }
       if (gEl) { gEl.style.color = "#111"; gEl.innerHTML = 'Growth <b style="margin-left:5px;color:' + (gCat ? gCat.color : "#5aa2e6") + '">' + (todayInWeek ? fmtHM(gVal) : "—") + "</b>"; } }
@@ -3023,7 +3159,7 @@ if (IS_BROWSER) (function () {
   { const rb = $("reportsBtn"); if (rb) rb.addEventListener("click", () => { renderReports(); $("reportsDialog").showModal(); }); }   // top-bar button removed; launched from the pool buttons box
   // right-bar footer + scheduler-row launchers
   { const b = $("rbReports"); if (b) b.addEventListener("click", () => { renderReports(); $("reportsDialog").showModal(); }); }
-  { const b = $("rbUndo"); if (b) b.addEventListener("click", () => undo()); }
+  [["rbUndo", undo], ["rbRedo", redo], ["mvUndo", undo], ["mvRedo", redo]].forEach(([id, fn]) => { const b = $(id); if (!b) return; b.addEventListener("pointerdown", (e) => e.preventDefault()); b.addEventListener("click", () => fn()); });   // pointerdown: keep the caret (and the phone keyboard) where it is
   // A / ↑ ordering buttons are created & wired inside renderPool (they now live at the bottom of the pool)
   { const b = $("mpTopBtn"); if (b) b.addEventListener("click", () => { mpDlg.showModal(); renderBudgets(); }); }
   { const tg = $("tbToggle"); if (tg) tg.addEventListener("click", () => { const p = $("pool"); const open = p.classList.toggle("open"); const gw = $("gridWrap"); if (gw) gw.classList.toggle("poolOpen", open); tg.classList.toggle("on", open); tg.innerHTML = open ? "&#10005;" : "&#9776;"; }); }   // ☰ / ✕ shows-hides the task boxes; open → grid shifts right so Monday isn't covered
@@ -3234,13 +3370,21 @@ if (IS_BROWSER) (function () {
   $("weekNext").onclick = () => { if (viewDay >= 0) { stepDay(1); return; } if (state.currentWeek < state.weeks.length - 1) { state.currentWeek++; selectedId = null; commit(); } else { snap(); state.weeks.push({ id: "w" + Date.now(), blocks: [], budgets: {} }); state.currentWeek = state.weeks.length - 1; selectedId = null; commit(); toast("Added Week " + state.weeks.length); } };
 
   /* ── undo / keys ── */
-  // Undo button removed from the top bar — Ctrl/Cmd+Z still undoes; Ctrl+Y (or Ctrl/Cmd+Shift+Z) redoes
+  // Ctrl/Cmd+Z undoes, Ctrl+Y (or Ctrl/Cmd+Shift+Z) redoes — everywhere (v236): the note handles its own keys with the same history;
+  // in a text field you are still editing, the field's own undo applies; once the field's change is in (or you haven't typed in it), Plapp's.
+  function undoKey(e) { const k = (e.key || "").toLowerCase(), mod = (e.ctrlKey || e.metaKey) && !e.altKey;   // e.key, not e.code: on Swiss/German QWERTZ the Y and Z keys are swapped
+    return !mod ? null : (k === "z" && !e.shiftKey) ? "undo" : ((k === "y" && !e.shiftKey) || (k === "z" && e.shiftKey)) ? "redo" : null; }
+  const isTextField = (t) => t && (t.tagName === "TEXTAREA" || (t.tagName === "INPUT" && /^(text|search|url|tel|email|password|number|)$/i.test(t.getAttribute("type") || "")));
+  document.addEventListener("focusin", (e) => { if (isTextField(e.target)) e.target._v0 = e.target.value; });
+  document.addEventListener("change", (e) => { if (isTextField(e.target)) e.target._v0 = e.target.value; }, true);
   document.addEventListener("keydown", (e) => {
-    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable)) return;
-    { const k = (e.key || "").toLowerCase();   // e.key, not e.code: on Swiss/German QWERTZ the Y and Z keys are swapped
-      if ((e.ctrlKey || e.metaKey) && !e.altKey && ((k === "y" && !e.shiftKey) || (k === "z" && e.shiftKey))) { e.preventDefault(); redo(); return; }
-      if ((e.ctrlKey || e.metaKey) && k === "z") { e.preventDefault(); undo(); return; } }
-    if (e.key === "Escape") { armedCat = null; selectedId = null; renderAll(); }
+    const t = e.target, uk = undoKey(e);
+    if (t && t.isContentEditable) return;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) {
+      if (!uk || (isTextField(t) && t.value !== t._v0)) return;   // mid-edit in a field → its own undo
+    }
+    if (uk) { e.preventDefault(); if (uk === "undo") undo(); else redo(); return; }
+    if (e.key === "Escape") { if (noteBig) { setNoteBig(false); return; } armedCat = null; selectedId = null; renderAll(); }
     if (e.key === "ArrowLeft" && !e.ctrlKey && !e.metaKey) $("weekPrev").click();
     if (e.key === "ArrowRight" && !e.ctrlKey && !e.metaKey) { if (state.currentWeek < state.weeks.length - 1) $("weekNext").click(); }
   });
@@ -3249,12 +3393,13 @@ if (IS_BROWSER) (function () {
   function noteCmd(cmd) {
     const nb = $("noteBody"), sel0 = window.getSelection(), keep = sel0 && sel0.rangeCount && nb.contains(sel0.getRangeAt(0).startContainer) ? sel0.getRangeAt(0).cloneRange() : null;
     if (document.activeElement !== nb) { nb.focus(); if (keep) { const sl = window.getSelection(); sl.removeAllRanges(); sl.addRange(keep); } }
+    noteSnap("cmd", true);
     if (cmd === "bold") document.execCommand("bold");
     else if (cmd === "italic") document.execCommand("italic");
     else if (cmd === "pink") document.execCommand("foreColor", false, PINK);
     else if (cmd === "bullet") document.execCommand("insertUnorderedList");
-    else if (cmd === "indent") document.execCommand("indent");
-    else if (cmd === "outdent") document.execCommand("outdent");
+    else if (cmd === "indent") { if (!indentLines(1)) document.execCommand("indent"); }
+    else if (cmd === "outdent") { if (!indentLines(-1)) document.execCommand("outdent"); }
     else if (cmd === "check") toggleCheckLines();
     decorateNoteLists(); revealNoteCaret();
     saveNoteHtml();
@@ -3271,20 +3416,87 @@ if (IS_BROWSER) (function () {
     return state.notes.find((n) => n.id === ui.activeNote) || state.notes[0];
   }
   function dumpNote() { return (state.notes || []).find((n) => n.id === state.dumpNote) || curNote(); }
-  function saveNoteHtml() { curNote().html = $("noteBody").innerHTML; saveNoteSoon(); }
+  /* v235: copy/paste (and Enter after a pasted line) makes Chrome bake the note's own layout into inline styles: in v232/v233 the hover grip
+     (background-image → shows as tiled dots since v233), since v233 the grip variables (--gx…, which would freeze laptop sizes on the phone),
+     plus paddings / list-style. None of these is ever meant inline in a note, so strip them; colours, weights etc. stay (see unwrapLineStyleSpans).
+     Only properties are removed (no nodes), so the caret is unaffected. Returns true if anything changed. */
+  const NOTE_JUNK_CSS = /^(--|background-(image|repeat|position|size|attachment|origin|clip)|padding|list-style|position$|box-sizing$|-webkit-tap-highlight-color$|top$|left$|right$|bottom$)/;
+  function cleanNoteStyles(root) {
+    let changed = false;
+    root.querySelectorAll("[style]").forEach((el) => {
+      const st = el.style, kill = [];
+      for (let i = 0; i < st.length; i++) if (NOTE_JUNK_CSS.test(st[i])) kill.push(st[i]);
+      kill.forEach((k) => st.removeProperty(k));
+      if (kill.length) changed = true;
+      if (!st.length) el.removeAttribute("style");
+    });
+    return changed;
+  }
+  function saveNoteHtml() { cleanNoteStyles($("noteBody")); const cn = curNote(); cn.html = $("noteBody").innerHTML; nhDirty.add(cn.id); saveNoteSoon(); }
   function switchNote(id) { mvLeftmost = false; if (document.activeElement === $("noteBody")) saveNoteHtml(); ui.activeNote = id; saveUI(); closeNotePop(); renderNote(true); }
   function renderNoteTabs() {
     const host = $("noteTabs"); if (!host) return;
     const cn = curNote();
     host.innerHTML = state.notes.map((n) => '<div class="nTab' + (n.id === cn.id ? " on" : "") + '" data-nid="' + n.id + '" style="background:' + (n.id === cn.id ? noteBg(n.color) : noteTabCol(n.color)) + '" title="' + esc(n.name || "Note") + (n.id === cn.id ? " — click again to rename / recolour / delete" : "") + '">' + esc(n.name || "Note") + "</div>").join("") +
       '<div class="nTab add" title="New note">+</div>';
-    host.querySelectorAll(".nTab[data-nid]").forEach((t) => t.addEventListener("click", () => { if (t.dataset.nid === curNote().id) openNotePop(); else switchNote(t.dataset.nid); }));
+    host.querySelectorAll(".nTab[data-nid]").forEach((t) => {
+      t.addEventListener("click", () => { if (tabJustDragged) return; if (t.dataset.nid === curNote().id) openNotePop(); else switchNote(t.dataset.nid); });
+      t.addEventListener("pointerdown", (e) => startTabDrag(t, e));
+      t.addEventListener("contextmenu", (e) => { if (tabDrag) e.preventDefault(); });
+    });
     host.querySelector(".nTab.add").addEventListener("click", () => {
       snap(); const used = new Set(state.notes.map((n) => n.color)); const color = Object.keys(NOTE_COLORS).find((c) => !used.has(c)) || "yellow";
       const n = { id: "n" + Date.now().toString(36), name: "Note " + (state.notes.length + 1), color, html: "" };
       state.notes.push(n); mvLeftmost = false; ui.activeNote = n.id; saveUI(); commit(); renderNote(true); openNotePop(true);
     });
   }
+  /* v236: drag a tab left / right to reorder the notes (mouse: just drag; touch: hold ~⅓ s, then drag — a quick swipe still scrolls the tabs).
+     The tab follows the pointer and the others make room; the new order is state.notes' order (synced, undoable). */
+  let tabDrag = null, tabJustDragged = false;
+  function startTabDrag(t, e) {
+    if (e.button > 0) return;
+    const st = { t, sx: e.clientX, sy: e.clientY, x: e.clientX, on: false, pid: e.pointerId, touch: e.pointerType !== "mouse", timer: null, order0: Array.from(t.parentElement.querySelectorAll(".nTab[data-nid]")).map((x) => x.dataset.nid) };
+    tabDrag = st;
+    if (st.touch) st.timer = setTimeout(() => { if (tabDrag === st) beginTabDrag(st); }, 330);
+  }
+  function beginTabDrag(st) {
+    st.on = true; st.grab = st.x - st.t.getBoundingClientRect().left; closeNotePop();
+    st.t.classList.add("nTabDrag"); document.body.classList.add("tabDragging");
+    try { st.t.setPointerCapture(st.pid); } catch (er) {}
+    if (navigator.vibrate && st.touch) { try { navigator.vibrate(15); } catch (er) {} }
+  }
+  function moveTabDrag(x) {
+    const st = tabDrag, host = st.t.parentElement; st.x = x;
+    const others = Array.from(host.querySelectorAll(".nTab[data-nid]")).filter((o) => o !== st.t);
+    const before = others.find((o) => { const r = o.getBoundingClientRect(); return x < r.left + r.width / 2; }) || host.querySelector(".nTab.add");
+    if (before !== st.t.nextElementSibling) host.insertBefore(st.t, before);
+    st.t.style.transform = "";
+    const r = st.t.getBoundingClientRect(); st.t.style.transform = "translateX(" + Math.round(x - st.grab - r.left) + "px)";
+    const hr = host.getBoundingClientRect(); if (x < hr.left + 24) host.scrollLeft -= 8; else if (x > hr.right - 24) host.scrollLeft += 8;   // the tab strip scrolls when it overflows
+  }
+  function endTabDrag(apply) {
+    const st = tabDrag; tabDrag = null; if (!st) return;
+    clearTimeout(st.timer);
+    if (!st.on) return;
+    st.t.classList.remove("nTabDrag"); st.t.style.transform = ""; document.body.classList.remove("tabDragging");
+    tabJustDragged = true; setTimeout(() => { tabJustDragged = false; }, 0);   // the click that ends a drag doesn't open / switch the tab
+    const order = Array.from(st.t.parentElement.querySelectorAll(".nTab[data-nid]")).map((x) => x.dataset.nid);
+    if (!apply || order.join() === st.order0.join()) { renderNoteTabs(); return; }
+    snap(); state.notes.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)); mvLeftmost = false; commit();
+  }
+  document.addEventListener("pointermove", (e) => {
+    const st = tabDrag; if (!st || e.pointerId !== st.pid) return;
+    if (!st.on) {
+      const dx = e.clientX - st.sx, dy = e.clientY - st.sy;
+      if (st.touch) { if (Math.abs(dx) + Math.abs(dy) > 8) endTabDrag(false); return; }   // moved before the hold → it's a scroll, not a drag
+      if (Math.abs(dx) < 5) return;
+      beginTabDrag(st);
+    }
+    e.preventDefault(); moveTabDrag(e.clientX);
+  });
+  document.addEventListener("pointerup", (e) => { if (tabDrag && e.pointerId === tabDrag.pid) endTabDrag(true); });
+  document.addEventListener("pointercancel", (e) => { if (tabDrag && e.pointerId === tabDrag.pid) endTabDrag(false); });
+  document.addEventListener("touchmove", (e) => { if (tabDrag && tabDrag.on) e.preventDefault(); }, { passive: false });
   function closeNotePop() { const p = document.querySelector(".nPop"); if (p) p.remove(); }
   function openNotePop(focusName) {
     closeNotePop();
@@ -3293,7 +3505,7 @@ if (IS_BROWSER) (function () {
       '<div class="nSw">' + Object.keys(NOTE_COLORS).map((c) => '<button data-c="' + c + '" class="' + (c === n.color ? "on" : "") + '" style="background:' + noteTabCol(c) + '" title="' + c + '"></button>').join("") + "</div>" +
       '<div class="nMv"><span>Position</span><button data-m="first"' + (state.notes[0] === n ? " disabled" : "") + ' title="Make it the leftmost tab (the phone opens this one)">&#8676; first</button><button data-m="-1"' + (state.notes[0] === n ? " disabled" : "") + ' title="One to the left">&#9664;</button><button data-m="1"' + (state.notes[state.notes.length - 1] === n ? " disabled" : "") + ' title="One to the right">&#9654;</button></div>' +
       '<label><input type="checkbox" class="nDump"' + (state.dumpNote === n.id ? " checked disabled" : "") + '> Dump note — collects all ticked items</label>' +
-      '<div class="nPopBtns"><button class="nDel"' + (state.notes.length < 2 ? " disabled" : "") + '>Delete note</button><button class="nOk">Done</button></div>';
+      '<div class="nPopBtns"><button class="nDel"' + (state.notes.length < 2 ? " disabled" : "") + '>Delete note</button><button class="nHist" title="Earlier versions and removed lines of this note">&#128339; History</button><button class="nOk">Done</button></div>';
     $("notePanel").appendChild(pop);
     const nm = pop.querySelector(".nName");
     nm.addEventListener("change", () => { snap(); n.name = nm.value.trim() || "Note"; commit(); });
@@ -3306,10 +3518,12 @@ if (IS_BROWSER) (function () {
       const t = document.querySelector('.nTab[data-nid="' + n.id + '"]'); if (t) t.scrollIntoView({ block: "nearest", inline: "nearest" });
     }));
     pop.querySelector(".nDump").addEventListener("change", (e) => { if (e.target.checked) { snap(); state.dumpNote = n.id; commit(); renderNote(true); openNotePop(); } });
+    pop.querySelector(".nHist").addEventListener("click", () => { closeNotePop(); openNoteHistory(n.id); });
     pop.querySelector(".nOk").addEventListener("click", () => { if (nm.value.trim() && nm.value.trim() !== n.name) { snap(); n.name = nm.value.trim(); commit(); } closeNotePop(); });
     pop.querySelector(".nDel").addEventListener("click", () => {
       if (state.notes.length < 2) return;
       if (!confirm('Delete the note "' + (n.name || "Note") + '" and everything in it?')) return;
+      nhAdd(n.id, n.name, "", "Note deleted");   // its lines go to the history's removed lines
       snap(); state.notes = state.notes.filter((x) => x.id !== n.id);
       if (state.dumpNote === n.id) state.dumpNote = state.notes[0].id;   // the dump role moves to the first remaining note
       ui.activeNote = state.notes[0].id; saveUI(); closeNotePop(); commit(); renderNote(true);
@@ -3323,9 +3537,147 @@ if (IS_BROWSER) (function () {
       const c = b.dataset.nc;
       if (c === "up" || c === "down") moveNoteLine(c === "up" ? -1 : 1);
       else if (c === "style") toggleStylePop();
+      else if (c === "big") setNoteBig(!noteBig);
       else noteCmd(c);
     });
   });
+
+  /* ── note history (v236): a safety net for everything written in a note ──
+     IndexedDB "plapp-notehist" on this device: "snaps" = copies of a note's HTML (taken about once a minute while it changes, before a cut /
+     multi-line delete, after another device's changes arrive, before a note is deleted); "gone" = lines that were in one copy and missing from
+     the next — unless they were ticked, are still in some note (moved), or were merely edited (≥ 75% alike a remaining line). Thinning keeps
+     every copy for 2 days, the last per hour for 30 days, the last per day for a year. Nothing of this is synced (it would bloat the plan). */
+  const nhDirty = new Set(), nhLast = {}, nhPruned = {};
+  function nhDb() { return new Promise((ok, no) => { if (typeof indexedDB === "undefined") return no(new Error("no IndexedDB")); const rq = indexedDB.open("plapp-notehist", 1); rq.onupgradeneeded = () => { const db = rq.result; db.createObjectStore("snaps", { keyPath: "k" }).createIndex("note", "note"); db.createObjectStore("gone", { keyPath: "k" }).createIndex("note", "note"); }; rq.onsuccess = () => ok(rq.result); rq.onerror = () => no(rq.error); }); }
+  const nhReq = (rq) => new Promise((ok, no) => { rq.onsuccess = () => ok(rq.result); rq.onerror = () => no(rq.error); });
+  let nhSeq = 0; const nhKey = () => Date.now() * 1000 + (nhSeq++ % 1000);
+  function noteLines(html) {   // [{ text, path, li }] of a note's HTML (path = the parent line's text)
+    const d = document.createElement("div"); d.innerHTML = html || "";
+    return Array.from(d.querySelectorAll("li")).map((li) => { const o = ownerLi(li), c = li.cloneNode(true); c.querySelectorAll("ul,ol").forEach((x) => x.remove()); c.classList.remove("collapsed", "hasKids", "ndSrc"); c.removeAttribute("data-fold"); return { text: ownText(li), path: o ? ownText(o) : "", li: c.outerHTML }; }).filter((x) => x.text);
+  }
+  function nhAlike(a, b) {   // Dice coefficient on character pairs
+    if (a === b) return 1; if (a.length < 2 || b.length < 2) return 0;
+    const m = new Map(); for (let i = 0; i < a.length - 1; i++) { const g = a.substr(i, 2); m.set(g, (m.get(g) || 0) + 1); }
+    let hit = 0; for (let i = 0; i < b.length - 1; i++) { const g = b.substr(i, 2), c = m.get(g); if (c) { hit++; m.set(g, c - 1); } }
+    return 2 * hit / (a.length + b.length - 2);
+  }
+  function nhStillKnown() {   // texts that are not "lost": in any note right now, or ticked
+    const s = new Set();
+    (state.notes || []).forEach((n) => { const html = n.id === curNote().id && $("noteBody").dataset.nid === n.id ? $("noteBody").innerHTML : n.html; noteLines(html).forEach((l) => s.add(l.text.toLowerCase())); });
+    (state.ticked || []).forEach((t) => noteLines((t.li || "") + (t.sib || "")).forEach((l) => s.add(l.text.toLowerCase())));
+    return s;
+  }
+  async function nhAdd(noteId, name, html, why) {
+    try {
+      const db = await nhDb();
+      const last = await new Promise((ok) => { const c = db.transaction("snaps").objectStore("snaps").index("note").openCursor(IDBKeyRange.only(noteId), "prev"); c.onsuccess = () => ok(c.result ? c.result.value : null); c.onerror = () => ok(null); });
+      nhLast[noteId] = Date.now();
+      if (last && last.html === html) return;
+      const now = Date.now(), tx = db.transaction(["snaps", "gone"], "readwrite");
+      if (html) tx.objectStore("snaps").put({ k: nhKey(), t: now, note: noteId, name: name || "", html, n: noteLines(html).length, why: why || "" });
+      if (last) {
+        const nowLines = noteLines(html), known = nhStillKnown(), texts = nowLines.map((l) => l.text.toLowerCase());
+        for (const l of noteLines(last.html)) {
+          const t = l.text.toLowerCase();
+          if (known.has(t) || texts.some((x) => x.indexOf(t) >= 0 || nhAlike(x, t) >= 0.75)) continue;   // still there / ticked / moved / just edited
+          tx.objectStore("gone").put({ k: nhKey(), t: now, seen: last.t, note: noteId, name: name || last.name || "", text: l.text, path: l.path, li: l.li, why: why || "" });
+        }
+      }
+      await new Promise((ok) => { tx.oncomplete = ok; tx.onerror = ok; tx.onabort = ok; });
+      if (!nhPruned[noteId] || now - nhPruned[noteId] > 3600000) { nhPruned[noteId] = now; nhPrune(db, noteId); }
+    } catch (e) {}
+  }
+  async function nhPrune(db, noteId) {
+    try {
+      const all = await nhReq(db.transaction("snaps").objectStore("snaps").index("note").getAll(IDBKeyRange.only(noteId)));
+      all.sort((a, b) => b.t - a.t);
+      const now = Date.now(), seen = new Set(), drop = [];
+      for (const x of all) {
+        const age = now - x.t; if (age < 2 * 86400000) continue;
+        const d = new Date(x.t), bucket = age < 30 * 86400000 ? "h" + ymd(d) + d.getHours() : "d" + ymd(d);
+        if (age > 366 * 86400000 || seen.has(bucket)) drop.push(x.k); else seen.add(bucket);   // newest first → the newest of each bucket stays
+      }
+      const g = (await nhReq(db.transaction("gone").objectStore("gone").index("note").getAll(IDBKeyRange.only(noteId)))).filter((x) => now - x.t > 366 * 86400000).map((x) => x.k);
+      if (!drop.length && !g.length) return;
+      const tx = db.transaction(["snaps", "gone"], "readwrite"); drop.forEach((k) => tx.objectStore("snaps").delete(k)); g.forEach((k) => tx.objectStore("gone").delete(k));
+    } catch (e) {}
+  }
+  function nhNoteHtml(n) { const body = $("noteBody"); return n.id === curNote().id && body.dataset.nid === n.id ? body.innerHTML : n.html; }
+  function nhCapture(force, why) {   // copy every changed note whose last copy is ≥ 60 s old (force: right now)
+    const now = Date.now();
+    for (const id of Array.from(nhDirty)) {
+      const n = (state.notes || []).find((x) => x.id === id); if (!n) { nhDirty.delete(id); continue; }
+      if (!force && nhLast[id] && now - nhLast[id] < 60000) continue;
+      nhDirty.delete(id); nhAdd(n.id, n.name, nhNoteHtml(n), why);
+    }
+  }
+  setInterval(() => nhCapture(false), 15000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") nhCapture(true); });
+  window.addEventListener("pagehide", () => nhCapture(true));
+  const nhFmt = (t) => { const d = new Date(t); return fmtDeadline(ymd(d)) + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes()); };
+  let nhSel = null, nhShowAll = false;
+  async function openNoteHistory(noteId) {
+    nhDirty.add(noteId); nhCapture(true, "");   // so the newest state is in the list
+    nhSel = noteId; nhShowAll = false; $("nhSearch").value = "";
+    await new Promise((r) => setTimeout(r, 60));
+    await renderNoteHistory(); $("noteHistDialog").showModal();
+  }
+  async function renderNoteHistory() {
+    let db; try { db = await nhDb(); } catch (e) { $("nhGone").innerHTML = '<p class="muted">This browser can\'t keep a history (no IndexedDB).</p>'; return; }
+    const snaps = await nhReq(db.transaction("snaps").objectStore("snaps").getAll()), gone = await nhReq(db.transaction("gone").objectStore("gone").getAll());
+    const names = {}; snaps.concat(gone).forEach((x) => { if (!names[x.note]) names[x.note] = x.name; });
+    (state.notes || []).forEach((n) => { names[n.id] = n.name || "Note"; });
+    const live = new Set((state.notes || []).map((n) => n.id));
+    $("nhNote").innerHTML = Object.keys(names).map((id) => '<option value="' + esc(id) + '"' + (id === nhSel ? " selected" : "") + ">" + esc(names[id] || "Note") + (live.has(id) ? "" : " (deleted)") + "</option>").join("");
+    const q = $("nhSearch").value.trim().toLowerCase(), known = nhStillKnown();
+    const seenTxt = new Set();
+    const rows = gone.filter((g) => g.note === nhSel).sort((a, b) => b.t - a.t).filter((g) => { const t = g.text.toLowerCase(); if (seenTxt.has(t) || known.has(t)) return false; seenTxt.add(t); return !q || t.indexOf(q) >= 0 || (g.path || "").toLowerCase().indexOf(q) >= 0; });
+    const shown = nhShowAll || q ? rows : rows.slice(0, 60);
+    $("nhGone").innerHTML = rows.length ? shown.map((g) => '<div class="nhRow" data-k="' + g.k + '"><span class="nhWhen" title="last seen ' + esc(nhFmt(g.seen || g.t)) + '">' + esc(nhFmt(g.t)) + '</span><span class="nhTxt">' + (g.path ? '<span class="nhPath">' + esc(g.path) + " › </span>" : "") + esc(g.text) + '</span><button class="nhBack">Put back</button></div>').join("") + (shown.length < rows.length ? '<button class="nhMore">Show all ' + rows.length + "</button>" : "")
+      : '<p class="muted">' + (q ? "Nothing matches." : "No removed lines recorded for this note.") + "</p>";
+    $("nhGone").querySelectorAll(".nhRow").forEach((r) => r.querySelector(".nhBack").addEventListener("click", () => { const g = gone.find((x) => String(x.k) === r.dataset.k); if (g) { nhPutBack(g); r.remove(); } }));
+    const more = $("nhGone").querySelector(".nhMore"); if (more) more.addEventListener("click", () => { nhShowAll = true; renderNoteHistory(); });
+    const vers = snaps.filter((x) => x.note === nhSel).sort((a, b) => b.t - a.t);
+    $("nhVers").innerHTML = vers.length ? vers.map((v) => '<div class="nhVer" data-k="' + v.k + '"><span class="nhWhen">' + esc(nhFmt(v.t)) + "</span><span>" + v.n + " lines" + (v.why ? " · " + esc(v.why) : "") + "</span></div>").join("") : '<p class="muted">No copies yet.</p>';
+    $("nhVers").querySelectorAll(".nhVer").forEach((row) => row.addEventListener("click", () => {
+      const v = vers.find((x) => String(x.k) === row.dataset.k); if (!v) return;
+      const open = row.classList.contains("on"); $("nhVers").querySelectorAll(".nhVer").forEach((x) => x.classList.remove("on")); $("nhVers").querySelectorAll(".nhPrevWrap").forEach((x) => x.remove());
+      if (open) return;
+      row.classList.add("on");
+      const d = document.createElement("div"); d.innerHTML = v.html; const lines = [];
+      const walk = (node, depth) => { for (const c of Array.from(node.children)) { if (c.tagName === "LI") { lines.push("  ".repeat(depth) + (c.classList.contains("chk") ? "☐ " : "• ") + ownText(c)); walk(c, depth + 1); } else if (isList(c)) walk(c, c.previousElementSibling && c.previousElementSibling.tagName === "LI" ? depth + 1 : depth); else walk(c, depth); } };
+      walk(d, 0);
+      const w = document.createElement("div"); w.className = "nhPrevWrap";
+      w.innerHTML = '<div class="nhPrev"></div><div class="nhVerBtns"><button class="nhRestore">Restore this version</button><button class="nhCopy">Copy text</button></div>';
+      w.querySelector(".nhPrev").textContent = lines.join("\n") || "(empty)";
+      w.querySelector(".nhCopy").addEventListener("click", () => { try { navigator.clipboard.writeText(lines.join("\n")); toast("Copied"); } catch (e) {} });
+      w.querySelector(".nhRestore").addEventListener("click", () => {
+        let n = (state.notes || []).find((x) => x.id === v.note);
+        snap();
+        if (!n) { n = { id: v.note, name: v.name || "Restored note", color: "yellow", html: "" }; state.notes.push(n); }
+        else nhAdd(n.id, n.name, nhNoteHtml(n), "Before restoring an earlier version");
+        n.html = v.html; mvLeftmost = false; ui.activeNote = n.id; saveUI(); commit(); renderNote(true);
+        $("noteHistDialog").close(); toast("Restored the version of " + nhFmt(v.t) + " — Ctrl+Z / ↶ undoes it");
+      });
+      row.after(w);
+    }));
+  }
+  function nhPutBack(g) {   // a removed line → back into its note (under its old parent line if that is still there), or into the dump note
+    const n = (state.notes || []).find((x) => x.id === g.note) || dumpNote();
+    snap();
+    withNoteDom(n.id, (root) => {
+      const tpl = document.createElement("div"); tpl.innerHTML = g.li || ""; const li = tpl.firstElementChild && tpl.firstElementChild.tagName === "LI" ? tpl.firstElementChild : Object.assign(document.createElement("li"), { textContent: g.text });
+      const parent = g.path ? Array.from(root.querySelectorAll("li")).find((x) => ownText(x) === g.path) : null;
+      let box;
+      if (parent) { box = noteKidList(parent); if (!box) { box = document.createElement("ul"); parent.parentNode.insertBefore(box, parent.nextSibling); } parent.classList.remove("collapsed"); }
+      else { const lists = Array.from(root.children).filter((c) => isList(c)); box = lists[lists.length - 1]; if (!box) { box = document.createElement("ul"); root.appendChild(box); } }
+      box.appendChild(li);
+    });
+    commit(); renderNote(true); toast("Put back into “" + (n.name || "Note") + "”");
+  }
+  $("nhNote").addEventListener("change", () => { nhSel = $("nhNote").value; nhShowAll = false; renderNoteHistory(); });
+  $("nhSearch").addEventListener("input", () => renderNoteHistory());
+  $("nhClose").addEventListener("click", () => $("noteHistDialog").close());
 
   /* ── tick boxes (v227) ──
      A <li class="chk"> is a tick box. Ticking moves the line (with its sub-items) out of its note into state.ticked;
@@ -3549,6 +3901,7 @@ if (IS_BROWSER) (function () {
   function placeCaret(node, atEnd) { const r = document.createRange(); r.selectNodeContents(node); r.collapse(!atEnd); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }
   function setNoteFold(li, fold) {
     if (!li || !noteKidList(li)) return;
+    if (li.classList.contains("collapsed") !== !!fold) noteSnap("fold", true);
     li.classList.toggle("collapsed", fold);
     if (fold) {   // don't leave the caret stranded in the now-hidden children → park it at the end of the bullet's own line
       const n = noteCaretNode(), kids = noteKidList(li);
@@ -3671,10 +4024,50 @@ if (IS_BROWSER) (function () {
     const r = li.getBoundingClientRect(), br = $("noteBody").getBoundingClientRect();   // keep the moved line in view
     if (r.top < br.top || r.bottom > br.bottom) li.scrollIntoView({ block: "nearest" });
   }
-  function gripHit(li, x, y) {   // the ⠿ grip sits --gx left of the line (left of its bullet / ▾ / tick box), first line only
-    const r = li.getBoundingClientRect(), cs = getComputedStyle(li);
-    const gx = parseFloat(cs.getPropertyValue("--gx")) || 0, gh = parseFloat(cs.getPropertyValue("--gh")) || 11, lh = parseFloat(cs.lineHeight) || 18;
-    return gx > 0 && x >= r.left - gx - 2 && x <= r.left - gx + gh && y >= r.top && y < r.top + lh + 3;
+  // v236 column layout (see the CSS): [grip --gw][fold --fd][marker --mk] text; the <li> box starts at the marker column.
+  function noteCols(li) { const cs = getComputedStyle(li); return { gw: parseFloat(cs.getPropertyValue("--gw")) || 11, fd: parseFloat(cs.getPropertyValue("--fd")) || 12, mk: parseFloat(cs.getPropertyValue("--mk")) || 17, lh: parseFloat(cs.lineHeight) || 18 }; }
+  /* v236: Tab / Shift+Tab on list lines are done by Plapp, not the browser: Chrome's own indent split a line from its sub-items
+     (they became its siblings, or — with an inner sub-list — a folded line's hidden children were deleted). Now a line always moves
+     with its sub-items. Indent: into the line above (as its last sub-item; a folded line above unfolds). Outdent: to just after its
+     parent; the lines below it in the same group become its sub-items, so the visual order never changes (as in Google Docs).
+     A top-level line without sub-items still outdents natively (= turns into plain text). */
+  function prevSibLi(li) { let p = li.previousElementSibling; while (p && p.tagName !== "LI") p = p.previousElementSibling; return p; }
+  function topUnits(lines) { const set = new Set(lines); return lines.filter((li) => !noteLiChain(li).slice(1).some((a) => set.has(a))); }
+  function indentUnit(li) {
+    const p = prevSibLi(li); if (!p) return false;
+    let box = noteKidList(p);
+    if (!box) { box = document.createElement(li.parentElement.tagName === "OL" ? "ol" : "ul"); p.parentNode.insertBefore(box, p.nextSibling); }   // Chrome's structure: the sub-list right after its line
+    p.classList.remove("collapsed");
+    placeUnit(unitOf(li), box, null);
+    return true;
+  }
+  function outdentUnit(li) {
+    const o = ownerLi(li); if (!o) return false;
+    const x = li.parentElement, u = unitOf(li), later = [];
+    for (let n = (u.sib || li).nextSibling; n; n = n.nextSibling) later.push(n);
+    placeUnit(u, o.parentElement, afterUnit(o));
+    if (later.some((n) => n.nodeType === 1 && (n.tagName === "LI" || isList(n)))) {   // the lines below it in its old group become its sub-items
+      let kids = noteKidList(li);
+      if (!kids) { kids = document.createElement(x.tagName.toLowerCase()); li.parentNode.insertBefore(kids, li.nextSibling); }
+      later.forEach((n) => kids.appendChild(n));
+      li.classList.remove("collapsed");   // they were visible — keep them visible
+    }
+    if (isList(x) && !x.querySelector("li")) x.remove();
+    return true;
+  }
+  function indentLines(dir) {   // returns false → let the browser do it (not a list line / top-level outdent without sub-items)
+    const lines = noteCaretNode() ? linesInSelection() : []; if (!lines.length) return false;
+    const units = topUnits(lines);
+    if (dir < 0 && units.some((li) => !ownerLi(li))) { if (!units.some((li) => noteKidList(li))) return false; }
+    const sel = getSelection(), r0 = sel.rangeCount ? sel.getRangeAt(0) : null, keep = r0 ? [r0.startContainer, r0.startOffset, r0.endContainer, r0.endOffset] : null;
+    units.forEach((li) => { if (dir > 0) indentUnit(li); else if (ownerLi(li)) outdentUnit(li); });
+    if (keep) { try { const r = document.createRange(); r.setStart(keep[0], keep[1]); r.setEnd(keep[2], keep[3]); sel.removeAllRanges(); sel.addRange(r); } catch (e) {} }
+    return true;
+  }
+  const foldInFoldCol = (li) => li.classList.contains("hasKids") && (li.classList.contains("chk") || !!(li.parentElement && li.parentElement.tagName === "OL"));   // ▾ sits in the fold column (its marker is a box / number)
+  function gripHit(li, x, y) {   // the ⠿ grip sits left of the fold column, first line only; where the fold column is empty it counts as grip too (bigger target)
+    const r = li.getBoundingClientRect(), c = noteCols(li);
+    return x >= r.left - c.fd - c.gw - 2 && x < r.left - (foldInFoldCol(li) ? c.fd : 0) + 1 && y >= r.top && y < r.top + c.lh + 3;
   }
   let lineDrag = null;
   function noteScroller() {   // what scrolls while dragging near the edge: the note itself, else the panel/page around it
@@ -3720,7 +4113,7 @@ if (IS_BROWSER) (function () {
     const br = $("noteBody").getBoundingClientRect(), tr = d.t.getBoundingClientRect();
     let y, left = tr.left;
     if (d.mode === "before") y = tr.top;
-    else if (d.mode === "first") { y = ownBottom(d.t); left = tr.left + 16; }
+    else if (d.mode === "first") { y = ownBottom(d.t); left = tr.left + noteCols(d.t).mk; }
     else y = unitBottom(d.t);
     y = Math.max(br.top, Math.min(br.bottom, y));
     ln.style.display = "block"; ln.style.top = (y - 1) + "px"; ln.style.left = left + "px"; ln.style.width = Math.max(30, br.right - 10 - left) + "px";
@@ -3782,10 +4175,10 @@ if (IS_BROWSER) (function () {
       startLineDrag(li, e);
       return;
     }
-    const onFold = li.classList.contains("hasKids") && e.clientX < r.left && e.clientX >= r.left - (parseFloat(getComputedStyle(li).getPropertyValue("--tx")) || 16) - 2;   // ▾/▸ sits just left of the line
-    const lh = parseFloat(getComputedStyle(li).lineHeight) || 18;
-    const padL = parseFloat(getComputedStyle(li).paddingLeft) || 19;
-    const onBox = li.classList.contains("chk") && e.clientX >= r.left && e.clientX < r.left + padL && e.clientY < r.top + lh;   // the box sits in the line's own left padding (first line only)
+    const c = noteCols(li), firstLine = e.clientY < r.top + c.lh + 2, inMarker = e.clientX >= r.left && e.clientX < r.left + c.mk;
+    const inFoldCol = foldInFoldCol(li);
+    const onFold = firstLine && li.classList.contains("hasKids") && (inFoldCol ? (e.clientX < r.left && e.clientX >= r.left - c.fd - 1) : inMarker);   // ▾/▸: in the fold column next to a box / number, else the marker itself
+    const onBox = firstLine && li.classList.contains("chk") && inMarker;   // the tick box is the line's marker (first line only)
     if (!onFold && !onBox) return;
     e.preventDefault(); e.stopPropagation();
     noteKeepBlur = document.activeElement !== body;
@@ -3801,7 +4194,7 @@ if (IS_BROWSER) (function () {
     const li = (n.nodeType === 1 ? n : n.parentElement).closest("li");
     if (!li || !li.classList.contains("collapsed")) return false;
     const kids = noteKidList(li); if (!kids || kids.contains(n)) return false;
-    e.preventDefault();
+    e.preventDefault(); noteSnap("para", true);
     if (!r0.collapsed) r0.deleteContents();
     const inner = kids.parentElement === li;
     const tail = document.createRange(); tail.setStart(r0.startContainer, r0.startOffset);
@@ -3815,6 +4208,103 @@ if (IS_BROWSER) (function () {
     saveNoteHtml();
     return true;
   }
+  /* ── cut / copy / paste / text-drag carry folded sub-items (v236) ──
+     Chrome leaves hidden (folded) lines out of what it copies, but a cut still deletes them → a folded bullet's sub-items were lost on
+     cut + paste. Whenever a selection touches folded content, Plapp writes the clipboard (or drag data) itself: the selected lines incl.
+     the hidden ones, folds marked data-fold="1" instead of class "collapsed" (so Chrome doesn't drop them as invisible on paste); after
+     the paste / drop, data-fold turns back into a fold. Selecting a folded line's whole text counts as selecting the bullet with its
+     sub-items (otherwise the text would move and the sub-items stay behind under an empty ▸). Plain text selections stay native. */
+  const noteClip = { snapped: false, drag: false };
+  function extendOverFolded(r) {   // selection covers a folded line's text up to its end → take its hidden sub-items along
+    const body = $("noteBody"), ec = r.endContainer;
+    const el = ec.nodeType === 1 ? ec : ec.parentElement, li = el && el.closest("li");
+    if (!li || !body.contains(li) || !li.classList.contains("collapsed")) return;
+    const kids = noteKidList(li); if (!kids || kids.contains(ec)) return;
+    const own = document.createRange(); own.selectNodeContents(li); if (kids.parentElement === li) own.setEndBefore(kids);
+    const tail = document.createRange(); tail.setStart(r.endContainer, r.endOffset); tail.setEnd(own.endContainer, own.endOffset);
+    if (tail.toString().trim() !== "") return;   // stops before the end of the line
+    const head = document.createRange(); head.setStart(own.startContainer, own.startOffset);
+    if (r.comparePoint(own.startContainer, own.startOffset) > 0 || (head.setEnd(r.startContainer, r.startOffset), head.toString().trim() !== "")) return;   // starts mid-line
+    r.setEndAfter(kids);
+  }
+  function noteClipRange() {   // the selection as a range — extended over folded sub-items — if it touches hidden content; else null (→ native)
+    const body = $("noteBody"), sel = getSelection(); if (!sel || !sel.rangeCount) return null;
+    const r = sel.getRangeAt(0).cloneRange(); if (r.collapsed || !body.contains(r.commonAncestorContainer)) return null;
+    extendOverFolded(r);
+    const hit = Array.from(body.querySelectorAll("li.collapsed")).some((li) => { const k = noteKidList(li); return k && r.intersectsNode(k); });
+    return hit ? r : null;
+  }
+  function noteClipData(r) {   // { html, text } of a range, hidden lines included, folds as data-fold
+    const frag = r.cloneContents(), box = document.createElement("div");
+    let ctx = r.commonAncestorContainer; ctx = ctx.nodeType === 1 ? ctx : ctx.parentElement;
+    const list = ctx.closest("ul,ol"), wrap = list && $("noteBody").contains(list) && Array.from(frag.childNodes).some((n) => n.nodeName === "LI") ? document.createElement(list.tagName) : null;   // list items need their list around them
+    (wrap ? (box.appendChild(wrap), wrap) : box).appendChild(frag);
+    const lines = [];
+    const walk = (node, depth) => {
+      for (const n of Array.from(node.childNodes)) {
+        if (n.nodeType === 1 && n.tagName === "LI") { if (n.classList.contains("collapsed")) { n.classList.remove("collapsed"); n.setAttribute("data-fold", "1"); } n.classList.remove("ndSrc"); lines.push("  ".repeat(depth) + ownText(n)); walk(n, depth + 1); }
+        else if (n.nodeType === 1 && isList(n)) walk(n, n.previousElementSibling && n.previousElementSibling.tagName === "LI" ? depth + 1 : depth);
+        else if (n.nodeType === 1) walk(n, depth);
+        else if (n.nodeType === 3 && n.textContent.trim() && !(n.parentElement && n.parentElement.closest("li"))) lines.push("  ".repeat(depth) + n.textContent.trim());
+      }
+    };
+    walk(box, 0);
+    { const c = wrap || box, last = c.lastElementChild; if (last && last.tagName === "LI" && !last.textContent.trim() && !last.querySelector("li,img")) last.remove(); }   // a selection reaching the start of the next line (triple-click) → no empty extra line
+    cleanNoteStyles(box);
+    return { html: box.innerHTML, text: lines.length ? lines.join("\n") : r.toString() };
+  }
+  function noteClipDelete(r) {   // delete the (extended) selection like the browser would — incl. the hidden lines inside it
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    document.execCommand("delete");
+    decorateNoteLists(); saveNoteHtml();
+  }
+  function noteRefold() {   // after a paste / drop: lines that arrived with data-fold become folded again
+    let any = false;
+    $("noteBody").querySelectorAll("li[data-fold]").forEach((li) => { li.removeAttribute("data-fold"); if (noteKidList(li)) { li.classList.add("collapsed"); any = true; } });
+    if (any) { decorateNoteLists(); saveNoteHtml(); }
+  }
+  $("noteBody").addEventListener("copy", (e) => {
+    const r = noteClipRange(); if (!r || !e.clipboardData) return;
+    const d = noteClipData(r); e.preventDefault(); e.clipboardData.setData("text/html", d.html); e.clipboardData.setData("text/plain", d.text);
+  });
+  $("noteBody").addEventListener("cut", (e) => {
+    const r = noteClipRange(); if (!r || !e.clipboardData) return;
+    const d = noteClipData(r); e.preventDefault(); e.clipboardData.setData("text/html", d.html); e.clipboardData.setData("text/plain", d.text);
+    noteSnap("cut", true); nhDirty.add(curNote().id); nhCapture(true, "Before a cut"); noteClipDelete(r);
+  });
+  // Dragging selected text within the note is done by Plapp too: Chrome's own move deleted the source and then sometimes inserted nothing
+  // (whole lines dropped at the end of a later line → the text was gone), and it can't carry hidden lines. Drops from elsewhere stay native.
+  $("noteBody").addEventListener("dragstart", (e) => {
+    noteClip.drag = null;
+    const sel = getSelection(); if (!sel.rangeCount || !e.dataTransfer) return;
+    const r = noteClipRange() || sel.getRangeAt(0).cloneRange(); if (r.collapsed || !$("noteBody").contains(r.commonAncestorContainer)) return;
+    const d = noteClipData(r); e.dataTransfer.setData("text/html", d.html); e.dataTransfer.setData("text/plain", d.text);
+    noteClip.drag = { r, html: d.html };
+  });
+  $("noteBody").addEventListener("drop", (e) => {
+    const d = noteClip.drag; if (!d) return;
+    e.preventDefault(); noteClip.drag = null;
+    const body = $("noteBody"), pos = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null;
+    if (!pos || !body.contains(pos.startContainer) || d.r.isPointInRange(pos.startContainer, pos.startOffset)) return;   // dropped onto itself → nothing
+    noteSnap("drag", true);
+    const mk0 = document.createElement("span"); mk0.setAttribute("data-dropmark", "1"); mk0.textContent = "\u200b"; pos.insertNode(mk0);   // remember the drop point while the source is deleted
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(d.r); document.execCommand("delete");
+    const marks = body.querySelectorAll("[data-dropmark]"), mark = marks[0];   // (Chrome's line merge may have re-created it → find it by attribute)
+    if (!mark) { decorateNoteLists(); saveNoteHtml(); return; }
+    const at = document.createRange(); at.setStartBefore(mark); at.collapse(true); marks.forEach((m) => m.remove()); sel.removeAllRanges(); sel.addRange(at);
+    document.execCommand("insertHTML", false, d.html);
+    noteRefold(); decorateNoteLists(); saveNoteHtml();
+  });
+  document.addEventListener("dragend", () => { noteClip.drag = null; });
+  // v236: every change to the note's text is an undo step (typing bursts merged); the browser's own undo (e.g. from a context menu) is redirected
+  $("noteBody").addEventListener("beforeinput", (e) => {
+    const t = e.inputType || "";
+    if (t === "historyUndo" || t === "historyRedo") { e.preventDefault(); if (t === "historyUndo") undo(); else redo(); return; }
+    if (/^delete/.test(t)) { const sl = getSelection(); if (sl.rangeCount && !sl.isCollapsed && /\n/.test(sl.toString())) { nhDirty.add(curNote().id); nhCapture(true, "Before deleting lines"); } }   // history copy right before a multi-line delete
+    if (t === "deleteByCut" && noteClip.snapped) { noteClip.snapped = false; return; }   // the cut handler already took the step
+    const kind = /^insert(Text|CompositionText|ReplacementText)$/.test(t) ? "type" : /^delete(Content|Word|SoftLine|HardLine|Entire)/.test(t) ? "del" : (t === "deleteByDrag" || t === "insertFromDrop") ? "drag" : "other";
+    noteSnap(kind, kind === "other");
+  }, true);
   // Backspace at the start of a line whose line above is empty (or Delete at the end of an empty line): just drop the empty line,
   // so the remaining line keeps its own style (the browser would merge it into the empty, unstyled line).
   $("noteBody").addEventListener("beforeinput", (e) => {
@@ -3836,8 +4326,10 @@ if (IS_BROWSER) (function () {
     }
     decorateNoteLists(); saveNoteHtml();
   });
-  $("noteBody").addEventListener("input", (e) => { if (e && e.inputType === "insertParagraph") plainNewLine(); if (e && /^(delete|insertParagraph)/.test(e.inputType || "")) unwrapLineStyleSpans(); decorateNoteLists(); revealNoteCaret(); saveNoteHtml(); });
+  $("noteBody").addEventListener("input", (e) => { if (e && (e.inputType === "insertFromPaste" || e.inputType === "insertFromDrop")) noteRefold(); if (e && e.inputType === "insertParagraph") plainNewLine(); if (e && /^(delete|insertParagraph)/.test(e.inputType || "")) unwrapLineStyleSpans(); decorateNoteLists(); revealNoteCaret(); saveNoteHtml(); });
   $("noteBody").addEventListener("keydown", (e) => {
+    { const uk = undoKey(e); if (uk) { e.preventDefault(); if (uk === "undo") undo(); else redo(); return; } }   // the one Plapp history, not the browser's
+    if (e.key === "Escape" && noteBig && !document.querySelector(".sPop, .nPop")) { e.preventDefault(); setNoteBig(false); return; }
     if (e.key === "Tab") { e.preventDefault(); noteCmd(e.shiftKey ? "outdent" : "indent"); return; }
     if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && noteEnterInFolded(e)) return;
     if (e.shiftKey && (e.altKey || e.ctrlKey || e.metaKey) && (e.key === "ArrowUp" || e.key === "ArrowDown")) { e.preventDefault(); moveNoteLine(e.key === "ArrowUp" ? -1 : 1); return; }
@@ -4411,6 +4903,18 @@ if (IS_BROWSER) (function () {
   window.addEventListener("focus", () => { if (dirty) pushRemote(); else if (Date.now() - lastPull > 8000) pullRemote(true); });
   window.addEventListener("online", () => { if (dirty) pushRemote(); });
   window.addEventListener("pagehide", () => { if (dirty) pushRemote(); });
+  // v237: two Plapp windows on one computer (e.g. ?view=note next to the main window). Leaving a window saves its changes to the cloud at once;
+  // when another window saved (a localStorage "storage" event), this one fetches and merges them ~2.5 s after that window's last save.
+  window.addEventListener("blur", () => { if (dirty) pushRemote(); });
+  let otherWinTimer = null;
+  window.addEventListener("storage", (e) => {
+    if (e.key !== STORAGE_KEY || !syncOn()) return;
+    clearTimeout(otherWinTimer);
+    otherWinTimer = setTimeout(function again() {
+      if (drag || lineDrag || tabDrag || document.querySelector("dialog[open]")) { otherWinTimer = setTimeout(again, 3000); return; }   // not under a drag or an open dialog
+      if (dirty) pushRemote(); else pullRemote(true);
+    }, 2500);
+  });
   // while the page is open and idle, look for other devices' changes about once a minute (a tiny request: just the version stamp)
   setInterval(async () => {
     if (document.visibilityState !== "visible" || !syncOn() || pushing || dirty || Date.now() - lastPull < 40000) return;
@@ -4420,7 +4924,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v234"; document.title = "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v237"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -4437,7 +4941,8 @@ if (IS_BROWSER) (function () {
     let sum = 0;
     for (const w of state.weeks) for (const b of w.blocks) {
       if (b.kind !== "actual" || b.startMs == null) continue;
-      if (!(b.startMs >= s0 && b.startMs < e0)) continue;
+      const sh = shiftedDay(b.startMs);
+      if (sh ? !(sh >= ymd(new Date(s0)) && sh <= endStr) : !(b.startMs >= s0 && b.startMs < e0)) continue;   // a session before its day's start time counts for the day before
       const hrs = (b.endMs - b.startMs) / 3600000;
       if (b.split) { for (const k in b.split) if (ids.has(k)) sum += hrs * b.split[k]; }   // parent block → count each child's share
       else if (ids.has(b.catId)) sum += hrs;
@@ -4452,7 +4957,8 @@ if (IS_BROWSER) (function () {
       prev: (() => { let d = addDays(parseYMD(date), -1); if (d.getDay() === 0) d = addDays(d, -1); return entryNum(ymd(d)); })(),   // "prev" = the last day ON the tracker (Sundays don't exist, so Monday looks back to Saturday)
       avg: (n) => { const a = lastN(n); return a.length ? a.reduce((s, x) => s + x, 0) / a.length : NaN; },
       sum: (n) => lastN(n).reduce((s, x) => s + x, 0),
-      avgSince: (ds) => { let cur = parseYMD(ds); const end = parseYMD(date), acc = []; while (cur <= end) { const v = entryNum(ymd(cur)); if (v != null) acc.push(v); cur = addDays(cur, 1); } return acc.length ? acc.reduce((s, x) => s + x, 0) / acc.length : NaN; },
+      // avgSince("YYYY-MM-DD") = average per entered day; avgSince("YYYY-MM-DD", 7) = per calendar day: Monday's entry covers Sunday + Monday (v236)
+      avgSince: (ds, per) => { let cur = parseYMD(ds); const end = parseYMD(date); let sum = 0, days = 0; while (cur <= end) { const v = entryNum(ymd(cur)); if (v != null) { sum += v; days += (per === 7 && cur.getDay() === 1) ? 2 : 1; } cur = addDays(cur, 1); } return days ? sum / days : NaN; },
       hours: (taskName, n) => trackedHoursOver(taskName, n || 1, date),
       dow: weekDayIdx(parseYMD(date)),   // 0 = Mon … 5 = Sat
       firstHours: (taskName, hrs) => {   // true if the first `hrs` logged hours today are all this task
@@ -4460,7 +4966,7 @@ if (IS_BROWSER) (function () {
         if (!cat) return false;
         const ids = new Set([cat.id]); (state.categories || []).forEach((c) => { if (c.parent === cat.id) ids.add(c.id); });
         const dayStart = parseYMD(date).getTime(), dayEnd = dayStart + 86400000, blocks = [];
-        for (const w of state.weeks) for (const b of w.blocks) if (b.kind === "actual" && b.startMs != null && b.startMs >= dayStart && b.startMs < dayEnd) blocks.push(b);
+        for (const w of state.weeks) for (const b of w.blocks) if (b.kind === "actual" && b.startMs != null) { const sh = shiftedDay(b.startMs); if (sh ? sh === date : (b.startMs >= dayStart && b.startMs < dayEnd)) blocks.push(b); }
         blocks.sort((a, b) => a.startMs - b.startMs);
         const limit = Math.max(0, hrs); let acc = 0;
         for (const b of blocks) { if (acc >= limit) break; if (!ids.has(b.catId)) return false; acc += (b.endMs - b.startMs) / 3600000; }
@@ -4490,12 +4996,44 @@ if (IS_BROWSER) (function () {
   }
   function commitDefs() { stampHabitChange(); commit(); renderChangelog && renderChangelog(); }
   const MAILS_RULE2_FROM = "2026-10-19";   // Mails habit: from Mon 19 Oct 2026 on, the auto-red limit is "91 min or more" instead of "more than 60 min" (owner request 16 Oct 2026)
+  /* ── when a day starts (v236) ── state.dayStart = { "YYYY-MM-DD": minutes } (0–300): that day starts at that time instead of midnight
+     — for the habits only (Mails, Hour, hours(), firstHours()) and the top-bar Mails / Growth counters; the grid stays midnight to midnight.
+     A tracked session that starts before its calendar day's start time counts for the day before (Sunday folds into Saturday, as always).
+     Set it by tapping a day letter above the streak grid (ahead of time or afterwards — everything is recomputed). */
+  const DAYSTART_MAX = 300;
+  function dayStartMin(ds) { const v = state.dayStart && state.dayStart[ds]; return v > 0 ? Math.min(DAYSTART_MAX, v) : 0; }
+  function shiftedDay(ms) {   // the tracker day a moment belongs to, if a late day start moves it to the day before; else null
+    const d = new Date(ms), cal = ymd(d), cut = dayStartMin(cal);
+    if (!cut || d.getHours() * 60 + d.getMinutes() >= cut) return null;
+    const p = addDays(parseYMD(cal), -1); if (p.getDay() === 0) p.setDate(p.getDate() - 1);
+    return ymd(p);
+  }
+  function habitDayOf(b) { return (b.startMs != null && shiftedDay(b.startMs)) || b.date; }
+  function habitToday() { return shiftedDay(Date.now()) || ymd(new Date()); }
+  const fmtDayStart = (m) => Math.floor(m / 60) + ":" + pad2(m % 60);
+  function parseDayStart(v) {   // "2", "2:30", "230", "0" → minutes (null = invalid)
+    v = String(v || "").trim().replace(".", ":"); if (!v) return 0;
+    let m;
+    if (v.indexOf(":") >= 0) { const p = v.split(":"); m = (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0); }
+    else { const n = parseFloat(v); if (isNaN(n)) return null; m = n >= 100 ? Math.floor(n / 100) * 60 + (n % 100) : Math.round(n * 60); }
+    return m < 0 || m > DAYSTART_MAX ? null : Math.round(m / 5) * 5;
+  }
+  function editDayStart(ds) {
+    const cur = dayStartMin(ds);
+    const v = prompt("When does " + fmtDeadline(ds) + " start, for the habits (Mails, Hour …)?\nAnything you time before this counts for the day before.\nBetween 0:00 (midnight, the default) and 5:00 — e.g. 2:30.", fmtDayStart(cur));
+    if (v === null) return;
+    const m = parseDayStart(v); if (m === null) { toast("Use a time between 0:00 and 5:00, e.g. 2:30"); return; }
+    if (m === cur) return;
+    snap(); if (!state.dayStart) state.dayStart = {};
+    if (m) state.dayStart[ds] = m; else delete state.dayStart[ds];
+    commit(); toast(fmtDeadline(ds) + (m ? " starts at " + fmtDayStart(m) : " starts at midnight again"));
+  }
   function mailsTimedOn(date) {   // timed (actual) hours that day on "Mails" + its children (hmails, wmails, fmails …)
     const cat = (state.categories || []).find((c) => (c.name || "").trim().toLowerCase() === "mails");
     if (!cat) return 0;
     const ids = new Set([cat.id]); (state.categories || []).forEach((c) => { if (c.parent === cat.id) ids.add(c.id); });
     let s = 0;
-    for (const wk of state.weeks) for (const b of (wk.blocks || [])) { if (b.kind === "actual" && ids.has(b.catId) && b.date === date && b.endMs != null) s += (b.endMs - b.startMs) / 3600000; }
+    for (const wk of state.weeks) for (const b of (wk.blocks || [])) { if (b.kind === "actual" && ids.has(b.catId) && b.endMs != null && habitDayOf(b) === date) s += (b.endMs - b.startMs) / 3600000; }
     return s;
   }
   function growthTimedFirstHour(date) {   // Hour habit: is the FIRST full hour of the day entirely "Growth" (task or child)? → 'ok' | 'fail' | 'pending'
@@ -4503,7 +5041,7 @@ if (IS_BROWSER) (function () {
     if (!g) return "fail";
     const ids = new Set([g.id]); (state.categories || []).forEach((c) => { if (c.parent === g.id) ids.add(c.id); });
     const blocks = [];
-    for (const wk of state.weeks) for (const b of (wk.blocks || [])) if (b.kind === "actual" && b.date === date && b.startMs != null && b.endMs != null) blocks.push(b);
+    for (const wk of state.weeks) for (const b of (wk.blocks || [])) if (b.kind === "actual" && b.startMs != null && b.endMs != null && habitDayOf(b) === date) blocks.push(b);
     if (!blocks.length) return "pending";   // nothing timed yet
     blocks.sort((a, b) => a.startMs - b.startMs);
     let acc = 0;
@@ -4526,12 +5064,12 @@ if (IS_BROWSER) (function () {
       const lim = d < MAILS_RULE2_FROM ? oldLim : newLim;
       const later = d < MAILS_RULE2_FROM ? " (from " + fmtDeadline(MAILS_RULE2_FROM) + ": " + newLim + ")" : "";
       return {
-        rule: "Built-in: missed when Mails timed that day (the Mails task + its sub-tasks, all sessions added up) is " + lim + later + "; otherwise blank — you click achieved.",
+        rule: "Built-in: missed when Mails timed that day (the Mails task + its sub-tasks, all sessions added up) is " + lim + later + "; otherwise blank — you click achieved. A day can start up to 05:00 (tap its letter above the streak grid): sessions before that count for the day before.",
         desc: "Turns red by itself once you've timed " + lim + " of mail in a day" + later + ". Below that it stays blank: mark it achieved yourself when you've also done the two daily emails. A manual mark always wins.",
       };
     }
     return {
-      rule: "Built-in (Mon–Thu): the first full hour timed that day must be all Growth (task or sub-task). Growth hour first → achieved; anything else timed first → missed; not yet → blank today, missed once the day is over. Fri–Sat: click.",
+      rule: "Built-in (Mon–Thu): the first full hour timed that day must be all Growth (task or sub-task). Growth hour first → achieved; anything else timed first → missed; not yet → blank today, missed once the day is over. Fri–Sat: click. A day can start up to 05:00 (tap its letter above the streak grid): sessions before that count for the day before.",
       desc: "Mon–Thu, start the working day with a full hour of Growth before timing anything else. Turns green or red by itself; a manual mark always wins. Fri and Sat you mark yourself.",
     };
   }
@@ -4556,10 +5094,10 @@ if (IS_BROWSER) (function () {
       const s = growthTimedFirstHour(date);
       if (s === "ok") return "ach";
       if (s === "fail") return "miss";
-      return date < ymd(new Date()) ? "miss" : null;   // pending: a past day that never got its Growth-first hour → missed; today → blank (still possible)
+      return date < habitToday() ? "miss" : null;   // pending: a past day that never got its Growth-first hour → missed; today → blank (still possible)
     }
     if (type === "binary") { if (raw === "ach") { const r = (def.rule || "").trim() ? evalHabitRule(h, date, null) : null; return r === false ? "miss" : "ach"; } return raw === "miss" ? "miss" : null; }
-    const today = ymd(new Date());
+    const today = habitToday();
     if (type === "numeric") { if (raw === "ach" || raw === "miss") return raw; if (typeof raw !== "number") return null; const r = evalHabitRule(h, date, raw); if (r == null) return null; return r ? "ach" : "miss"; }   // once a value is entered, evaluate the rule right away: below target → red now; raise it to meet the target → green. Manual ach/miss overrides.
     if (type === "hours") { if (raw === "ach" || raw === "miss") return raw; if (date > today) return null; const r = evalHabitRule(h, date, null); if (r == null) return null; if (r) return "ach"; return date < today ? "miss" : null; }   // today can still be met by logging more, so it isn't "missed" until it's past
     return null;
@@ -4646,6 +5184,7 @@ if (IS_BROWSER) (function () {
   function mvToday() { const d = new Date(); if (d.getDay() === 0) d.setDate(d.getDate() - 1); return ymd(d); }   // Sunday isn't tracked → Saturday
   function renderMv() {
     if (!MV) return;
+    { const hd = $("mvHead"); if (hd && hd.offsetHeight) document.body.style.setProperty("--mvh", hd.offsetHeight + "px"); }
     const t = document.querySelector("#mvHead .mvTitle"); if (t) t.textContent = MV === "note" ? "Notes" : MV === "habits" ? "Habits" : "Timer";
     if (MV === "habits") renderMvHabits(); else if (MV === "timer") renderMvTimer();
   }
@@ -4656,6 +5195,7 @@ if (IS_BROWSER) (function () {
     const wi = cellForDate(state.anchorMonday, parseYMD(mvDay)).weekIdx, s = computeWeekStats(wi);
     let h = '<div class="mvDayNav"><button class="mvPrev" title="Previous day">&lsaquo;</button><div class="mvDay">' + (mvDay === today ? "Today · " : "") + esc(fmtDeadline(mvDay)) + '</div><button class="mvNext" title="Next day"' + (mvDay >= today ? " disabled" : "") + ">&rsaquo;</button></div>";
     h += '<div class="mvScore ' + (s.achieved ? "ok" : "bad") + '">This week: ' + s.miss + " missed · Joker " + fmtJoker(s.joker) + "</div>";
+    { const cut = dayStartMin(mvDay); h += '<button class="mvCut' + (cut ? " cut" : "") + '">Day starts ' + (cut ? fmtDayStart(cut) : "at midnight") + "</button>"; }
     if (!s.habits.length) h += '<p class="muted">No habits this week.</p>';
     for (const hb of s.habits) {
       const def = defFor(hb.id, mvDay) || {}, nm = def.name || hb.name, ty = def.type || hb.type || "binary";
@@ -4669,6 +5209,7 @@ if (IS_BROWSER) (function () {
     host.querySelector(".mvPrev").addEventListener("click", () => step(-1));
     host.querySelector(".mvNext").addEventListener("click", () => step(1));
     host.querySelectorAll(".mvCell").forEach((c) => c.addEventListener("click", () => habitCellClick(c)));
+    { const cb = host.querySelector(".mvCut"); if (cb) cb.addEventListener("click", () => editDayStart(mvDay)); }
   }
   function renderMvTimer() {
     const host = $("mvTimer"); if (!host) return;
@@ -4728,11 +5269,36 @@ if (IS_BROWSER) (function () {
     if (!closed && ui.rightBarW) rb.style.width = ui.rightBarW + "px";
     if (ro) ro.style.display = closed ? "block" : "none";
   }
+  /* v237: ⤢ opens the note as a large panel over the grid (laptop); ⤡, Esc or a click outside closes it. The same #notePanel is just
+     positioned over #gridScroll (position: fixed), so editing, tabs, popovers and history work exactly as in the side bar. Not remembered. */
+  let noteBig = false;
+  function placeNoteBig() {
+    const p = $("notePanel"), g = $("gridScroll").getBoundingClientRect(), top = Math.max(8, g.top - 28);
+    p.style.left = Math.round(g.left + LABEL_W + 6) + "px"; p.style.top = Math.round(top) + "px";   // the time column stays visible (and is a place to click out)
+    p.style.width = Math.max(320, Math.round(g.width - LABEL_W - 16)) + "px"; p.style.height = Math.max(260, Math.round(g.bottom - top - 10)) + "px";
+  }
+  function setNoteBig(on) {
+    on = !!on; if (MV || on === noteBig) return; noteBig = on;
+    const p = $("notePanel"), body = $("noteBody"), btn = $("noteTools2").querySelector('[data-nc="big"]');
+    closeNotePop();   // (also closes the Aa popover)
+    document.body.classList.toggle("noteBig", on);
+    if (btn) { btn.innerHTML = on ? "&#10529;" : "&#10530;"; btn.title = on ? "Back to the side bar (Esc)" : "Open the note large, over the grid (Esc closes)"; }
+    if (on) {
+      placeNoteBig(); const hadCaret = !!noteCaretNode(); body.focus({ preventScroll: true });
+      if (!hadCaret) { const lis = Array.from(body.querySelectorAll("li")).filter((li) => li.offsetParent !== null), last = lis[lis.length - 1]; if (last) caretToLineEnd(last); else placeCaret(body, true); }   // no caret yet → end of the last visible line
+    }
+    else { ["left", "top", "width", "height"].forEach((k) => { p.style[k] = ""; }); if (document.activeElement === body) body.blur(); }
+  }
+  window.addEventListener("resize", () => { if (noteBig) placeNoteBig(); });
+  document.addEventListener("pointerdown", (e) => {   // a click outside the large note closes it (not on dialogs, popovers or the toast)
+    if (!noteBig || e.target.closest("#notePanel, dialog, #toast, .nPop, .sPop")) return;
+    setNoteBig(false);
+  }, true);
   function setupNoteResize() {
     const body = $("noteBody");
     if (body) {
       if (ui.noteH) body.style.height = ui.noteH + "px";
-      if (window.ResizeObserver) { let t = null; new ResizeObserver(() => { const h = body.offsetHeight; if (!h) return; ui.noteH = h; if (t) clearTimeout(t); t = setTimeout(saveUI, 400); }).observe(body); }
+      if (window.ResizeObserver) { let t = null; new ResizeObserver(() => { const h = body.offsetHeight; if (!h || noteBig || MV) return; ui.noteH = h; if (t) clearTimeout(t); t = setTimeout(saveUI, 400); }).observe(body); }
     }
     const grip = $("rbGrip"), bar = $("rightBar");
     if (grip && bar) grip.addEventListener("pointerdown", (e) => {
@@ -4752,7 +5318,7 @@ if (IS_BROWSER) (function () {
     let h = '<div class="stWeek">';
     if (note) h += '<div class="stNoteTxt">' + esc(note) + "</div>";
     h += '<table class="stGrid"><thead><tr><th class="stNameH stScoreCell ' + (s.achieved ? "ok" : "bad") + '" title="missed cells / Joker (used / available)">' + s.miss + " / " + fmtJoker(s.joker) + '</th>';
-    for (let i = 0; i < 6; i++) h += "<th>" + dayLbls[i] + "</th>";
+    for (let i = 0; i < 6; i++) { const ds = s.dates[i], cut = dayStartMin(ds); h += '<th class="stDayH' + (cut ? " cut" : "") + '" data-ds="' + ds + '" title="' + esc(fmtDeadline(ds)) + " — the day starts at " + (cut ? fmtDayStart(cut) : "midnight") + ' (for the habits). Tap to change.">' + dayLbls[i] + (cut ? "<sup>" + fmtDayStart(cut) + "</sup>" : "") + "</th>"; }
     if (ui.streakAvg) h += '<th class="stAvgH" title="Average of all entered values">Ø</th>';
     h += "</tr></thead><tbody>";
     for (const hb of s.habits) {
@@ -4785,6 +5351,7 @@ if (IS_BROWSER) (function () {
     if (ui.streakNext) h += streakWeekHtml(state.currentWeek + 1);
     host.innerHTML = h;
     host.querySelectorAll(".stCell").forEach((c) => c.addEventListener("click", () => habitCellClick(c)));
+    host.querySelectorAll(".stDayH").forEach((th) => th.addEventListener("click", () => editDayStart(th.dataset.ds)));
     const br = host.querySelector(".stBtnRow");
     br.querySelector(".stCfg").addEventListener("click", openHabits);
     br.querySelector(".stNext").addEventListener("click", () => { ui.streakNext = !ui.streakNext; saveUI(); renderStreak(); });
@@ -4829,7 +5396,12 @@ if (IS_BROWSER) (function () {
   }
 
   function openHabits() { renderHabitsTable(); renderHistory(); renderChangelog(); habitsDlg.showModal(); }
-  function habitAllAvg(hb) { const nums = Object.values(hb.entries || {}).filter((v) => typeof v === "number"); return nums.length ? { avg: nums.reduce((s, x) => s + x, 0) / nums.length, n: nums.length } : null; }
+  const AVG7_RE = /avgSince\s*\([^)]*,\s*7\s*\)/;   // a rule averaging per calendar day (Monday's entry = Sunday + Monday)
+  function habitAllAvg(hb) {
+    const ent = Object.entries(hb.entries || {}).filter(([, v]) => typeof v === "number"); if (!ent.length) return null;
+    const per7 = AVG7_RE.test(hb.rule || ""), days = ent.reduce((s, [d]) => s + (per7 && parseYMD(d).getDay() === 1 ? 2 : 1), 0);
+    return { avg: ent.reduce((s, [, v]) => s + v, 0) / days, n: ent.length, per7 };
+  }
   function ruleUsesAvg(hb) { return /avgSince\s*\(|\bavg\s*\(/.test(hb.rule || ""); }
   function renderHabitReview() {
     const host = $("habitReviewBody"); if (!host) return;
@@ -4842,19 +5414,19 @@ if (IS_BROWSER) (function () {
            (bi ? '<div class="hbrDesc">' + esc(bi.desc) + '</div><div class="hbrRule">' + esc(bi.rule) + "</div>"
                : '<div class="hbrDesc">' + (hb.desc ? esc(hb.desc) : '<span class="muted">— no note —</span>') + '</div>' +
                  '<div class="hbrRule">' + (hb.rule ? esc(hb.rule) : '<span class="muted">' + (ty === "binary" ? "click — no formula" : "—") + "</span>") + "</div>");
-      if (ruleUsesAvg(hb)) { const a = habitAllAvg(hb); block += '<div class="hbrAvg">Ø of all entered values: ' + (a ? a.avg.toFixed(2) + ' <span class="muted">(' + a.n + ' entr' + (a.n === 1 ? "y" : "ies") + ')</span>' : '<span class="muted">no numeric entries yet</span>') + "</div>"; }
+      if (ruleUsesAvg(hb)) { const a = habitAllAvg(hb); block += '<div class="hbrAvg">' + (a && a.per7 ? "Ø per calendar day (Mon = Sun + Mon): " : "Ø of all entered values: ") + (a ? a.avg.toFixed(2) + ' <span class="muted">(' + a.n + ' entr' + (a.n === 1 ? "y" : "ies") + ')</span>' : '<span class="muted">no numeric entries yet</span>') + "</div>"; }
       h += block + "</div>";
     }
     host.innerHTML = h;
   }
   function habitReviewText() {
     const list = (state.habits || []).filter((h) => !h.archived);
-    return list.map((hb) => { const ty = hb.type || "binary", bi = builtinRule(hb); let t = bi ? ("HABIT: " + hb.name + " (built-in)\nNote: " + bi.desc + "\nRule: " + bi.rule) : ("HABIT: " + hb.name + " (" + ty + ")\nNote: " + (hb.desc || "—") + "\nFormula: " + (hb.rule || (ty === "binary" ? "click — no formula" : "—"))); if (ruleUsesAvg(hb)) { const a = habitAllAvg(hb); t += "\nØ all entered values: " + (a ? a.avg.toFixed(2) + " (" + a.n + " entries)" : "none yet"); } return t; }).join("\n\n----------------------------------------\n\n");
+    return list.map((hb) => { const ty = hb.type || "binary", bi = builtinRule(hb); let t = bi ? ("HABIT: " + hb.name + " (built-in)\nNote: " + bi.desc + "\nRule: " + bi.rule) : ("HABIT: " + hb.name + " (" + ty + ")\nNote: " + (hb.desc || "—") + "\nFormula: " + (hb.rule || (ty === "binary" ? "click — no formula" : "—"))); if (ruleUsesAvg(hb)) { const a = habitAllAvg(hb); t += (a && a.per7 ? "\nØ per calendar day (Mon = Sun + Mon): " : "\nØ all entered values: ") + (a ? a.avg.toFixed(2) + " (" + a.n + " entries)" : "none yet"); } return t; }).join("\n\n----------------------------------------\n\n");
   }
   function renderHabitsTable() {
     const host = $("habitsTableWrap"); if (!host) return;
     const list = state.habits || [];
-    const help = '<p class="muted" style="margin-top:8px;line-height:1.6;">Types — <b>Click</b>: tap the cell (achieved→missed→NA). An optional rule acts as a guard — if you tap achieved but the rule is false, the day flips to missed. <b>Number</b>: you type a number each day and the rule decides. <b>Hours</b>: read automatically from your logged time; tap a cell to override it (auto→achieved→missed→NA→auto). A day is achieved when the rule is true; if the rule returns <code>null</code> the cell stays blank so you can click it. Variables: <code>value</code> (today’s number), <code>prev</code> (yesterday’s), <code>avg(n)</code>, <code>sum(n)</code>, <code>avgSince("YYYY-MM-DD")</code>, <code>hours("Task", n)</code> = hours logged for a task over the last n days, <code>dow</code> (0=Mon … 5=Sat), <code>firstHours("Task", h)</code> = true if the first h logged hours today are that task. Examples: <code>value &gt;= 15</code> · <code>value &gt; 100 + (prev &lt; 100 ? (100-prev)/2 : 0)</code> · <code>avgSince("2026-06-01") &lt; 30</code> · <code>hours("Mails", 6) &lt;= 6</code> · <code>dow &lt;= 3 ? firstHours("Growth", 2) : null</code></p>';
+    const help = '<p class="muted" style="margin-top:8px;line-height:1.6;">Types — <b>Click</b>: tap the cell (achieved→missed→NA). An optional rule acts as a guard — if you tap achieved but the rule is false, the day flips to missed. <b>Number</b>: you type a number each day and the rule decides. <b>Hours</b>: read automatically from your logged time; tap a cell to override it (auto→achieved→missed→NA→auto). A day is achieved when the rule is true; if the rule returns <code>null</code> the cell stays blank so you can click it. Variables: <code>value</code> (today’s number), <code>prev</code> (yesterday’s), <code>avg(n)</code>, <code>sum(n)</code>, <code>avgSince("YYYY-MM-DD")</code> (per entered day) or <code>avgSince("YYYY-MM-DD", 7)</code> (per calendar day — Monday’s entry counts for Sunday + Monday), <code>hours("Task", n)</code> = hours logged for a task over the last n days, <code>dow</code> (0=Mon … 5=Sat), <code>firstHours("Task", h)</code> = true if the first h logged hours today are that task. Examples: <code>value &gt;= 15</code> · <code>value &gt; 100 + (prev &lt; 100 ? (100-prev)/2 : 0)</code> · <code>avgSince("2026-06-01") &lt; 30</code> · <code>hours("Mails", 6) &lt;= 6</code> · <code>dow &lt;= 3 ? firstHours("Growth", 2) : null</code></p>';
     const effNote = '<p class="muted" style="margin:2px 0 8px;">Edits take effect <b>' + esc(fmtDeadline(nextMondayYmd())) + '</b> — the current week keeps version v' + (versionForWeek(state.currentWeek) || 1) + '.</p>';
     if (!list.length) { host.innerHTML = '<p class="muted">No habits yet — add your first below.</p>' + help; return; }
     let h = effNote + '<table class="hbTable"><thead><tr><th>Habit</th><th>Type</th><th>Rule (achieved when true)</th><th>Note (plain language)</th><th title="Fill-forward: left = target per day; right = how far it may reach (a number of days, the word week, or blank = no limit)">Fill /day · max</th><th></th><th></th></tr></thead><tbody>';
@@ -5082,7 +5654,25 @@ if (IS_BROWSER) (function () {
     state.habitFix2026w37 = true; saveLocal(); if (typeof schedulePush === "function") schedulePush();
     if (changed.length) { console.log("[habit update] " + changed.join(" · ")); setTimeout(() => { try { toast("Habit update (from Mon): " + changed.join(" · ")); } catch (e) {} }, 900); }
   }
-  loadLocal(); seedHabits(); applyHabitFix(); seedColors(); mergeSplitBlocks(); buildGrid(); dockNote(); renderAll(); renderNote(true); applyRightBar(); setupNoteResize(); checkReminder(); setupFillHandle();
+  function applyEthanol7() {   // v236 one-time: the Ethanol habit's "average since" counts calendar days (Monday's entry = Sunday + Monday), from next Monday like any habit change
+    if (!state || state.ethanol7Fix) return;
+    const habits = state.habits || [], hit = [];
+    for (const h of habits) {
+      if (h.archived || (h.type || "binary") !== "numeric" || !/🍺|ethanol|alkohol|alcohol|beer|bier/i.test(h.name || "")) continue;
+      const r = h.rule || ""; if (!/avgSince\s*\(/.test(r) || AVG7_RE.test(r)) continue;
+      const nr = r.replace(/avgSince\s*\(\s*("[^"]*"|'[^']*')\s*\)/g, "avgSince($1, 7)"); if (nr === r) continue;
+      hit.push([h, nr]);
+    }
+    if (hit.length) {
+      if (!Array.isArray(state.habitVersions)) state.habitVersions = [];
+      if (!state.habitVersions.length) state.habitVersions.push({ v: 1, from: thisMondayYmd(), defs: defsSnapshot() });   // baseline: this week keeps the old rule
+      hit.forEach(([h, nr]) => { h.rule = nr; if (h.desc && !/calendar day/i.test(h.desc)) h.desc = h.desc.replace(/\s*$/, "") + " Per calendar day: Monday's entry counts for Sunday + Monday."; });
+      stampHabitChange();
+    }
+    state.ethanol7Fix = true; saveLocal(); schedulePush();
+    if (hit.length) { console.log("[habit update] per-calendar-day average: " + hit.map((x) => x[0].name).join(", ")); setTimeout(() => { try { toast("Habit update (from next Monday): " + hit.map((x) => x[0].name).join(", ") + " now averages per calendar day (Mon = Sun + Mon)"); } catch (e) {} }, 1200); }
+  }
+  loadLocal(); seedHabits(); applyHabitFix(); applyEthanol7(); seedColors(); mergeSplitBlocks(); buildGrid(); dockNote(); renderAll(); renderNote(true); (state.notes || []).forEach((n) => nhDirty.add(n.id)); applyRightBar(); setupNoteResize(); checkReminder(); setupFillHandle();
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d && !mpFillGuard) d.close(); })); // click outside to close (mpFillGuard blocks the phantom click after a drag-fill)
   if (state.timer) startTimerLoop();
   setInterval(() => { if (document.visibilityState === "visible" && !drag && !noteAct) renderBlocks(); }, 15000); // advance now-line, slide plans & drop elapsed plans
