@@ -1,4 +1,4 @@
-const CACHE = "weekplan-v237";
+const CACHE = "weekplan-v238";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-note.png", "./icon-habits.png", "./icon-timer.png"];
 
 self.addEventListener("install", (e) => {

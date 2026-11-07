@@ -893,6 +893,50 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .wkBadge.bad { background: #f4b0a6; }
 .histTable .histDel { background: transparent; border: none; color: rgba(0,0,0,0.3); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 5px; }
 .histTable .histDel:hover { color: #c53030; }
+/* v238: all weeks in one table (streak row → All) */
+.stMissWk { text-align: right; font-family: 'Inter', sans-serif; font-size: 8.5px; font-weight: 600; color: #a9aeb5; line-height: 1.15; margin: 0 1px 1px 0; white-space: nowrap; }
+#allWeeksDialog { width: fit-content; min-width: min(520px, 92vw); max-width: 96vw; }
+.awSum { font-size: 12.5px; font-weight: 600; color: var(--ink3); margin-left: 8px; }
+.awWrap { max-height: 68vh; overflow: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 8px; }
+.awTbl { border-collapse: separate; border-spacing: 0; font-family: 'Inter', sans-serif; font-size: 11px; width: max-content; }
+.awTbl th, .awTbl td { padding: 1px 2px; background: #fff; }
+.awTbl thead th { position: sticky; top: 0; z-index: 2; font-size: 10.5px; font-weight: 700; color: var(--ink2); text-align: center; vertical-align: bottom; padding: 5px 2px 4px; border-bottom: 1px solid var(--line); }
+.awTbl th.awHb { width: 46px; max-width: 64px; white-space: normal; word-break: break-word; line-height: 1.2; }
+.awTbl th.awWkH, .awTbl th.awDayH { text-align: left; padding-left: 8px; }
+.awTbl td.awWk { vertical-align: top; padding: 4px 10px 0 8px; white-space: nowrap; }
+.awTbl td.awWk .awScore { font-size: 10.5px; font-weight: 700; margin-top: 3px; }
+.awTbl td.awWk .awScore.ok { color: #1f9d55; } .awTbl td.awWk .awScore.bad { color: #d64545; }
+.awTbl td.awWk .awTag { font-size: 9.5px; color: var(--ink3); margin-top: 2px; }
+.awTbl td.awWk .awNote { font-size: 9.5px; color: var(--ink2); font-style: italic; margin-top: 3px; max-width: 110px; white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.awTbl .wkBadge.cur { background: #e3e6ea; }
+.awTbl td.awDay { white-space: nowrap; color: var(--ink2); padding: 1px 10px 1px 0; font-size: 10.5px; }
+.awTbl td.awDay.today { color: var(--ink); font-weight: 700; }
+.awTbl tr.awFirst td { border-top: 5px solid #fff; box-shadow: 0 -1px 0 var(--line); }
+.awTbl tbody tr:first-child td { box-shadow: none; }
+.awCell { height: 18px; min-width: 42px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 600; color: #7a6a20; background: var(--panel); }
+.awCell.ach { background: #fff2ab; color: #9c7a00; }
+.awCell.na { background: #f0cf4d; color: #6f5a12; }
+.awCell.miss { background: #f2795f; color: #ffe8e2; }
+.awCell.off { background: repeating-linear-gradient(135deg, #f5f6f8 0 3px, #fff 3px 6px); }
+.awCell.today { box-shadow: inset 0 0 0 1px #555; }
+.awCell.future { opacity: .78; }
+.awTbl tfoot td { position: sticky; bottom: 0; z-index: 2; height: 21px; box-sizing: border-box; font-size: 10px; font-weight: 700; color: var(--ink2); text-align: center; }
+.awTbl tfoot tr.awF1 td { bottom: 21px; border-top: 1px solid var(--line); }
+.awTbl tfoot tr:only-child td { bottom: 0; }
+.awTbl tfoot td.awFLbl { text-align: left; padding-left: 8px; }
+.awTbl th.awCmtH { text-align: left; padding-left: 10px; }
+.awTbl td.awCmt { width: 380px; min-width: 380px; max-width: 380px; vertical-align: top; padding: 0; border-left: 1px solid var(--line); background: #fcfcfd; }
+.awCmtBox { position: relative; }
+.awCe { position: absolute; left: 0; right: 0; padding: 2px 10px 4px; font-size: 10.5px; line-height: 1.38; color: var(--ink); white-space: normal; border-top: 1px dashed rgba(0,0,0,0.12); }
+.awTbl tr.awEnd td { padding: 0; height: 0; border: 0; box-shadow: none; }
+.awCh { font-weight: 700; color: var(--ink2); margin-bottom: 2px; }
+.awCi { margin-top: 3px; }
+.awCi b { font-weight: 700; }
+.awCi .awCt { font-size: 9.5px; font-weight: 600; color: var(--ink3); }
+.awCi code { display: block; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 10px; color: #4a5260; background: var(--panel); border-radius: 3px; padding: 1px 4px; margin-top: 1px; white-space: pre-wrap; word-break: break-word; }
+.awTbl tr.awUp td { height: 24px; }
+.awBtns { margin-top: 12px; align-items: center; }
+.awMsg { font-size: 12px; color: var(--ink2); }
 .stVer { font-size: 9px; font-weight: 700; color: var(--ink3); }
 .stNote { border: none; background: transparent; cursor: pointer; font-size: 12px; padding: 0 4px; opacity: .45; }
 .stNote.has { opacity: 1; }
@@ -987,6 +1031,12 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
   <div id="histWrap"></div>
   <h3 style="margin-top:18px;">Change log</h3>
   <div id="changelogWrap"></div>
+</dialog>
+
+<dialog id="allWeeksDialog">
+  <h2>All weeks <span id="awSum" class="awSum"></span></h2>
+  <div id="awWrap" class="awWrap"></div>
+  <div class="btnRow awBtns"><button class="btnGhost" id="awXlsx" title="A spreadsheet file: opens in Excel, Numbers, LibreOffice — and in Google Sheets (upload it to Drive, or Sheets → File → Import)">&darr; Excel file (.xlsx)</button><button class="btnGhost" id="awSheets" title="Copies the table (with its colours) and opens a new Google Sheet — paste there with Ctrl+V">Copy &amp; open Google Sheets</button><span id="awMsg" class="awMsg"></span><span style="flex:1"></span><button class="btn" id="awClose">Close</button></div>
 </dialog>
 
 <dialog id="bkDialog">
@@ -1094,7 +1144,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it or see its 🕘 History — removed lines and earlier versions; drag a tab to reorder — on the phone hold it first; + for a new note). ⤢ (right end of the note's toolbar) opens the note large over the grid; Esc, ⤡ or a click outside puts it back. For a second window with just the notes, open this page with <b>?view=note</b> at the end of the address (sticky-note tab icon). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip left of its bullet (drag left below the last sub-item to take it a level up); a tap on the grip cycles that line bold → highlight → italics → plain, or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I). Cut / copy / paste and Tab / Shift+Tab take a folded line's hidden sub-items along. Undo / redo: <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (or Ctrl+Shift+Z) or ↶ ↷ — one history for everything, also inside the note (in a text field you are still typing in, the field's own undo). Habits: tap a day letter above the streak grid to let that day start later (up to 5:00) — time before then counts for the day before.</p>
+  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it or see its 🕘 History — removed lines and earlier versions; drag a tab to reorder — on the phone hold it first; + for a new note). ⤢ (right end of the note's toolbar) opens the note large over the grid; Esc, ⤡ or a click outside puts it back. For a second window with just the notes, open this page with <b>?view=note</b> at the end of the address (sticky-note tab icon). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip left of its bullet (drag left below the last sub-item to take it a level up); a tap on the grip cycles that line bold → highlight → italics → plain, or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I). Cut / copy / paste and Tab / Shift+Tab take a folded line's hidden sub-items along. Undo / redo: <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (or Ctrl+Shift+Z) or ↶ ↷ — one history for everything, also inside the note (in a text field you are still typing in, the field's own undo). Habits: tap a day letter above the streak grid to let that day start later (up to 5:00) — time before then counts for the day before. <b>All</b> (under the streak grid) shows every week in one table — as an Excel file (.xlsx, also opens in Google Sheets) or copied straight into a new Google Sheet. With <b>Ø</b> on, the grey line above the Ø column counts the finished weeks you missed.</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -1186,7 +1236,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v237 */
+/* build v238 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2082,6 +2132,7 @@ if (IS_BROWSER) (function () {
       if ($("masterplanDialog").open) renderBudgets();
       if ($("habitsDialog").open) { renderHabitsTable(); renderHistory(); renderChangelog(); }
       if ($("reportsDialog").open) renderReports();
+      if ($("allWeeksDialog").open) { const w = $("awWrap"), y = w.scrollTop; renderAllWeeks(); w.scrollTop = y; }
     } catch (e) {}
   }
 
@@ -4924,7 +4975,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v237"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v238"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -5311,12 +5362,16 @@ if (IS_BROWSER) (function () {
   function renderRightBar() { applyRightBar(); renderStreak(); renderDeadlines(); }
   function dockNote() { const dock = $("noteDock"), body = $("noteBody"); if (dock && body && body.parentElement !== dock) dock.appendChild(body); }
 
-  function streakWeekHtml(weekIdx) {
+  function streakWeekHtml(weekIdx, main) {
     const s = computeWeekStats(weekIdx), today = ymd(new Date());
     const dayLbls = ["M", "T", "W", "T", "F", "S"];
     const mon = ymd(dateOfCell(state.anchorMonday, weekIdx, 0)), ver = versionForWeek(weekIdx), note = (state.weekNotes || {})[mon];
     let h = '<div class="stWeek">';
     if (note) h += '<div class="stNoteTxt">' + esc(note) + "</div>";
+    if (main && ui.streakAvg) {   // v238: with Ø on, a light line above the Ø column: finished weeks missed / finished weeks
+      const mw = weeksMissedSummary();
+      if (mw.total) h += '<div class="stMissWk" title="Finished weeks with more missed cells than Jokers, out of all finished weeks in the tracker (this week isn\'t counted until it\'s over). All (below) shows every week.">' + mw.missed + " / " + mw.total + " weeks missed</div>";
+    }
     h += '<table class="stGrid"><thead><tr><th class="stNameH stScoreCell ' + (s.achieved ? "ok" : "bad") + '" title="missed cells / Joker (used / available)">' + s.miss + " / " + fmtJoker(s.joker) + '</th>';
     for (let i = 0; i < 6; i++) { const ds = s.dates[i], cut = dayStartMin(ds); h += '<th class="stDayH' + (cut ? " cut" : "") + '" data-ds="' + ds + '" title="' + esc(fmtDeadline(ds)) + " — the day starts at " + (cut ? fmtDayStart(cut) : "midnight") + ' (for the habits). Tap to change.">' + dayLbls[i] + (cut ? "<sup>" + fmtDayStart(cut) + "</sup>" : "") + "</th>"; }
     if (ui.streakAvg) h += '<th class="stAvgH" title="Average of all entered values">Ø</th>';
@@ -5339,14 +5394,15 @@ if (IS_BROWSER) (function () {
     const host = $("streakBody"); if (!host) return;
     if (!(state.habits || []).length) { host.innerHTML = '<div class="stEmpty">No habits yet — click the ⚙ to add some.</div>'; return; }
     const curMon = ymd(dateOfCell(state.anchorMonday, state.currentWeek, 0)), curNote = (state.weekNotes || {})[curMon] || "";
-    let h = streakWeekHtml(state.currentWeek);
+    let h = streakWeekHtml(state.currentWeek, true);
     // button row sits between the present week and the next week (so "Nxt Wk" stays put when toggled)
     h += '<div class="stBtnRow">' +
       '<button class="stBtn stCfg" title="Manage habits & history">🔥</button>' +
       '<button class="stBtn stNext' + (ui.streakNext ? " on" : "") + '" title="Show / hide next week">Next</button>' +
       '<button class="stBtn stBulk" title="Bulk-mark a range of days (holiday, illness…)">Bulk</button>' +
       '<button class="stBtn stNoteBtn' + (curNote ? " has" : "") + '" title="Note for this week">🖉</button>' +
-      '<button class="stBtn stAvg' + (ui.streakAvg ? " on" : "") + '" title="Show / hide averages of entered values">Ø</button>' +
+      '<button class="stBtn stAvg' + (ui.streakAvg ? " on" : "") + '" title="Show / hide averages of entered values (and how many finished weeks you missed)">Ø</button>' +
+      '<button class="stBtn stAll" title="All weeks in one table — and as a spreadsheet">All</button>' +
       "</div>";
     if (ui.streakNext) h += streakWeekHtml(state.currentWeek + 1);
     host.innerHTML = h;
@@ -5357,6 +5413,7 @@ if (IS_BROWSER) (function () {
     br.querySelector(".stNext").addEventListener("click", () => { ui.streakNext = !ui.streakNext; saveUI(); renderStreak(); });
     br.querySelector(".stBulk").addEventListener("click", openBulk);
     br.querySelector(".stAvg").addEventListener("click", () => { ui.streakAvg = !ui.streakAvg; saveUI(); renderStreak(); });
+    br.querySelector(".stAll").addEventListener("click", openAllWeeks);
     br.querySelector(".stNoteBtn").addEventListener("click", () => {
       const cur = (state.weekNotes || {})[curMon] || "";
       const v = prompt("Note for the week of " + fmtDeadline(curMon) + ":", cur);
@@ -5507,6 +5564,325 @@ if (IS_BROWSER) (function () {
       commit(); renderHistory(); renderStreak();
     }));
   }
+
+  /* ── v238: all weeks in one table (streak row → All), as an .xlsx file or copied into a new Google Sheet ──
+     Same cells and colours as the side bar (habitStatus, per week's habit version); a habit that wasn't part of a week is hatched there.
+     Weeks = every week with a habit mark plus this week (the "Past weeks" set). "Finished" = before this week (the tracker's today). */
+  function todayWeekIdx() { return cellForDate(state.anchorMonday, parseYMD(habitToday())).weekIdx; }
+  function trackedWeeks() {
+    const wset = new Set();
+    for (const hb of (state.habits || [])) for (const d in (hb.entries || {})) wset.add(cellForDate(state.anchorMonday, parseYMD(d)).weekIdx);
+    wset.add(todayWeekIdx());
+    return [...wset].sort((a, b) => a - b);
+  }
+  /* The side bar re-renders on every change, and re-evaluating every past week's rules costs ~100 ms with a year of history —
+     so the count is kept until something a finished week can depend on changes. Rules only look backwards (value, prev, avg,
+     avgSince, hours, firstHours, Mails / Hour are all "up to that day"); the one reach forward is a session early on this Monday,
+     before its day start, which counts for last Saturday. So: habit definitions + versions + task names/parents, and marks,
+     day starts and tracked sessions dated up to this week's Monday. Ticking Tue–Sat of this week doesn't recompute. */
+  let missWkMemo = null;
+  function trackerSig() {
+    const mon = ymd(dateOfCell(state.anchorMonday, todayWeekIdx(), 0)), cutMs = parseYMD(mon).getTime() + 86400000;
+    const hs = (state.habits || []).map((h) => { const e = []; for (const d in (h.entries || {})) if (d <= mon) e.push(d, h.entries[d]); return [h.id, h.name, h.type, h.rule, h.since, h.archived, e]; });
+    const ds = []; for (const d in (state.dayStart || {})) if (d <= mon) ds.push(d, state.dayStart[d]);
+    let bs = 0;
+    for (const w of (state.weeks || [])) for (const b of (w.blocks || [])) {
+      if (b.kind !== "actual" || (b.startMs != null ? b.startMs >= cutMs : !(b.date <= mon))) continue;
+      const t = b.date + "|" + b.startSlot + "|" + b.lenSlots + "|" + b.startMs + "|" + b.endMs + "|" + b.catId;
+      let x = 0; for (let i = 0; i < t.length; i++) x = (Math.imul(x, 33) + t.charCodeAt(i)) | 0;
+      bs = (Math.imul(bs, 31) + x) | 0;
+    }
+    return JSON.stringify([state.anchorMonday, mon, ds, state.habitVersions || null, hs, (state.categories || []).map((c) => [c.id, c.name, c.parent || ""])]) + "#" + bs;
+  }
+  function weeksMissedSummary() {   // finished weeks in the tracker, and how many of them had more missed cells than Jokers
+    const key = trackerSig(); if (missWkMemo && missWkMemo.key === key) return missWkMemo.val;
+    const cur = todayWeekIdx(); let total = 0, missed = 0;
+    for (const wi of trackedWeeks()) { if (wi >= cur) continue; const s = computeWeekStats(wi); if (!s.H) continue; total++; if (!s.achieved) missed++; }
+    missWkMemo = { key, val: { total, missed } };
+    return missWkMemo.val;
+  }
+  function allWeeksModel() {
+    const cur = todayWeekIdx(), today = habitToday();
+    const weeks = trackedWeeks().map((wi) => { const s = computeWeekStats(wi); return { wi, s, ids: new Set(s.habits.map((h) => h.id)), note: (state.weekNotes || {})[s.dates[0]] || "", finished: wi < cur, isCur: wi === cur }; }).filter((w) => w.s.H);
+    const cols = (state.habits || []).filter((hb) => weeks.some((w) => w.ids.has(hb.id))).map((hb) => ({ hb, name: hb.name, hm: !!hb.hm, ach: 0, miss: 0, avg: (hb.type || "binary") === "numeric" ? habitAllAvg(hb) : null }));
+    for (const w of weeks) {
+      const thu = parseYMD(w.s.dates[3]); w.iso = thu.getFullYear() + "-W" + String(isoWeek(thu)).padStart(2, "0"); w.wk = isoWeek(thu);
+      w.days = w.s.dates.map((ds) => ({ ds, cells: cols.map((c) => {
+        if (!w.ids.has(c.hb.id)) return { off: true };
+        const st = habitStatus(c.hb, ds), val = (c.hb.entries || {})[ds];
+        if (st === "ach") c.ach++; else if (st === "miss") c.miss++;
+        return { st, num: typeof val === "number" ? val : null };
+      }) }));
+    }
+    const fin = weeks.filter((w) => w.finished);
+    return { weeks, cols, today, finished: fin.length, missed: fin.filter((w) => !w.s.achieved).length };
+  }
+  const awVal = (c, col) => c.st === "na" ? "NA" : c.num != null ? (col.hm ? fmtHM(c.num) : fmtNum(c.num)) : "";
+  /* Comments column: the habits at the start of the table and every change after it, from the habit definitions (versions,
+     "since", archive, deleted habits) plus the built-in Mails limit (MAILS_RULE2_FROM). Each entry =
+     { mon, head, items: [{ name, tag, lines: [{ k: "desc" | "formula" | "type", t }] }] }, chronological. */
+  const fmtDay = (ds) => fmtDeadline(ds) + " " + parseYMD(ds).getFullYear();
+  function habitText(id, def, mon) {   // how a habit read on that Monday: verbal (its note, or the built-in description) and formula
+    const live = (state.habits || []).find((x) => x.id === id), bi = live ? builtinRule(live, mon) : null;
+    if (bi) return { verbal: bi.desc, formula: "built-in (no formula)" };
+    return { verbal: def.desc || "(no description)", formula: def.rule || ((def.type || "binary") === "binary" ? "— (you tick it)" : "—") };
+  }
+  function habitChangeLog(m) {
+    if (!m.weeks.length) return [];
+    const hs = state.habits || [], ids = hs.map((h) => h.id), first = m.weeks[0].s.dates[0];
+    for (const v of (state.habitVersions || [])) for (const id in (v.defs || {})) if (!ids.includes(id)) ids.push(id);   // habits deleted since: still in old versions
+    const live = (id) => hs.find((h) => h.id === id);
+    const active = (id, mon) => { const d = defFor(id, mon), h = live(id); if (!d || d.archived) return false; return !(h && h.since && ymd(addDays(parseYMD(mon), 5)) < h.since); };   // as weekHabitsFor, from the definitions
+    const look = (id, mon) => { const d = defFor(id, mon); return Object.assign({ name: d.name, type: d.type || "binary" }, habitText(id, d, mon)); };
+    const full = (id, mon, tag) => { const x = look(id, mon); return { name: x.name, tag: tag || "", lines: [{ k: "desc", t: x.verbal }, { k: "formula", t: x.formula }] }; };
+    const out = [];
+    const start = ids.filter((id) => active(id, first));
+    if (start.length) out.push({ mon: first, head: start.length + " habit" + (start.length === 1 ? "" : "s") + " at the start (" + fmtDay(first) + "):", items: start.map((id) => full(id, first)) });
+    const pts = new Set();
+    for (const v of (state.habitVersions || [])) if (v.from > first) pts.add(ymd(mondayOf(parseYMD(v.from))));
+    for (const h of hs) if (h.since && h.since > first) pts.add(ymd(mondayOf(parseYMD(h.since))));
+    if (MAILS_RULE2_FROM > first) pts.add(MAILS_RULE2_FROM);
+    for (const P of [...pts].sort()) {
+      const prev = ymd(addDays(parseYMD(P), -7)), ch = [], add = [], back = [], arch = [], rem = [];
+      for (const id of ids) {
+        const a = active(id, prev), b = active(id, P);
+        if (!a && b) { const dp = defFor(id, prev); (dp && dp.archived ? back : add).push(full(id, P, dp && dp.archived ? "back from the archive" : "new")); }
+        else if (a && !b) { const dn = defFor(id, P); (dn && dn.archived ? arch : rem).push({ name: look(id, prev).name, tag: dn && dn.archived ? "archived" : "removed", lines: [] }); }
+        else if (a && b) {
+          const x = look(id, prev), y = look(id, P); if (x.name === y.name && x.type === y.type && x.verbal === y.verbal && x.formula === y.formula) continue;
+          const lines = [{ k: "desc", t: x.verbal === y.verbal ? y.verbal + "  (unchanged)" : y.verbal + "  (before: " + x.verbal + ")" },
+                         { k: "formula", t: x.formula === y.formula ? y.formula + "  (unchanged)" : x.formula + "  →  " + y.formula }];
+          if (x.type !== y.type) lines.unshift({ k: "type", t: "type: " + x.type + " → " + y.type });
+          ch.push({ name: y.name + (x.name !== y.name ? " (was " + x.name + ")" : ""), tag: "changed", lines });
+        }
+      }
+      const n = (k, one, many) => k === 1 ? one : k + " " + many, parts = [];
+      if (ch.length) parts.push(n(ch.length, "1 habit changed", "habits changed"));
+      if (add.length) parts.push(n(add.length, "new habit added", "new habits added"));
+      if (back.length) parts.push(n(back.length, "1 habit back from the archive", "habits back from the archive"));
+      if (arch.length) parts.push(n(arch.length, "1 habit archived", "habits archived"));
+      if (rem.length) parts.push(n(rem.length, "1 habit removed", "habits removed"));
+      if (!parts.length) continue;
+      const head = parts.join(", "); out.push({ mon: P, head: head.charAt(0).toUpperCase() + head.slice(1) + " as of " + fmtDay(P) + ":", items: ch.concat(add, back, arch, rem) });
+    }
+    return out;
+  }
+  function changeLines(e) {   // one entry as plain lines (spreadsheet / clipboard)
+    const L = [e.head];
+    for (const it of e.items) {
+      const d = it.lines.find((l) => l.k === "desc");
+      L.push("• " + it.name + (it.tag && it.tag !== "changed" && it.tag !== "new" ? " (" + it.tag + ")" : "") + (d ? " — " + d.t : ""));
+      for (const l of it.lines) if (l.k !== "desc") L.push("     " + (l.k === "formula" ? "formula: " : "") + l.t);
+    }
+    return L;
+  }
+  function renderAllWeeks() {
+    const host = $("awWrap"), m = allWeeksModel();
+    $("awSum").textContent = m.finished ? m.missed + " of " + m.finished + " finished week" + (m.finished === 1 ? "" : "s") + " missed" : "";
+    if (!m.weeks.length || !m.cols.length) { host.innerHTML = '<p class="muted" style="padding:10px 12px;">No habit marks yet.</p>'; return; }
+    let h = '<table class="awTbl"><thead><tr><th class="awWkH">Week</th><th class="awDayH">Day</th>';
+    for (const c of m.cols) h += '<th class="awHb" title="' + esc(c.name + (c.hb.archived ? " (archived)" : "") + (c.hb.desc ? " — " + c.hb.desc : "")) + '">' + esc(c.name) + "</th>";
+    h += '<th class="awCmtH">Comments</th></tr></thead><tbody>';
+    // comments: each entry starts on the first row dated on/after its Monday and spans the rows until the next one; later than the table → one extra row at the end
+    const days = []; for (const w of m.weeks) for (const dy of w.days) days.push(dy.ds);
+    const blocks = new Map();
+    for (const e of habitChangeLog(m)) { let r = days.findIndex((ds) => ds >= e.mon); if (r < 0) r = days.length; if (!blocks.has(r)) blocks.set(r, []); blocks.get(r).push(e); }
+    const nRows = days.length + (blocks.has(days.length) ? 1 : 0);
+    let ct = "";   // all comments live in one cell spanning every row; layoutComments() places each next to its row (or right below the previous one)
+    for (const r of [...blocks.keys()].sort((a, b) => a - b)) for (const e of blocks.get(r)) {
+      ct += '<div class="awCe" data-r="' + r + '"><div class="awCh">' + esc(e.head) + "</div>";
+      for (const it of e.items) {
+        const d = it.lines.find((l) => l.k === "desc");
+        ct += '<div class="awCi"><b>' + esc(it.name) + "</b>" + (it.tag && it.tag !== "changed" && it.tag !== "new" ? ' <span class="awCt">' + esc(it.tag) + "</span>" : "") + (d ? " — " + esc(d.t) : "");
+        for (const l of it.lines) if (l.k === "formula") ct += "<code>" + esc(l.t) + "</code>"; else if (l.k !== "desc") ct += "<div>" + esc(l.t) + "</div>";
+        ct += "</div>";
+      }
+      ct += "</div>";
+    }
+    const cmtCell = (r) => r === 0 ? '<td class="awCmt" rowspan="' + (nRows + 1) + '"><div class="awCmtBox">' + ct + "</div></td>" : "";
+    let row = 0;
+    for (const w of m.weeks) {
+      const res = w.s.achieved ? "ok" : "bad", d0 = parseYMD(w.s.dates[0]);
+      w.days.forEach((dy, i) => {
+        h += "<tr" + (i === 0 ? ' class="awFirst" data-wi="' + w.wi + '"' : "") + ">";
+        if (i === 0) {
+          h += '<td class="awWk" rowspan="6" title="' + esc(w.iso + " · " + fmtDeadline(w.s.dates[0]) + " – " + fmtDeadline(w.s.dates[5]) + " " + d0.getFullYear() + (w.note ? "\n" + w.note : "")) + '"><span class="wkBadge ' + (w.finished || w.isCur ? res : "cur") + '">W' + w.wk + "</span>" +
+               '<div class="awScore ' + res + '">' + w.s.miss + " / " + fmtJoker(w.s.joker) + "</div>" +
+               (w.isCur ? '<div class="awTag">this week</div>' : w.finished ? "" : '<div class="awTag">upcoming</div>') +
+               (w.note ? '<div class="awNote">' + esc(w.note) + "</div>" : "") + "</td>";
+        }
+        h += '<td class="awDay' + (dy.ds === m.today ? " today" : "") + '">' + esc(fmtDeadline(dy.ds)) + "</td>";
+        dy.cells.forEach((c, j) => {
+          const cls = c.off ? "off" : c.st === "ach" || c.st === "miss" || c.st === "na" ? c.st : "blank";
+          h += '<td><div class="awCell ' + cls + (dy.ds === m.today ? " today" : "") + (dy.ds > m.today ? " future" : "") + '"' + (c.off ? ' title="not tracked that week"' : "") + ">" + (c.off ? "" : esc(awVal(c, m.cols[j]))) + "</div></td>";
+        });
+        h += cmtCell(row++) + "</tr>";
+      });
+    }
+    if (nRows > days.length) h += '<tr class="awFirst awUp"><td class="awWk" colspan="2"><span class="awTag">upcoming</span></td>' + m.cols.map(() => "<td></td>").join("") + "</tr>";
+    h += '<tr class="awEnd"><td colspan="' + (2 + m.cols.length) + '"></td></tr>';   // grows when the comments run past the last row
+    h += "</tbody><tfoot>";
+    h += '<tr class="awF1"><td class="awFLbl" colspan="2" title="Achieved ÷ (achieved + missed) days — NA and blank days left out">Achieved</td>' + m.cols.map((c) => "<td" + (c.ach + c.miss ? ' title="' + c.ach + " achieved / " + c.miss + ' missed"' : "") + ">" + (c.ach + c.miss ? Math.round(100 * c.ach / (c.ach + c.miss)) + "%" : "") + "</td>").join("") + "<td></td></tr>";
+    if (m.cols.some((c) => c.avg)) h += '<tr class="awF2"><td class="awFLbl" colspan="2" title="Average of all entered values (as in the Ø column)">Ø</td>' + m.cols.map((c) => "<td" + (c.avg && c.avg.per7 ? ' title="per calendar day (Mon = Sun + Mon)"' : "") + ">" + (c.avg ? (c.hm ? fmtHM(c.avg.avg) : fmtAvg(c.avg.avg)) : "") + "</td>").join("") + "<td></td></tr>";
+    host.innerHTML = h + "</tfoot></table>";
+    if ($("allWeeksDialog").open) layoutComments();
+  }
+  function layoutComments() {   // needs layout (dialog open): each comment at the top of its row, or 8px below the previous one if that is still running
+    const host = $("awWrap"), box = host.querySelector(".awCmtBox"); if (!box) return;
+    const rows = host.querySelectorAll(".awTbl tbody tr"), end = host.querySelector("tr.awEnd td"), top0 = box.getBoundingClientRect().top;   // (measure everything before touching the spacer: changing it can clamp the scroll position)
+    let y = 0;
+    for (const el of box.querySelectorAll(".awCe")) { const tr = rows[+el.dataset.r]; const t = Math.max(tr ? tr.getBoundingClientRect().top - top0 + 4 : 0, y); el.style.top = t + "px"; y = t + el.offsetHeight + 8; }
+    const lastBottom = rows[rows.length - 2] ? rows[rows.length - 2].getBoundingClientRect().bottom - top0 : 0;
+    end.style.height = Math.max(0, Math.ceil(y - lastBottom)) + "px";
+  }
+  function openAllWeeks() {
+    $("awMsg").textContent = ""; renderAllWeeks(); $("allWeeksDialog").showModal(); layoutComments();
+    const host = $("awWrap"); host.scrollTop = host.scrollHeight;   // chronological: open at the bottom (this week)
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if ($("allWeeksDialog").open) layoutComments(); });   // text heights change once the web font is in
+  }
+  // Spreadsheet rows. A cell = { v, t: "s" text | "n" number | "d" date (YYYY-MM-DD) | "hm" hours as h:mm | "p" fraction as %, f: fill key, b: bold, c: centred }
+  const AW_FILL = { ach: "#fff2ab", na: "#f0cf4d", miss: "#f2795f", off: "#eeeff1", ok: "#b8ecc4", bad: "#f4b0a6", head: "#eceef1" };
+  function allWeeksDayRows(m) {
+    const H = (v) => ({ v, t: "s", f: "head", b: true });
+    const rows = [[H("Week"), H("Date")].concat(m.cols.map((c) => Object.assign(H(c.name), { c: 1 })), [Object.assign(H("Missed"), { c: 1 }), Object.assign(H("Joker"), { c: 1 }), H("Comments")])];
+    for (const w of m.weeks) {
+      const wf = w.finished || w.isCur ? (w.s.achieved ? "ok" : "bad") : null;
+      w.days.forEach((dy, i) => {
+        const r = [{ v: w.iso, t: "s" }, { v: dy.ds, t: "d" }];
+        dy.cells.forEach((c, j) => {
+          if (c.off) { r.push({ v: "", t: "s", f: "off" }); return; }
+          const f = c.st === "ach" || c.st === "miss" || c.st === "na" ? c.st : null;
+          if (c.st === "na") r.push({ v: "NA", t: "s", f, c: 1 });
+          else if (c.num != null) r.push({ v: c.num, t: m.cols[j].hm ? "hm" : "n", f, c: 1 });
+          else r.push({ v: c.st === "ach" ? "✓" : c.st === "miss" ? "✕" : "", t: "s", f, c: 1 });
+        });
+        if (i === 0) r.push({ v: w.s.miss, t: "n", f: wf, b: true, c: 1 }, { v: Math.round(w.s.joker * 10) / 10, t: "n", f: wf, c: 1 });
+        rows.push(r);
+      });
+    }
+    // Comments: one line per row, each entry from the first row dated on/after its Monday (or right after the previous entry, one row apart); later than the table → extra rows
+    const CC = 2 + m.cols.length + 2, dataEnd = rows.length; let cur = 1;
+    for (const e of habitChangeLog(m)) {
+      let r = 1; while (r < dataEnd && rows[r][1].v < e.mon) r++;
+      r = Math.max(r, cur);
+      changeLines(e).forEach((t, k) => { while (rows.length <= r + k) rows.push([]); rows[r + k][CC] = { v: t, t: "s", b: k === 0 }; });
+      cur = r + changeLines(e).length + 1;
+    }
+    rows.push([]);
+    rows.push([{ v: "Achieved", t: "s", b: true }, null].concat(m.cols.map((c) => c.ach + c.miss ? { v: c.ach / (c.ach + c.miss), t: "p", c: 1 } : null)));
+    if (m.cols.some((c) => c.avg)) rows.push([{ v: "Ø", t: "s", b: true }, null].concat(m.cols.map((c) => c.avg ? { v: c.avg.avg, t: c.hm ? "hm" : "n", c: 1 } : null)));
+    return rows;
+  }
+  function allWeeksWeekRows(m) {
+    const H = (v) => ({ v, t: "s", f: "head", b: true });
+    const rows = [["Week", "Monday", "Missed", "Joker", "NA cells", "Result", "Note"].map(H)];
+    for (const w of m.weeks) {
+      const res = w.finished ? (w.s.achieved ? "achieved" : "missed") : w.isCur ? "this week (" + (w.s.achieved ? "on track" : "over the Joker") + ")" : "upcoming";
+      rows.push([{ v: w.iso, t: "s" }, { v: w.s.dates[0], t: "d" }, { v: w.s.miss, t: "n", c: 1 }, { v: Math.round(w.s.joker * 10) / 10, t: "n", c: 1 }, { v: w.s.na, t: "n", c: 1 },
+                 { v: res, t: "s", f: w.finished || w.isCur ? (w.s.achieved ? "ok" : "bad") : null, b: true }, { v: w.note, t: "s" }]);
+    }
+    rows.push([]);
+    rows.push([{ v: "Finished weeks", t: "s", b: true }, null, { v: m.finished, t: "n", c: 1 }]);
+    rows.push([{ v: "… of them missed", t: "s", b: true }, null, { v: m.missed, t: "n", c: 1 }]);
+    return rows;
+  }
+  // A minimal .xlsx writer (stored zip, inline strings) — opens in Excel, Numbers, LibreOffice and Google Sheets
+  const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function zipStore(files) {   // [{ name, text }] → Blob (no compression)
+    const enc = new TextEncoder(), parts = [], cent = []; let off = 0, cdLen = 0;
+    for (const f of files) {
+      const nm = enc.encode(f.name), d = enc.encode(f.text), crc = crc32(d);
+      const lh = new DataView(new ArrayBuffer(30));
+      lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true); lh.setUint16(10, 0, true); lh.setUint16(12, 33, true);
+      lh.setUint32(14, crc, true); lh.setUint32(18, d.length, true); lh.setUint32(22, d.length, true); lh.setUint16(26, nm.length, true); lh.setUint16(28, 0, true);
+      parts.push(new Uint8Array(lh.buffer), nm, d);
+      const ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, 0, true); ch.setUint16(14, 33, true);
+      ch.setUint32(16, crc, true); ch.setUint32(20, d.length, true); ch.setUint32(24, d.length, true); ch.setUint16(28, nm.length, true); ch.setUint32(42, off, true);
+      cent.push(new Uint8Array(ch.buffer), nm); cdLen += 46 + nm.length;
+      off += 30 + nm.length + d.length;
+    }
+    const eo = new DataView(new ArrayBuffer(22));
+    eo.setUint32(0, 0x06054b50, true); eo.setUint16(8, files.length, true); eo.setUint16(10, files.length, true); eo.setUint32(12, cdLen, true); eo.setUint32(16, off, true);
+    return new Blob(parts.concat(cent, [new Uint8Array(eo.buffer)]), { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  }
+  function xlsxBlob(sheets) {   // [{ name, rows, widths, freeze: { c, r } }]
+    const xe = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");
+    const col = (i) => { let s = ""; for (i++; i; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + (i - 1) % 26) + s; return s; };
+    const FMT = { d: 164, hm: 165, p: 9 }, fillKeys = Object.keys(AW_FILL), xfs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'], xfIdx = {};
+    const sid = (c) => {
+      const fmt = FMT[c.t] || 0, key = (c.f || "") + "|" + fmt + "|" + (c.b ? 1 : 0) + "|" + (c.c ? 1 : 0); if (key === "|0|0|0") return 0;
+      if (xfIdx[key] == null) { xfIdx[key] = xfs.length; xfs.push('<xf numFmtId="' + fmt + '" fontId="' + (c.b ? 1 : 0) + '" fillId="' + (c.f ? 2 + fillKeys.indexOf(c.f) : 0) + '" borderId="0" xfId="0"' + (fmt ? ' applyNumberFormat="1"' : "") + (c.b ? ' applyFont="1"' : "") + (c.f ? ' applyFill="1"' : "") + (c.c ? ' applyAlignment="1"><alignment horizontal="center"/></xf>' : "/>")); }
+      return xfIdx[key];
+    };
+    const serial = (ds) => { const p = ds.split("-").map(Number); return (Date.UTC(p[0], p[1] - 1, p[2]) - Date.UTC(1899, 11, 30)) / 86400000; };
+    const NS = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"', HD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+    const sheetXml = (sh) => {
+      let x = HD + "<worksheet " + NS + ">";
+      if (sh.freeze) { const fc = sh.freeze.c || 0, fr = sh.freeze.r || 0; x += '<sheetViews><sheetView workbookViewId="0"><pane' + (fc ? ' xSplit="' + fc + '"' : "") + (fr ? ' ySplit="' + fr + '"' : "") + ' topLeftCell="' + col(fc) + (fr + 1) + '" activePane="' + (fc && fr ? "bottomRight" : fr ? "bottomLeft" : "topRight") + '" state="frozen"/></sheetView></sheetViews>'; }
+      if (sh.widths) x += "<cols>" + sh.widths.map((w, i) => '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>').join("") + "</cols>";
+      x += "<sheetData>";
+      sh.rows.forEach((r, ri) => {
+        x += '<row r="' + (ri + 1) + '">';
+        (r || []).forEach((c, ci) => {
+          if (!c) return;
+          const ref = col(ci) + (ri + 1), s = sid(c), sa = s ? ' s="' + s + '"' : "";
+          if (!c.t || c.t === "s") x += c.v === "" || c.v == null ? (s ? '<c r="' + ref + '"' + sa + "/>" : "") : '<c r="' + ref + '"' + sa + ' t="inlineStr"><is><t xml:space="preserve">' + xe(c.v) + "</t></is></c>";
+          else { const v = c.t === "d" ? serial(c.v) : c.t === "hm" ? c.v / 24 : c.v; if (typeof v === "number" && isFinite(v)) x += '<c r="' + ref + '"' + sa + "><v>" + v + "</v></c>"; }
+        });
+        x += "</row>";
+      });
+      return x + "</sheetData></worksheet>";
+    };
+    const sheetTexts = sheets.map(sheetXml);   // (fills the style table)
+    const styles = HD + "<styleSheet " + NS.split(" xmlns:r")[0] + '><numFmts count="2"><numFmt numFmtId="164" formatCode="ddd d mmm yyyy"/><numFmt numFmtId="165" formatCode="[h]:mm"/></numFmts>' +
+      '<fonts count="2"><font><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="11"/><name val="Calibri"/><family val="2"/></font></fonts>' +
+      '<fills count="' + (2 + fillKeys.length) + '"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' + fillKeys.map((k) => '<fill><patternFill patternType="solid"><fgColor rgb="FF' + AW_FILL[k].slice(1).toUpperCase() + '"/><bgColor indexed="64"/></patternFill></fill>').join("") + "</fills>" +
+      '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+      '<cellXfs count="' + xfs.length + '">' + xfs.join("") + '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+    const files = [
+      { name: "[Content_Types].xml", text: HD + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' + sheets.map((s, i) => '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join("") + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>' },
+      { name: "_rels/.rels", text: HD + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+      { name: "xl/workbook.xml", text: HD + "<workbook " + NS + "><sheets>" + sheets.map((s, i) => '<sheet name="' + xe(s.name) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>').join("") + "</sheets></workbook>" },
+      { name: "xl/_rels/workbook.xml.rels", text: HD + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + sheets.map((s, i) => '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>').join("") + '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+      { name: "xl/styles.xml", text: styles },
+    ].concat(sheetTexts.map((t, i) => ({ name: "xl/worksheets/sheet" + (i + 1) + ".xml", text: t })));
+    return zipStore(files);
+  }
+  function downloadAllWeeksXlsx() {
+    const m = allWeeksModel();
+    if (!m.weeks.length || !m.cols.length) { $("awMsg").textContent = "Nothing to export yet."; return; }
+    const blob = xlsxBlob([
+      { name: "Days", rows: allWeeksDayRows(m), widths: [10, 16].concat(m.cols.map(() => 9), [8, 7, 100]), freeze: { c: 2, r: 1 } },
+      { name: "Weeks", rows: allWeeksWeekRows(m), widths: [10, 16, 8, 7, 9, 22, 40], freeze: { r: 1 } },
+    ]);
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "plapp-streaks-" + ymd(new Date()) + ".xlsx"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    $("awMsg").textContent = "Downloaded (2 sheets: Days, Weeks).";
+  }
+  function copyAllWeeksForSheets() {   // the Days table as HTML with inline colours (Google Sheets / Excel keep them on paste) + tab-separated text
+    const m = allWeeksModel();
+    if (!m.weeks.length || !m.cols.length) { $("awMsg").textContent = "Nothing to copy yet."; return; }
+    const rows = allWeeksDayRows(m);
+    const txt = (c) => !c ? "" : c.t === "hm" ? fmtHM(c.v) : c.t === "p" ? Math.round(c.v * 100) + "%" : c.t === "n" ? String(Math.round(c.v * 1000) / 1000) : String(c.v == null ? "" : c.v);
+    let html = '<meta charset="utf-8"><table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:10pt">';
+    for (const r of rows) { html += "<tr>"; for (const c of (r || [])) html += "<td" + (c ? ' style="' + (c.f ? "background-color:" + AW_FILL[c.f] + ";" : "") + (c.b ? "font-weight:bold;" : "") + (c.c ? "text-align:center;" : "") + '"' : "") + ">" + esc(txt(c)) + "</td>"; html += "</tr>"; }
+    html += "</table>";
+    const tsv = rows.map((r) => (r || []).map(txt).join("\t")).join("\n");
+    let ok = false;
+    const onCopy = (e) => { e.preventDefault(); e.stopPropagation(); e.clipboardData.setData("text/html", html); e.clipboardData.setData("text/plain", tsv); ok = true; };
+    document.addEventListener("copy", onCopy, true);
+    try { document.execCommand("copy"); } catch (e) {}
+    document.removeEventListener("copy", onCopy, true);
+    if (!ok) { $("awMsg").textContent = "Couldn't copy — use the Excel file instead."; return; }
+    $("awMsg").textContent = "Copied — paste it into the new sheet with Ctrl+V.";
+    window.open("https://sheets.new", "_blank", "noopener");
+  }
+  $("awXlsx").addEventListener("click", downloadAllWeeksXlsx);
+  $("awSheets").addEventListener("click", copyAllWeeksForSheets);
+  $("awClose").addEventListener("click", () => $("allWeeksDialog").close());
+
   function checkReminder() {
     if (MV) return;   // phone views open for one quick thing — the daily "fill in your habits" popup only shows in the full app
     if (!(state.habits || []).length) return;
