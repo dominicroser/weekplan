@@ -260,8 +260,8 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteBody ol > li { counter-increment: nli; }
 #noteBody ol > li:not(.chk)::after { content: counter(nli) "."; background: none; text-align: right; padding-right: 4px; width: calc(var(--mk) + 12px); left: -12px; }
 /* collapsible bullets: a bullet with sub-bullets shows ▾ (open) / ▸ (folded) as its marker; click it to fold */
-#noteBody ul > li.hasKids:not(.chk)::after { content: "\25BE"; background: none; color: #8a7c2e; cursor: pointer; }
-#noteBody ul > li.hasKids.collapsed:not(.chk)::after { content: "\25B8"; color: #3a3320; font-weight: 700; }
+#noteBody ul > li.hasKids:not(.chk)::after { content: "\25BE"; background: none; color: currentColor; cursor: pointer; }   /* v239: ▾ / ▸ in the bullet colour (currentColor = the line's own colour, incl. priority colours) */
+#noteBody ul > li.hasKids.collapsed:not(.chk)::after { content: "\25B8"; color: currentColor; font-weight: 700; }
 #noteBody li.collapsed > ul, #noteBody li.collapsed > ol, #noteBody li.collapsed + ul, #noteBody li.collapsed + ol { display: none; }
 /* tick boxes (v227): a <li class="chk"> shows an empty box as its marker; ticking moves the item to the dump note's "Ticked" section */
 #noteBody li.chk::after { content: ""; left: calc(var(--mk) - var(--bxg) - var(--bx)); top: 0.3em; top: calc((1lh - var(--bx)) / 2); width: var(--bx); height: var(--bx); border: 1.5px solid #6b6230; border-radius: 3px; background: rgba(255,255,255,0.55); padding: 0; cursor: pointer; }
@@ -279,8 +279,8 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteBody li::before { content: ""; position: absolute; left: calc(-1 * (var(--gw) + var(--fd))); top: 0; width: calc(var(--gw) + var(--fd)); height: 1.45em; height: 1lh;
   padding-left: var(--gw); box-sizing: border-box; text-align: center; font-size: var(--mkfs); font-weight: 400; font-style: normal; color: #8a7c2e; user-select: none; -webkit-user-select: none;
   background-repeat: no-repeat; background-position: var(--gpos); background-size: var(--gsz); }
-#noteBody li.chk.hasKids::before, #noteBody ol > li.hasKids::before { content: "\25BE"; cursor: pointer; }   /* ▾ for lines whose marker is a box / number */
-#noteBody li.chk.hasKids.collapsed::before, #noteBody ol > li.hasKids.collapsed::before { content: "\25B8"; color: #3a3320; font-weight: 700; }
+#noteBody li.chk.hasKids::before, #noteBody ol > li.hasKids::before { content: "\25BE"; color: currentColor; cursor: pointer; }   /* ▾ for lines whose marker is a box / number */
+#noteBody li.chk.hasKids.collapsed::before, #noteBody ol > li.hasKids.collapsed::before { content: "\25B8"; color: currentColor; font-weight: 700; }
 @media (hover: hover) { #noteBody li:hover::before { background-image: var(--grip); } }
 @media (hover: none) { #noteBody li::before { background-image: var(--grip); } }
 #noteBody li.ndSrc { opacity: 0.35; }
@@ -1236,7 +1236,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v238 */
+/* build v240 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2355,7 +2355,7 @@ if (IS_BROWSER) (function () {
     el.classList.toggle("open", !!nt.open);
     const cn = curNote();
     body.style.background = noteBg(cn.color); body.style.setProperty("--nbg", noteBg(cn.color));
-    if (force || document.activeElement !== body || body.dataset.nid !== cn.id) { body.innerHTML = cn.html || ""; body.dataset.nid = cn.id; decorateNoteLists(); if (cleanNoteStyles(body)) { cn.html = body.innerHTML; saveNoteSoon(); } }   // v235: old pasted-in layout junk is removed once, and saved
+    if (force || document.activeElement !== body || body.dataset.nid !== cn.id) { body.innerHTML = cn.html || ""; body.dataset.nid = cn.id; decorateNoteLists(); if (cleanNoteStyles(body) | fixGhostLines(body)) { decorateNoteLists(); cn.html = body.innerHTML; saveNoteSoon(); } }   // v235: old pasted-in layout junk is removed once, and saved
     renderNoteTabs(); renderTicked();
   }
 
@@ -3483,7 +3483,7 @@ if (IS_BROWSER) (function () {
     });
     return changed;
   }
-  function saveNoteHtml() { cleanNoteStyles($("noteBody")); const cn = curNote(); cn.html = $("noteBody").innerHTML; nhDirty.add(cn.id); saveNoteSoon(); }
+  function saveNoteHtml() { cleanNoteStyles($("noteBody")); if (fixGhostLines($("noteBody"))) decorateNoteLists(); const cn = curNote(); cn.html = $("noteBody").innerHTML; nhDirty.add(cn.id); saveNoteSoon(); }
   function switchNote(id) { mvLeftmost = false; if (document.activeElement === $("noteBody")) saveNoteHtml(); ui.activeNote = id; saveUI(); closeNotePop(); renderNote(true); }
   function renderNoteTabs() {
     const host = $("noteTabs"); if (!host) return;
@@ -3941,6 +3941,30 @@ if (IS_BROWSER) (function () {
       if (li.getAttribute("class") === "") li.removeAttribute("class");
     });
   }
+  /* v240: a line with nothing in it at all (no text, no <br>, no picture) has zero height — invisible and unclickable, but its marker is still
+     drawn, right on top of the next line's marker (seen as a grey dot inside a tick box: the dot shows through the box's half-white fill).
+     Such a line is dropped; one that still has sub-items gets its empty line back (a <br>), so its ▾/▸ no longer sits on the line below.
+     The line holding the caret is left alone. Only collapsible white space counts as empty (a line with just &nbsp; is visible). */
+  function liOwnEmpty(li) {
+    for (const c of li.childNodes) {
+      if (c.nodeType === 3) { if (/[^ \t\n\r\f]/.test(c.data)) return false; }
+      else if (c.nodeType === 1 && !isList(c)) { if (c.tagName === "BR" || c.tagName === "IMG" || /[^ \t\n\r\f]/.test(c.textContent) || c.querySelector("br,img")) return false; }
+    }
+    return true;
+  }
+  function fixGhostLines(root) {
+    let changed = false;
+    const sel = window.getSelection && window.getSelection(), an = sel && sel.rangeCount ? sel.anchorNode : null;
+    for (const li of Array.from(root.querySelectorAll("li"))) {
+      if (!li.isConnected || !liOwnEmpty(li)) continue;
+      const kids = noteKidList(li);
+      if (kids) { li.insertBefore(document.createElement("br"), kids.parentElement === li ? kids : null); changed = true; continue; }
+      if (an && (li === an || li.contains(an))) continue;
+      const list = li.parentElement; li.remove(); changed = true;
+      if (isList(list) && !list.querySelector("li") && !list.textContent.trim()) list.remove();
+    }
+    return changed;
+  }
   function noteCaretNode() { const sel = window.getSelection && window.getSelection(); if (!sel || !sel.rangeCount) return null; const n = sel.getRangeAt(0).startContainer; return $("noteBody").contains(n) ? n : null; }
   // If the caret has ended up inside a folded (hidden) sub-list — e.g. Tab under a folded bullet, or Backspace merging into its last child — unfold so you can see what you type.
   function revealNoteCaret() {
@@ -4002,6 +4026,59 @@ if (IS_BROWSER) (function () {
     const li = (n.nodeType === 1 ? n : n.parentElement).closest("li"); if (!li) return;
     let prev = li.previousElementSibling; while (prev && prev.tagName !== "LI") prev = prev.previousElementSibling;
     [li, prev].forEach((x) => { if (x && !ownText(x) && STYLE_CLS.some((c) => x.classList.contains(c))) STYLE_CLS.forEach((c) => x.classList.remove(c)); });
+  }
+  /* v240: line starts typed as shortcuts. Enter at the END of a line that starts with "- " turns it into a bullet, "o " (also "O ", which
+     a phone keyboard capitalises) into a tick box: the two characters disappear and the new line below continues the list. Works on plain
+     lines and on list lines (bullet ↔ tick box, a numbered line → bullet / tick box). "- " or "o " alone + Enter = an empty bullet / tick box
+     (no extra line). Only at the end of a line, so Enter in the middle of such a line splits it as usual. Ctrl+Z undoes it.
+     Returns "" (nothing to do), "line" (converted; the Enter goes ahead) or "empty" (converted; the Enter has nothing left to do). */
+  let noteMdKey = false;   // true from an Enter keydown until the end of that keystroke (its beforeinput needs no second look)
+  const NOTE_MD = /^[ \t\n\r\f\u00a0]*(?:([-\u2013\u2014])|([oO]))[ \u00a0]/;
+  function noteMdLine(dry, noSnap) {
+    const body = $("noteBody"), sel = window.getSelection(); if (!sel || !sel.rangeCount || !sel.isCollapsed) return "";
+    const n = noteCaretNode(); if (!n) return "";
+    const caret = sel.getRangeAt(0).cloneRange(), el = n.nodeType === 1 ? n : n.parentElement;
+    let li = el.closest("li"); if (li && !body.contains(li)) li = null;
+    let pre, post;
+    if (li) {
+      pre = document.createRange(); pre.selectNodeContents(li); pre.setEnd(caret.startContainer, caret.startOffset);
+      post = document.createRange(); post.setStart(caret.startContainer, caret.startOffset);
+      const kids = noteKidList(li); if (kids && kids.parentElement === li) post.setEndBefore(kids); else post.setEnd(li, li.childNodes.length);
+    } else {   // a plain line: Chrome knows where its paragraph starts and ends (text node, <div>, after a <br> …)
+      try {
+        sel.modify("extend", "backward", "paragraphboundary"); pre = sel.getRangeAt(0).cloneRange();
+        sel.removeAllRanges(); sel.addRange(caret.cloneRange()); sel.modify("extend", "forward", "paragraphboundary"); post = sel.getRangeAt(0).cloneRange();
+      } catch (e) { pre = null; }
+      sel.removeAllRanges(); sel.addRange(caret.cloneRange());
+      if (!pre || !body.contains(pre.startContainer)) return "";
+    }
+    if (/[^ \t\n\r\f\u00a0]/.test(post.toString())) return "";   // not at the end of the line
+    const m = NOTE_MD.exec(pre.toString()); if (!m) return "";
+    if (dry) return "line";
+    const want = m[1] ? "bullet" : "chk";
+    if (!noSnap) noteSnap("cmd", true);
+    // remove the marker characters: the first m[0].length characters of the line
+    { let left = m[0].length; const cut = document.createRange(); cut.setStart(pre.startContainer, pre.startOffset);
+      const w = document.createTreeWalker(pre.commonAncestorContainer.nodeType === 1 ? pre.commonAncestorContainer : pre.commonAncestorContainer.parentNode, NodeFilter.SHOW_TEXT);
+      let t, ok = false;
+      while ((t = w.nextNode())) { if (!pre.intersectsNode(t)) continue; const s0 = t === pre.startContainer ? pre.startOffset : 0, avail = t.length - s0; if (left <= avail) { cut.setEnd(t, s0 + left); ok = true; break; } left -= avail; }
+      if (!ok) return "";
+      cut.deleteContents(); }
+    // make the line a list line of the wanted kind
+    if (!li || (want === "bullet" && li.parentElement && li.parentElement.tagName === "OL")) {
+      if (!li && !/[^ \t\n\r\f]/.test(pre.toString())) { const br = document.createElement("br"); caret.insertNode(br); caret.setStartBefore(br); caret.collapse(true); }   // line now empty: give it its placeholder, or Chrome would list the line above
+      sel.removeAllRanges(); sel.addRange(caret);   // (a live range: it followed the cut)
+      document.execCommand("insertUnorderedList");
+      const n2 = noteCaretNode(); li = n2 ? (n2.nodeType === 1 ? n2 : n2.parentElement).closest("li") : null;
+      if (!li || !body.contains(li)) { decorateNoteLists(); saveNoteHtml(); return "line"; }
+    }
+    li.classList.toggle("chk", want === "chk");
+    if (!li.getAttribute("class")) li.removeAttribute("class");
+    const empty = !ownText(li) && !Array.from(li.children).some((c) => c.tagName === "IMG" || (!isList(c) && c.querySelector("img")));   // nothing left but the marker → stay on this line
+    if (empty) { if (liOwnEmpty(li)) { const kids = noteKidList(li); li.insertBefore(document.createElement("br"), kids && kids.parentElement === li ? kids : li.firstChild); } placeCaret(li, false); }
+    else caretToLineEnd(li);
+    decorateNoteLists(); saveNoteHtml();
+    return empty ? "empty" : "line";
   }
   // Chrome "preserves" a line's look when lines merge (Backspace/Delete) or split by wrapping text in <span style="color:…; font-weight:700…">.
   // Those spans would make a line style stick (Alt+B could no longer remove it), so unwrap any span whose inline style is only our line-style
@@ -4248,10 +4325,15 @@ if (IS_BROWSER) (function () {
     e.preventDefault(); noteSnap("para", true);
     if (!r0.collapsed) r0.deleteContents();
     const inner = kids.parentElement === li;
+    { const head = document.createRange(); head.setStart(li, 0); head.setEnd(r0.startContainer, r0.startOffset);   // v240: caret at the very start → an empty line above,
+      if (!/[^ \t\n\r\f]/.test(head.toString()) && !head.cloneContents().querySelector("img")) {                      // the folded line stays whole (text, box, hidden sub-items)
+        const up = document.createElement("li"); up.innerHTML = "<br>"; if (li.classList.contains("chk")) up.className = "chk";
+        li.parentNode.insertBefore(up, li); decorateNoteLists(); saveNoteHtml(); return true;
+      } }
     const tail = document.createRange(); tail.setStart(r0.startContainer, r0.startOffset);
     if (inner) tail.setEndBefore(kids); else { tail.setEnd(li, li.childNodes.length); }
     const frag = tail.extractContents();
-    const nli = document.createElement("li"); nli.appendChild(frag);
+    const nli = document.createElement("li"); nli.appendChild(frag); if (li.classList.contains("chk")) nli.className = "chk";   // v240: a tick box continues as a tick box (as on any other line)
     if (!nli.textContent.trim() && !nli.querySelector("img")) nli.innerHTML = "<br>";
     li.parentNode.insertBefore(nli, inner ? li.nextSibling : kids.nextSibling);   // new line goes after the (hidden) children, which stay with this bullet
     placeCaret(nli, false);
@@ -4356,6 +4438,13 @@ if (IS_BROWSER) (function () {
     const kind = /^insert(Text|CompositionText|ReplacementText)$/.test(t) ? "type" : /^delete(Content|Word|SoftLine|HardLine|Entire)/.test(t) ? "del" : (t === "deleteByDrag" || t === "insertFromDrop") ? "drag" : "other";
     noteSnap(kind, kind === "other");
   }, true);
+  // v240: "- " / "o " line starts when Enter arrives without a usable keydown (some phone keyboards) — the keydown path has already converted
+  // the line otherwise, so this finds nothing to do. The conversion runs right after the event (not inside it), then the new line is added.
+  $("noteBody").addEventListener("beforeinput", (e) => {
+    if (e.inputType !== "insertParagraph" || noteMdKey || noteMdLine(true) !== "line") return;   // the keydown already did it
+    e.preventDefault();
+    setTimeout(() => { if (noteMdLine(false, true) === "line") document.execCommand("insertParagraph"); }, 0);
+  });
   // Backspace at the start of a line whose line above is empty (or Delete at the end of an empty line): just drop the empty line,
   // so the remaining line keeps its own style (the browser would merge it into the empty, unstyled line).
   $("noteBody").addEventListener("beforeinput", (e) => {
@@ -4382,7 +4471,10 @@ if (IS_BROWSER) (function () {
     { const uk = undoKey(e); if (uk) { e.preventDefault(); if (uk === "undo") undo(); else redo(); return; } }   // the one Plapp history, not the browser's
     if (e.key === "Escape" && noteBig && !document.querySelector(".sPop, .nPop")) { e.preventDefault(); setNoteBig(false); return; }
     if (e.key === "Tab") { e.preventDefault(); noteCmd(e.shiftKey ? "outdent" : "indent"); return; }
-    if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && noteEnterInFolded(e)) return;
+    if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (!e.isComposing && e.keyCode !== 229) { noteMdKey = true; setTimeout(() => { noteMdKey = false; }, 0); if (noteMdLine() === "empty") { e.preventDefault(); return; } }   // v240: "- " / "o " at the start of the line
+      if (noteEnterInFolded(e)) return;
+    }
     if (e.shiftKey && (e.altKey || e.ctrlKey || e.metaKey) && (e.key === "ArrowUp" || e.key === "ArrowDown")) { e.preventDefault(); moveNoteLine(e.key === "ArrowUp" ? -1 : 1); return; }
     if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {   // e.code, so it also works where Alt+letter types a special character (Mac, Swiss layout)
       const m = /^(?:Digit|Numpad)([0-5])$/.exec(e.code || "");
@@ -4975,7 +5067,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v238"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v240"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
