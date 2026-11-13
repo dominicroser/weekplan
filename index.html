@@ -646,14 +646,15 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .sgTable td { font-weight: 400; color: #111; }
 .sgTable td.sgName { text-align: left; font-weight: 800; max-width: 62px; overflow: hidden; text-overflow: ellipsis; }   /* narrower task-name column */
 .sgTable .sgPrio, .sgTable .sgPrioH { text-align: center; padding: 0 1px; }   /* tight star cells */
-.sgTable .sgEq { font-weight: 800; }
+.sgTable .sgEq { font-weight: 800; margin-left: 3px; }
+.sgTable .sgEqPh { visibility: hidden; }
 .sgTable tr.sgMuted td { background: #eceef1; color: #80868e; }   /* no star & no Open → light-grey line, grey text (name keeps its colour, set inline) */
 .sgTable tr.sgMuted .sgBtn, .sgTable tr.sgMuted input.sgPlan { color: #80868e; }
 .sgTable tr.sgOver td { background: #000 !important; color: #fff; }   /* over → black line, white text (name keeps its colour, set inline) */
 .sgTable tr.sgOver .sgBtn { color: #fff; border-color: rgba(255,255,255,0.55); }
 .sgTable tr.sgOver input.sgPlan { color: #fff; }
 .sgTable tr.sgOver .sgStar:not(.set) { -webkit-text-stroke-color: rgba(255,255,255,0.6); }   /* empty star outline visible on black */
-.sgTable tr.sgSum td.sgP { text-align: center; }
+.sgTable td.sgP { text-align: center; }   /* Plan values (editable, fixed and group lines) in one centred line */
 .sgTable tr.sgSumW td { color: #12388f; }   /* Work → dark blue */
 .sgTable tr.sgSumF td { color: #15803d; }   /* Fruit → green */
 .sgTable tr.sgSumH td { color: #b8860b; }   /* Home → dark yellow */
@@ -1233,7 +1234,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v252 */
+/* build v253 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2575,6 +2576,7 @@ if (IS_BROWSER) (function () {
       ip: (c) => poolIP(c.id),
     };
     const sgTasks = shownAll.slice();
+    const SG_EQ_PH = '<button class="sgBtn sgEq sgEqPh" tabindex="-1" aria-hidden="true" disabled>=</button>';   // invisible "=" on rows without one, so the Open times line up
     const sgMuted = (c) => !(sgVal.prio(c) > 0) && Math.abs(sgVal.open(c)) < TOL;   // no star and no Open (|Open| < 15 min) → folded block below the totals.
     // v250: that includes a black row that is over by less than 15 min (possible with typed plans like 1:10) — it goes down there and stays black.
     const sgSort = ui.sgSort || { key: "prio", dir: -1 };
@@ -2603,16 +2605,17 @@ if (IS_BROWSER) (function () {
         const nameColor = over ? c.color : (isNoneGroup(c) ? "#6b6f76" : c.color);   // None tasks: their own light grey on black, darker grey on white
         const openTxt = Math.abs(O) < 0.0001 ? "0:00" : fmtHM(Math.abs(O));
         const pCell = editable
-          ? '<button class="sgBtn sgMinus" title="−15 min">−</button><input class="sgPlan" value="' + fmtHM(bw) + '" title="Planned this week — type to set"><button class="sgBtn sgPlus" title="+15 min">+</button><button class="sgBtn sgEq" title="Set to timed + gridded">=</button>'
+          ? '<button class="sgBtn sgMinus" title="−15 min">−</button><input class="sgPlan" value="' + fmtHM(bw) + '" title="Planned this week — type to set"><button class="sgBtn sgPlus" title="+15 min">+</button>'
           : '<span class="sgPstatic">' + fmtHM(bw) + "</span>";
+        const eqBtn = editable ? '<button class="sgBtn sgEq" title="Set Plan to timed + gridded (Open → 0:00)">=</button>' : SG_EQ_PH;   // v253: "=" sits right of the Open time
         const cls = [rowCls, extraCls].filter(Boolean).join(" ");
         return '<tr data-cat="' + c.id + '"' + (cls ? ' class="' + cls + '"' : "") + ">" +
           '<td class="sgPrio"><button class="sgStar' + (hasWp ? " set" : "") + '" style="color:' + starColor + '" title="Weekly priority — click to cycle">★</button></td>' +
-          '<td class="sgOpen">' + openTxt + "</td>" +
-          '<td class="sgP">' + pCell + "</td>" +
+          '<td class="sgOpen">' + openTxt + eqBtn + "</td>" +
           '<td class="sgName" style="color:' + nameColor + '" title="' + c.name.replace(/"/g, "&quot;") + '">' + c.name.replace(/</g, "&lt;") + "</td>" +
           '<td class="sgT">' + fmtHM(T) + "</td>" +
           '<td class="sgD">' + (todayInWeek ? fmtHM(D) : "") + "</td>" +
+          '<td class="sgP">' + pCell + "</td>" +
           "</tr>";
       };
       const topRows = sgOrder.filter((c) => !sgMuted(c)), mutedRows = sgOrder.filter(sgMuted), mutedOpen = !!ui.sgMutedOpen;
@@ -2629,16 +2632,16 @@ if (IS_BROWSER) (function () {
         const gO = wsum((c) => planTimeBlocked(c) ? 0 : weekBudget(c, cw) - (used[c.id] || 0), g.wt), gP = wsum((c) => weekBudget(c, cw), g.wt);
         const gD = wsum((c) => trackToday(c.id), g.wt), gT = wsum((c) => trackWeek(c.id), g.wt);
         const gOtxt = Math.abs(gO) < 0.0001 ? "0:00" : (gO < 0 ? "−" : "") + fmtHM(Math.abs(gO));   // no black shading here, so an over group gets a minus sign
-        body += '<tr class="sgSum ' + g.c + '"' + (g.t ? ' title="' + g.t + '"' : "") + '><td class="sgPrio"></td><td class="sgOpen">' + gOtxt + '</td><td class="sgP">' + fmtHM(gP) +
-          '</td><td class="sgName">' + g.l + (g.c === "sgSumA" && mutedRows.length ? '<button class="sgMutedTog" title="' + (mutedOpen ? "Hide" : "Show") + " the " + mutedRows.length + " task" + (mutedRows.length > 1 ? "s" : "") + ' with no star and no open time">' + (mutedOpen ? "▾" : "▸") + "</button>" : "") + '</td><td class="sgT">' + fmtHM(gT) + '</td><td class="sgD">' + (todayInWeek ? fmtHM(gD) : "") + "</td></tr>";
+        body += '<tr class="sgSum ' + g.c + '"' + (g.t ? ' title="' + g.t + '"' : "") + '><td class="sgPrio"></td><td class="sgOpen">' + gOtxt + SG_EQ_PH +
+          '</td><td class="sgName">' + g.l + (g.c === "sgSumA" && mutedRows.length ? '<button class="sgMutedTog" title="' + (mutedOpen ? "Hide" : "Show") + " the " + mutedRows.length + " task" + (mutedRows.length > 1 ? "s" : "") + ' with no star and no open time">' + (mutedOpen ? "▾" : "▸") + "</button>" : "") + '</td><td class="sgT">' + fmtHM(gT) + '</td><td class="sgD">' + (todayInWeek ? fmtHM(gD) : "") + '</td><td class="sgP">' + fmtHM(gP) + "</td></tr>";
       }   // Day is real-time (today), so it's blank when viewing any week other than the current one
       if (mutedOpen) body += mutedRows.map((c, i) => rowHtml(c, i ? "" : "sgMutedFirst")).join("");   // grey rows (no star & no Open) live below Total, folded by its ▸/▾
       sgHtml += '<table class="sgTable"><thead><tr>' +
         '<th class="sgH sgPrioH" data-sk="prio" title="Sort by priority">★</th>' +
         '<th class="sgH" data-sk="open" title="Sort by Open (Planned − Gridded this week)">Open</th>' +
-        '<th title="Planned this week">Plan</th>' +
         '<th class="sgH sgNameH" data-sk="name" title="Sort by group, then name">Task</th>' +
         '<th title="Timed this week">Week</th><th title="Timed today">Day</th>' +
+        '<th title="Planned this week">Plan</th>' +
         "</tr></thead><tbody>" + body + "</tbody></table>";
     }
     const sgWrap = document.createElement("div"); sgWrap.className = "sgWrap"; sgWrap.innerHTML = sgHtml; if (!sgHtml) sgWrap.style.display = "none";
@@ -4961,7 +4964,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v252"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v253"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
