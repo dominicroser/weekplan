@@ -269,6 +269,8 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteBody li.chk.hasKids::before, #noteBody ol > li.hasKids::before { content: "\25BE"; color: currentColor; cursor: pointer; }   /* ▾ for lines whose marker is a box / number */
 #noteBody li.chk.hasKids.collapsed::before, #noteBody ol > li.hasKids.collapsed::before { content: "\25B8"; color: currentColor; font-weight: 700; }
 @media (hover: hover) { #noteBody li:hover::before { background-image: var(--grip); } }
+#noteBody li::before { cursor: default; }   /* v254: arrow (not the text I-beam) over the ⠿ grip; ▾/▸ in the fold column keep their pointer (more specific rules) */
+#noteBody.onGrip, #noteBody.onGrip li, #noteBody.onGrip li::before, #noteBody.onGrip li::after { cursor: default !important; }   /* exact grip area (gripHit), also where ▾ shares the ::before */
 @media (hover: none) { #noteBody li::before { background-image: var(--grip); } }
 #noteBody li.ndSrc { opacity: 0.35; }
 #noteBody li.ndSrc + ul, #noteBody li.ndSrc + ol { opacity: 0.35; }
@@ -1234,7 +1236,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v253 */
+/* build v254 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -4080,6 +4082,13 @@ if (IS_BROWSER) (function () {
     const r = li.getBoundingClientRect(), c = noteCols(li);
     return x >= r.left - c.fd - c.gw - 2 && x < r.left - (foldInFoldCol(li) ? c.fd : 0) + 1 && y >= r.top && y < r.top + c.lh + 3;
   }
+  // v254: mouse over the ⠿ grip → arrow cursor (the grip is part of a pseudo-element, so the exact area comes from gripHit, same as the drag)
+  $("noteBody").addEventListener("pointermove", (e) => {
+    if (e.pointerType !== "mouse" || lineDrag) return;
+    const body = $("noteBody"), li = e.target.closest && e.target.closest("li");
+    body.classList.toggle("onGrip", !!(li && e.target === li && body.contains(li) && gripHit(li, e.clientX, e.clientY)));
+  });
+  $("noteBody").addEventListener("pointerleave", () => $("noteBody").classList.remove("onGrip"));
   let lineDrag = null;
   function noteScroller() {   // what scrolls while dragging near the edge: the note itself, else the panel/page around it
     const body = $("noteBody");
@@ -4964,7 +4973,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v253"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v254"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
