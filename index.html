@@ -98,19 +98,8 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 .poolSummary .sumSec { margin-bottom: 7px; }
 .poolSummary .sumHd { font-weight: 800; font-size: 12px; color: var(--ink); margin: 3px 0 2px; display: flex; align-items: center; gap: 5px; }
 .poolSummary .sumSec.collapsible .sumHd { cursor: pointer; }
-.sumTbl { border-collapse: collapse; width: 100%; font-family: 'Inter', sans-serif; font-size: 11px; }
-.sumTbl th, .sumTbl td { border: 1px solid var(--line); padding: 0 5px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 400; line-height: 1.35; }
-.sumTbl th { color: #111; font-weight: 700; }
-.sumTbl td.sumRowLbl { font-weight: 700; }
-.sumTbl tr.trM td { color: #d6336c; }
-.sumTbl tr.trG td { color: #5aa2e6; }   /* Growth → light blue */
-.sumTbl tr.trW td { color: #12388f; }   /* Work → dark blue */
-.sumTbl th.sumBtnCell { text-align: center; padding: 0 3px; }
 .sumExpand { background: transparent; border: none; cursor: pointer; color: #111; font-size: 11px; line-height: 1; padding: 0 1px; }
 .sumExpand:hover { color: var(--ink); }
-.sumTbl tr.trF td { color: #15803d; }
-.sumTbl tr.trH td { color: #b8860b; }
-.sumTbl tr.trT td { color: var(--ink); font-weight: 700; }
 .poolSummary .l1 { color: var(--ink); }
 .poolSummary .l1 b { color: var(--ink); font-weight: 700; }
 .poolSummary .l2 { color: var(--ink); }
@@ -378,7 +367,7 @@ body.mv-note .nPop .nMv button { padding: 7px 12px; font-size: 14px; }
 @media (max-width: 560px) { .bkRow { grid-template-columns: 1fr auto auto; } .bkRow .bkWhen { grid-column: 1 / -1; } }
 /* ── phone views (v227): ?view=note | habits | timer — one panel full-screen, opened from the three home-screen shortcuts ── */
 #mvHead, #mvHabits, #mvTimer { display: none; }
-body.mv #gridWrap, body.mv #rbGrip, body.mv #rbFooter, body.mv #sgPanel, body.mv #streakPanel, body.mv #rbSummary, body.mv #deadlinePanel, body.mv #notePanel, body.mv #checkPop, body.mv #pool, body.mv #actionBar { display: none !important; }
+body.mv #gridWrap, body.mv #rbGrip, body.mv #rbFooter, body.mv #sgPanel, body.mv #streakPanel, body.mv #deadlinePanel, body.mv #notePanel, body.mv #checkPop, body.mv #pool, body.mv #actionBar { display: none !important; }
 body.mv-note #notePanel, body.mv-habits #mvHabits, body.mv-timer #mvTimer { display: flex !important; }
 body.mv #body { height: 100vh; height: 100dvh; flex-direction: column; overflow: hidden; }
 body.mv #rightBar { width: 100% !important; flex: 1; min-height: 0; height: auto; border: none; display: flex; }
@@ -648,7 +637,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .sgTitle { font-weight: 800; font-size: 12px; color: #111; cursor: pointer; display: flex; align-items: center; gap: 5px; user-select: none; }
 .sgTri { font-size: 14px; width: 13px; line-height: 1; }   /* larger toggle triangle */
 .sgTable { border-collapse: collapse; width: 100%; font-size: 11px; margin-top: 3px; font-variant-numeric: tabular-nums; }
-.sgTable th, .sgTable td { padding: 1px 4px; text-align: right; white-space: nowrap; border: 1px solid var(--line); }   /* very light gridlines */
+.sgTable th, .sgTable td { padding: 1px 3px; text-align: right; white-space: nowrap; border: 1px solid var(--line); }   /* very light gridlines */
 .sgTable thead th { font-weight: 800; color: #111; text-align: center; }   /* headers centred */
 .sgTable th.sgH { cursor: pointer; }
 .sgTable th.sgH:hover { background: rgba(0,0,0,0.06); }
@@ -656,12 +645,18 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .sgTable td.sgName { text-align: left; font-weight: 800; max-width: 62px; overflow: hidden; text-overflow: ellipsis; }   /* narrower task-name column */
 .sgTable .sgPrio, .sgTable .sgPrioH { text-align: center; padding: 0 1px; }   /* tight star cells */
 .sgTable .sgEq { font-weight: 800; }
-.sgTable tr.sgTotRow td { font-weight: 800; }
-.sgTable tr.sgTotRow td.sgP { text-align: center; }   /* Total-of-Planned centred in its cell */
-.sgTable tr.sgOver td { background: #5c636e !important; color: #fff; }   /* over → dark grey (not black), white text */   /* over → dark grey line, white text */
-.sgTable tr.sgOver td.sgName { color: #fff !important; }
+.sgTable tr.sgMuted td { background: #eceef1; color: #80868e; }   /* no star & no Open → light-grey line, grey text (name keeps its colour, set inline) */
+.sgTable tr.sgMuted .sgBtn, .sgTable tr.sgMuted input.sgPlan { color: #80868e; }
+.sgTable tr.sgOver td { background: #000 !important; color: #fff; }   /* over → black line, white text (name keeps its colour, set inline) */
 .sgTable tr.sgOver .sgBtn { color: #fff; border-color: rgba(255,255,255,0.55); }
 .sgTable tr.sgOver input.sgPlan { color: #fff; }
+.sgTable tr.sgOver .sgStar:not(.set) { -webkit-text-stroke-color: rgba(255,255,255,0.6); }   /* empty star outline visible on black */
+.sgTable tr.sgSum td.sgP { text-align: center; }
+.sgTable tr.sgSumW td { color: #12388f; }   /* Work → dark blue */
+.sgTable tr.sgSumF td { color: #15803d; }   /* Fruit → green */
+.sgTable tr.sgSumH td { color: #b8860b; }   /* Home → dark yellow */
+.sgTable tr.sgSumT td { color: #80868e; font-weight: 800; }   /* Total W+F → medium grey, bold */
+.sgTable tr.sgSumW td { border-top: 2px solid #c9ced6; }   /* separates the group lines from the tasks */
 .sgStar { background: transparent; border: none; cursor: pointer; font-size: 18px; line-height: 1; padding: 0; color: transparent; -webkit-text-stroke: 0.6px rgba(0,0,0,0.42); }
 .sgStar.set { -webkit-text-stroke: 0; }
 .sgBtn { background: transparent; border: 1px solid var(--line); border-radius: 3px; font-size: 11px; line-height: 1; padding: 0 3px; cursor: pointer; color: #111; }
@@ -760,8 +755,6 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 #topBar #rbZoom { flex-shrink: 0; gap: 6px; margin-left: 4px; }   /* zoom −/+ pinned to the far right of the top bar (pushed there by the flexible scheduler) */
 #topBar #rbZoom .zBtn { width: 34px; height: 34px; border: 2px solid #9aa0a8; }
 #rbTools .pmBtn { width: 22px; height: 22px; font-size: 12px; border-radius: 5px; }
-#rbSummary { padding: 4px 8px 2px; }
-#rbSummary .poolSummary { margin: 0; }
 #rightBar.closed { display: none; }
 #rbGrip { width: 7px; flex-shrink: 0; cursor: col-resize; touch-action: none; }
 #rbGrip:hover { background: var(--line); }
@@ -999,7 +992,6 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
       <div class="rbPanel" id="streakPanel">
         <div id="streakBody"></div>
       </div>
-      <div id="rbSummary"></div>
       <div class="rbPanel" id="deadlinePanel">
         <div class="rbHd"><button class="rbAdd" id="dlAdd" title="Add deadline">+</button></div>
         <div id="deadlineBody"></div>
@@ -1236,7 +1228,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v240 */
+/* build v247 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2498,7 +2490,7 @@ if (IS_BROWSER) (function () {
     const gContribs = (c) => groupContribs(state, c.id);
     const wsum = (metric, wt) => sumCats.reduce((s, c) => s + (metric(c) || 0) * wt(c), 0);
     const gwt = (g) => (c) => gContribs(c)[g] || 0;
-    const twt = (c) => { const w = gContribs(c); return (w.work || 0) + (w.fruit || 0); };   // Total = Work + Fruit only (Home excluded)
+    const twt = (c) => { const w = gContribs(c); return (w.work || 0) + (w.fruit || 0); };   // Total W+F = Work + Fruit only (Home excluded)
     const wsumVals = (wt, scope) => {
       if (scope === "day") { const T = wsum((c) => trackToday(c.id), wt), A = wsum((c) => aheadToday[c.id], wt), E = wsum((c) => elapsedToday[c.id], wt); const P = E + A, C = T + A; return { T: T, A: A, C: C, P: P, O: P - C }; }
       if (scope === "week") { const T = wsum((c) => trackWeek(c.id), wt), C = wsum((c) => used[c.id], wt), P = wsum((c) => weekBudget(c, cw), wt); return { T: T, A: C - T, C: C, P: P, O: P - C }; }
@@ -2511,22 +2503,7 @@ if (IS_BROWSER) (function () {
     };
     const mailCats = sumCats.filter((c) => /mail/i.test(c.name || ""));
     const growthCats = sumCats.filter((c) => /growth/i.test(c.name || ""));
-    const buildTable = () => {
-      const rows = [
-        { c: "trW", l: "Work", wt: gwt("work") },
-        { c: "trF", l: "Fruit", wt: gwt("fruit") },
-        { c: "trT", l: "Total", wt: twt },
-        { c: "trH", l: "Home", wt: gwt("home") },
-      ];
-      const vals = (r) => r.wt
-        ? { TD: wsum((c) => trackToday(c.id), r.wt), TW: wsum((c) => trackWeek(c.id), r.wt), P: wsum((c) => weekBudget(c, cw), r.wt) }
-        : { TD: sumOf(r.S, (c) => trackToday(c.id)), TW: sumOf(r.S, (c) => trackWeek(c.id)), P: sumOf(r.S, (c) => weekBudget(c, cw)) };
-      let h = '<table class="sumTbl"><thead><tr><th class="sumBtnCell"></th><th title="Timed today">Day</th><th title="Timed this week">Week</th><th title="Planned this week">Plan</th></tr></thead><tbody>';
-      for (const r of rows) { const v = vals(r); h += '<tr class="' + r.c + '"><td class="sumRowLbl">' + r.l + "</td><td>" + (todayInWeek ? fmtHM(v.TD) : "") + "</td><td>" + (todayInWeek ? fmtHM(v.TW) : "") + "</td><td>" + fmtHM(v.P) + "</td></tr>"; }   // Day/Week are real-time (today / this week), so blank them when viewing any week other than the current one
-      return h + "</tbody></table>";
-    };
-    { const rs = $("rbSummary"); if (rs) rs.innerHTML = '<div class="poolSummary"><div class="sumSec">' + buildTable() + "</div></div>"; }   // summary table lives in the right bar, just below the streak tracker
-    // Mails & Growth today → top-bar fields (in each task's own colour); the two rows were dropped from the summary table above
+    // Mails & Growth today → top-bar fields (in each task's own colour)
     { const mCat = mailCats.find((c) => !c.parent) || mailCats[0], gCat = growthCats.find((c) => !c.parent) || growthCats[0];
       const hToday = habitToday(), habitDaySum = (cats) => { const ids = new Set(cats.map((c) => c.id)); let t = 0; for (const w of state.weeks) for (const b of (w.blocks || [])) if (b.kind === "actual" && b.endMs != null && ids.has(b.catId) && habitDayOf(b) === hToday) t += (b.endMs - b.startMs) / 3600000; return t; };
       const mVal = habitDaySum(mailCats), gVal = habitDaySum(growthCats);   // the habit day: after midnight but before the day's start time it's still yesterday's totals
@@ -2677,13 +2654,17 @@ if (IS_BROWSER) (function () {
     const grpCmp = (a, b) => (gKeyOf(a) - gKeyOf(b)) || (a.name || "").localeCompare(b.name || "");
     // open/over — but never while a task is being timed, and never the immediate task
     const stateOf = (c) => { if (c.id === immediateId || c.id === timedId || planTimeBlocked(c)) return ""; const O = openOf(c); return O >= TOL ? "open" : O <= -TOL ? "over" : ""; };
-    // SECTION: Stretch Goal table — tasks with a weekly priority > 0 or a non-zero Open this week. Sortable + collapsible.
+    // SECTION: Stretch Goal table — every task of this week (planned, gridded, timed, starred or IP). Sortable.
+    // v246: rows with no star and no Open (|Open| < 15 min) sink to the bottom, light-grey background + grey text (name in its own colour);
+    // over rows (Open < 0) keep their place (no longer forced to the top), black background, white text (name in its own colour).
+    // Below the tasks: Work / Fruit / Home / Total W+F lines (they replace the old Day/Week/Plan summary table under the streak tracker).
     const sgVal = {
       prio: (c) => { const v = poolWprio(c.id); return (v === "" || v == null || isNaN(v)) ? 0 : +v; },
       open: (c) => planTimeBlocked(c) ? 0 : (weekBudget(c, cw) - effUsed(c.id)),
       ip: (c) => poolIP(c.id),
     };
-    const sgTasks = shownAll.filter((c) => sgVal.prio(c) > 0 || Math.abs(sgVal.open(c)) >= TOL || sgVal.ip(c) > eps);   // also: tasks with if-possible (IP) hours this week
+    const sgTasks = shownAll.slice();
+    const sgMuted = (c) => !(sgVal.prio(c) > 0) && Math.abs(sgVal.open(c)) < TOL;   // no star and no Open → bottom block
     const sgSort = ui.sgSort || { key: "prio", dir: -1 };
     let sgOrder;
     if (sgFrozen && Date.now() - sgFrozen.t < 3000) {   // just changed a star → keep the order for ~3s
@@ -2692,41 +2673,57 @@ if (IS_BROWSER) (function () {
       sgTasks.forEach((c) => { if (sgFrozen.ids.indexOf(c.id) < 0) sgOrder.push(c); });
     } else {
       sgOrder = sgTasks.slice().sort((a, b) => {
-        const oa = sgVal.open(a) < -0.0001 ? 0 : 1, ob = sgVal.open(b) < -0.0001 ? 0 : 1;
-        if (oa !== ob) return oa - ob;   // over tasks always on top, regardless of the chosen sort
+        const ma = sgMuted(a) ? 1 : 0, mb = sgMuted(b) ? 1 : 0;
+        if (ma !== mb) return ma - mb;   // no star & no Open → always at the bottom, regardless of the chosen sort
         return sgSort.key === "name" ? grpCmp(a, b) : (((sgVal[sgSort.key](a) - sgVal[sgSort.key](b)) * (sgSort.dir || 1)) || grpCmp(a, b));
       });
     }
     sgLastOrder = sgOrder.map((c) => c.id);
     let sgHtml = "";
     if (sgTasks.length) {
-      let body = "", sumO = 0, sumT = 0, sumP = 0;
+      let body = "";
       for (const c of sgOrder) {
-        const bw = weekBudget(c, cw), O = sgVal.open(c), T = effTrackWeek(c.id);
-        sumO += O; sumT += T; sumP += bw;
+        const bw = weekBudget(c, cw), O = sgVal.open(c), T = effTrackWeek(c.id), D = effTrackToday(c.id);
         const editable = !(c.auto || planTimeBlocked(c));
         const wp = poolWprio(c.id), hasWp = wp !== "" && wp != null && !isNaN(wp) && +wp > 0;
         const starColor = hasWp ? prio5Bg(+wp) : "transparent";
-        const over = O < -0.0001;   // over → row shaded dark grey, white text (no minus sign)
+        const over = O < -0.0001;   // over → black row, white text (no minus sign); wins over the muted grey
+        const rowCls = over ? "sgOver" : sgMuted(c) ? "sgMuted" : "";
+        const nameColor = over ? c.color : (isNoneGroup(c) ? "#6b6f76" : c.color);   // None tasks: their own light grey on black, darker grey on white
         const openTxt = Math.abs(O) < 0.0001 ? "0:00" : fmtHM(Math.abs(O));
         const pCell = editable
           ? '<button class="sgBtn sgMinus" title="−15 min">−</button><input class="sgPlan" value="' + fmtHM(bw) + '" title="Planned this week — type to set"><button class="sgBtn sgPlus" title="+15 min">+</button><button class="sgBtn sgEq" title="Set to timed + gridded">=</button>'
           : '<span class="sgPstatic">' + fmtHM(bw) + "</span>";
-        body += '<tr data-cat="' + c.id + '"' + (over ? ' class="sgOver"' : "") + ">" +
+        body += '<tr data-cat="' + c.id + '"' + (rowCls ? ' class="' + rowCls + '"' : "") + ">" +
           '<td class="sgPrio"><button class="sgStar' + (hasWp ? " set" : "") + '" style="color:' + starColor + '" title="Weekly priority — click to cycle">★</button></td>' +
           '<td class="sgOpen">' + openTxt + "</td>" +
-          '<td class="sgName"' + (over ? "" : ' style="color:' + (isNoneGroup(c) ? "#6b6f76" : c.color) + '"') + ' title="' + c.name.replace(/"/g, "&quot;") + '">' + c.name.replace(/</g, "&lt;") + "</td>" +
-          '<td class="sgT">' + fmtHM(T) + "</td>" +
           '<td class="sgP">' + pCell + "</td>" +
+          '<td class="sgName" style="color:' + nameColor + '" title="' + c.name.replace(/"/g, "&quot;") + '">' + c.name.replace(/</g, "&lt;") + "</td>" +
+          '<td class="sgT">' + fmtHM(T) + "</td>" +
+          '<td class="sgD">' + (todayInWeek ? fmtHM(D) : "") + "</td>" +
           "</tr>";
       }
-      const totRow = '<tr class="sgTotRow"><td class="sgPrio"></td><td class="sgOpen">' + (Math.abs(sumO) < 0.0001 ? "0:00" : fmtHM(Math.abs(sumO))) + '</td><td class="sgName">Total</td><td class="sgT">' + fmtHM(sumT) + '</td><td class="sgP">' + fmtHM(sumP) + "</td></tr>";
+      // Group lines: every task (incl. hidden/archived), a parent's time fanned out to its children's groups; Open = Planned − Gridded (untracked tasks count 0)
+      const grpLines = [
+        { c: "sgSumW", l: "Work", wt: gwt("work") },
+        { c: "sgSumF", l: "Fruit", wt: gwt("fruit") },
+        { c: "sgSumH", l: "Home", wt: gwt("home") },
+        { c: "sgSumT", l: "Total W+F", t: "Total W+F = Work + Fruit (Home not included)", wt: twt },
+      ];
+      for (const g of grpLines) {
+        const gO = wsum((c) => planTimeBlocked(c) ? 0 : weekBudget(c, cw) - (used[c.id] || 0), g.wt), gP = wsum((c) => weekBudget(c, cw), g.wt);
+        const gD = wsum((c) => trackToday(c.id), g.wt), gT = wsum((c) => trackWeek(c.id), g.wt);
+        const gOtxt = Math.abs(gO) < 0.0001 ? "0:00" : (gO < 0 ? "−" : "") + fmtHM(Math.abs(gO));   // no black shading here, so an over group gets a minus sign
+        body += '<tr class="sgSum ' + g.c + '"' + (g.t ? ' title="' + g.t + '"' : "") + '><td class="sgPrio"></td><td class="sgOpen">' + gOtxt + '</td><td class="sgP">' + fmtHM(gP) +
+          '</td><td class="sgName">' + g.l + '</td><td class="sgT">' + fmtHM(gT) + '</td><td class="sgD">' + (todayInWeek ? fmtHM(gD) : "") + "</td></tr>";
+      }   // Day is real-time (today), so it's blank when viewing any week other than the current one
       sgHtml += '<table class="sgTable"><thead><tr>' +
         '<th class="sgH sgPrioH" data-sk="prio" title="Sort by priority">★</th>' +
-        '<th class="sgH" data-sk="open" title="Sort by Open (Planned − Gridded this week)">O</th>' +
+        '<th class="sgH" data-sk="open" title="Sort by Open (Planned − Gridded this week)">Open</th>' +
+        '<th title="Planned this week">Plan</th>' +
         '<th class="sgH sgNameH" data-sk="name" title="Sort by group, then name">Task</th>' +
-        '<th title="Timed this week">T</th><th title="Planned this week">P</th>' +
-        "</tr></thead><tbody>" + body + totRow + "</tbody></table>";
+        '<th title="Timed this week">Week</th><th title="Timed today">Day</th>' +
+        "</tr></thead><tbody>" + body + "</tbody></table>";
     }
     const sgWrap = document.createElement("div"); sgWrap.className = "sgWrap"; sgWrap.innerHTML = sgHtml; if (!sgHtml) sgWrap.style.display = "none";
     { const sgHost = $("sgPanel"); if (sgHost) { sgHost.innerHTML = ""; sgHost.appendChild(sgWrap); sgHost.style.display = sgHtml ? "" : "none"; } else pool.appendChild(sgWrap); }   // Stretch Goal table lives at the top of the right bar
@@ -5067,7 +5064,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v240"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v247"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
