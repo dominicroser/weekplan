@@ -67,7 +67,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 /* ── top bar (above the grid only) ── */
 #topBar { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 2px; flex-shrink: 0; overflow: visible; min-height: 46px; box-sizing: border-box; }
 #topBar #cmdForm { flex: 1 1 auto; min-width: 120px; padding: 0; position: relative; }
-#topBar #mpTopBtn { flex-shrink: 0; border: 2px solid #9aa0a8; }
+#topBar #mpTopBtn, #topBar #calTopBtn { flex-shrink: 0; border: 2px solid #9aa0a8; }
 #topBar #cmdInput { border-width: 2px; border-color: #9aa0a8; }
 /* scheduler help spills DOWN-RIGHT from the top bar (input keeps its place) */
 #topBar #cmdForm.spill #cmdInput { flex: 1 1 auto; width: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
@@ -462,6 +462,35 @@ dialog h2 { font-size: 17px; margin: 0 0 4px; }
 dialog h3 { font-size: 13px; margin: 18px 0 6px; color: var(--ink2); font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
 dialog label { display: block; font-size: 11.5px; color: var(--ink2); font-family: 'Inter', sans-serif; margin: 8px 0 3px; }
 dialog input[type=text], dialog input[type=password] { width: 100%; background: #fff; border: 1px solid var(--line); color: var(--ink); border-radius: 6px; padding: 7px 9px; font-size: 12.5px; }
+/* 📅 calendar import (v257) */
+#calDialog { max-width: 960px; width: 96vw; }
+#calDialog .calHead { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; flex-wrap: wrap; }
+#calDialog .calHead h2 { margin: 0 10px 0 0; }
+#calDialog .calNav { border: 1px solid var(--line); background: #fff; border-radius: 5px; font-size: 12px; line-height: 1; padding: 3px 7px; cursor: pointer; color: var(--ink2); }
+#calWeekLbl { font-size: 13px; font-weight: 700; min-width: 190px; text-align: center; }
+.calTbl { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+.calTbl th { font-size: 11px; color: var(--ink2); font-weight: 700; text-align: left; padding: 3px 4px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.calTbl th.calCk, .calTbl td.calCk { text-align: center; }
+.calTbl td { padding: 2px 4px; border-bottom: 1px solid #f0f1f3; vertical-align: middle; white-space: nowrap; }
+.calTbl tr.calDay td { font-weight: 800; color: #111; padding-top: 10px; border-bottom: 1px solid var(--line); }
+.calTbl tr.calOff td, .calTbl tr.calOff input, .calTbl tr.calOff select { color: #9aa0a8; }
+.calTbl tr.calIn td, .calTbl tr.calIn input, .calTbl tr.calIn select { color: #9aa0a8; font-style: italic; }
+.calTbl input.calStart, .calTbl input.calDur { width: 46px; padding: 2px 3px; text-align: center; font-size: 12px; border: 1px solid var(--line); border-radius: 4px; }
+.calTbl input.calTitle { width: 100%; min-width: 150px; padding: 2px 5px; font-size: 12px; border: 1px solid transparent; border-radius: 4px; background: transparent; }
+.calTbl input.calTitle:hover, .calTbl input.calTitle:focus { border-color: var(--line); background: #fff; }
+.calTbl select.calTask { font-size: 12px; max-width: 150px; padding: 1px 2px; }
+.calTbl .calStep { border: 1px solid var(--line); background: #fff; border-radius: 3px; font-size: 11px; line-height: 1; padding: 1px 4px; cursor: pointer; color: var(--ink2); }
+.calTbl .calEnd { color: var(--ink3); font-size: 11px; }
+.calTbl .calTag { font-size: 10.5px; padding: 1px 6px; border-radius: 8px; background: #eef1f5; color: #4a5260; }
+.calTbl .calTag.calMain { background: #dde7f6; color: #12388f; font-weight: 700; }
+.calTbl .calNote { font-size: 11px; color: #b45309; font-style: normal; }
+.calTbl input[type=checkbox] { width: 15px; height: 15px; margin: 0; vertical-align: middle; }
+.calAllDay { margin-top: 10px; font-size: 11.5px; color: var(--ink2); }
+.calMsg { padding: 10px 0; font-size: 12.5px; line-height: 1.5; }
+.calMsg.err { color: #b91c1c; }
+#calDialog .calFoot { margin-top: 12px; align-items: center; }
+#calDialog .calFootNote { margin-left: auto; font-size: 11.5px; }
+#calDialog input.calUrl { width: 100%; margin: 6px 0; }
 .btnRow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .btn { background: var(--accent); border: 1px solid var(--accent); color: #fff; padding: 7px 13px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
 .btnGhost { background: #fff; border: 1px solid var(--line); color: var(--ink); padding: 7px 13px; border-radius: 7px; font-size: 12.5px; cursor: pointer; }
@@ -640,8 +669,8 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .sgWrap { margin: 10px 0 0; }
 .sgTitle { font-weight: 800; font-size: 12px; color: #111; cursor: pointer; display: flex; align-items: center; gap: 5px; user-select: none; }
 .sgTri { font-size: 14px; width: 13px; line-height: 1; }   /* larger toggle triangle */
-.sgTable { border-collapse: collapse; width: 100%; font-size: 11px; margin-top: 3px; font-variant-numeric: tabular-nums; }
-.sgTable th, .sgTable td { padding: 1px 3px; text-align: right; white-space: nowrap; border: 1px solid var(--line); }   /* very light gridlines */
+.sgTable { border-collapse: collapse; width: 100%; font-size: 11px; margin-top: 3px; font-variant-numeric: tabular-nums; }   /* v259: no outer frame (v258 had one) */
+.sgTable th, .sgTable td { padding: 1px 3px; text-align: right; white-space: nowrap; border: 1px solid rgba(0,0,0,0.14); }   /* light gridlines (v258: .09 → .14) */
 .sgTable thead th { font-weight: 800; color: #111; text-align: center; }   /* headers centred */
 .sgTable th.sgH { cursor: pointer; }
 .sgTable th.sgH:hover { background: rgba(0,0,0,0.06); }
@@ -775,16 +804,20 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .rbHd .rbAdd { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; width: 20px; height: 20px; line-height: 1; cursor: pointer; font-size: 14px; }
 .rbHd .rbAdd:hover { background: var(--panel2); }
 /* Deadlines */
-.dlTable { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 10.5px; }
-.dlTable td { padding: 1px 3px; vertical-align: middle; }
-.dlTable input.dlDate { width: 118px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 5px; padding: 1px 4px; font-size: 10px; }
+.dlTable { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 11px; outline: 1px solid #b0b6be; outline-offset: -1px; }   /* v258: 10.5 → 11 px, outer frame */
+.dlTable td { padding: 2px 4px; vertical-align: middle; border: 1px solid rgba(0,0,0,0.06); }   /* very light gridlines */
+/* v258: rows alternate orange / yellow — light tints of the unmuddied hues behind the text (v259: left stripe removed) */
+.dlTable tr:nth-child(odd) td { background: #ffe2c4; }
+.dlTable tr:nth-child(even) td { background: #fff1b3; }
+
+.dlTable input.dlDate { width: 118px; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 5px; padding: 1px 4px; font-size: 10.5px; }
 .dlTable .dlDateCell { min-width: 76px; }
-.dlTable .dlDateTxt { cursor: pointer; white-space: nowrap; color: var(--ink); border-bottom: 1px dotted var(--ink3); }
-.dlTable input.dlName { width: 100%; border: none; background: transparent; color: var(--ink); font-size: 10.5px; padding: 1px 2px; }
+.dlTable .dlDateTxt { cursor: pointer; white-space: nowrap; color: var(--ink); padding-left: 2px; }   /* v258: no dotted underline */
+.dlTable input.dlName { width: 100%; border: none; background: transparent; color: var(--ink); font-size: 11px; padding: 1px 2px; }
 .dlTable input.dlName:focus { outline: 1px solid var(--line); border-radius: 4px; }
-.dlTable tr.past { opacity: .45; }
-.dlTable .dlDel { border: none; background: transparent; color: var(--ink3); cursor: pointer; font-size: 12px; }
-.dlDays { color: var(--ink3); font-size: 9.5px; white-space: nowrap; }
+.dlTable tr.past td, .dlTable tr.past input.dlName { font-weight: 700; }   /* v259: past deadlines bold, same colours (was opacity .45) */
+.dlTable .dlDel { border: none; background: transparent; color: #8a7a66; cursor: pointer; font-size: 12px; }
+.dlDays { color: #6f6253; font-size: 10px; white-space: nowrap; }   /* v258: darker so it reads on the orange / yellow rows */
 .dlEmpty, .stEmpty { color: var(--ink3); font-size: 11.5px; font-style: italic; }
 /* Streak grid */
 .stWeek { margin-bottom: 8px; }
@@ -796,7 +829,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .stBtn:hover { background: var(--panel2); }
 .stBtn.on { background: #8f959d; color: #fff; border-color: #8f959d; }
 .stBtn.has { color: var(--accent); }
-.stGrid { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; table-layout: fixed; }
+.stGrid { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; table-layout: fixed; }   /* v259: no outer frame (v258 had one) */
 .stGrid th { font-size: 9.5px; font-weight: 700; color: var(--ink3); padding: 1px 0; text-align: center; }
 .stGrid th.stNameH { text-align: left; width: 54px; }
 .stGrid th.stDayH { cursor: pointer; border-radius: 3px; }
@@ -811,7 +844,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .stCell.ach { background: #fff2ab; color: #9c7a00; }
 .stCell.na  { background: #f0cf4d; color: #6f5a12; }
 .stCell.miss { background: #f2795f; color: #ffdcd4; }
-.stCell.blank { background: var(--panel); }
+.stCell.blank { background: #e8eaee; }   /* v258: a little darker than --panel */
 .stCell.today { box-shadow: inset 0 0 0 1px #555; }
 .stCell.future { opacity: .78; }
 .stMore { align-self: flex-start; border: 1px solid var(--line); background: var(--panel); color: var(--ink2); border-radius: 6px; padding: 2px 8px; font-size: 11px; cursor: pointer; }
@@ -980,6 +1013,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
         <button class="iconBtn zBtn" id="rbZoomOut" title="Shorter cells — see more hours">&minus;</button>
         <button class="iconBtn zBtn" id="rbZoomIn" title="Taller cells — see fewer hours">+</button>
       </div>
+      <button class="iconBtn" id="calTopBtn" title="Import events from Google Calendar">📅</button>
       <button class="iconBtn" id="mpTopBtn" title="Masterplan &amp; tasks">🐝</button>
     </div>
     <div class="weekNav">
@@ -1227,6 +1261,12 @@ create policy "planner anon access" on plans
   </div>
 </dialog>
 
+<dialog id="calDialog">
+  <div class="calHead"><h2>📅 Calendar → Plapp</h2><button class="calNav" id="calPrev" title="Previous week">&#9664;</button><span id="calWeekLbl"></span><button class="calNav" id="calNext" title="Next week">&#9654;</button><button class="calNav" id="calReload" title="Load again from the calendar">&#8635;</button></div>
+  <div id="calBody"></div>
+  <div class="btnRow calFoot"><button class="btn" id="calAdd">Add</button><button class="btnGhost" id="calCancel">Cancel</button><span class="calFootNote"><a href="#" id="calSetupLink">Calendar link…</a></span></div>
+</dialog>
+
 <dialog id="reportsDialog">
   <h2>Reports</h2>
   <p class="muted">Timed hours (from the ▶ timer) for the week you're viewing, plus group totals across all weeks. Hours are exact.</p>
@@ -1238,7 +1278,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v256 */
+/* build v259 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -3290,6 +3330,246 @@ if (IS_BROWSER) (function () {
   $("cmdInput").addEventListener("focus", () => $("cmdForm").classList.add("spill"));
   $("cmdInput").addEventListener("blur", () => $("cmdForm").classList.remove("spill"));
 
+  /* ── 📅 calendar import (v257) ──────────────────────────────────────────────────────────────────────────────────────────
+     A week of events comes from Google Calendar through a small Apps Script web app ("calendar bridge", plapp-calendar-bridge.gs:
+     GET <url>?from=<ms>&to=<ms> → { events: [{ id, cal, main, title, start, end, allDay, status }], missing: [labels] }).
+     #calDialog lists them per day: tick · start · duration · name · task · Zug before / after. "Add" creates per ticked row
+     [Zug][Switch][event][Zug] — the Switch is the one every event gets; a Zug before sits above it. One undo step.
+     Defaults: main calendars ticked; Infos calendars, declined, all-day and ≥ 5 h events not. Plapp remembers per event title
+     (state.calImport.mem) the last duration / task / Zug / tick, so recurring events come pre-filled. Imported events carry
+     cal = "<calendar event id>|<date>" and calSlot (the calendar's start slot then) → listed as "in Plapp", or flagged when the
+     calendar time has changed since. The bridge URL is in state.calImport.url (synced, so every device has it). */
+  let calWeek = 0, calRows = [], calAllDay = [], calMissing = [], calLoadSeq = 0, calSetupMode = false, calLoadedWeek = null;
+  const CAL_LONG = 20;   // ≥ 20 slots = 5 h → unticked by default (usually "info", e.g. a visitor all day)
+  const calNorm = (s) => String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
+  const calEsc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const calHM = (slot) => { const m = slot * SLOT_MIN; return Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0"); };
+  const calParseClock = (v) => {   // "9", "9:30", "930", "9.30", "18" → minutes since midnight (NaN if unreadable)
+    const t = String(v).trim().replace(/[.h]/, ":"); if (!t) return NaN;
+    let h, m;
+    if (t.indexOf(":") >= 0) { const p = t.split(":"); h = parseInt(p[0], 10); m = parseInt(p[1] || "0", 10); }
+    else if (/^\d{3,4}$/.test(t)) { h = parseInt(t.slice(0, -2), 10); m = parseInt(t.slice(-2), 10); }
+    else { h = parseInt(t, 10); m = 0; }
+    return (isNaN(h) || isNaN(m) || m > 59 || h > 24) ? NaN : h * 60 + m;
+  };
+  const calParseDur = (v) => {   // "1:15" → 75; a bare number ≤ 12 = hours ("2", "1.5"), above = minutes ("45", "90") → minutes (NaN if unreadable)
+    const t = String(v).trim().replace(",", "."); if (!t) return NaN;
+    if (t.indexOf(":") >= 0) { const p = t.split(":"); const h = parseInt(p[0] || "0", 10), m = parseInt(p[1] || "0", 10); return (isNaN(h) || isNaN(m)) ? NaN : h * 60 + m; }
+    const n = parseFloat(t); if (isNaN(n)) return NaN; return n <= 12 ? Math.round(n * 60) : Math.round(n);
+  };
+  const calCats = () => state.categories.filter((c) => !c.archived && !/^(switch|zug)$/i.test((c.name || "").trim()));
+  function calUtilCat(name, group) {   // the Switch / Zug utility task (created if missing, like the scheduler does for Switch)
+    let c = state.categories.find((x) => (x.name || "").trim().toLowerCase() === name.toLowerCase());
+    if (!c) { c = { id: "cat" + Date.now() + name.charAt(0).toLowerCase(), name: name, hours: 0, group: group, defaultMin: 15, noTrack: true, color: group === "none" ? GREY : groupColorFor(group, state.categories, null) }; state.categories.push(c); }
+    return c;
+  }
+  function openCalImport() {
+    const now = new Date(), thisWk = cellForDate(state.anchorMonday, now).weekIdx;
+    calWeek = state.currentWeek;
+    if (calWeek === thisWk && (now.getDay() === 6 || now.getDay() === 0)) calWeek = thisWk + 1;   // Saturday / Sunday routine → next week
+    calSetupMode = !(state.calImport && state.calImport.url);
+    calRows = []; calAllDay = []; calMissing = []; calLoadedWeek = null;
+    $("calDialog").showModal();
+    calLoad();
+  }
+  function calWeekLabel() {
+    const mon = dateOfCell(state.anchorMonday, calWeek, 0), sat = addDays(mon, 5);
+    const mo = (d) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    return "W" + isoWeek(mon) + " · " + mo(mon) + " – " + mo(sat);
+  }
+  function calLoad() {
+    $("calWeekLbl").textContent = calWeekLabel();
+    if (calSetupMode) { calRender(); return; }
+    const url = state.calImport.url, mon = dateOfCell(state.anchorMonday, calWeek, 0);
+    const from = mon.getTime(), to = addDays(mon, 7).getTime(), seq = ++calLoadSeq;
+    calRows = []; calAllDay = []; calLoadedWeek = null;
+    calRender("Loading events from Google Calendar …");
+    fetch(url + (url.indexOf("?") >= 0 ? "&" : "?") + "from=" + from + "&to=" + to)
+      .then((r) => r.text())
+      .then((txt) => {
+        if (seq !== calLoadSeq) return;   // a newer load (other week) has started
+        let j; try { j = JSON.parse(txt); } catch (e) { throw new Error("The calendar link answered, but not with event data. Is the web app deployed with “Who has access: Anyone”?"); }
+        if (j.error) throw new Error(j.error);
+        calBuildRows(j.events || [], from, to); calMissing = j.missing || []; calLoadedWeek = calWeek;
+        calRender();
+      })
+      .catch((e) => { if (seq !== calLoadSeq) return; calRender(null, "Couldn’t load the calendar: " + (e && e.message ? e.message : e) + " — check the link (Calendar link… below)."); });
+  }
+  function calBuildRows(events, from, to) {
+    const mem = (state.calImport && state.calImport.mem) || {};
+    const wk = state.weeks[calWeek], blocks = wk ? wk.blocks : [];
+    const cats = calCats(), catById = {}; cats.forEach((c) => (catById[c.id] = c));
+    const rows = [], allDay = [];
+    for (const ev of events) {
+      const s = new Date(ev.start), e = new Date(ev.end);
+      if (ev.allDay) { const last = new Date(ev.end - 1); allDay.push({ title: ev.title, cal: ev.cal, from: s, to: last }); continue; }
+      if (ev.start < from || ev.start >= to || s.getDay() === 0) continue;   // started before Monday, or a Sunday (Plapp has no Sunday)
+      const di = weekDayIdx(s), ds = ymd(s);
+      const sMin = s.getHours() * 60 + s.getMinutes();
+      const startSlot = Math.floor(sMin / SLOT_MIN);
+      const endSlot = ymd(e) === ds ? Math.ceil((e.getHours() * 60 + e.getMinutes()) / SLOT_MIN) : TOTAL_SLOTS;
+      const calLen = Math.max(1, Math.min(TOTAL_SLOTS - startSlot, endSlot - startSlot));
+      const key = ev.id + "|" + ds, norm = calNorm(ev.title), m = mem[norm];
+      const declined = ev.status === "NO";
+      let status = "", note = "";
+      const mine = blocks.find((b) => b.cal === key);
+      if (mine) { status = "in"; if (mine.calSlot != null && mine.calSlot !== startSlot) { status = "moved"; note = "calendar now " + calHM(startSlot) + " (was " + calHM(mine.calSlot) + ")"; } else note = "in Plapp"; }
+      else if (blocks.some((b) => b.event && b.day === DAYS[di] && calNorm(b.name) === norm)) { status = "same"; note = "already in Plapp?"; }
+      let catId = m && m.catId && catById[m.catId] ? m.catId : "";
+      if (!catId && !m) { const hit = cats.find((c) => calNorm(c.name) === norm); if (hit) catId = hit.id; }   // a task with the event's name
+      const tick = !status && !declined && (m ? !m.skip : (ev.main && calLen < CAL_LONG));
+      if (declined) note = "you declined";
+      else if (!m && !status && ev.main && calLen >= CAL_LONG) note = "long — info only?";
+      rows.push({ key, title: ev.title, name: ev.title, norm, cal: ev.cal, main: !!ev.main, di, startSlot, calSlot: startSlot, lenSlots: m && m.len ? Math.min(m.len, TOTAL_SLOTS - startSlot) : calLen, calLen,
+        calTxt: calHM(startSlot) + "–" + calHM(Math.min(TOTAL_SLOTS, startSlot + calLen)), catId, zb: !!(m && m.zb), za: !!(m && m.za), tick, status, note, declined, touched: false });
+    }
+    rows.sort((a, b) => (a.di - b.di) || (a.startSlot - b.startSlot) || ((b.main ? 1 : 0) - (a.main ? 1 : 0)));
+    calRows = rows; calAllDay = allDay;
+  }
+  function calTaskOptions(sel) {
+    const cats = calCats();
+    let h = '<option value="">— no task —</option>';
+    for (const g of GROUP_ORDER) {
+      const list = cats.filter((c) => (GROUP_ORDER.indexOf(c.group) >= 0 ? c.group : "none") === g).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      if (!list.length) continue;
+      h += '<optgroup label="' + calEsc(GROUPS[g] ? GROUPS[g].label : g) + '">' + list.map((c) => '<option value="' + c.id + '"' + (c.id === sel ? " selected" : "") + ">" + calEsc(c.name) + "</option>").join("") + "</optgroup>";
+    }
+    return h;
+  }
+  function calRender(loadingMsg, errMsg) {
+    const body = $("calBody"), add = $("calAdd");
+    $("calWeekLbl").textContent = calWeekLabel();
+    if (calSetupMode) {
+      const cur = (state.calImport && state.calImport.url) || "";
+      body.innerHTML = '<div class="calMsg">Paste the link of your <b>Plapp calendar bridge</b> (the Google Apps Script web app, <code>https://script.google.com/macros/s/…/exec</code>). ' +
+        'Setup: script.google.com → New project → paste the script → Deploy → New deployment → Web app, <i>Execute as: Me</i>, <i>Who has access: Anyone</i> → copy the Web app URL. ' +
+        'The link works like a password (it shows your calendar entries); it is stored with your plan, so all your devices get it.</div>' +
+        '<input type="text" class="calUrl" id="calUrlIn" placeholder="https://script.google.com/macros/s/…/exec" value="' + calEsc(cur) + '">' +
+        '<div class="btnRow"><button class="btn" id="calUrlSave">Save &amp; load</button>' + (cur ? '<button class="btnGhost" id="calUrlBack">Back</button>' : "") + "</div>";
+      add.style.display = "none";
+      $("calUrlSave").addEventListener("click", () => {
+        const v = $("calUrlIn").value.trim();
+        if (!/^https:\/\/\S+$/.test(v)) { toast("That doesn't look like a web link (https://…)."); return; }
+        if (!state.calImport || typeof state.calImport !== "object") state.calImport = {};
+        state.calImport.url = v; calSetupMode = false; commit(); calLoad();
+      });
+      const bk = $("calUrlBack"); if (bk) bk.addEventListener("click", () => { calSetupMode = false; calLoad(); });
+      return;
+    }
+    add.style.display = "";
+    if (loadingMsg || errMsg) { body.innerHTML = '<div class="calMsg' + (errMsg ? " err" : "") + '">' + calEsc(errMsg || loadingMsg) + "</div>"; calUpdateAdd(); return; }
+    const dayName = (di) => { const d = dateOfCell(state.anchorMonday, calWeek, di); return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" }); };
+    let h = '<table class="calTbl"><thead><tr><th class="calCk" title="Tick = add to Plapp">Add</th><th>Start</th><th>Duration</th><th></th><th>Name in Plapp</th><th>Task</th><th class="calCk" title="15-min Zug block above the Switch">Zug before</th><th class="calCk" title="15-min Zug block right after">Zug after</th><th>Calendar</th><th></th></tr></thead><tbody>';
+    let lastDi = -1;
+    calRows.forEach((r, i) => {
+      if (r.di !== lastDi) { lastDi = r.di; h += '<tr class="calDay"><td colspan="10">' + calEsc(dayName(r.di)) + "</td></tr>"; }
+      const imported = r.status === "in" || r.status === "moved";
+      const cls = imported ? "calIn" : (r.tick ? "" : "calOff");
+      const dis = imported ? " disabled" : "";
+      h += '<tr data-i="' + i + '"' + (cls ? ' class="' + cls + '"' : "") + ">" +
+        '<td class="calCk"><input type="checkbox" class="calTick"' + (r.tick ? " checked" : "") + dis + "></td>" +
+        '<td><input type="text" class="calStart" value="' + calHM(r.startSlot) + '" title="Start (↑/↓ = ±15 min)"' + dis + "></td>" +
+        '<td><button class="calStep calMinus" title="−15 min"' + dis + '>−</button> <input type="text" class="calDur" value="' + calHM(r.lenSlots) + '" title="Duration — 1:30, 45 (min) or 2 (h); ↑/↓ = ±15 min"' + dis + '> <button class="calStep calPlus" title="+15 min"' + dis + ">+</button></td>" +
+        '<td class="calEnd" title="Calendar: ' + calEsc(r.calTxt) + '">–' + calHM(Math.min(TOTAL_SLOTS, r.startSlot + r.lenSlots)) + "</td>" +
+        '<td><input type="text" class="calTitle" value="' + calEsc(r.name) + '" title="' + calEsc(r.title) + '"' + dis + "></td>" +
+        '<td><select class="calTask"' + dis + ">" + calTaskOptions(r.catId) + "</select></td>" +
+        '<td class="calCk"><input type="checkbox" class="calZb"' + (r.zb ? " checked" : "") + dis + "></td>" +
+        '<td class="calCk"><input type="checkbox" class="calZa"' + (r.za ? " checked" : "") + dis + "></td>" +
+        '<td><span class="calTag' + (r.main ? " calMain" : "") + '">' + calEsc(r.cal) + "</span></td>" +
+        '<td class="calNote">' + calEsc(r.note) + "</td></tr>";
+    });
+    h += "</tbody></table>";
+    if (!calRows.length) h = '<div class="calMsg">No timed events Monday–Saturday in this week.</div>';
+    if (calAllDay.length) {
+      const dd = (d) => d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+      h += '<div class="calAllDay"><b>All-day (not added):</b> ' + calAllDay.map((a) => calEsc(a.title) + " <span class=\"calEnd\">(" + dd(a.from) + (ymd(a.to) !== ymd(a.from) ? "–" + dd(a.to) : "") + ", " + calEsc(a.cal) + ")</span>").join(" · ") + "</div>";
+    }
+    if (calMissing.length) h += '<div class="calMsg err">Not found by the bridge: ' + calEsc(calMissing.join(", ")) + " — check the IDs at the top of the script.</div>";
+    body.innerHTML = h;
+    calUpdateAdd();
+  }
+  function calUpdateAdd() {
+    const n = calRows.filter((r) => r.tick && r.status !== "in" && r.status !== "moved").length;
+    const add = $("calAdd"); add.textContent = n ? "Add " + n + " event" + (n > 1 ? "s" : "") : "Add"; add.disabled = !n;
+  }
+  function calRowEl(r, i) {   // refresh one row in place (keeps focus / scroll), after an edit
+    const tr = $("calBody").querySelector('tr[data-i="' + i + '"]'); if (!tr) return;
+    tr.className = r.tick ? "" : "calOff";
+    tr.querySelector(".calTick").checked = r.tick;
+    const st = tr.querySelector(".calStart"); if (document.activeElement !== st) st.value = calHM(r.startSlot);
+    const du = tr.querySelector(".calDur"); if (document.activeElement !== du) du.value = calHM(r.lenSlots);
+    tr.querySelector(".calEnd").textContent = "–" + calHM(Math.min(TOTAL_SLOTS, r.startSlot + r.lenSlots));
+    calUpdateAdd();
+  }
+  function calTouch(r) { r.touched = true; r.tick = true; }   // editing a row means you want it
+  function calSetLen(r, slots) { r.lenSlots = Math.max(1, Math.min(TOTAL_SLOTS - r.startSlot, slots)); }
+  function calAddChecked() {
+    const todo = calRows.filter((r) => r.tick && r.status !== "in" && r.status !== "moved");
+    if (!todo.length) return;
+    snap();
+    while (state.weeks.length <= calWeek) state.weeks.push({ id: "w" + Date.now() + "_" + state.weeks.length, blocks: [], budgets: {} });
+    const B = state.weeks[calWeek].blocks;
+    const sw = calUtilCat("Switch", "work");
+    let zugN = 0, zug = null; const zugCat = () => (zug = zug || calUtilCat("Zug", "none"));
+    for (const r of todo) {
+      const day = DAYS[r.di], s = r.startSlot, e = Math.min(TOTAL_SLOTS, s + r.lenSlots);
+      if (r.zb && s >= 2) { B.push({ id: state.nextId++, catId: zugCat().id, day, startSlot: s - 2, lenSlots: 1, kind: "plan" }); zugN++; }
+      if (s >= 1) B.push({ id: state.nextId++, catId: sw.id, day, startSlot: s - 1, lenSlots: 1, kind: "plan" });
+      const ev = { id: state.nextId++, event: true, name: (r.name || "").trim() || r.title, color: EVENT_COLOR, day, startSlot: s, lenSlots: e - s, kind: "plan", cal: r.key, calSlot: r.calSlot };
+      if (r.catId) ev.catId = r.catId;
+      B.push(ev);
+      if (r.za && e < TOTAL_SLOTS) { B.push({ id: state.nextId++, catId: zugCat().id, day, startSlot: e, lenSlots: 1, kind: "plan" }); zugN++; }
+    }
+    // remember the choices per event title (what you ticked, and what you left unticked) → next week's defaults
+    if (!state.calImport || typeof state.calImport !== "object") state.calImport = {};
+    const mem = state.calImport.mem || (state.calImport.mem = {});
+    for (const r of calRows) {
+      if (r.status || r.declined) continue;   // already in Plapp / declined: no decision made here
+      mem[r.norm] = { len: r.lenSlots, catId: r.catId || null, zb: !!r.zb, za: !!r.za, skip: !r.tick, t: Date.now() };
+    }
+    state.currentWeek = calWeek; selectedId = null;   // show the week you just filled
+    commit();
+    $("calDialog").close();
+    toast("Added " + todo.length + " event" + (todo.length > 1 ? "s" : "") + " (+ switches" + (zugN ? ", " + zugN + " Zug" : "") + ") — Ctrl+Z / ↶ undoes it.");
+  }
+  { const dlg = $("calDialog");
+    $("calTopBtn").addEventListener("click", openCalImport);
+    $("calCancel").addEventListener("click", () => dlg.close());
+    $("calAdd").addEventListener("click", calAddChecked);
+    $("calPrev").addEventListener("click", () => { if (calWeek > 0) { calWeek--; calLoad(); } });
+    $("calNext").addEventListener("click", () => { calWeek++; calLoad(); });
+    $("calReload").addEventListener("click", () => calLoad());
+    $("calSetupLink").addEventListener("click", (e) => { e.preventDefault(); calSetupMode = true; calRender(); });
+    const body = $("calBody");
+    const rowOf = (el) => { const tr = el.closest("tr[data-i]"); if (!tr) return null; const i = +tr.dataset.i; return { r: calRows[i], i }; };
+    body.addEventListener("click", (e) => {
+      const b = e.target.closest(".calMinus, .calPlus"); if (!b) return;
+      const x = rowOf(b); if (!x) return;
+      calTouch(x.r); calSetLen(x.r, x.r.lenSlots + (b.classList.contains("calPlus") ? 1 : -1)); calRowEl(x.r, x.i);
+    });
+    body.addEventListener("change", (e) => {
+      const x = rowOf(e.target); if (!x) return; const r = x.r, t = e.target;
+      if (t.classList.contains("calTick")) { r.tick = t.checked; r.touched = true; }
+      else if (t.classList.contains("calStart")) { const m = calParseClock(t.value); if (!isNaN(m)) { calTouch(r); r.startSlot = Math.max(0, Math.min(TOTAL_SLOTS - 1, Math.round(m / SLOT_MIN))); calSetLen(r, r.lenSlots); } t.value = calHM(r.startSlot); }
+      else if (t.classList.contains("calDur")) { const m = calParseDur(t.value); if (!isNaN(m) && m > 0) { calTouch(r); calSetLen(r, Math.round(m / SLOT_MIN)); } t.value = calHM(r.lenSlots); }
+      else if (t.classList.contains("calTitle")) { calTouch(r); r.name = t.value; }
+      else if (t.classList.contains("calTask")) { calTouch(r); r.catId = t.value; }
+      else if (t.classList.contains("calZb")) { calTouch(r); r.zb = t.checked; }
+      else if (t.classList.contains("calZa")) { calTouch(r); r.za = t.checked; }
+      calRowEl(r, x.i);
+    });
+    body.addEventListener("keydown", (e) => {
+      const t = e.target; if (!(t.classList && (t.classList.contains("calStart") || t.classList.contains("calDur")))) return;
+      if (e.key === "Enter") { e.preventDefault(); t.blur(); return; }
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      e.preventDefault(); const x = rowOf(t); if (!x) return; const d = e.key === "ArrowUp" ? 1 : -1;
+      calTouch(x.r);
+      if (t.classList.contains("calStart")) { x.r.startSlot = Math.max(0, Math.min(TOTAL_SLOTS - 1, x.r.startSlot + d)); calSetLen(x.r, x.r.lenSlots); t.value = calHM(x.r.startSlot); }
+      else { calSetLen(x.r, x.r.lenSlots + d); t.value = calHM(x.r.lenSlots); }
+      calRowEl(x.r, x.i);
+    });
+  }
+
   /* ── weeks ── */
   function stepDay(d) {
     let nd = viewDay + d, wk = state.currentWeek;
@@ -4985,7 +5265,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v256"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v259"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
