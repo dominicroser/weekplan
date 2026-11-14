@@ -657,11 +657,13 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .sgTable tr.sgOver input.sgPlan { color: #fff; }
 .sgTable tr.sgOver .sgStar:not(.set) { -webkit-text-stroke-color: rgba(255,255,255,0.6); }   /* empty star outline visible on black */
 .sgTable td.sgP { text-align: center; }   /* Plan values (editable, fixed and group lines) in one centred line */
+.sgTable td.sgT { font-weight: 800; }   /* v255: Week column bold (task rows and group lines) */
+.sgTable th.sgOpenH { text-align: right; }   /* v255: header "=" sits right above the rows' "=" */
 .sgTable tr.sgSumW td { color: #12388f; }   /* Work → dark blue */
 .sgTable tr.sgSumF td { color: #15803d; }   /* Fruit → green */
 .sgTable tr.sgSumH td { color: #b8860b; }   /* Home → dark yellow */
-.sgTable tr.sgSumT td { color: #80868e; font-weight: 800; }   /* Work+Fruit → medium grey, bold */
-.sgTable tr.sgSumA td { color: #111; font-weight: 800; }   /* Total (Work + Fruit + Home) → black, bold */
+.sgTable tr.sgSumT td { color: #80868e; }   /* Work+Fruit → medium grey (v255: no longer bold; label bold like Work/Fruit/Home) */
+.sgTable tr.sgSumA td { color: #111; }   /* Total (Work + Fruit + Home) → black (v255: no longer bold) */
 .sgTable tr.sgSum td.sgName { max-width: none; overflow: visible; white-space: nowrap; }   /* group labels ("Work+Fruit") never cut off */
 .sgTable .sgMutedTog { background: none; border: none; padding: 0 0 0 4px; margin: 0; font: inherit; font-size: 12px; line-height: 1; color: inherit; cursor: pointer; }
 .sgTable tr.sgMutedFirst td { border-top: 2px solid #c9ced6; }   /* grey block starts below Total */
@@ -1236,7 +1238,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v254 */
+/* build v256 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2574,7 +2576,7 @@ if (IS_BROWSER) (function () {
     // Below the tasks: Work / Fruit / Home / Total W+F lines (they replace the old Day/Week/Plan summary table under the streak tracker).
     const sgVal = {
       prio: (c) => { const v = poolWprio(c.id); return (v === "" || v == null || isNaN(v)) ? 0 : +v; },
-      open: (c) => planTimeBlocked(c) ? 0 : (weekBudget(c, cw) - effUsed(c.id)),
+      open: (c) => planTimeBlocked(c) ? 0 : Math.round((weekBudget(c, cw) - effUsed(c.id)) * 60) / 60,   // v255: whole minutes, so a few seconds' difference (auto plans = raw timed seconds vs. "used" rounded to the minute) is 0:00, not a black "0:00" row
       ip: (c) => poolIP(c.id),
     };
     const sgTasks = shownAll.slice();
@@ -2631,7 +2633,7 @@ if (IS_BROWSER) (function () {
         { c: "sgSumA", l: "Total", t: "Total = Work + Fruit + Home", wt: (c) => { const w = gContribs(c); return (w.work || 0) + (w.fruit || 0) + (w.home || 0); } },
       ];
       for (const g of grpLines) {
-        const gO = wsum((c) => planTimeBlocked(c) ? 0 : weekBudget(c, cw) - (used[c.id] || 0), g.wt), gP = wsum((c) => weekBudget(c, cw), g.wt);
+        const gO = Math.round(wsum((c) => planTimeBlocked(c) ? 0 : weekBudget(c, cw) - (used[c.id] || 0), g.wt) * 60) / 60, gP = wsum((c) => weekBudget(c, cw), g.wt);   // v255: rounded to whole minutes before the sign test (was "−0:00" when a group was over by a few seconds)
         const gD = wsum((c) => trackToday(c.id), g.wt), gT = wsum((c) => trackWeek(c.id), g.wt);
         const gOtxt = Math.abs(gO) < 0.0001 ? "0:00" : (gO < 0 ? "−" : "") + fmtHM(Math.abs(gO));   // no black shading here, so an over group gets a minus sign
         body += '<tr class="sgSum ' + g.c + '"' + (g.t ? ' title="' + g.t + '"' : "") + '><td class="sgPrio"></td><td class="sgOpen">' + gOtxt + SG_EQ_PH +
@@ -2640,7 +2642,7 @@ if (IS_BROWSER) (function () {
       if (mutedOpen) body += mutedRows.map((c, i) => rowHtml(c, i ? "" : "sgMutedFirst")).join("");   // grey rows (no star & no Open) live below Total, folded by its ▸/▾
       sgHtml += '<table class="sgTable"><thead><tr>' +
         '<th class="sgH sgPrioH" data-sk="prio" title="Sort by priority">★</th>' +
-        '<th class="sgH" data-sk="open" title="Sort by Open (Planned − Gridded this week)">Open</th>' +
+        '<th class="sgH sgOpenH" data-sk="open" title="Sort by Open (Planned − Gridded this week)">Open<button class="sgBtn sgEqAll" title="Set Plan to timed + gridded for every task with an Open time this week (also the over / black ones) — one undo step">=</button></th>' +   // v255
         '<th class="sgH sgNameH" data-sk="name" title="Sort by group, then name">Task</th>' +
         '<th title="Timed this week">Week</th><th title="Timed today">Day</th>' +
         '<th title="Planned this week">Plan</th>' +
@@ -2650,6 +2652,16 @@ if (IS_BROWSER) (function () {
     { const sgHost = $("sgPanel"); if (sgHost) { sgHost.innerHTML = ""; sgHost.appendChild(sgWrap); sgHost.style.display = sgHtml ? "" : "none"; } else pool.appendChild(sgWrap); }   // Stretch Goal table lives at the top of the right bar
     sgWrap.querySelectorAll(".sgH").forEach((th) => th.addEventListener("click", () => { const k = th.dataset.sk, cur = ui.sgSort || { key: "prio", dir: -1 }; ui.sgSort = cur.key === k ? { key: k, dir: -(cur.dir || 1) } : { key: k, dir: k === "name" ? 1 : -1 }; sgFrozen = null; saveUI(); renderPool(); }));
     { const tog = sgWrap.querySelector(".sgMutedTog"); if (tog) tog.addEventListener("click", (e) => { e.stopPropagation(); ui.sgMutedOpen = !ui.sgMutedOpen; saveUI(); renderPool(); }); }
+    // v255: "=" in the Open header = the row "=" on every editable task of this week whose Open (whole minutes) isn't 0:00 — positive or over. One undo step.
+    { const ea = sgWrap.querySelector(".sgEqAll"); if (ea) ea.addEventListener("click", (e) => {
+      e.stopPropagation();   // not a sort click
+      const todo = sgTasks.filter((c) => !(c.auto || planTimeBlocked(c)) && Math.abs(sgVal.open(c)) > 0.0001);
+      if (!todo.length) { toast("No task with an open time this week."); return; }
+      snap(); const B = ensureBudgets(state.weeks[cw]);
+      for (const c of todo) B[c.id] = effUsed(c.id);
+      commit();
+      toast("Plan = timed + gridded for " + todo.length + " task" + (todo.length > 1 ? "s" : "") + " — Ctrl+Z / ↶ undoes it.");
+    }); }
     sgWrap.querySelectorAll("tr[data-cat]").forEach((tr) => {
       const cat = state.categories.find((x) => x.id === tr.dataset.cat); if (!cat) return;
       const star = tr.querySelector(".sgStar");
@@ -2664,7 +2676,7 @@ if (IS_BROWSER) (function () {
         if (nv == null) delete poolMp.wprio[cat.id][cw]; else poolMp.wprio[cat.id][cw] = nv;
         commit();
       });
-      const stepP = (d) => { snap(); const nb = Math.max(0, Math.round((weekBudget(cat, cw) + d * 0.25) * 100) / 100); ensureBudgets(state.weeks[cw])[cat.id] = nb; localUpdatedAt = Date.now(); saveLocal(); schedulePush(); poolDirty = true; schedulePoolReflow(); };
+      const stepP = (d) => { snap(); const nb = Math.max(0, Math.round((weekBudget(cat, cw) + d * 0.25) * 60) / 60); ensureBudgets(state.weeks[cw])[cat.id] = nb; localUpdatedAt = Date.now(); saveLocal(); schedulePush(); poolDirty = true; schedulePoolReflow(); };   // v255: steps round to whole minutes (was 1/100 h = 36 s, so 15:11 → + → − gave 15:10:48)
       const mn = tr.querySelector(".sgMinus"); if (mn) mn.addEventListener("click", (e) => { e.stopPropagation(); stepP(-1); });
       const pl = tr.querySelector(".sgPlus"); if (pl) pl.addEventListener("click", (e) => { e.stopPropagation(); stepP(1); });
       const eq = tr.querySelector(".sgEq"); if (eq) eq.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = effUsed(cat.id); commit(); });
@@ -4523,7 +4535,7 @@ if (IS_BROWSER) (function () {
     let vacEq = 0; for (const i of remIdx) { const wk = state.weeks[i]; const hd = wk && wk.holidays ? Math.max(0, Math.min(6, wk.holidays)) : 0; vacEq += hd / 6; }
     const paceDiv = remIdx.length - vacEq;
     const pace = (v) => (paceDiv > 0.0001 && Math.abs(v) > 0.0001) ? fmtHM(v / paceDiv) : "";
-    const paceSigned = (v) => { if (paceDiv <= 0.0001 || Math.abs(v) <= 0.0001) return ""; const q = v / paceDiv; return (q < 0 ? "+" : "-") + fmtHM(Math.abs(q)); };   // reversed sign: open (to schedule) shows negative, over-committed shows positive
+    const paceSigned = (v) => { if (paceDiv <= 0.0001 || Math.abs(v) <= 0.0001) return ""; const q = Math.round(v / paceDiv * 60) / 60; if (!q) return ""; return (q < 0 ? "+" : "-") + fmtHM(Math.abs(q)); };   // reversed sign: open (to schedule) shows negative, over-committed shows positive
     // Effective weeks (excluding holidays): total across the masterplan and remaining
     let totVac = 0; for (const i of mpIdx) { const wk = state.weeks[i]; const hd = wk && wk.holidays ? Math.max(0, Math.min(6, wk.holidays)) : 0; totVac += hd / 6; }
     const totEff = mpIdx.length - totVac;
@@ -4536,7 +4548,7 @@ if (IS_BROWSER) (function () {
     const timedPastAgg = (c) => { let s = 0; for (const i of pastIdx) s += trackedById(c.id, i); return s; };  // totals: own-only (no double count)
     const twCell = (timedSum, plannedSum, btot) => {
       const tw = pastEff > 0.0001 ? timedSum / pastEff : 0, pw = totEff > 0.0001 ? plannedSum / totEff : 0;
-      const cls = tw > pw + 0.0001 ? "dfNeg" : tw < pw - 0.0001 ? "dfPos" : "dfZero";   // above Planned/wk → red, below → blue
+      const dm = Math.round((tw - pw) * 60), cls = dm > 0 ? "dfNeg" : dm < 0 ? "dfPos" : "dfZero";   // above Planned/wk → red, below → blue (v256: compared in whole minutes, as shown)
       return '<td class="paceX keyWk' + (btot ? " btot" : "") + " " + cls + '">' + (tw > 0.0001 ? fmtHM(tw) : "") + "</td>";
     };
     const fmtWk = (n) => (Math.round(n * 10) / 10).toString();
@@ -4584,8 +4596,8 @@ if (IS_BROWSER) (function () {
     const taskRow = (c) => {
       const unassigned = !c.group || GROUP_ORDER.indexOf(c.group) < 0, kind = kindOf(c);
       let tsum = 0; for (const i of mpIdx) tsum += weekEffort(c, i);
-      const goal = gGet("goal", c.id), over = goal > 0.0001 && tsum > goal + 0.0001, hasGoal = goal > 0.0001, df = tsum - goal, dcls = df < -0.0001 ? "dfNeg" : df > 0.0001 ? "dfPos" : "dfZero";
-      const openVal = goal - tsum, ocls = openVal > 0.0001 ? "dfNeg" : openVal < -0.0001 ? "dfPos" : "dfZero";   // Open = Planned − Committed (coral = still to schedule, blue = over-committed)
+      const goal = gGet("goal", c.id), over = goal > 0.0001 && Math.round((tsum - goal) * 60) > 0, hasGoal = goal > 0.0001, df = tsum - goal, dcls = df < -0.0001 ? "dfNeg" : df > 0.0001 ? "dfPos" : "dfZero";
+      const openVal = Math.round((goal - tsum) * 60) / 60, ocls = openVal > 0.0001 ? "dfNeg" : openVal < -0.0001 ? "dfPos" : "dfZero";   // Open = Planned − Committed (coral = still to schedule, blue = over-committed); v256: rounded to whole minutes (past weeks count raw timed seconds) so no "+0:00"/"-0:00"; footers likewise
       let r = '<tr data-id="' + c.id + '"' + (c.ad ? ' class="adRow"' : "") + ">";
       // ── Task name (frozen) ──
       r += '<td class="name"><span class="budSwatch" style="background:' + c.color + '"></span><input class="tname" placeholder="name…" value="' + (c.name || "").replace(/"/g, "&quot;") + '"></td>';
@@ -4663,8 +4675,8 @@ if (IS_BROWSER) (function () {
       let gt = 0, gIP = 0, goalSum = 0, timedTot = 0, timedPastTot = 0, cells = "";
       for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { s += weekEffortAgg(c, i); sip += ipGet(c.id, i); } gt += s; cells += '<td class="wkHours btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + fmtHM(s) + '</td><td class="btot wprioCol prioW' + i + (isPast(i) ? " pastCol" : "") + '"></td><td class="btot ipCol ipW' + i + (isPast(i) ? " pastCol" : "") + '">' + (sip ? fmtHM(sip) : "") + '</td>'; }
       for (const c of list) { gIP += gGet("goalIP", c.id); goalSum += gGet("goal", c.id); timedTot += timedAgg(c); timedPastTot += timedPastAgg(c); }
-      const gover = goalSum > 0.0001 && gt > goalSum + 0.0001;
-      const gOpen = goalSum - gt, gCls = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "dfNeg" : gOpen < -0.0001 ? "dfPos" : "dfZero"), gTxt = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "+" + fmtHM(gOpen) : gOpen < -0.0001 ? "-" + fmtHM(-gOpen) : "0:00");   // Open: positive = to schedule (red), negative = over (blue)
+      const gover = goalSum > 0.0001 && Math.round((gt - goalSum) * 60) > 0;
+      const gOpen = Math.round((goalSum - gt) * 60) / 60, gCls = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "dfNeg" : gOpen < -0.0001 ? "dfPos" : "dfZero"), gTxt = goalSum <= 0.0001 ? "" : (gOpen > 0.0001 ? "+" + fmtHM(gOpen) : gOpen < -0.0001 ? "-" + fmtHM(-gOpen) : "0:00");   // Open: positive = to schedule (red), negative = over (blue)
       let f = '<tr class="budFoot"><td class="name">Total</td>';
       for (let k = 0; k < 16; k++) f += '<td class="feat ' + (k < 2 ? "fInfo" : k < 14 ? "fCreate" : "fOver") + '"></td>';
       f += '<td class="paceT keyWk btot">' + paceAll(gt) + '</td><td class="paceD keyWk btot ' + gCls + '">' + (goalSum > 0.0001 ? paceSigned(gOpen) : "") + '</td><td class="paceG keyWk btot">' + (goalSum > 0.0001 ? paceAll(goalSum) : "") + '</td>' + twCell(timedPastTot, goalSum, true) +
@@ -4677,11 +4689,11 @@ if (IS_BROWSER) (function () {
         let tot = 0, goalS = 0, ipS = 0, timedS = 0, timedPastS = 0, cc = "";
         for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { const w = grpW(c, g); s += weekEffortAgg(c, i) * w; sip += ipGet(c.id, i) * w; } tot += s; cc += '<td class="wkHours btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + (s > 0.0001 ? fmtHM(s) : "") + '</td><td class="btot wprioCol prioW' + i + (isPast(i) ? " pastCol" : "") + '"></td><td class="btot ipCol ipW' + i + (isPast(i) ? " pastCol" : "") + '">' + (sip > 0.0001 ? fmtHM(sip) : "") + '</td>'; }
         for (const c of list) { const w = grpW(c, g); goalS += gGet("goal", c.id) * w; ipS += gGet("goalIP", c.id) * w; timedS += timedAgg(c) * w; timedPastS += timedPastAgg(c) * w; }
-        const gOpenG = goalS - tot, cls = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "dfNeg" : gOpenG < -0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "+" + fmtHM(gOpenG) : gOpenG < -0.0001 ? "-" + fmtHM(-gOpenG) : "0:00");   // Open: positive = to schedule (red), negative = over (blue)
+        const gOpenG = Math.round((goalS - tot) * 60) / 60, cls = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "dfNeg" : gOpenG < -0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (gOpenG > 0.0001 ? "+" + fmtHM(gOpenG) : gOpenG < -0.0001 ? "-" + fmtHM(-gOpenG) : "0:00");   // Open: positive = to schedule (red), negative = over (blue)
         let g2 = '<tr class="budFoot budGrp budGrp-' + g + '"><td class="name">' + label + '</td>';
         for (let k = 0; k < 16; k++) g2 += '<td class="feat ' + (k < 2 ? "fInfo" : k < 14 ? "fCreate" : "fOver") + '"></td>';
         g2 += '<td class="paceT keyWk btot">' + paceAll(tot) + '</td><td class="paceD keyWk btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(gOpenG) : "") + '</td><td class="paceG keyWk btot">' + (goalS > 0.0001 ? paceAll(goalS) : "") + '</td>' + twCell(timedPastS, goalS, true) +
-          '<td class="keyTot ktTimed btot">' + (timedS > 0.0001 ? fmtHM(timedS) : "") + '</td><td class="stot keyTot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="dcol keyTot btot ' + openHalfCls(goalS - tot) + '">' + dtxt + '</td>' +
+          '<td class="keyTot ktTimed btot">' + (timedS > 0.0001 ? fmtHM(timedS) : "") + '</td><td class="stot keyTot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="dcol keyTot btot ' + openHalfCls(gOpenG) + '">' + dtxt + '</td>' +
           '<td class="gcol gcolF planMP btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td>' +
           '<td class="gcol gcolPrio starMP btot"></td><td class="gcol gcolFip starMP btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td>';
         return g2 + cc + "</tr>";
@@ -4692,12 +4704,12 @@ if (IS_BROWSER) (function () {
         let tot = 0, goalS = 0, ipS = 0, timedS = 0, timedPastS = 0, cc = "";
         for (const i of mpIdx) { let s = 0, sip = 0; for (const c of list) { const w = wf(c); s += weekEffortAgg(c, i) * w; sip += ipGet(c.id, i) * w; } tot += s; cc += '<td class="wkHours btot' + (i === state.currentWeek ? " mpCur" : "") + (isPast(i) ? " pastCol" : "") + '">' + (s > 0.0001 ? fmtHM(s) : "") + '</td><td class="btot wprioCol prioW' + i + (isPast(i) ? " pastCol" : "") + '"></td><td class="btot ipCol ipW' + i + (isPast(i) ? " pastCol" : "") + '">' + (sip > 0.0001 ? fmtHM(sip) : "") + '</td>'; }
         for (const c of list) { const w = wf(c); goalS += gGet("goal", c.id) * w; ipS += gGet("goalIP", c.id) * w; timedS += timedAgg(c) * w; timedPastS += timedPastAgg(c) * w; }
-        const gOpenWF = goalS - tot, cls = goalS <= 0.0001 ? "" : (gOpenWF > 0.0001 ? "dfNeg" : gOpenWF < -0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (gOpenWF > 0.0001 ? "+" + fmtHM(gOpenWF) : gOpenWF < -0.0001 ? "-" + fmtHM(-gOpenWF) : "0:00");
+        const gOpenWF = Math.round((goalS - tot) * 60) / 60, cls = goalS <= 0.0001 ? "" : (gOpenWF > 0.0001 ? "dfNeg" : gOpenWF < -0.0001 ? "dfPos" : "dfZero"), dtxt = goalS <= 0.0001 ? "" : (gOpenWF > 0.0001 ? "+" + fmtHM(gOpenWF) : gOpenWF < -0.0001 ? "-" + fmtHM(-gOpenWF) : "0:00");
         const label = 'Total <span style="color:#12388f">Work</span>+<span style="color:#15803d">Fruit</span>';
         let g2 = '<tr class="budFoot budGrp budGrp-wf"><td class="name">' + label + '</td>';
         for (let k = 0; k < 16; k++) g2 += '<td class="feat ' + (k < 2 ? "fInfo" : k < 14 ? "fCreate" : "fOver") + '"></td>';
         g2 += '<td class="paceT keyWk btot">' + paceAll(tot) + '</td><td class="paceD keyWk btot ' + cls + '">' + (goalS > 0.0001 ? paceSigned(gOpenWF) : "") + '</td><td class="paceG keyWk btot">' + (goalS > 0.0001 ? paceAll(goalS) : "") + '</td>' + twCell(timedPastS, goalS, true) +
-          '<td class="keyTot ktTimed btot">' + (timedS > 0.0001 ? fmtHM(timedS) : "") + '</td><td class="stot keyTot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="dcol keyTot btot ' + openHalfCls(goalS - tot) + '">' + dtxt + '</td>' +
+          '<td class="keyTot ktTimed btot">' + (timedS > 0.0001 ? fmtHM(timedS) : "") + '</td><td class="stot keyTot btot">' + (tot > 0.0001 ? fmtHM(tot) : "") + '</td><td class="dcol keyTot btot ' + openHalfCls(gOpenWF) + '">' + dtxt + '</td>' +
           '<td class="gcol gcolF planMP btot">' + (goalS > 0.0001 ? fmtHM(goalS) : "") + '</td>' +
           '<td class="gcol gcolPrio starMP btot"></td><td class="gcol gcolFip starMP btot">' + (ipS > 0.0001 ? fmtHM(ipS) : "") + '</td>';
         return g2 + cc + "</tr>";
@@ -4973,7 +4985,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v254"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v256"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
