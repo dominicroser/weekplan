@@ -1041,7 +1041,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
         <div id="deadlineBody"></div>
       </div>
       <div class="rbPanel" id="notePanel">
-        <div id="noteTop"><div id="noteTabs"></div><div id="noteTools2"><button data-nc="bullet" title="Bullet list (Ctrl+Shift+8)">&bull;</button><button data-nc="check" title="Tick box (Ctrl+Shift+9)">&#9744;</button><button data-nc="outdent" title="Outdent (Shift+Tab)">&#8676;</button><button data-nc="indent" title="Indent (Tab)">&#8677;</button><button data-nc="up" title="Move line up (Alt+Shift+&#8593;) — or drag the &#10303; grip left of the line (tap it: bold / highlight / italics / plain)">&#8593;</button><button data-nc="down" title="Move line down (Alt+Shift+&#8595;)">&#8595;</button><button data-nc="style" title="Priority colour, bold, highlight, italics">Aa</button><button data-nc="big" title="Open the note large, over the grid (Esc closes)">&#10530;</button></div></div>
+        <div id="noteTop"><div id="noteTabs"></div><div id="noteTools2"><button data-nc="bullet" title="Bullet list (Ctrl+Shift+8, or type - and a space at the start of a line)">&bull;</button><button data-nc="check" title="Tick box (Ctrl+Shift+9, or type o and a space at the start of a line)">&#9744;</button><button data-nc="outdent" title="Outdent (Shift+Tab)">&#8676;</button><button data-nc="indent" title="Indent (Tab)">&#8677;</button><button data-nc="up" title="Move line up (Alt+Shift+&#8593;) — or drag the &#10303; grip left of the line (tap it: bold / highlight / italics / plain)">&#8593;</button><button data-nc="down" title="Move line down (Alt+Shift+&#8595;)">&#8595;</button><button data-nc="style" title="Priority colour, bold, highlight, italics">Aa</button><button data-nc="big" title="Open the note large, over the grid (Esc closes)">&#10530;</button></div></div>
         <div id="noteDock"></div>
         <div id="tickedWrap"></div>
       </div>
@@ -1180,7 +1180,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it or see its 🕘 History — removed lines and earlier versions; drag a tab to reorder — on the phone hold it first; + for a new note). ⤢ (right end of the note's toolbar) opens the note large over the grid; Esc, ⤡ or a click outside puts it back. For a second window with just the notes, open this page with <b>?view=note</b> at the end of the address (sticky-note tab icon). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip left of its bullet (drag left below the last sub-item to take it a level up); a tap on the grip cycles that line bold → highlight → italics → plain, or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I). Cut / copy / paste and Tab / Shift+Tab take a folded line's hidden sub-items along. Undo / redo: <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (or Ctrl+Shift+Z) or ↶ ↷ — one history for everything, also inside the note (in a text field you are still typing in, the field's own undo). Habits: tap a day letter above the streak grid to let that day start later (up to 5:00) — time before then counts for the day before. <b>All</b> (under the streak grid) shows every week in one table — as an Excel file (.xlsx, also opens in Google Sheets) or copied straight into a new Google Sheet. With <b>Ø</b> on, the grey line above the Ø column counts the finished weeks you missed.</p>
+  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it or see its 🕘 History — removed lines and earlier versions; drag a tab to reorder — on the phone hold it first; + for a new note). ⤢ (right end of the note's toolbar) opens the note large over the grid; Esc, ⤡ or a click outside puts it back. For a second window with just the notes, open this page with <b>?view=note</b> at the end of the address (sticky-note tab icon). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. Or type <b>-</b> and a space at the start of a line for a bullet, <b>o</b> and a space for a tick box (Backspace right after turns it back into text). A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip left of its bullet (drag left below the last sub-item to take it a level up); a tap on the grip cycles that line bold → highlight → italics → plain, or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I). Cut / copy / paste and Tab / Shift+Tab take a folded line's hidden sub-items along. Undo / redo: <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (or Ctrl+Shift+Z) or ↶ ↷ — one history for everything, also inside the note (in a text field you are still typing in, the field's own undo). Habits: tap a day letter above the streak grid to let that day start later (up to 5:00) — time before then counts for the day before. <b>All</b> (under the streak grid) shows every week in one table — as an Excel file (.xlsx, also opens in Google Sheets) or copied straight into a new Google Sheet. With <b>Ø</b> on, the grey line above the Ø column counts the finished weeks you missed.</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -1278,7 +1278,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v259 */
+/* build v260 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -4204,16 +4204,17 @@ if (IS_BROWSER) (function () {
     let prev = li.previousElementSibling; while (prev && prev.tagName !== "LI") prev = prev.previousElementSibling;
     [li, prev].forEach((x) => { if (x && !ownText(x) && STYLE_CLS.some((c) => x.classList.contains(c))) STYLE_CLS.forEach((c) => x.classList.remove(c)); });
   }
-  /* v240: line starts typed as shortcuts. Enter at the END of a line that starts with "- " turns it into a bullet, "o " (also "O ", which
-     a phone keyboard capitalises) into a tick box: the two characters disappear and the new line below continues the list. Works on plain
-     lines and on list lines (bullet ↔ tick box, a numbered line → bullet / tick box). "- " or "o " alone + Enter = an empty bullet / tick box
-     (no extra line). Only at the end of a line, so Enter in the middle of such a line splits it as usual. Ctrl+Z undoes it.
-     Returns "" (nothing to do), "line" (converted; the Enter goes ahead) or "empty" (converted; the Enter has nothing left to do). */
-  let noteMdKey = false;   // true from an Enter keydown until the end of that keystroke (its beforeinput needs no second look)
-  const NOTE_MD = /^[ \t\n\r\f\u00a0]*(?:([-\u2013\u2014])|([oO]))[ \u00a0]/;
-  function noteMdLine(dry, noSnap) {
-    const body = $("noteBody"), sel = window.getSelection(); if (!sel || !sel.rangeCount || !sel.isCollapsed) return "";
-    const n = noteCaretNode(); if (!n) return "";
+  /* v240, v260: line starts typed as shortcuts. "- " (dash, space) at the start of a line turns it into a bullet, "o " (also "O ", which a phone
+     keyboard capitalises) into a tick box — since v260 as soon as the space is typed (v240–v259: on Enter at the end of the line). The two
+     characters disappear; text already on the line stays, so "o " typed in front of an existing line makes that line a tick box. Plain lines
+     and list lines: bullet ↔ tick box, a numbered line → bullet / tick box. A line that already is that kind is left alone (a "- " typed
+     inside a bullet stays text). Backspace right after the conversion, or Ctrl+Z, gives back the plain "- " / "o ".
+     Called after the space is in the note (input event); returns true if it converted the line. */
+  const NOTE_MD = /^[ \t\n\r\f ]*(?:([-–—])|([oO]))[  ]$/;   // the line's text before the caret: marker + the space just typed
+  let noteMdLast = null;   // { li, entry, html } of the newest conversion — for Backspace-turns-it-back
+  function noteMdSpace() {
+    const body = $("noteBody"), sel = window.getSelection(); if (!sel || !sel.rangeCount || !sel.isCollapsed) return false;
+    const n = noteCaretNode(); if (!n) return false;
     const caret = sel.getRangeAt(0).cloneRange(), el = n.nodeType === 1 ? n : n.parentElement;
     let li = el.closest("li"); if (li && !body.contains(li)) li = null;
     let pre, post;
@@ -4227,35 +4228,39 @@ if (IS_BROWSER) (function () {
         sel.removeAllRanges(); sel.addRange(caret.cloneRange()); sel.modify("extend", "forward", "paragraphboundary"); post = sel.getRangeAt(0).cloneRange();
       } catch (e) { pre = null; }
       sel.removeAllRanges(); sel.addRange(caret.cloneRange());
-      if (!pre || !body.contains(pre.startContainer)) return "";
+      if (!pre || !post || !body.contains(pre.startContainer)) return false;
     }
-    if (/[^ \t\n\r\f\u00a0]/.test(post.toString())) return "";   // not at the end of the line
-    const m = NOTE_MD.exec(pre.toString()); if (!m) return "";
-    if (dry) return "line";
+    const m = NOTE_MD.exec(pre.toString()); if (!m) return false;
     const want = m[1] ? "bullet" : "chk";
-    if (!noSnap) noteSnap("cmd", true);
+    if (li && (want === "chk" ? li.classList.contains("chk") : (!li.classList.contains("chk") && li.parentElement && li.parentElement.tagName === "UL"))) return false;   // already that kind
+    const top0 = undoStack[undoStack.length - 1]; noteSnap("cmd", true);
+    const entry = undoStack[undoStack.length - 1] !== top0 ? undoStack[undoStack.length - 1] : null;   // the undo step this conversion took
     // remove the marker characters: the first m[0].length characters of the line
     { let left = m[0].length; const cut = document.createRange(); cut.setStart(pre.startContainer, pre.startOffset);
       const w = document.createTreeWalker(pre.commonAncestorContainer.nodeType === 1 ? pre.commonAncestorContainer : pre.commonAncestorContainer.parentNode, NodeFilter.SHOW_TEXT);
       let t, ok = false;
       while ((t = w.nextNode())) { if (!pre.intersectsNode(t)) continue; const s0 = t === pre.startContainer ? pre.startOffset : 0, avail = t.length - s0; if (left <= avail) { cut.setEnd(t, s0 + left); ok = true; break; } left -= avail; }
-      if (!ok) return "";
+      if (!ok) return false;
       cut.deleteContents(); }
+    const restEmpty = !/[^ \t\n\r\f ]/.test(post.toString());   // (post is a live range: it now covers the rest of the line)
     // make the line a list line of the wanted kind
     if (!li || (want === "bullet" && li.parentElement && li.parentElement.tagName === "OL")) {
-      if (!li && !/[^ \t\n\r\f]/.test(pre.toString())) { const br = document.createElement("br"); caret.insertNode(br); caret.setStartBefore(br); caret.collapse(true); }   // line now empty: give it its placeholder, or Chrome would list the line above
+      if (restEmpty && (li ? liOwnEmpty(li) : !post.cloneContents().querySelector("br"))) { const br = document.createElement("br"); caret.insertNode(br); caret.setStartBefore(br); caret.collapse(true); }   // line now empty: give it its placeholder, or Chrome would convert the line above
       sel.removeAllRanges(); sel.addRange(caret);   // (a live range: it followed the cut)
       document.execCommand("insertUnorderedList");
       const n2 = noteCaretNode(); li = n2 ? (n2.nodeType === 1 ? n2 : n2.parentElement).closest("li") : null;
-      if (!li || !body.contains(li)) { decorateNoteLists(); saveNoteHtml(); return "line"; }
+      if (!li || !body.contains(li)) { decorateNoteLists(); saveNoteHtml(); return true; }
     }
     li.classList.toggle("chk", want === "chk");
     if (!li.getAttribute("class")) li.removeAttribute("class");
-    const empty = !ownText(li) && !Array.from(li.children).some((c) => c.tagName === "IMG" || (!isList(c) && c.querySelector("img")));   // nothing left but the marker → stay on this line
-    if (empty) { if (liOwnEmpty(li)) { const kids = noteKidList(li); li.insertBefore(document.createElement("br"), kids && kids.parentElement === li ? kids : li.firstChild); } placeCaret(li, false); }
-    else caretToLineEnd(li);
+    if (liOwnEmpty(li)) { const kids = noteKidList(li); li.insertBefore(document.createElement("br"), kids && kids.parentElement === li ? kids : li.firstChild); placeCaret(li, false); }
+    else {   // the cursor goes to the start of the line's text (where the space was typed)
+      const w = document.createTreeWalker(li, NodeFilter.SHOW_TEXT, { acceptNode: (x) => (x.length && !(x.parentElement && x.parentElement.closest("ul,ol") !== li.parentElement)) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP });
+      const t = w.nextNode(); if (t) { const r = document.createRange(); r.setStart(t, 0); r.collapse(true); sel.removeAllRanges(); sel.addRange(r); } else placeCaret(li, false);
+    }
     decorateNoteLists(); saveNoteHtml();
-    return empty ? "empty" : "line";
+    noteMdLast = entry ? { li, entry, html: body.innerHTML } : null;
+    return true;
   }
   // Chrome "preserves" a line's look when lines merge (Backspace/Delete) or split by wrapping text in <span style="color:…; font-weight:700…">.
   // Those spans would make a line style stick (Alt+B could no longer remove it), so unwrap any span whose inline style is only our line-style
@@ -4617,6 +4622,18 @@ if (IS_BROWSER) (function () {
     noteRefold(); decorateNoteLists(); saveNoteHtml();
   });
   document.addEventListener("dragend", () => { noteClip.drag = null; });
+  // v260: Backspace right after a "- " / "o " conversion (nothing changed since, cursor at the start of that line) gives back the plain
+  // "- " / "o " text, as in Google Docs or Notion — that is the conversion's own undo step. Registered before the undo-snapshot listener below,
+  // which it stops (the Backspace itself is no change).
+  $("noteBody").addEventListener("beforeinput", (e) => {
+    const L = noteMdLast; if (!L || e.inputType !== "deleteContentBackward") return;
+    noteMdLast = null;
+    const body = $("noteBody"), sel = window.getSelection();
+    if (undoStack[undoStack.length - 1] !== L.entry || body.innerHTML !== L.html || !L.li.isConnected || !sel || !sel.rangeCount || !sel.isCollapsed) return;
+    const n = noteCaretNode(); if (!n || (n.nodeType === 1 ? n : n.parentElement).closest("li") !== L.li) return;
+    const r = document.createRange(); r.selectNodeContents(L.li); r.setEnd(sel.anchorNode, sel.anchorOffset); if (r.toString() !== "") return;
+    e.preventDefault(); e.stopImmediatePropagation(); undo();
+  }, true);
   // v236: every change to the note's text is an undo step (typing bursts merged); the browser's own undo (e.g. from a context menu) is redirected
   $("noteBody").addEventListener("beforeinput", (e) => {
     const t = e.inputType || "";
@@ -4626,13 +4643,6 @@ if (IS_BROWSER) (function () {
     const kind = /^insert(Text|CompositionText|ReplacementText)$/.test(t) ? "type" : /^delete(Content|Word|SoftLine|HardLine|Entire)/.test(t) ? "del" : (t === "deleteByDrag" || t === "insertFromDrop") ? "drag" : "other";
     noteSnap(kind, kind === "other");
   }, true);
-  // v240: "- " / "o " line starts when Enter arrives without a usable keydown (some phone keyboards) — the keydown path has already converted
-  // the line otherwise, so this finds nothing to do. The conversion runs right after the event (not inside it), then the new line is added.
-  $("noteBody").addEventListener("beforeinput", (e) => {
-    if (e.inputType !== "insertParagraph" || noteMdKey || noteMdLine(true) !== "line") return;   // the keydown already did it
-    e.preventDefault();
-    setTimeout(() => { if (noteMdLine(false, true) === "line") document.execCommand("insertParagraph"); }, 0);
-  });
   // Backspace at the start of a line whose line above is empty (or Delete at the end of an empty line): just drop the empty line,
   // so the remaining line keeps its own style (the browser would merge it into the empty, unstyled line).
   $("noteBody").addEventListener("beforeinput", (e) => {
@@ -4655,12 +4665,18 @@ if (IS_BROWSER) (function () {
     decorateNoteLists(); saveNoteHtml();
   });
   $("noteBody").addEventListener("input", (e) => { if (e && (e.inputType === "insertFromPaste" || e.inputType === "insertFromDrop")) noteRefold(); if (e && e.inputType === "insertParagraph") plainNewLine(); if (e && /^(delete|insertParagraph)/.test(e.inputType || "")) unwrapLineStyleSpans(); decorateNoteLists(); revealNoteCaret(); saveNoteHtml(); });
+  // v260: "- " / "o " + space at the start of a line → bullet / tick box (noteMdSpace). Typed text only (not paste / drop), and never in the
+  // middle of a phone keyboard's composition — when the composition ends, the line is checked again (some keyboards put the space inside it).
+  $("noteBody").addEventListener("input", (e) => {
+    if (e.isComposing || !/^insert(Text|CompositionText)$/.test(e.inputType || "") || (e.data != null && !/[ \u00a0]$/.test(e.data))) return;
+    noteMdSpace();
+  });
+  $("noteBody").addEventListener("compositionend", () => setTimeout(() => { if (document.activeElement === $("noteBody")) noteMdSpace(); }, 0));
   $("noteBody").addEventListener("keydown", (e) => {
     { const uk = undoKey(e); if (uk) { e.preventDefault(); if (uk === "undo") undo(); else redo(); return; } }   // the one Plapp history, not the browser's
     if (e.key === "Escape" && noteBig && !document.querySelector(".sPop, .nPop")) { e.preventDefault(); setNoteBig(false); return; }
     if (e.key === "Tab") { e.preventDefault(); noteCmd(e.shiftKey ? "outdent" : "indent"); return; }
     if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      if (!e.isComposing && e.keyCode !== 229) { noteMdKey = true; setTimeout(() => { noteMdKey = false; }, 0); if (noteMdLine() === "empty") { e.preventDefault(); return; } }   // v240: "- " / "o " at the start of the line
       if (noteEnterInFolded(e)) return;
     }
     if (e.shiftKey && (e.altKey || e.ctrlKey || e.metaKey) && (e.key === "ArrowUp" || e.key === "ArrowDown")) { e.preventDefault(); moveNoteLine(e.key === "ArrowUp" ? -1 : 1); return; }
@@ -5265,7 +5281,7 @@ if (IS_BROWSER) (function () {
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
 
-  try { const BUILD = "v259"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { const BUILD = "v260"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
