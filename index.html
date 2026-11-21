@@ -13,8 +13,11 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" id="favicon" href="icon-192.png">
+<!-- v262: the web fonts load on the side (media=print → all once loaded). As an @import inside the style sheet they blocked the whole app:
+     on a connection that hangs (train wifi) nothing started until the fonts request gave up. sw.js keeps a copy of the fonts for offline use. -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" crossorigin="anonymous" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Inter:wght@400;500;600;700&display=swap">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Inter:wght@400;500;600;700&display=swap');
 :root{
   --bg:#ffffff; --panel:#f5f6f8; --panel2:#eceef1; --ink:#1f2328; --ink2:#5b626b;
   --ink3:#8b919a; --line:rgba(0,0,0,0.09); --line2:rgba(0,0,0,0.05);
@@ -228,6 +231,7 @@ h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; whit
 #noteClose { width: 22px; height: 22px; border: none; background: transparent; cursor: pointer; font-size: 15px; line-height: 1; color: #8a7c2e; padding: 0; }
 #noteBody { position: absolute; inset: 7px; padding: 5px 7px; overflow: auto; background: #f0e39c; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); font-family: 'Inter', sans-serif; font-size: 12.5px; line-height: 1.45; color: #3a3320; outline: none; -webkit-user-select: text; user-select: text; cursor: text; }
 #noteBody:empty:before { content: 'Quick notes…'; color: #b3a86a; }
+#noteBody a[href] { color: #1f56b8; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; cursor: pointer; overflow-wrap: anywhere; }   /* v264: links (click / tap opens) */
 /* ── note layout (v236): one column grid for every kind of line ──
    [grip --gw][fold --fd][marker --mk] text. Every <li> draws its own marker in its left padding (--mk wide), so all text of one level
    starts on one vertical line whatever the marker (dot, ▾/▸, tick box, number). A sub-list is indented by exactly one marker column,
@@ -366,9 +370,26 @@ body.mv-note .nPop .nMv button { padding: 7px 12px; font-size: 14px; }
 .bkRow .bkWhat small { display: block; color: var(--ink3); }
 @media (max-width: 560px) { .bkRow { grid-template-columns: 1fr auto auto; } .bkRow .bkWhen { grid-column: 1 / -1; } }
 /* ── phone views (v227): ?view=note | habits | timer — one panel full-screen, opened from the three home-screen shortcuts ── */
-#mvHead, #mvHabits, #mvTimer { display: none; }
+#mvHead, #mvHabits, #mvTimer, #mvToday { display: none; }
 body.mv #gridWrap, body.mv #rbGrip, body.mv #rbFooter, body.mv #sgPanel, body.mv #streakPanel, body.mv #deadlinePanel, body.mv #notePanel, body.mv #checkPop, body.mv #pool, body.mv #actionBar { display: none !important; }
-body.mv-note #notePanel, body.mv-habits #mvHabits, body.mv-timer #mvTimer { display: flex !important; }
+body.mv-note #notePanel, body.mv-habits #mvHabits, body.mv-timer #mvTimer, body.mv-today #mvToday { display: flex !important; }
+/* v263: ?view=today — timer, today's blocks, today's habits on one screen */
+#mvToday { flex-direction: column; gap: 9px; }
+.tdDate { font-weight: 800; font-size: 16px; }
+.tdHd { font-size: 12px; font-weight: 800; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 6px; display: flex; justify-content: space-between; gap: 10px; }
+.tdHd span { text-transform: none; letter-spacing: 0; font-weight: 600; }
+.tdRows { display: flex; flex-direction: column; gap: 5px; }
+.tdRow { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 5px 10px; border: 1px solid var(--line); border-left: 7px solid #999; border-radius: 9px; background: var(--panel); font-size: 15px; color: var(--ink); }
+.tdRow.tap { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.tdRow.past { opacity: 0.45; }
+.tdRow.now { border-top-color: #000; border-right-color: #000; border-bottom-color: #000; box-shadow: 0 0 0 1px #000; font-weight: 700; }
+.tdRow.on { background: #383d44; color: #fff; }
+.tdRow.act { min-height: 0; padding: 3px 10px; background: none; border-style: dashed; border-left-style: solid; font-size: 13px; color: var(--ink2); }
+.tdTime { font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 13px; min-width: 88px; }
+.tdName { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tdDur { font-size: 12px; opacity: 0.7; white-space: nowrap; }
+.tdNav { display: flex; gap: 8px; margin-top: 10px; }
+.tdNav a { flex: 1; text-align: center; padding: 11px 0; border: 1px solid var(--line); border-radius: 9px; text-decoration: none; color: var(--ink2); font-weight: 700; font-size: 14px; background: var(--panel); }
 body.mv #body { height: 100vh; height: 100dvh; flex-direction: column; overflow: hidden; }
 body.mv #rightBar { width: 100% !important; flex: 1; min-height: 0; height: auto; border: none; display: flex; }
 body.mv #rbInner { padding: 0 14px 28px; gap: 12px; }   /* (the top padding lives in the sticky header, so nothing scrolls by above it) */
@@ -842,7 +863,16 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .stCell { height: 18px; border: 1px solid var(--bg); border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 600; color: #7a6a20; user-select: none; }
 .stCellIn { width: 100%; height: 100%; border: 1px solid var(--accent); border-radius: 3px; text-align: center; font: inherit; font-size: 9px; padding: 0; background: #fff; color: var(--ink); box-sizing: border-box; outline: none; }
 .stCell.ach { background: #fff2ab; color: #9c7a00; }
-.stCell.na  { background: #f0cf4d; color: #6f5a12; }
+.stCell.na  { background: #edbf40; color: #6f5a12; }   /* v264: UT (untracked, was NA) a touch more orange / darker */
+.stCell .ut, .awCell .ut { color: #f5cc5c; font-weight: 600; }   /* v264: the letters UT only a little lighter than the cell — there if you look */
+.stGrid th.stSunH { color: var(--ink3); cursor: default; }
+.stGrid td.stSunTd { padding-left: 3px; }   /* the 7th column (Sunday / + / averages) sits a little apart from Mon–Sat */
+.stCell.stPlus { background: #f3f4f6; color: #8a8f99; font-size: 11px; font-weight: 700; border: 1px dashed #c9ccd3; }
+.stCell.stPlus:hover { background: #e8eaee; color: var(--ink); }
+.stCell.stSunOff { background: repeating-linear-gradient(135deg, #f1f2f5 0 3px, #fff 3px 6px); cursor: default; }
+.stGrid td.stAvgW { font-size: 8px; font-weight: 800; text-align: center; color: #7a1f3d; padding: 0 0 0 3px; cursor: help; white-space: nowrap; }   /* v264: long-run averages, dark wine red */
+.mvPlus { margin-left: 8px; height: 46px; padding: 0 12px; border-radius: 9px; border: 1px dashed #b9bdc6; background: #f3f4f6; color: var(--ink2); font: 600 15px/1 'Inter', sans-serif; flex-shrink: 0; }
+.mvSunNote { font-size: 13px; color: var(--ink3); margin: 2px 0 8px; }
 .stCell.miss { background: #f2795f; color: #ffdcd4; }
 .stCell.blank { background: #e8eaee; }   /* v258: a little darker than --panel */
 .stCell.today { box-shadow: inset 0 0 0 1px #555; }
@@ -861,6 +891,11 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 #habitsDialog { max-width: 720px; }
 #habitsTableWrap { overflow-x: auto; }
 .hbTable { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 13px; }
+.hbStartRow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 4px; font-size: 13px; }
+.hbStartRow.missing input { outline: 2px solid #f2795f; }
+#hbSunLegend { font-size: 12px; line-height: 1.55; margin: 4px 0 10px; }
+#hbSunLegend .w { color: #7a1f3d; font-weight: 800; }
+#hbSunLegend .warn { color: #b4690e; }
 .hbTable th { text-align: left; font-size: 11px; color: var(--ink2); padding: 4px 6px; border-bottom: 1px solid var(--line); }
 .hbTable td { padding: 3px 6px; border-bottom: 1px solid var(--line); }
 .hbTable input.hbName { width: 100%; min-width: 120px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 7px; font-size: 13px; }
@@ -952,7 +987,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .awTbl tbody tr:first-child td { box-shadow: none; }
 .awCell { height: 18px; min-width: 42px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 600; color: #7a6a20; background: var(--panel); }
 .awCell.ach { background: #fff2ab; color: #9c7a00; }
-.awCell.na { background: #f0cf4d; color: #6f5a12; }
+.awCell.na { background: #edbf40; color: #6f5a12; }
 .awCell.miss { background: #f2795f; color: #ffe8e2; }
 .awCell.off { background: repeating-linear-gradient(135deg, #f5f6f8 0 3px, #fff 3px 6px); }
 .awCell.today { box-shadow: inset 0 0 0 1px #555; }
@@ -1032,6 +1067,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
       <div id="mvHead"><a class="mvBack" href="./">&lsaquo; Plapp</a><span class="mvTitle"></span><span class="mvSync"></span><button id="mvUndo" class="mvHBtn" title="Undo">&#8630;</button><button id="mvRedo" class="mvHBtn" title="Redo">&#8631;</button><button id="mvRefresh" title="Refresh from the cloud">&#10227;</button></div>
       <div class="rbPanel" id="mvHabits"></div>
       <div class="rbPanel" id="mvTimer"></div>
+      <div class="rbPanel" id="mvToday"></div>
       <div class="rbPanel" id="sgPanel"></div>
       <div class="rbPanel" id="streakPanel">
         <div id="streakBody"></div>
@@ -1060,7 +1096,9 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 
 <dialog id="habitsDialog">
   <h2>Habits &amp; streaks</h2>
-  <p class="muted">Each day a habit is <b>Achieved</b> (light yellow), <b>Missed</b> (coral) or <b>NA</b> (deep yellow). Click a cell in the side bar to cycle it. A week is <b>achieved</b> when missed cells ≤ Joker, where Joker = habits × (6·habits − NA) ⁄ (6·habits).</p>
+  <p class="muted">Each day a habit is <b>Achieved</b> (light yellow), <b>Missed</b> (coral) or <b>UT</b> (orange). <b>UT = untracked</b> (called “NA” until Nov 2026): the day doesn't count — it is neither achieved nor missed, and the week's Joker shrinks a little. Click a cell in the side bar to cycle it. A week is <b>achieved</b> when missed cells ≤ Joker, where Joker = habits × (6·habits − UT) ⁄ (6·habits).</p>
+  <div class="hbStartRow"><label for="hbStart"><b>Streak tracker started on</b></label> <input type="date" id="hbStart"> <span class="muted" id="hbStartNote">All averages (the wine-red numbers, Ø) count from this day — usually 1 January; for this tracker, the day you started recording.</span></div>
+  <div id="hbSunLegend" class="muted"></div>
   <div id="habitsTableWrap"></div>
   <div class="btnRow" style="margin-top:12px;"><button class="btnGhost" id="hbAdd">+ Add habit</button><button class="btnGhost" id="hbReview">📖 Review rules</button><button class="btnGhost" id="hbCsv">&darr; Download all values (CSV)</button><button class="btnGhost" id="hbClearWk">Clear this week</button></div>
   <h3 style="margin-top:18px;">Past weeks</h3>
@@ -1077,7 +1115,7 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 
 <dialog id="bkDialog">
   <h2>Earlier versions on this device</h2>
-  <p class="muted">Kept in this browser whenever another device's changes replaced or were merged into the plan here (newest 30). <b>Restore</b> puts that version back as your current plan (Ctrl+Z undoes it); <b>Download</b> saves it as a file you can Import.</p>
+  <p class="muted">Kept in this browser: a copy once a day, and one whenever another device's changes replaced or were merged into the plan here (the newest 30, plus the last one of each day for 30 days). <b>Restore</b> puts that version back as your current plan (Ctrl+Z undoes it); <b>Download</b> saves it as a file you can Import.</p>
   <div id="bkList"></div>
   <div class="btnRow" style="margin-top:12px;"><button class="btnGhost" id="bkClose">Close</button></div>
 </dialog>
@@ -1110,11 +1148,11 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 
 <dialog id="bulkDialog">
   <h2>Bulk-mark days</h2>
-  <p class="muted">Set the same status across a range of days — e.g. a whole week NA for a holiday, or the next few days NA for one habit while you’re ill. Sundays are skipped.</p>
+  <p class="muted">Set the same status across a range of days — e.g. a whole week UT (untracked) for a holiday, or the next few days UT for one habit while you’re ill. Sundays are skipped.</p>
   <div class="bulkRow"><label>Habit</label><select id="bulkHabit"></select></div>
   <div class="bulkRow"><label>From</label><input type="date" id="bulkFrom"></div>
   <div class="bulkRow"><label>To</label><input type="date" id="bulkTo"></div>
-  <div class="bulkRow"><label>Set to</label><select id="bulkStatus"><option value="na">NA</option><option value="ach">Achieved</option><option value="miss">Missed</option><option value="clear">Clear (blank)</option></select></div>
+  <div class="bulkRow"><label>Set to</label><select id="bulkStatus"><option value="na">UT (untracked)</option><option value="ach">Achieved</option><option value="miss">Missed</option><option value="clear">Clear (blank)</option></select></div>
   <div class="btnRow" style="margin-top:14px;"><button class="btn" id="bulkApply">Apply</button><button class="btnGhost" id="bulkCancel">Cancel</button></div>
 </dialog>
 
@@ -1180,7 +1218,7 @@ create policy "planner anon access" on plans
   </details>
 
   <h3>Tips</h3>
-  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it or see its 🕘 History — removed lines and earlier versions; drag a tab to reorder — on the phone hold it first; + for a new note). ⤢ (right end of the note's toolbar) opens the note large over the grid; Esc, ⤡ or a click outside puts it back. For a second window with just the notes, open this page with <b>?view=note</b> at the end of the address (sticky-note tab icon). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. Or type <b>-</b> and a space at the start of a line for a bullet, <b>o</b> and a space for a tick box (Backspace right after turns it back into text). A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip left of its bullet (drag left below the last sub-item to take it a level up); a tap on the grip cycles that line bold → highlight → italics → plain, or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I). Cut / copy / paste and Tab / Shift+Tab take a folded line's hidden sub-items along. Undo / redo: <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (or Ctrl+Shift+Z) or ↶ ↷ — one history for everything, also inside the note (in a text field you are still typing in, the field's own undo). Habits: tap a day letter above the streak grid to let that day start later (up to 5:00) — time before then counts for the day before. <b>All</b> (under the streak grid) shows every week in one table — as an Excel file (.xlsx, also opens in Google Sheets) or copied straight into a new Google Sheet. With <b>Ø</b> on, the grey line above the Ø column counts the finished weeks you missed.</p>
+  <p class="muted">Type <b>&lt;what&gt; : &lt;when&gt;</b>. Before the colon, up to three comma-separated parts in any order: a masterplan task, a free name, and/or the word <b>Event</b>. Examples: <i>Growth : mon 10-11am</i>, <i>Growth, Fred : mon 10-11am</i> (shown “Growth (Fred)”), <i>Growth, Fred, Event : mon 10-11am</i> (event on the task), <i>Fred, Event : mon 10-11am</i> (plain event), <i>chairs : mon 10-11am</i> (one-off). Days: <b>every day</b> (Mon–Sat), <b>mon-fri</b>, <b>tue and thu</b>, <b>weekends</b> (Sat). Weeks: <b>this week</b>, <b>whole masterplan</b>, or <b>weeks 38-51</b>. Start with <b>delete</b> to bulk-remove matching blocks. Drag either end of a block to resize; tap a block for nudge buttons. The notes in the side bar: coloured tabs on top (click the open tab to rename / recolour / delete it or see its 🕘 History — removed lines and earlier versions; drag a tab to reorder — on the phone hold it first; + for a new note). ⤢ (right end of the note's toolbar) opens the note large over the grid; Esc, ⤡ or a click outside puts it back. For a second window with just the notes, open this page with <b>?view=note</b> at the end of the address (sticky-note tab icon). Ctrl+B bold, Ctrl+I italic, Ctrl+H pink, Ctrl+Shift+8 bullets, Ctrl+Shift+9 tick boxes, Tab / Shift+Tab indent. Or type <b>-</b> and a space at the start of a line for a bullet, <b>o</b> and a space for a tick box (Backspace right after turns it back into text). Web addresses (https://… or www.…) become links as soon as a space or Enter follows; a click or tap opens them in a new tab. A bullet with sub-bullets shows ▾ — click it (or Ctrl+↑ / Ctrl+↓) to fold / unfold. Ticked items move to the bottom of the dump note; click one there to untick it. Move a line (with its sub-items): drag the ⠿ grip left of its bullet (drag left below the last sub-item to take it a level up); a tap on the grip cycles that line bold → highlight → italics → plain, or Alt+Shift+↑ / ↓, or the ↑ ↓ buttons. <b>Aa</b> marks the line at the cursor: priority colours 1–5 (Alt+1…5, Alt+0 = none), bold (Alt+B), highlight (Alt+H), italics (Alt+I). Cut / copy / paste and Tab / Shift+Tab take a folded line's hidden sub-items along. Backspace, Delete, typing and Enter never delete hidden sub-items: they stay with their line (or with the line it is merged into); only deleting or cutting a selection that contains the whole folded line removes them. Undo / redo: <b>Ctrl+Z</b> / <b>Ctrl+Y</b> (or Ctrl+Shift+Z) or ↶ ↷ — one history for everything, also inside the note (in a text field you are still typing in, the field's own undo). On the phone, open this page with <b>?view=today</b> for the day on one screen: the timer, today's blocks (tap one to time its task) and today's habits. Habits: tap a day letter above the streak grid to let that day start later (up to 5:00) — time before then counts for the day before. <b>All</b> (under the streak grid) shows every week in one table — as an Excel file (.xlsx, also opens in Google Sheets) or copied straight into a new Google Sheet. With <b>Ø</b> on, the grey line above the Ø column counts the finished weeks you missed.</p>
 
   <h3>Data</h3>
   <div class="btnRow">
@@ -1278,7 +1316,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v260 */
+/* build v265 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1508,11 +1546,11 @@ function groupContribs(state, catId) {
 // per-week "assigned" usage:
 //   used = exact( actual on past + today ) + planned future (today's not-yet-elapsed + future days)
 //   miss = tasks whose TODAY plan has already elapsed with nothing tracked today
-function weekUsage(state, weekIdx) {
+function weekUsage(state, weekIdx, rep) {   // rep: buildReport(state), if the caller has it already (v262 — renderPool asked for a fresh one per week of the masterplan)
   const anchor = state.anchorMonday;
   const now = new Date(), todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const nowSlot = (now.getHours() * 60 + now.getMinutes()) / SLOT_MIN;
-  const rep = buildReport(state);
+  if (!rep) rep = buildReport(state);
   const wblocks = (state.weeks[weekIdx] && state.weeks[weekIdx].blocks) || [];
   const actualRaw = {}, plannedFut = {}, miss = {};
   for (let d = 0; d < DAYS.length; d++) {
@@ -1904,7 +1942,7 @@ if (IS_BROWSER) (function () {
   let ui = {}; try { ui = JSON.parse(localStorage.getItem("weekplan-ui") || "{}"); } catch (e) { ui = {}; }
   function saveUI() { try { localStorage.setItem("weekplan-ui", JSON.stringify(ui)); } catch (e) {} }
   // phone views (v227): the home-screen shortcuts open ./?view=note | habits | timer — one panel, full screen
-  const MV = (function () { try { const v = new URLSearchParams(location.search).get("view"); return ["note", "habits", "timer"].indexOf(v) >= 0 ? v : ""; } catch (e) { return ""; } })();
+  const MV = (function () { try { const v = new URLSearchParams(location.search).get("view"); return ["note", "habits", "timer", "today"].indexOf(v) >= 0 ? v : ""; } catch (e) { return ""; } })();
   if (MV) document.body.classList.add("mv", "mv-" + MV);
 
   // ── editable tracked-session helpers (shared by inline log + popup) ──
@@ -1975,16 +2013,55 @@ if (IS_BROWSER) (function () {
     try {
       let raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) { const old = localStorage.getItem(OLD_KEY); if (old) { const od = JSON.parse(old); state = migrate(od.state || od); } }
-      else { const d = JSON.parse(raw); if (d.state) { state = migrate(d.state); localUpdatedAt = d.localUpdatedAt || 0; syncedAt = d.syncedAt || null; dirty = !!d.dirty; } }
+      else { const d = JSON.parse(raw); if (d.state) { state = migrate(d.state); localUpdatedAt = d.localUpdatedAt || 0; syncedAt = d.syncedAt || null; dirty = !!d.dirty; lsWid = d.wid || null; if (d.seen && typeof d.seen === "object") for (const w in d.seen) vvBump(w, +d.seen[w] || 0); } }
       baseJson = syncedAt ? localStorage.getItem(BASE_KEY) : null;
+      const bv = localStorage.getItem(BASE_VER_KEY); if (baseJson && bv != null && bv !== syncedAt) baseJson = null;   // v262: another window's base (see saveLocal) — not this plan's ancestor
     } catch (e) {}
     try { const c = localStorage.getItem(CFG_KEY); if (c) { cfg = JSON.parse(c); } } catch (e) {}
-    loadedUpdatedAt = localUpdatedAt;
+    loadedUpdatedAt = localUpdatedAt; lsSee(lsWid, JSON.stringify(state));
     if (linkConnect) { syncedAt = null; baseJson = null; dirty = false; loadedUpdatedAt = 0; }   // opened via a setup link → this device joins the cloud plan
     if (!syncedAt) provisionalBase = JSON.stringify(state);   // first sync ahead (new device, or upgrade from ≤ v230)
   }
-  function saveLocal() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, localUpdatedAt, syncedAt, dirty })); } catch (e) {} }
-  function saveBase(json) { baseJson = json; try { localStorage.setItem(BASE_KEY, json); } catch (e) { try { localStorage.removeItem(BASE_KEY); } catch (e2) {} } }   // too big for storage → kept in memory for this session
+  /* v262: (1) a save that fails (storage full) is no longer silent: the common-ancestor copy is given up first to make room, and if the plan
+     still doesn't fit, a warning says so (red dot + message) — until then changes live only in this open window and in the cloud.
+     (2) Two windows on one device share this storage. The ancestor copy (BASE_KEY) is stamped with the cloud version it belongs to; a
+     window with unsent changes makes sure the stored ancestor is its own before it saves — otherwise a reload could pair its plan with the
+     other window's newer ancestor, and the merge would then undo what the other window had saved. */
+  const BASE_VER_KEY = BASE_KEY + "-v";
+  /* v263: two Plapp windows on one device share this storage. Every save gets an id (wid = window id : running number) and lists, per
+     window, the newest save of that window it contains (seen — a version vector; a window's own saves each build on the one before).
+     A window never writes over another window's save it hasn't merged in yet (it merges first — absorbStorage — and then writes the
+     merged plan), so the saves normally form one line and the common ancestor for a merge is simply the last storage content this
+     window had seen (lsSeen, id lsWid). That is checked, not assumed: a save contains lsSeen exactly if its seen-entry for lsSeen's
+     window is at least lsSeen's number; if not (two windows saved within the same few milliseconds), the newest of this window's
+     last few seen plans (lsHist) that the save does contain is the ancestor. */
+  const WIN = Math.random().toString(36).slice(2, 10), WID_KEY = STORAGE_KEY + "-w";
+  let storeFail = false, storeWarned = 0, lsSeen = null, lsWid = null, lsHist = [], wSeq = 0, absorbPending = false;
+  const vv = {}, vvOrder = [];
+  function vvBump(win, seq) { if (!(vv[win] >= seq)) vv[win] = seq; const i = vvOrder.indexOf(win); if (i >= 0) vvOrder.splice(i, 1); vvOrder.push(win); while (vvOrder.length > 16) delete vv[vvOrder.shift()]; }   // (windows long gone drop out)
+  function lsHas(d, wid) { if (!wid) return true; const i = wid.lastIndexOf(":"); return !!d.seen && d.seen[wid.slice(0, i)] >= +wid.slice(i + 1); }   // does save d contain the save wid? (no id = a plan from before v263: taken as common)
+  function lsSee(wid, stateJson) { lsWid = wid; lsSeen = stateJson; lsHist.push({ wid, json: stateJson }); if (lsHist.length > 3) lsHist.shift(); }
+  function foreignSave() { try { const w = localStorage.getItem(WID_KEY); return !!w && w !== lsWid && w.indexOf(WIN + ":") !== 0; } catch (e) { return false; } }
+  function saveLocal() {
+    if (foreignSave()) { absorbPending = true; clearTimeout(absorbTimer); absorbTimer = setTimeout(absorbStorage, 0); return; }   // another window saved meanwhile → merge that in first; the merged plan is written then
+    const stateJson = JSON.stringify(state), wid = WIN + ":" + (++wSeq); vvBump(WIN, wSeq);
+    const json = '{"state":' + stateJson + "," + JSON.stringify({ localUpdatedAt, syncedAt, dirty, wid, seen: vv }).slice(1);
+    try {
+      if (dirty && syncedAt && baseJson && localStorage.getItem(BASE_VER_KEY) !== syncedAt) { try { localStorage.setItem(BASE_KEY, baseJson); localStorage.setItem(BASE_VER_KEY, syncedAt); } catch (e) {} }
+      localStorage.setItem(STORAGE_KEY, json); localStorage.setItem(WID_KEY, wid); lsSee(wid, stateJson);
+      if (storeFail) { storeFail = false; if (!dirty) setDot("ok", "Synced"); }
+    } catch (e) {
+      let ok = false;
+      try { localStorage.removeItem(BASE_KEY); localStorage.removeItem(BASE_VER_KEY); localStorage.setItem(STORAGE_KEY, json); localStorage.setItem(WID_KEY, wid); lsSee(wid, stateJson); ok = true; } catch (e2) {}
+      if (!ok) {
+        storeFail = true;
+        const msg = "This device's storage is full — changes are NOT being saved on this device" + (syncOn() ? " (they still reach the cloud while you are online)" : "") + ". Export a backup (⚙ → Export) before closing this window.";
+        try { setDot("err", msg); if (Date.now() - storeWarned > 120000) { storeWarned = Date.now(); toast("⚠ " + msg); } } catch (e3) {}
+      }
+    }
+  }
+  function saveBase(json) { baseJson = json; try { localStorage.setItem(BASE_KEY, json); localStorage.setItem(BASE_VER_KEY, syncedAt || ""); } catch (e) { try { localStorage.removeItem(BASE_KEY); localStorage.removeItem(BASE_VER_KEY); } catch (e2) {} } }   // too big for storage → kept in memory for this session
+  function storageUse() { let n = 0; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); n += k.length + (localStorage.getItem(k) || "").length; } } catch (e) {} return n; }   // characters; browsers allow about 5 million per site
   function saveCfg() { try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg || {})); } catch (e) {} }
 
   /* ── Supabase ── */
@@ -2014,6 +2091,9 @@ if (IS_BROWSER) (function () {
     if (!row) { if (dirty || !syncedAt) { dirty = true; armPush(); } return "upload"; }   // nothing in the cloud yet → upload ours
     if (sameVer(row.updated_at, syncedAt)) { if (dirty) armPush(); return "same"; }
     const remote = migrate(row.data), remoteJson = JSON.stringify(remote), localJson = JSON.stringify(state);
+    if (dirty && syncedAt && syncDeepEq(state, remote)) {   // v263: "unsent changes" that the cloud already has (another window of this device sent them) → just note the version
+      syncedAt = row.updated_at; syncGen++; saveBase(remoteJson); provisionalBase = null; dirty = false; saveLocal(); return "same";
+    }
     let base = baseJson;
     if (!syncedAt) {        // first sync: no common ancestor recorded yet
       if (loadedUpdatedAt > Date.parse(row.updated_at)) { base = remoteJson; dirty = true; }   // (≤ v230 upgrade) this device had newer, unsent changes → keep them
@@ -2048,13 +2128,13 @@ if (IS_BROWSER) (function () {
     const cn = curNote(); if (!cn || body.dataset.nid !== cn.id || cn.html === prevHtml) return;
     let off = -1;
     try { const sel = getSelection(); if (sel.rangeCount) { const r = sel.getRangeAt(0); if (body.contains(r.startContainer)) { const pre = document.createRange(); pre.selectNodeContents(body); pre.setEnd(r.startContainer, r.startOffset); off = pre.toString().length; } } } catch (e) {}
-    body.innerHTML = cn.html || ""; decorateNoteLists();
+    noteGuard = null; body.innerHTML = cn.html || ""; decorateNoteLists();   // (v261: a pending edit guard must not compare against replaced lines)
     if (off < 0) return;
     try { const w = document.createTreeWalker(body, NodeFilter.SHOW_TEXT); let n, acc = 0; while ((n = w.nextNode())) { if (acc + n.length >= off) { const r = document.createRange(); r.setStart(n, off - acc); r.collapse(true); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); return; } acc += n.length; } } catch (e) {}
   }
   // Save to the cloud — but never blindly: first check that the cloud is still at the version this device last synced with;
   // if another device saved in between, fetch that and merge before writing. Failed saves are retried (and merged) later.
-  let pushing = false, pushAgain = false, retryTimer = null, retryDelay = 0;
+  let pushing = false, pushAgain = false, retryTimer = null, retryDelay = 0, casOff = false;
   async function pushRemote() {
     if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }
     if (!syncOn() || !dirty) return;
@@ -2062,15 +2142,35 @@ if (IS_BROWSER) (function () {
     pushing = true; setDot("saving", "Saving…");
     try {
       const head = await fetchRow("updated_at");
+      let ver = head ? head.updated_at : null;   // the cloud version (exactly as the server writes it) that our save is going to replace
       if (head && !sameVer(head.updated_at, syncedAt)) {
         const gen = syncGen, row = await fetchRow("data,updated_at"); lastPull = Date.now();
         if (gen !== syncGen) { pushAgain = true; return; }   // something else synced meanwhile → start over
-        applyRemote(row);
+        applyRemote(row); ver = row ? row.updated_at : null;
         if (!dirty) { setDot("ok", "Synced"); return; }
       }
-      const seq = editSeq, json = JSON.stringify(state), now = new Date().toISOString();
-      const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans", { method: "POST", headers: Object.assign(sbHeaders(), { Prefer: "resolution=merge-duplicates" }), body: '[{"id":' + JSON.stringify(cfg.pid) + ',"data":' + json + ',"updated_at":"' + now + '"}]' });
-      if (!r.ok) throw new Error("HTTP " + r.status);
+      const seq = editSeq, json = JSON.stringify(state), now = new Date().toISOString(), api = cfg.url.replace(/\/$/, "") + "/rest/v1/plans";
+      /* v263: the save itself is conditional ("replace the plan only if it is still version X") — one step in the database. Until v262 it
+         was check-then-write: a device that saved between our check and our write was overwritten without a trace of a merge. If the
+         cloud moved on, nothing is written and we start over (fetch, merge, save). PostgREST answers an update that matched no row
+         with 200 [] (v10+) or 404 [] (older). Should this kind of save not work on a server (an answer we don't understand, or "no row"
+         although the version is unchanged), it is switched off for this session and the plain save of v262 is used — never worse than before. */
+      let wrote = false;
+      if (ver && !casOff) {
+        const r = await fetch(api + "?id=eq." + encodeURIComponent(cfg.pid) + "&updated_at=eq." + encodeURIComponent(ver) + "&select=updated_at", { method: "PATCH", headers: Object.assign(sbHeaders(), { Prefer: "return=representation" }), body: '{"data":' + json + ',"updated_at":"' + now + '"}' });
+        let rows = null; if (r.ok || r.status === 404) { try { rows = await r.json(); } catch (e) {} }
+        if (r.ok && Array.isArray(rows) && rows.length === 1) wrote = true;
+        else if (Array.isArray(rows) && rows.length === 0) {
+          const chk = await fetchRow("updated_at");
+          if (chk && !sameVer(chk.updated_at, ver)) { pushAgain = true; return; }   // another device saved in between → start over: fetch, merge, save
+          casOff = true; try { console.log("[sync] conditional save matched nothing although the version is unchanged — using the plain save"); } catch (e) {}
+        } else if (r.status === 401 || r.status === 403 || r.status === 429 || r.status >= 500) throw new Error("HTTP " + r.status);
+        else { casOff = true; try { console.log("[sync] conditional save not available (HTTP " + r.status + ") — using the plain save"); } catch (e) {} }
+      }
+      if (!wrote) {
+        const r = await fetch(api, { method: "POST", headers: Object.assign(sbHeaders(), { Prefer: "resolution=merge-duplicates" }), body: '[{"id":' + JSON.stringify(cfg.pid) + ',"data":' + json + ',"updated_at":"' + now + '"}]' });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+      }
       syncedAt = now; syncGen++; saveBase(json); provisionalBase = null; localUpdatedAt = Date.parse(now);
       if (editSeq === seq) dirty = false;
       saveLocal(); retryDelay = 0; setDot("ok", "Synced");
@@ -2090,7 +2190,7 @@ if (IS_BROWSER) (function () {
 
   /* ── local backups (v231) — whenever this device replaces or merges its plan with another device's version, the version it had
      is kept in this browser (IndexedDB, newest 30). ⚙ Settings → "Earlier versions on this device" restores or downloads one. ── */
-  const BK_MAX = 30; let bkSeq = 0;
+  const BK_MAX = 30, BK_DAYS = 30; let bkSeq = 0;   // v262: besides the newest 30, the last version of each day is kept for 30 days — and one "Daily copy" a day is made even without another device (see dailyBackup)
   function bkDb() { return new Promise((ok, no) => { if (typeof indexedDB === "undefined") return no(new Error("no IndexedDB")); const rq = indexedDB.open("plapp-backups", 1); rq.onupgradeneeded = () => { const db = rq.result; db.createObjectStore("meta", { keyPath: "k" }); db.createObjectStore("data", { keyPath: "k" }); }; rq.onsuccess = () => ok(rq.result); rq.onerror = () => no(rq.error); }); }
   function bkSummary(json) {
     try { const st = JSON.parse(json); let blocks = 0; (st.weeks || []).forEach((w) => { blocks += (w.blocks || []).length; });
@@ -2106,10 +2206,35 @@ if (IS_BROWSER) (function () {
       await new Promise((ok, no) => {
         const tx = db.transaction(["meta", "data"], "readwrite");
         tx.objectStore("meta").put({ k, t: Date.now(), reason, size: json.length, summary: bkSummary(json) }); tx.objectStore("data").put({ k, json });
-        const ks = tx.objectStore("meta").getAllKeys(); ks.onsuccess = () => { const all = ks.result.sort((x, y) => x - y); all.slice(0, Math.max(0, all.length + 1 - BK_MAX)).forEach((old) => { tx.objectStore("meta").delete(old); tx.objectStore("data").delete(old); }); };
+        const ks = tx.objectStore("meta").getAllKeys(); ks.onsuccess = () => {
+          const all = ks.result.sort((x, y) => y - x), keep = new Set(all.slice(0, BK_MAX)), days = new Set(), cut = Date.now() - BK_DAYS * 86400000;   // (key = time in ms × 1000 + counter)
+          for (const key of all) { const t = Math.floor(key / 1000); if (t < cut) break; const d = ymd(new Date(t)); if (!days.has(d)) { days.add(d); keep.add(key); } }
+          all.forEach((old) => { if (!keep.has(old)) { tx.objectStore("meta").delete(old); tx.objectStore("data").delete(old); } });
+        };
         tx.oncomplete = ok; tx.onerror = () => no(tx.error);
       });
     } catch (e) {}
+  }
+  // v262: once a day (first time the app is opened or comes back to the front), keep a copy of the plan as it is — so there is something
+  // to go back to after a slow mistake too (something deleted or overwritten that is only noticed days later), not just after a sync.
+  function dailyBackup() {
+    const today = ymd(new Date()); if (ui.lastDaily === today) return;
+    ui.lastDaily = today; saveUI(); const json = JSON.stringify(state); backupState("Daily copy", json);
+    /* v263: … and one in the cloud: a row per weekday ("<plan code>-day-0…6") next to the plan, overwritten a week later — so the last
+       seven days exist outside this device too (the plan row itself has no history). Listed under Earlier versions. */
+    if (syncOn()) fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans", { method: "POST", headers: Object.assign(sbHeaders(), { Prefer: "resolution=merge-duplicates" }),
+      body: '[{"id":' + JSON.stringify(cfg.pid + "-day-" + new Date().getDay()) + ',"data":{"kind":"daily-copy","day":"' + today + '","state":' + json + '},"updated_at":"' + new Date().toISOString() + '"}]' }).then((r) => { if (!r.ok) { ui.lastDaily = ""; saveUI(); } }, () => { ui.lastDaily = ""; saveUI(); });   // failed → try again next time
+  }
+  async function listCloudCopies() {
+    if (!syncOn()) return [];
+    const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans?id=like." + encodeURIComponent(cfg.pid + "-day-") + "*&select=id,updated_at", { headers: sbHeaders(), cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return (await r.json()).sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at));
+  }
+  async function cloudCopyJson(id) {
+    const r = await fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/plans?id=eq." + encodeURIComponent(id) + "&select=data", { headers: sbHeaders(), cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const rows = await r.json(); return rows[0] && rows[0].data && rows[0].data.state ? JSON.stringify(rows[0].data.state) : null;
   }
   async function listBackups() { const db = await bkDb(); return new Promise((ok, no) => { const g = db.transaction("meta").objectStore("meta").getAll(); g.onsuccess = () => ok(g.result.sort((x, y) => y.k - x.k)); g.onerror = () => no(g.error); }); }
   async function backupJson(k) { const db = await bkDb(); return new Promise((ok, no) => { const g = db.transaction("data").objectStore("data").get(k); g.onsuccess = () => ok(g.result ? g.result.json : null); g.onerror = () => no(g.error); }); }
@@ -2117,16 +2242,18 @@ if (IS_BROWSER) (function () {
   function commit() {
     state.weeks.forEach((w) => { w.blocks = mergeAdjacent(w.blocks); });
     if (selectedId != null && !curBlocks().some((b) => b.id === selectedId)) selectedId = null;
-    localUpdatedAt = Date.now(); saveLocal(); schedulePush(); renderAll();
+    localUpdatedAt = Date.now(); editSeq++; dirty = true; saveLocal(); armPush(); renderAll();   // (= saveLocal + schedulePush, with one write to storage instead of two)
   }
   /* ── one undo history for everything (v236) ──
      Entries are either a whole-plan snapshot (a JSON string, taken by snap() before any Plapp-level change: grid, tasks, habits, ticking,
      moving / styling note lines …) or a light note entry { note, html, caret } = one note's HTML before a burst of typing, a fold, a cut,
      a paste … (taken by noteSnap()). Ctrl+Z / Ctrl+Y (and the ↶ ↷ buttons) walk this one history wherever the cursor is — also inside the
      note, where the browser's own undo used to apply and knew nothing about moves, folds or ticks. */
-  const UNDO_MAX = 100;
+  const UNDO_MAX = 100, UNDO_CHARS = 3e7;   // v262: at most 100 steps AND about 30 million characters (a plan step is the whole plan as text — 100 of those could reach 100+ MB on a big plan); never fewer than 5 steps
   let noteBurst = null;   // { id, kind, t } — the typing burst that the newest note entry belongs to
-  function pushUndo(e) { undoStack.push(e); if (undoStack.length > UNDO_MAX) undoStack.shift(); redoStack.length = 0; }   // a new change ends the redo chain
+  const undoSize = (e) => (typeof e === "string" ? e.length : ((e && e.html) || "").length + 64);
+  function trimHistory(st) { let tot = 0, keep = 0; for (let i = st.length - 1; i >= 0 && keep < UNDO_MAX; i--) { tot += undoSize(st[i]); if (tot > UNDO_CHARS && keep >= 5) break; keep++; } if (keep < st.length) st.splice(0, st.length - keep); }
+  function pushUndo(e) { undoStack.push(e); trimHistory(undoStack); redoStack.length = 0; }   // a new change ends the redo chain
   function snap() { pushUndo(JSON.stringify(state)); noteBurst = null; }
   // before a change to the open note: remember its HTML. Typing of one kind (letters / deletions) within 1.5 s of the last keystroke is one step.
   function noteSnap(kind, force) {
@@ -2397,7 +2524,7 @@ if (IS_BROWSER) (function () {
     el.classList.toggle("open", !!nt.open);
     const cn = curNote();
     body.style.background = noteBg(cn.color); body.style.setProperty("--nbg", noteBg(cn.color));
-    if (force || document.activeElement !== body || body.dataset.nid !== cn.id) { body.innerHTML = cn.html || ""; body.dataset.nid = cn.id; decorateNoteLists(); if (cleanNoteStyles(body) | fixGhostLines(body)) { decorateNoteLists(); cn.html = body.innerHTML; saveNoteSoon(); } }   // v235: old pasted-in layout junk is removed once, and saved
+    if (force || document.activeElement !== body || body.dataset.nid !== cn.id) { noteGuard = null; body.innerHTML = cn.html || ""; body.dataset.nid = cn.id; decorateNoteLists(); if (cleanNoteStyles(body) | fixGhostLines(body) | noteLinkify(body, false)) { decorateNoteLists(); cn.html = body.innerHTML; nhDirty.add(cn.id); saveNoteSoon(); } }   // v235: old pasted-in layout junk is removed once, and saved · v264: addresses already in the note become links (once, saved)
     renderNoteTabs(); renderTicked();
   }
 
@@ -2458,7 +2585,7 @@ if (IS_BROWSER) (function () {
     const poolMp = (state.masterplans || []).find((m) => m.from <= cwMon && cwMon <= m.to) || activeMasterplan();   // masterplan owning the current week (for weekly Prio)
     const poolWprio = (id) => (poolMp && poolMp.wprio && poolMp.wprio[id] && poolMp.wprio[id][cw] != null && poolMp.wprio[id][cw] !== "") ? poolMp.wprio[id][cw] : "";
     const rep = buildReport(state);
-    const usage = weekUsage(state, cw);   // past actual (floored to 15) + today/future planned
+    const usage = weekUsage(state, cw, rep);   // past actual (floored to 15) + today/future planned
     const used = usage.used;
     const wkDates = []; for (let d = 0; d < ND; d++) wkDates.push(ymd(dateOfCell(state.anchorMonday, cw, d)));
     const todayStr = ymd(new Date()), todayInWeek = wkDates.indexOf(todayStr) >= 0, todayIdx = wkDates.indexOf(todayStr);
@@ -2504,7 +2631,7 @@ if (IS_BROWSER) (function () {
     const nowSlotS = (new Date().getHours() * 60 + new Date().getMinutes()) / SLOT_MIN;
     const scopeIdx = currentMPweeks() || (function () { const a = []; for (let i = 0; i < W; i++) a.push(i); return a; })();   // "All weeks" summary is scoped to the current masterplan
     const allUsed = {}, allBud = {};
-    for (const i of scopeIdx) { const uu = weekUsage(state, i).used; for (const c of sumCats) { allUsed[c.id] = (allUsed[c.id] || 0) + (uu[c.id] || 0); allBud[c.id] = (allBud[c.id] || 0) + weekBudget(c, i); } }
+    for (const i of scopeIdx) { const uu = weekUsage(state, i, rep).used; for (const c of sumCats) { allUsed[c.id] = (allUsed[c.id] || 0) + (uu[c.id] || 0); allBud[c.id] = (allBud[c.id] || 0) + weekBudget(c, i); } }
     const scopeDates = new Set(); for (const i of scopeIdx) for (let d = 0; d < ND; d++) scopeDates.add(ymd(dateOfCell(state.anchorMonday, i, d)));
     const trackedAll = {}; for (const ds in rep.days) { if (!scopeDates.has(ds)) continue; const bc = rep.days[ds].byCat; for (const k in bc) trackedAll[k] = (trackedAll[k] || 0) + bc[k]; }
     const aheadToday = {}, elapsedToday = {};
@@ -2727,7 +2854,10 @@ if (IS_BROWSER) (function () {
         tr.addEventListener("pointerdown", (e) => {
           if (e.target.closest("input, button")) return;
           const sx = e.clientX, sy = e.clientY; let started = false;
-          const mv = (ev) => { if (!started && Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 6) { started = true; startNewDrag(ev, dcat); } };
+          // v265: less Open time left than the block would be (e.g. 0:45 of a 1h default) → the block is the time left, to the nearest 15 min (at least 15).
+          // Open ≤ 0 (nothing left / over / plan-time-blocked) → the usual length.
+          const op = sgVal.open(dcat), lim = op > 0.0001 ? Math.max(1, Math.round(op * SPH)) : null;
+          const mv = (ev) => { if (!started && Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 6) { started = true; startNewDrag(ev, dcat, lim); } };
           const up = () => { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); };
           document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
         });
@@ -2919,8 +3049,9 @@ if (IS_BROWSER) (function () {
     for (let d = 0; d < DAYS.length; d++) { const ds = ymd(dateOfCell(state.anchorMonday, state.currentWeek, d)); if (rep.days[ds] && rep.days[ds].byCat[cat.id]) done += rep.days[ds].byCat[cat.id]; }
     return Math.max(1, Math.round((weekBudget(cat, state.currentWeek) - done) * SPH));
   }
-  function startNewDrag(e, cat) {
-    drag = { mode: "new", catId: cat.id, color: cat.color, lenSlots: placeLen(cat) };
+  function startNewDrag(e, cat, maxSlots) {   // v265: maxSlots = the task's Open time in slots (Stretch Goal drag) — a block is never longer than what's left
+    let len = placeLen(cat); if (maxSlots != null && maxSlots > 0) len = Math.min(len, maxSlots);
+    drag = { mode: "new", catId: cat.id, color: cat.color, lenSlots: len };
     ghost.textContent = cat.name; ghost.style.background = cat.color; ghost.style.color = textOn(cat.color); ghost.style.display = "block"; moveGhost(e.clientX, e.clientY);
   }
   function startBlockDrag(e, block, mode) {
@@ -3622,6 +3753,7 @@ if (IS_BROWSER) (function () {
     const nb = $("noteBody"), sel0 = window.getSelection(), keep = sel0 && sel0.rangeCount && nb.contains(sel0.getRangeAt(0).startContainer) ? sel0.getRangeAt(0).cloneRange() : null;
     if (document.activeElement !== nb) { nb.focus(); if (keep) { const sl = window.getSelection(); sl.removeAllRanges(); sl.addRange(keep); } }
     noteSnap("cmd", true);
+    const sl = window.getSelection(), guard = /^(bold|italic|pink|bullet)$/.test(cmd) && sl.rangeCount && nb.contains(sl.getRangeAt(0).startContainer) ? noteFoldGuardArm(sl.getRangeAt(0), false) : null;   // v261: Chrome's own commands can drop / mangle hidden lines too
     if (cmd === "bold") document.execCommand("bold");
     else if (cmd === "italic") document.execCommand("italic");
     else if (cmd === "pink") document.execCommand("foreColor", false, PINK);
@@ -3629,6 +3761,7 @@ if (IS_BROWSER) (function () {
     else if (cmd === "indent") { if (!indentLines(1)) document.execCommand("indent"); }
     else if (cmd === "outdent") { if (!indentLines(-1)) document.execCommand("outdent"); }
     else if (cmd === "check") toggleCheckLines();
+    if (guard) noteFoldGuardCheck();   // (usually already done by the command's input event)
     decorateNoteLists(); revealNoteCaret();
     saveNoteHtml();
   }
@@ -4204,6 +4337,41 @@ if (IS_BROWSER) (function () {
     let prev = li.previousElementSibling; while (prev && prev.tagName !== "LI") prev = prev.previousElementSibling;
     [li, prev].forEach((x) => { if (x && !ownText(x) && STYLE_CLS.some((c) => x.classList.contains(c))) STYLE_CLS.forEach((c) => x.classList.remove(c)); });
   }
+  /* v264: web addresses become links — typed (as soon as a space or Enter follows), pasted, dropped, or already in a note (converted when
+     the note is shown, and when you leave it). An address the cursor is still in or right after is left alone until it is finished, so a
+     half-typed one isn't frozen. A click / tap on a link opens it in a new tab (listener next to the other noteBody listeners).
+     Only http(s):// and www. addresses; trailing punctuation (. , ; : ! ? quotes, an unmatched ")" or "]") is not part of the link.
+     The text node is split around the address (splitText), so a caret after it moves along with the text (DOM live-range rules). */
+  const NOTE_URL = /\b(?:https?:\/\/|www\.)[^\s<>"]+/gi;
+  function noteUrlTrim(u) {
+    for (;;) {
+      const c = u.slice(-1);
+      if (/[.,;:!?'"’”»]/.test(c)) { u = u.slice(0, -1); continue; }
+      if (c === ")" && u.split("(").length < u.split(")").length) { u = u.slice(0, -1); continue; }
+      if (c === "]" && u.split("[").length < u.split("]").length) { u = u.slice(0, -1); continue; }
+      return u;
+    }
+  }
+  function noteLinkify(root, keepCaret) {   // returns true if anything was turned into a link
+    if (!root) return false;
+    const sel = window.getSelection(), r0 = keepCaret && sel && sel.rangeCount && sel.isCollapsed ? sel.getRangeAt(0) : null;
+    const cNode = r0 ? r0.startContainer : null, cOff = r0 ? r0.startOffset : -1;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (t) => (/https?:\/\/|www\./i.test(t.data) && !(t.parentElement && t.parentElement.closest("a"))) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
+    const nodes = []; let t; while ((t = w.nextNode())) nodes.push(t);
+    let changed = false;
+    for (const node of nodes) {
+      const ms = []; let m; NOTE_URL.lastIndex = 0;
+      while ((m = NOTE_URL.exec(node.data))) { const u = noteUrlTrim(m[0]); if (/^https?:\/\/\S{3,}/i.test(u) || /^www\.[^.\s]+\.\S{2,}/i.test(u)) ms.push([m.index, u]); }
+      for (let i = ms.length - 1; i >= 0; i--) {   // right to left: the earlier offsets stay valid
+        const s = ms[i][0], u = ms[i][1], e = s + u.length;
+        if (node === cNode && cOff >= s && cOff <= e) continue;   // the cursor is in it / right after it: still being typed
+        node.splitText(e); const mid = node.splitText(s);
+        const a = document.createElement("a"); a.href = /^www\./i.test(u) ? "https://" + u : u; a.target = "_blank"; a.rel = "noopener";
+        mid.parentNode.insertBefore(a, mid); a.appendChild(mid); changed = true;
+      }
+    }
+    return changed;
+  }
   /* v240, v260: line starts typed as shortcuts. "- " (dash, space) at the start of a line turns it into a bullet, "o " (also "O ", which a phone
      keyboard capitalises) into a tick box — since v260 as soon as the space is typed (v240–v259: on Enter at the end of the line). The two
      characters disappear; text already on the line stays, so "o " typed in front of an existing line makes that line a tick box. Plain lines
@@ -4511,12 +4679,17 @@ if (IS_BROWSER) (function () {
   // Enter inside a folded bullet: split it ourselves so its hidden children stay with it (the browser would hand them to the new line)
   function noteEnterInFolded(e) {
     const sel = window.getSelection(); if (!sel || !sel.rangeCount) return false;
-    const r0 = sel.getRangeAt(0), n = noteCaretNode(); if (!n) return false;
-    const li = (n.nodeType === 1 ? n : n.parentElement).closest("li");
+    let n = noteCaretNode(); if (!n) return false;
+    let li = (n.nodeType === 1 ? n : n.parentElement).closest("li");
     if (!li || !li.classList.contains("collapsed")) return false;
-    const kids = noteKidList(li); if (!kids || kids.contains(n)) return false;
+    let kids = noteKidList(li); if (!kids || kids.contains(n)) return false;
     e.preventDefault(); noteSnap("para", true);
-    if (!r0.collapsed) r0.deleteContents();
+    if (!sel.getRangeAt(0).collapsed) {   // v261: over a selection: delete it the way the browser would (lines merge), hidden lines kept — Range.deleteContents took them along
+      noteFoldGuardArm(sel.getRangeAt(0), false); document.execCommand("delete"); noteFoldGuardCheck();
+      n = noteCaretNode(); li = n && (n.nodeType === 1 ? n : n.parentElement).closest("li"); kids = li && noteKidList(li);
+      if (!li || !li.classList.contains("collapsed") || !kids || kids.contains(n)) { document.execCommand("insertParagraph"); decorateNoteLists(); saveNoteHtml(); return true; }
+    }
+    const r0 = sel.getRangeAt(0);
     const inner = kids.parentElement === li;
     { const head = document.createRange(); head.setStart(li, 0); head.setEnd(r0.startContainer, r0.startOffset);   // v240: caret at the very start → an empty line above,
       if (!/[^ \t\n\r\f]/.test(head.toString()) && !head.cloneContents().querySelector("img")) {                      // the folded line stays whole (text, box, hidden sub-items)
@@ -4533,6 +4706,78 @@ if (IS_BROWSER) (function () {
     decorateNoteLists();
     saveNoteHtml();
     return true;
+  }
+  /* ── v261: editing can't lose a folded line's hidden sub-items ──
+     Chrome edits by what is rendered, so a folded line's sub-list (display:none) doesn't exist for it: Backspace at the start of the line
+     below a folded line (also on an empty one, to remove it), Delete at the end of a folded line or of the line above it, Backspace at
+     the start of a folded line, and deleting / typing over a selection that reaches into a folded line all threw the hidden lines away.
+     Now every edit is guarded: right before it (beforeinput) each folded line's hidden sub-list is noted and copied; right after (input)
+     a sub-list that is gone comes back — under its own line if that line is still there, else under the line its text was merged into
+     (where the cursor is) — and stays folded; one that Chrome moved along with a merged line gets that line folded. Hidden lines only go
+     when a selection that contains the whole folded line (from the start of its text to past its last hidden line: triple-click, Shift+↓
+     from the line start, Ctrl+A …) is deleted or cut — deleting a closed folder. Typing, Enter or paste over a selection keep them. */
+  var noteGuard = null;   // (var: renderNote, earlier in the file, clears it)
+  function noteFoldCovered(r, li, K) {   // does range r hold folded line li whole — from the start of its own text to past its hidden sub-list K?
+    const p = K.parentNode; if (!p) return false;
+    if (r.comparePoint(p, Array.prototype.indexOf.call(p.childNodes, K) + 1) !== 0) return false;   // ends before the last hidden line
+    if (r.comparePoint(li, 0) === 0) return true;   // starts at / before the line
+    if (!li.contains(r.startContainer) || K.contains(r.startContainer)) return false;
+    const head = document.createRange(); head.setStart(li, 0); head.setEnd(r.startContainer, r.startOffset);
+    return !/\S/.test(head.toString()) && !head.cloneContents().querySelector("img");   // nothing of the line's own text before the start
+  }
+  // r = the selection the edit replaces; del = it is a deletion (Backspace, Delete, cut), which may take whole folded lines
+  function noteFoldGuardArm(r, del) {
+    const body = $("noteBody"), folds = [];
+    for (const li of body.querySelectorAll("li.collapsed")) {   // document order → a folded line inside one already noted comes back with it
+      const K = noteKidList(li); if (!K || folds.some((f) => f.K.contains(li))) continue;
+      if (r && (K.contains(r.startContainer) || K.contains(r.endContainer))) continue;   // the edit happens inside the hidden lines themselves
+      if (r && del && !r.collapsed && noteFoldCovered(r, li, K)) continue;   // the whole folded line is deleted on purpose
+      folds.push({ li, K, inner: K.parentElement === li, lis: Array.from(K.querySelectorAll("li")), copy: K.cloneNode(true) });
+    }
+    const g = folds.length ? { folds } : null; noteGuard = g;
+    if (g) setTimeout(() => { if (noteGuard === g) noteGuard = null; }, 0);   // only for the edit about to happen (its input event comes in the same task)
+    return g;
+  }
+  function noteListOwner(K) {   // the line a sub-list belongs to (inside it, or the line right before a sibling list)
+    if (K.parentElement && K.parentElement.tagName === "LI") return K.parentElement;
+    const pv = K.previousElementSibling; return pv && pv.tagName === "LI" ? pv : null;
+  }
+  function noteFoldGuardCheck() {   // right after the edit: put back what was lost; true if anything changed
+    const g = noteGuard; noteGuard = null; if (!g) return false;
+    const body = $("noteBody"); let changed = false; const into = new Set();
+    for (const f of g.folds) {
+      const alive = f.lis.filter((x) => body.contains(x)).length;
+      if (alive && body.contains(f.K)) {   // still there, perhaps moved along with a merged line → keep it folded
+        const o = body.contains(f.li) ? f.li : noteListOwner(f.K);
+        if (o && o.contains(f.K) && f.K.parentElement !== o) { o.appendChild(f.K); changed = true; }   // wrapped in <b> etc. by bold / italic / colour across the line → out again
+        if (o && noteKidList(o) === f.K && !o.classList.contains("collapsed")) { o.classList.add("collapsed"); changed = true; }
+        continue;
+      }
+      if (alive) continue;   // some of its lines were moved elsewhere by the browser — leave them (never seen; the note history has a copy)
+      let t = body.contains(f.li) ? f.li : null;
+      const own = !!t;
+      if (!t) { const n = noteCaretNode(), el = n && (n.nodeType === 1 ? n : n.parentElement); t = el && el.closest("li"); if (t && !body.contains(t)) t = null; }
+      if (t) {
+        const ex = noteKidList(t);
+        if (ex) {   // the line has sub-items now (merged in from the line below, or its own) → the lost ones join them, in their old order
+          const fr = document.createDocumentFragment(); Array.from(f.copy.childNodes).forEach((c) => fr.appendChild(c));
+          if (own) ex.insertBefore(fr, ex.firstChild); else ex.appendChild(fr);
+          if (into.has(t)) t.classList.add("collapsed");   // (a line that had visible sub-items stays unfolded: nothing visible disappears)
+        } else {
+          if (f.inner) t.appendChild(f.copy); else t.parentNode.insertBefore(f.copy, t.nextSibling);
+          t.classList.add("collapsed");
+        }
+        into.add(t);
+      } else {   // merged into / turned into a plain (non-list) line → back as a visible list right below the cursor's line
+        const n = noteCaretNode(), isBlk = (x) => x.nodeType === 1 && /^(DIV|P|UL|OL|H[1-6]|BLOCKQUOTE|PRE)$/.test(x.tagName);
+        let blk = n; while (blk && blk.parentNode !== body) blk = blk.parentNode;
+        if (blk && !isBlk(blk)) while (blk.nextSibling && !isBlk(blk.nextSibling) && !(blk.nodeType === 1 && blk.tagName === "BR")) blk = blk.nextSibling;   // loose text: to the end of its line
+        body.insertBefore(f.copy, blk ? blk.nextSibling : null);
+      }
+      changed = true;
+    }
+    if (changed) decorateNoteLists();
+    return changed;
   }
   /* ── cut / copy / paste / text-drag carry folded sub-items (v236) ──
      Chrome leaves hidden (folded) lines out of what it copies, but a cut still deletes them → a folded bullet's sub-items were lost on
@@ -4553,15 +4798,19 @@ if (IS_BROWSER) (function () {
     if (r.comparePoint(own.startContainer, own.startOffset) > 0 || (head.setEnd(r.startContainer, r.startOffset), head.toString().trim() !== "")) return;   // starts mid-line
     r.setEndAfter(kids);
   }
-  function noteClipRange() {   // the selection as a range — extended over folded sub-items — if it touches hidden content; else null (→ native)
+  // v261: only a folded line that is selected whole travels with its hidden lines; a folded line the selection merely reaches into keeps them
+  function noteClipRange() {   // the selection as a range — extended over folded sub-items — if it holds a whole folded line; else null (→ native)
     const body = $("noteBody"), sel = getSelection(); if (!sel || !sel.rangeCount) return null;
     const r = sel.getRangeAt(0).cloneRange(); if (r.collapsed || !body.contains(r.commonAncestorContainer)) return null;
     extendOverFolded(r);
-    const hit = Array.from(body.querySelectorAll("li.collapsed")).some((li) => { const k = noteKidList(li); return k && r.intersectsNode(k); });
+    const hit = Array.from(body.querySelectorAll("li.collapsed")).some((li) => { const k = noteKidList(li); return k && noteFoldCovered(r, li, k); });
     return hit ? r : null;
   }
-  function noteClipData(r) {   // { html, text } of a range, hidden lines included, folds as data-fold
+  function noteClipData(r) {   // { html, text } of a range, hidden lines of whole folded lines included, folds as data-fold
+    const stay = [];   // hidden lists of folded lines that are only partly selected: not part of the copy (they stay where they are)
+    $("noteBody").querySelectorAll("li.collapsed").forEach((li) => { const k = noteKidList(li); if (k && r.intersectsNode(k) && !k.contains(r.startContainer) && !k.contains(r.endContainer) && !noteFoldCovered(r, li, k)) { k.setAttribute("data-stay", "1"); stay.push(k); } });
     const frag = r.cloneContents(), box = document.createElement("div");
+    stay.forEach((k) => k.removeAttribute("data-stay")); frag.querySelectorAll("[data-stay]").forEach((x) => x.remove());
     let ctx = r.commonAncestorContainer; ctx = ctx.nodeType === 1 ? ctx : ctx.parentElement;
     const list = ctx.closest("ul,ol"), wrap = list && $("noteBody").contains(list) && Array.from(frag.childNodes).some((n) => n.nodeName === "LI") ? document.createElement(list.tagName) : null;   // list items need their list around them
     (wrap ? (box.appendChild(wrap), wrap) : box).appendChild(frag);
@@ -4579,9 +4828,9 @@ if (IS_BROWSER) (function () {
     cleanNoteStyles(box);
     return { html: box.innerHTML, text: lines.length ? lines.join("\n") : r.toString() };
   }
-  function noteClipDelete(r) {   // delete the (extended) selection like the browser would — incl. the hidden lines inside it
+  function noteClipDelete(r) {   // delete the (extended) selection like the browser would — incl. the hidden lines of whole folded lines in it
     const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
-    document.execCommand("delete");
+    noteFoldGuardArm(r, true); document.execCommand("delete"); noteFoldGuardCheck();
     decorateNoteLists(); saveNoteHtml();
   }
   function noteRefold() {   // after a paste / drop: lines that arrived with data-fold become folded again
@@ -4614,7 +4863,7 @@ if (IS_BROWSER) (function () {
     if (!pos || !body.contains(pos.startContainer) || d.r.isPointInRange(pos.startContainer, pos.startOffset)) return;   // dropped onto itself → nothing
     noteSnap("drag", true);
     const mk0 = document.createElement("span"); mk0.setAttribute("data-dropmark", "1"); mk0.textContent = "\u200b"; pos.insertNode(mk0);   // remember the drop point while the source is deleted
-    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(d.r); document.execCommand("delete");
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(d.r); noteFoldGuardArm(d.r, true); document.execCommand("delete"); noteFoldGuardCheck();
     const marks = body.querySelectorAll("[data-dropmark]"), mark = marks[0];   // (Chrome's line merge may have re-created it → find it by attribute)
     if (!mark) { decorateNoteLists(); saveNoteHtml(); return; }
     const at = document.createRange(); at.setStartBefore(mark); at.collapse(true); marks.forEach((m) => m.remove()); sel.removeAllRanges(); sel.addRange(at);
@@ -4643,6 +4892,12 @@ if (IS_BROWSER) (function () {
     const kind = /^insert(Text|CompositionText|ReplacementText)$/.test(t) ? "type" : /^delete(Content|Word|SoftLine|HardLine|Entire)/.test(t) ? "del" : (t === "deleteByDrag" || t === "insertFromDrop") ? "drag" : "other";
     noteSnap(kind, kind === "other");
   }, true);
+  // v261: note the folded lines' hidden sub-lists before any edit that could reach beyond the cursor (see noteFoldGuardArm)
+  $("noteBody").addEventListener("beforeinput", (e) => {
+    const t = e.inputType || "", sel = getSelection(), r = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+    if (!r || !$("noteBody").contains(r.startContainer) || /^(history|format)/.test(t) || (/^insert(Text|CompositionText)$/.test(t) && r.collapsed)) return;   // typing at the cursor (also a phone keyboard's word) touches nothing else
+    noteFoldGuardArm(r, /^delete/.test(t));
+  }, true);
   // Backspace at the start of a line whose line above is empty (or Delete at the end of an empty line): just drop the empty line,
   // so the remaining line keeps its own style (the browser would merge it into the empty, unstyled line).
   $("noteBody").addEventListener("beforeinput", (e) => {
@@ -4664,14 +4919,24 @@ if (IS_BROWSER) (function () {
     }
     decorateNoteLists(); saveNoteHtml();
   });
-  $("noteBody").addEventListener("input", (e) => { if (e && (e.inputType === "insertFromPaste" || e.inputType === "insertFromDrop")) noteRefold(); if (e && e.inputType === "insertParagraph") plainNewLine(); if (e && /^(delete|insertParagraph)/.test(e.inputType || "")) unwrapLineStyleSpans(); decorateNoteLists(); revealNoteCaret(); saveNoteHtml(); });
+  $("noteBody").addEventListener("input", () => { noteFoldGuardCheck(); });   // v261: before the listener below (which tidies the lists and saves)
+  $("noteBody").addEventListener("input", (e) => { if (e && (e.inputType === "insertFromPaste" || e.inputType === "insertFromDrop")) noteRefold(); if (e && e.inputType === "insertParagraph") plainNewLine();
+    if (e && (/^(insertParagraph|insertLineBreak|insertFromPaste|insertFromDrop)$/.test(e.inputType || "") || (/^insert(Text|CompositionText)$/.test(e.inputType || "") && !e.isComposing && e.data != null && /\s$/.test(e.data)))) noteLinkify($("noteBody"), true);   // v264: an address followed by a space / Enter, or pasted → link
+    if (e && /^(delete|insertParagraph)/.test(e.inputType || "")) unwrapLineStyleSpans(); decorateNoteLists(); revealNoteCaret(); saveNoteHtml(); });
   // v260: "- " / "o " + space at the start of a line → bullet / tick box (noteMdSpace). Typed text only (not paste / drop), and never in the
   // middle of a phone keyboard's composition — when the composition ends, the line is checked again (some keyboards put the space inside it).
   $("noteBody").addEventListener("input", (e) => {
     if (e.isComposing || !/^insert(Text|CompositionText)$/.test(e.inputType || "") || (e.data != null && !/[ \u00a0]$/.test(e.data))) return;
     noteMdSpace();
   });
-  $("noteBody").addEventListener("compositionend", () => setTimeout(() => { if (document.activeElement === $("noteBody")) noteMdSpace(); }, 0));
+  $("noteBody").addEventListener("compositionend", () => setTimeout(() => { if (document.activeElement === $("noteBody")) { noteMdSpace(); if (noteLinkify($("noteBody"), true)) saveNoteHtml(); } }, 0));
+  $("noteBody").addEventListener("blur", () => { if (noteLinkify($("noteBody"), false)) saveNoteHtml(); });   // v264: an address you were still at becomes a link once you leave the note
+  $("noteBody").addEventListener("click", (e) => {   // v264: a click / tap on a link opens it (in a new tab); a selection that ends on a link doesn't
+    const a = e.target && e.target.closest ? e.target.closest("a[href]") : null; if (!a || !$("noteBody").contains(a)) return;
+    const s = window.getSelection(); if (s && !s.isCollapsed) return;
+    const href = a.getAttribute("href") || ""; if (!/^https?:\/\//i.test(href)) return;
+    e.preventDefault(); window.open(href, "_blank", "noopener");
+  });
   $("noteBody").addEventListener("keydown", (e) => {
     { const uk = undoKey(e); if (uk) { e.preventDefault(); if (uk === "undo") undo(); else redo(); return; } }   // the one Plapp history, not the browser's
     if (e.key === "Escape" && noteBig && !document.querySelector(".sPop, .nPop")) { e.preventDefault(); setNoteBig(false); return; }
@@ -4737,6 +5002,7 @@ if (IS_BROWSER) (function () {
     $("sbUrl").value = (cfg && cfg.url) || ""; $("sbKey").value = (cfg && cfg.key) || "";
     $("sbPid").value = (cfg && cfg.pid) || "wp-" + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 12);
     $("syncStatus").textContent = ""; dlg.showModal();
+    try { const n = storageUse(), bi = $("buildInfo"); if (bi) { bi.textContent = "build " + BUILD + " · on this device: " + Math.round(n / 1000) + " of about 5,000 KB" + (storeFail ? " — FULL, not saving!" : n > 4e6 ? " — nearly full" : "") + (casOff ? " · safe save: off" : ""); bi.style.color = storeFail || n > 4e6 ? "#c0392b" : ""; } } catch (e) {}
   });
   $("syncDot").addEventListener("click", () => $("settingsBtn").click());
   $("closeSettings").addEventListener("click", () => dlg.close());
@@ -5227,11 +5493,13 @@ if (IS_BROWSER) (function () {
     const d = $("bkDialog"), host = $("bkList"); host.innerHTML = '<p class="muted">Loading…</p>'; d.showModal();
     let list = [];
     try { list = await listBackups(); } catch (e) { host.innerHTML = '<p class="muted">This browser can\'t keep backups (' + esc(e.message || "no storage") + ").</p>"; return; }
+    let cloud = []; try { cloud = (await listCloudCopies()).map((c) => ({ k: "c:" + c.id, t: Date.parse(c.updated_at), reason: "Copy in the cloud", summary: "kept for a week — also there if this device is lost", cloud: c.id })); } catch (e) {}
+    list = list.concat(cloud);
     if (!list.length) { host.innerHTML = '<p class="muted">None yet — a version is kept here the first time another device\'s changes replace or merge into the plan on this device.</p>'; return; }
     const fmt = (t) => { const x = new Date(t); return x.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) + " " + String(x.getHours()).padStart(2, "0") + ":" + String(x.getMinutes()).padStart(2, "0"); };
     host.innerHTML = list.map((b) => '<div class="bkRow"><span class="bkWhen">' + fmt(b.t) + '</span><span class="bkWhat">' + esc(b.reason) + "<small>" + esc(b.summary || "") + '</small></span><button class="btnGhost" data-k="' + b.k + '" data-a="dl">Download</button><button class="btn" data-k="' + b.k + '" data-a="restore">Restore</button></div>').join("");
     host.querySelectorAll("button[data-k]").forEach((btn) => btn.addEventListener("click", async () => {
-      const k = +btn.dataset.k, meta = list.find((x) => x.k === k), json = await backupJson(k).catch(() => null);
+      const meta = list.find((x) => String(x.k) === btn.dataset.k), json = meta ? await (meta.cloud ? cloudCopyJson(meta.cloud) : backupJson(meta.k)).catch(() => null) : null;
       if (!json) { toast("That version can't be read any more."); return; }
       if (btn.dataset.a === "dl") { const blob = new Blob([json], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "plapp-version-" + ymd(new Date(meta.t)) + "-" + String(new Date(meta.t).getHours()).padStart(2, "0") + String(new Date(meta.t).getMinutes()).padStart(2, "0") + ".json"; a.click(); URL.revokeObjectURL(a.href); return; }
       if (!confirm("Replace your current plan with the version from " + fmt(meta.t) + "?\n(Ctrl+Z undoes this. Your current plan is kept as an earlier version too.)")) return;
@@ -5253,19 +5521,53 @@ if (IS_BROWSER) (function () {
   $("clearBtn").addEventListener("click", () => { if (!confirm("Clear all blocks in this week? Task budgets stay.")) return; snap(); state.weeks[state.currentWeek].blocks = []; commit(); dlg.close(); });
 
   // leaving the page/app: save right away instead of in 0.9 s; coming back: fetch (and merge) before anything else
+  // v262: typing is written to this device's storage 0.6 s after the last key — when the page is hidden / left / reloaded sooner, write it now
+  function flushNoteSave() { if (noteTimer) { clearTimeout(noteTimer); noteTimer = null; saveLocal(); } if (absorbPending) absorbStorage(true); }
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") { if (dirty) pushRemote(); return; }
-    if (dirty || MV || Date.now() - lastPull > 8000) guardedPull().then(() => archiveOldTicked());
+    if (document.visibilityState === "hidden") { flushNoteSave(); if (dirty) pushRemote(); return; }
+    absorbStorage();   // (a window that was frozen in the background may have missed the storage events)
+    if (dirty || MV || Date.now() - lastPull > 8000) guardedPull().then(() => { archiveOldTicked(); dailyBackup(); }); else dailyBackup();
   });
-  window.addEventListener("focus", () => { if (dirty) pushRemote(); else if (Date.now() - lastPull > 8000) pullRemote(true); });
+  window.addEventListener("focus", () => { absorbStorage(); if (dirty) pushRemote(); else if (Date.now() - lastPull > 8000) pullRemote(true); });
   window.addEventListener("online", () => { if (dirty) pushRemote(); });
-  window.addEventListener("pagehide", () => { if (dirty) pushRemote(); });
+  window.addEventListener("pagehide", () => { flushNoteSave(); if (dirty) pushRemote(); });
   // v237: two Plapp windows on one computer (e.g. ?view=note next to the main window). Leaving a window saves its changes to the cloud at once;
   // when another window saved (a localStorage "storage" event), this one fetches and merges them ~2.5 s after that window's last save.
-  window.addEventListener("blur", () => { if (dirty) pushRemote(); });
+  window.addEventListener("blur", () => { flushNoteSave(); if (dirty) pushRemote(); });
+  /* v263: … and the windows no longer need the cloud to see each other's changes. Whenever another window has written the plan to the
+     device's storage, this window merges that with its own plan right away — the same 3-way merge as between devices, with the plan
+     that save was built on as the common ancestor (see saveLocal). So two windows stay in step offline too, and closing or reloading
+     either one loses nothing; until v262 the storage simply held whatever window had saved last. What this window takes over counts
+     as an unsent change here; the push that follows usually finds that the cloud already has it (applyRemote → "same"). */
+  var absorbTimer = null;   // (var: saveLocal, earlier in the file, uses it)
+  function absorbStorage(force) {
+    clearTimeout(absorbTimer);
+    if (force !== true && (drag || lineDrag || tabDrag || document.querySelector("dialog[open]"))) { absorbTimer = setTimeout(absorbStorage, 1500); return; }   // not under a drag or an open dialog (this window doesn't write to the storage until then)
+    let d = null; try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) d = JSON.parse(raw); } catch (e) {}
+    if (!d || !d.state || !d.wid || d.wid === lsWid || d.wid.indexOf(WIN + ":") === 0) { const p = absorbPending; absorbPending = false; if (p && !foreignSave()) saveLocal(); return; }   // nothing new from another window
+    const theirs = migrate(d.state); if (!theirs) return;
+    const theirJson = JSON.stringify(theirs), hit = lsHas(d, lsWid) ? { json: lsSeen } : lsHist.slice().reverse().find((x) => lsHas(d, x.wid));
+    let base = null; try { base = hit && hit.json ? JSON.parse(hit.json) : null; } catch (e) {}
+    if (d.seen && typeof d.seen === "object") for (const w in d.seen) vvBump(w, +d.seen[w] || 0);
+    const pending = absorbPending; absorbPending = false;
+    if (syncDeepEq(state, theirs)) { lsSee(d.wid, theirJson); return; }
+    const res = syncMerge3(base, JSON.parse(JSON.stringify(state)), JSON.parse(theirJson));
+    const merged = migrate(res.value), changedHere = !syncDeepEq(merged, state), differs = !syncDeepEq(merged, theirs);
+    lsSee(d.wid, theirJson);
+    const prevHtml = (curNote() || {}).html;
+    if (changedHere) {
+      state = merged; if (selectedId != null && !curBlocks().some((x) => x.id === selectedId)) selectedId = null;
+      dirty = true; editSeq++; localUpdatedAt = Math.max(localUpdatedAt, d.localUpdatedAt || 0);
+    }
+    if (differs || pending) saveLocal();   // we have something that save lacked → the storage gets the merged plan (the other window then takes it over)
+    if (changedHere) { afterRemote(prevHtml, null, true); if (state.timer) startTimerLoop(); }
+  }
   let otherWinTimer = null;
   window.addEventListener("storage", (e) => {
-    if (e.key !== STORAGE_KEY || !syncOn()) return;
+    if (e.key !== STORAGE_KEY && e.key !== WID_KEY) return;
+    clearTimeout(absorbTimer); absorbTimer = setTimeout(absorbStorage, 0);
+    if (e.key !== STORAGE_KEY) return;
+    if (!syncOn()) return;
     clearTimeout(otherWinTimer);
     otherWinTimer = setTimeout(function again() {
       if (drag || lineDrag || tabDrag || document.querySelector("dialog[open]")) { otherWinTimer = setTimeout(again, 3000); return; }   // not under a drag or an open dialog
@@ -5279,9 +5581,11 @@ if (IS_BROWSER) (function () {
     try { const h = await fetchRow("updated_at"); lastPull = Date.now(); if (h && !sameVer(h.updated_at, syncedAt)) pullRemote(true); } catch (e) {}
   }, 45000);
 
-  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "activated" && navigator.serviceWorker.controller) location.reload(); }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows immediately
+  const BUILD = "v265";
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state !== "activated" || !navigator.serviceWorker.controller) return; const go = () => { flushNoteSave(); location.reload(); }; try { caches.has("weekplan-" + BUILD).then((same) => { if (!same) go(); }, go); } catch (e) { go(); } }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows — unless this page already IS that build (v262: the page itself is fetched fresh, so the reload used to hit a page you had just started using)
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}   // v262: ask the browser not to clear Plapp's storage (plan, note history, earlier versions) when the device runs low on space
 
-  try { const BUILD = "v260"; document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
+  try { document.title = (MV === "note" ? "Notes · " : MV === "habits" ? "Habits · " : MV === "timer" ? "Timer · " : MV === "today" ? "Today · " : "") + "Plapp " + BUILD; const bi = $("buildInfo"); if (bi) bi.textContent = "build " + BUILD; } catch (e) {}
   /* ═══════════ Right bar: deadlines · streaks · docked note ═══════════ */
   const habitsDlg = $("habitsDialog"), remindDlg = $("remindDialog");
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -5315,7 +5619,8 @@ if (IS_BROWSER) (function () {
       avg: (n) => { const a = lastN(n); return a.length ? a.reduce((s, x) => s + x, 0) / a.length : NaN; },
       sum: (n) => lastN(n).reduce((s, x) => s + x, 0),
       // avgSince("YYYY-MM-DD") = average per entered day; avgSince("YYYY-MM-DD", 7) = per calendar day: Monday's entry covers Sunday + Monday (v236)
-      avgSince: (ds, per) => { let cur = parseYMD(ds); const end = parseYMD(date); let sum = 0, days = 0; while (cur <= end) { const v = entryNum(ymd(cur)); if (v != null) { sum += v; days += (per === 7 && cur.getDay() === 1) ? 2 : 1; } cur = addDays(cur, 1); } return days ? sum / days : NaN; },
+      // — until the Sunday column (v264, state.sunFrom): from then on Sunday has its own entry and Monday counts once (weight7)
+      avgSince: (ds, per) => { let cur = parseYMD(ds); const end = parseYMD(date); let sum = 0, days = 0; while (cur <= end) { const k = ymd(cur), v = entryNum(k); if (v != null) { sum += v; days += per === 7 ? weight7(k) : 1; } cur = addDays(cur, 1); } return days ? sum / days : NaN; },
       hours: (taskName, n) => trackedHoursOver(taskName, n || 1, date),
       dow: weekDayIdx(parseYMD(date)),   // 0 = Mon … 5 = Sat
       firstHours: (taskName, hrs) => {   // true if the first `hrs` logged hours today are all this task
@@ -5430,10 +5735,50 @@ if (IS_BROWSER) (function () {
       desc: "Mon–Thu, start the working day with a full hour of Growth before timing anything else. Turns green or red by itself; a manual mark always wins. Fri and Sat you mark yourself.",
     };
   }
+  /* ── v264: the 7th (Sunday) column of the streak table ──
+     Each habit can have a role there (hb.sun — chosen in the 🔥 dialog, seeded once by name in applySunCol):
+       "fill"     → "+": type the minutes you did; they fill each Mon–Sat day from today on up to the daily target (bankFill).
+                    The day cells themselves are now plain values: typing in one replaces it (no spilling over any more).
+       "day"      → the Sunday itself. A Click habit (Phone) is tapped like any day; a missed Sunday makes the next Monday missed too.
+                    A Number habit (Ethanol) takes Sunday's value, which counts in its averages; the cell stays UT (Sundays are never scored).
+       "avg:<id>" → the long-run average of habit <id> since the tracker start (state.trackerStart), in wine red, current week only.
+     state.sunFrom = the first Sunday with its own column (the Sunday of the week v264 first started in). Before it, a per-calendar-day
+     habit's Monday entry covered Sunday + Monday (v236), so those Mondays still count twice and earlier Sundays can't be entered. */
+  function sunRole(hb) { const r = hb && hb.sun; return typeof r === "string" ? r : ""; }
+  function sunOpen(sunDs) { return !!(state.sunFrom && sunDs >= state.sunFrom); }
+  function sunPenalty(h, date) {
+    if (!state.sunFrom || date <= state.sunFrom) return false;
+    const d = parseYMD(date); if (d.getDay() !== 1) return false;
+    const sun = ymd(addDays(d, -1)); return !!(h.entries && h.entries[sun] === "miss");
+  }
+  function weight7(ds) { return (parseYMD(ds).getDay() === 1 && !(state.sunFrom && ds > state.sunFrom)) ? 2 : 1; }   // per calendar day: a Monday before the Sunday column counts for Sunday + Monday
+  function prevTrackerDay(ds) { const d = addDays(parseYMD(ds), -1); if (d.getDay() === 0) d.setDate(d.getDate() - 1); return ymd(d); }   // the tracker day before (Monday → Saturday)
+  function habitLongAvg(hb, end) {   // the long-run average since the tracker start, through `end` (default: today) — per entered day, or per calendar day for avgSince(…, 7) rules
+    const from = state.trackerStart || "", to = end || habitToday(), per7 = AVG7_RE.test(hb.rule || "");
+    let sum = 0, days = 0, n = 0;
+    for (const d in (hb.entries || {})) { const v = hb.entries[d]; if (typeof v !== "number" || (from && d < from) || d > to) continue; sum += v; n++; days += per7 ? weight7(d) : 1; }
+    return n ? { avg: sum / days, n, per7, from } : null;
+  }
+  function fmtHabitAvg(hb, a) { return a ? (hb.hm ? fmtHM(a.avg) : Math.abs(a.avg) >= 10 ? fmtNum(a.avg) : fmtAvg(a.avg)) : ""; }   // 13 / 12.5 · .333 · 7:15
+  function habitAvgTitle(hb, a) {
+    const nm = (hb && hb.name) || "?";
+    if (!a) return "Ø " + nm + ": no numbers entered" + (state.trackerStart ? " since " + fmtDeadline(state.trackerStart) : "");
+    return "Ø " + nm + " = " + (hb.hm ? fmtHM(a.avg) : a.avg.toFixed(a.avg < 10 ? 2 : 1)) + (a.per7 ? " per calendar day" : " per entered day") + (state.trackerStart ? " since " + fmtDeadline(state.trackerStart) : " (no tracker start set — all entries)") + " · " + a.n + " entr" + (a.n === 1 ? "y" : "ies");
+  }
+  // What a streak cell shows (side bar; marks = also ✓ / ✕, for the phone views)
+  function habitGlyph(hb, ty, st, val, marks) {
+    if (st === "na" && typeof val !== "number") return '<span class="ut">UT</span>';
+    if (ty === "numeric" && typeof val === "number") {
+      if (+hb.fill > 0 && (val <= 0 || val >= +hb.fill)) return marks ? (st === "ach" ? "✓" : st === "miss" ? "✕" : "") : "";   // v264: a fill habit (Sport) shows its minutes only while short of the target and above 0
+      return hb.hm ? fmtHM(val) : fmtNum(val);
+    }
+    return marks ? (st === "ach" ? "✓" : st === "miss" ? "✕" : "") : "";
+  }
   function habitStatus(h, date) {
     const def = defFor(h.id, date) || { type: h.type || "binary", rule: h.rule || "" };
     const type = def.type || "binary";
     const raw = h.entries ? h.entries[date] : undefined;
+    if (sunPenalty(h, date)) return "miss";   // v264: the Sunday before was missed → this Monday is missed, whatever is marked here
     if (raw === "na") return "na";
     const bk = builtinKind(h);
     if (bk === "mails") {   // Mails — a manual ach/miss always wins (you can override)
@@ -5459,92 +5804,207 @@ if (IS_BROWSER) (function () {
     if (type === "hours") { if (raw === "ach" || raw === "miss") return raw; if (date > today) return null; const r = evalHabitRule(h, date, null); if (r == null) return null; if (r) return "ach"; return date < today ? "miss" : null; }   // today can still be met by logging more, so it isn't "missed" until it's past
     return null;
   }
-  function distributeFill(h, startDate, amount) {   // spread `amount` from startDate forward, filling each Mon–Sat up to h.fill
-    const T = +h.fill || 0;
+  /* v264: "+" in a fill habit's 7th column (on the phone: "+ min"). The minutes you did fill the Mon–Sat days from today on, each up to the
+     daily target, as far as the habit's "max" allows (a number of days counted from the first filled day, "week" = through that week's
+     Saturday, blank = no limit). Days before today are never touched — enter those in their own cell. UT days and days marked ach / miss
+     by hand are skipped. A negative number takes minutes back from the last filled days (again only from today on; a day taken back to 0
+     becomes blank). From next week's "+", filling starts on that Monday. Replaces the v2xx fill-forward from a day cell (distributeFill). */
+  function bankStart(weekMon) { let d = parseYMD(habitToday()); const m = weekMon ? parseYMD(weekMon) : null; if (m && d < m) d = m; if (d.getDay() === 0) d = addDays(d, 1); return ymd(d); }
+  const bankDay = (ds) => { const d = parseYMD(ds); return DL_WD[(d.getDay() + 6) % 7] + " " + d.getDate(); };
+  function bankFill(h, weekMon, amount) {
+    const T = +h.fill || 0; if (!(T > 0) || !amount || !isFinite(amount)) return;
+    const start = bankStart(weekMon), r2 = (x) => Math.round(x * 100) / 100, touched = [];
     snap(); if (!h.entries) h.entries = {};
-    if (T <= 0) { h.entries[startDate] = amount; commit(); return; }
-    const maxRaw = String(h.fillMax == null ? "" : h.fillMax).trim().toLowerCase();
-    const weekLimit = (maxRaw === "week" || maxRaw === "w");
-    const maxDays = (!weekLimit && maxRaw !== "" && !isNaN(parseFloat(maxRaw))) ? Math.max(1, Math.floor(parseFloat(maxRaw))) : 0;   // 0 = no day-count limit
-    const satOfWeek = ymd(addDays(mondayOf(parseYMD(startDate)), 5));
-    let pool = amount, d = parseYMD(startDate), guard = 0, spanned = 0;
-    while (pool > 0.0001 && guard < 400) {
-      guard++;
-      if (d.getDay() !== 0) {   // Mon–Sat only
-        const ds = ymd(d);
-        if (weekLimit && ds > satOfWeek) break;
-        if (maxDays && spanned >= maxDays) break;
-        spanned++;
-        const raw = h.entries[ds];
-        if (raw !== "na") { const cur = typeof raw === "number" ? raw : 0; const room = T - cur; if (room > 0) { const add = Math.min(pool, room); h.entries[ds] = Math.round((cur + add) * 100) / 100; pool -= add; } }
+    let left = 0;
+    if (amount > 0) {
+      const maxRaw = String(h.fillMax == null ? "" : h.fillMax).trim().toLowerCase(), weekLimit = maxRaw === "week" || maxRaw === "w";
+      const maxDays = (!weekLimit && maxRaw !== "" && !isNaN(parseFloat(maxRaw))) ? Math.max(1, Math.floor(parseFloat(maxRaw))) : 0;   // 0 = no day-count limit
+      const satOfWeek = ymd(addDays(mondayOf(parseYMD(start)), 5));
+      let pool = amount, d = parseYMD(start), guard = 0, spanned = 0;
+      while (pool > 0.0001 && guard++ < 800) {
+        if (d.getDay() !== 0) {   // Mon–Sat only
+          const ds = ymd(d);
+          if (weekLimit && ds > satOfWeek) break;
+          if (maxDays && spanned >= maxDays) break;
+          spanned++;
+          const raw = h.entries[ds];
+          if (raw == null || typeof raw === "number") { const cur = typeof raw === "number" ? raw : 0, room = T - cur; if (room > 0.0001) { const add = Math.min(pool, room); h.entries[ds] = r2(cur + add); pool -= add; touched.push(ds); } }
+        }
+        d = addDays(d, 1);
       }
-      d = addDays(d, 1);
+      left = pool > 0.0001 ? r2(pool) : 0;
+    } else {
+      let take = -amount;
+      const days = Object.keys(h.entries).filter((ds) => ds >= start && parseYMD(ds).getDay() !== 0 && typeof h.entries[ds] === "number" && h.entries[ds] > 0).sort().reverse();
+      for (const ds of days) { if (take <= 0.0001) break; const cur = h.entries[ds], sub = Math.min(cur, take); if (cur - sub <= 0.0001) delete h.entries[ds]; else h.entries[ds] = r2(cur - sub); take -= sub; touched.push(ds); }
+      left = take > 0.0001 ? r2(take) : 0;
     }
-    if (pool > 0.0001 && !weekLimit && !maxDays) { const raw = h.entries[startDate], cur = typeof raw === "number" ? raw : 0; h.entries[startDate] = Math.round((cur + pool) * 100) / 100; }   // no limit + implausibly large entry → keep the remainder on the entry day
     commit();
+    const list = touched.slice().sort().map((ds) => bankDay(ds) + ": " + fmtNum(typeof h.entries[ds] === "number" ? h.entries[ds] : 0)).join(" · ");
+    toast(h.name + " " + (amount > 0 ? "+" : "−") + fmtNum(Math.abs(amount)) + " min" + (list ? " → " + list : "") + (left ? (amount > 0 ? " · " + fmtNum(left) + " min didn't fit" + (h.fillMax ? " (max: " + h.fillMax + ")" : "") : " · nothing more to take back from " + bankDay(start) + " on") : ""));
+  }
+  // v264: a fill habit's day cell is now a plain value (typing replaces it). Asks first only for the past: any day before yesterday, or yesterday if it already has a value.
+  function fillEditOk(h, date) {
+    const yest = prevTrackerDay(habitToday()), has = !!(h.entries && h.entries[date] != null);
+    if (date > yest || (date === yest && !has)) return true;
+    const v = has ? h.entries[date] : null, vt = v === "na" ? "UT" : typeof v === "number" ? fmtNum(v) : v;
+    return confirm((has ? "Do you really want to change this value?" : "Do you really want to enter a value for this day?") + "\n\n" + h.name + ", " + fmtDeadline(date) + (has ? ": " + vt : "") + "\n\nWhat you type replaces it. (Minutes you did go into + in the last column — they fill from today on.)");
   }
   function editHabitCell(h, date) {
     const def = defFor(h.id, date) || {}; const type = def.type || h.type || "binary";
     if (type === "binary") { cycleHabit(h, date); return; }
     if (type === "hours") { const cur = h.entries ? h.entries[date] : undefined; const next = cur === "ach" ? "miss" : cur === "miss" ? "na" : cur === "na" ? null : "ach"; snap(); if (!h.entries) h.entries = {}; if (next === null) delete h.entries[date]; else h.entries[date] = next; commit(); return; }
-    if (+h.fill > 0) {   // fill-forward habit: entered minutes fill each day up to the target, from this day onward
-      const v = prompt("Minutes done for “" + h.name + "”, from " + fmtDeadline(date) + " onward (fills each day up to " + h.fill + ").\nOr force with 'ach' / 'miss'; 'na'; or blank to clear this day.", "");
-      if (v === null) return;
-      const t = v.trim().toLowerCase();
-      if (t === "") { snap(); if (!h.entries) h.entries = {}; delete h.entries[date]; commit(); return; }
-      if (t === "na" || t === "ach" || t === "miss") { snap(); if (!h.entries) h.entries = {}; h.entries[date] = t; commit(); return; }
-      const num = parseFloat(v.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, 'ach'/'miss', 'na', or blank."); return; }
-      distributeFill(h, date, num); return;
-    }
     const cur = h.entries && h.entries[date] != null ? h.entries[date] : "";
-    const curDisp = (h.hm && typeof cur === "number") ? fmtHM(cur) : (cur === "na" ? "na" : String(cur));
-    const v = prompt("Value for “" + h.name + "” on " + date + "\n(a number" + (h.hm ? " as h:mm, e.g. 6:50" : "") + "; or force with 'ach' / 'miss'; 'na'; or blank to clear):", curDisp);
+    const curDisp = (h.hm && typeof cur === "number") ? fmtHM(cur) : (cur === "na" ? "ut" : String(cur));
+    const v = prompt("Value for “" + h.name + "” on " + date + "\n(a number" + (h.hm ? " as h:mm, e.g. 6:50" : "") + "; or force with 'ach' / 'miss'; 'ut' = untracked; or blank to clear):", curDisp);
     if (v === null) return;
-    const t = v.trim().toLowerCase();
+    const t0 = v.trim().toLowerCase(), t = t0 === "ut" ? "na" : t0;
     snap(); if (!h.entries) h.entries = {};
     if (t === "") delete h.entries[date];
     else if (t === "na" || t === "ach" || t === "miss") h.entries[date] = t;
-    else { const num = v.indexOf(":") >= 0 ? parseHM(v) : parseFloat(v.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, 'ach'/'miss', 'na', or blank."); return; } h.entries[date] = num; }
+    else { const num = v.indexOf(":") >= 0 ? parseHM(v) : parseFloat(v.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, 'ach'/'miss', 'ut', or blank."); return; } h.entries[date] = num; }
     commit();
   }
-  // numeric / fill habits: type straight into the streak cell instead of a pop-up (still accepts na / ach / miss / blank)
-  function habitCellClick(c) {   // a streak cell was tapped (week grid or phone Habits view)
+  // numeric / fill habits: type straight into the streak cell instead of a pop-up (still accepts ut / ach / miss / blank)
+  function habitCellClick(c) {   // a streak cell was tapped (week grid or phone views)
     const hb = (state.habits || []).find((x) => x.id === c.dataset.h); if (!hb) return;
-    const def = defFor(hb.id, c.dataset.d) || {}; const ty = def.type || hb.type || "binary";
-    if (builtinKind(hb)) { cycleHabit(hb, c.dataset.d); return; }   // auto habits (Mails / Hour) just cycle the manual override
-    if (ty === "numeric" || +hb.fill > 0) inlineHabitEdit(hb, c.dataset.d, c); else editHabitCell(hb, c.dataset.d);
+    if (c.dataset.plus) { inlinePlusEdit(hb, c.dataset.plus, c); return; }   // v264: "+" of a fill habit
+    const date = c.dataset.d; if (!date) return;
+    const def = defFor(hb.id, date) || {}; const ty = def.type || hb.type || "binary";
+    if (sunPenalty(hb, date)) { toast("Missed because Sunday " + fmtDeadline(ymd(addDays(parseYMD(date), -1))) + " was missed — change Sunday's cell to change this."); return; }
+    if (parseYMD(date).getDay() === 0) {   // v264: a Sunday cell (7th column)
+      if (!sunOpen(date)) return;
+      if (ty === "numeric") inlineHabitEdit(hb, date, c, true); else cycleHabit(hb, date);
+      return;
+    }
+    if (builtinKind(hb)) { cycleHabit(hb, date); return; }   // auto habits (Mails / Hour) just cycle the manual override
+    if (+hb.fill > 0 && !fillEditOk(hb, date)) return;
+    if (ty === "numeric" || +hb.fill > 0) inlineHabitEdit(hb, date, c); else editHabitCell(hb, date);
   }
   function rerenderHabitCells() { renderStreak(); renderMv(); }
-  function inlineHabitEdit(h, date, cell) {
+  function inlineHabitEdit(h, date, cell, sunday) {
     if (!cell || cell.querySelector("input")) return;
     const cur = h.entries && h.entries[date] != null ? h.entries[date] : "";
-    const disp = (h.hm && typeof cur === "number") ? fmtHM(cur) : (cur == null ? "" : String(cur));
+    const disp = (h.hm && typeof cur === "number") ? fmtHM(cur) : (cur == null ? "" : cur === "na" ? "ut" : String(cur));
     const inp = document.createElement("input"); inp.className = "stCellIn"; inp.value = disp === "0" && cur === "" ? "" : disp;
     inp.setAttribute("autocomplete", "off");
     cell.textContent = ""; cell.appendChild(inp); inp.focus(); inp.select();
     let done = false;
     const finish = () => {
       if (done) return; done = true; inp.dataset.done = "1";   // finished → the phone view may re-render this cell
-      const raw = inp.value.trim(), t = raw.toLowerCase();
-      if (t === "na" || t === "ach" || t === "miss") { snap(); if (!h.entries) h.entries = {}; h.entries[date] = t; commit(); return; }
+      const raw = inp.value.trim(), t0 = raw.toLowerCase(), t = t0 === "ut" ? "na" : t0;
+      if (t === "na" || t === "ach" || t === "miss") {
+        if (sunday) { toast("Sunday takes a number (or blank) — it always stays UT."); rerenderHabitCells(); return; }
+        snap(); if (!h.entries) h.entries = {}; h.entries[date] = t; commit(); return;
+      }
       if (t === "") { if (!(h.entries && h.entries[date] != null)) { rerenderHabitCells(); return; } snap(); delete h.entries[date]; commit(); return; }
-      if (+h.fill > 0) { const num = parseFloat(raw.replace(",", ".")); if (isNaN(num)) { toast("Enter a number, na/ach/miss, or blank."); rerenderHabitCells(); return; } if (num === 0) { snap(); if (!h.entries) h.entries = {}; h.entries[date] = 0; commit(); return; } distributeFill(h, date, num); return; }   // 0 sets the day to 0 (distributeFill only spreads positive amounts)
-      const num = (h.hm || raw.indexOf(":") >= 0) ? parseHM(raw) : parseFloat(raw.replace(",", ".")); if (isNaN(num)) { toast("Enter a number" + (h.hm ? " as h:mm" : "") + ", na/ach/miss, or blank."); rerenderHabitCells(); return; }
-      snap(); if (!h.entries) h.entries = {}; h.entries[date] = num; commit();
+      const num = (h.hm || raw.indexOf(":") >= 0) ? parseHM(raw) : parseFloat(raw.replace(",", ".")); if (isNaN(num)) { toast("Enter a number" + (h.hm ? " as h:mm" : "") + (sunday ? "" : ", ut/ach/miss") + ", or blank."); rerenderHabitCells(); return; }
+      snap(); if (!h.entries) h.entries = {}; h.entries[date] = num; commit();   // v264: also for fill habits (Sport): the value replaces what was there
     };
     inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); finish(); } else if (e.key === "Escape") { done = true; inp.dataset.done = "1"; rerenderHabitCells(); } });
     inp.addEventListener("blur", finish);
     inp.addEventListener("click", (e) => e.stopPropagation());
   }
+  function inlinePlusEdit(h, weekMon, cell) {   // v264: the "+" cell → type minutes → bankFill
+    if (!cell || cell.querySelector("input")) return;
+    const inp = document.createElement("input"); inp.className = "stCellIn"; inp.setAttribute("autocomplete", "off"); inp.setAttribute("inputmode", "decimal");
+    inp.title = "Minutes you did — they fill from " + bankDay(bankStart(weekMon)) + " on, " + h.fill + " per day. A negative number takes minutes back.";
+    cell.textContent = ""; cell.appendChild(inp); inp.focus();
+    let done = false;
+    const finish = () => {
+      if (done) return; done = true; inp.dataset.done = "1";
+      const raw = inp.value.trim(); if (!raw) { rerenderHabitCells(); return; }
+      const num = parseFloat(raw.replace(",", ".").replace(/^[−–]/, "-")); if (isNaN(num) || !num) { toast("Enter the minutes you did (a negative number takes minutes back)."); rerenderHabitCells(); return; }
+      bankFill(h, weekMon, num);
+    };
+    inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); finish(); } else if (e.key === "Escape") { done = true; inp.dataset.done = "1"; rerenderHabitCells(); } });
+    inp.addEventListener("blur", finish);
+    inp.addEventListener("click", (e) => e.stopPropagation());
+  }
+  function askBank(h) {   // v264, phone: "+ min" button
+    const v = prompt(h.name + ": minutes you did?\nThey fill from " + fmtDeadline(bankStart()) + " on, " + h.fill + " per day (a negative number takes minutes back).", "");
+    if (v === null || !v.trim()) return;
+    const num = parseFloat(v.trim().replace(",", ".").replace(/^[−–]/, "-")); if (isNaN(num) || !num) { toast("Enter the minutes you did."); return; }
+    bankFill(h, null, num);
+  }
   /* ── phone views (v227) ── */
   let mvDay = null;
-  function mvToday() { const d = new Date(); if (d.getDay() === 0) d.setDate(d.getDate() - 1); return ymd(d); }   // Sunday isn't tracked → Saturday
+  function mvToday() { const d = new Date(); if (d.getDay() === 0 && !sunOpen(ymd(d))) d.setDate(d.getDate() - 1); return ymd(d); }   // Sunday: its own page once the Sunday column exists (v264); before that → Saturday
+  // v264: the habit rows of the phone Habits / Today views. A Sunday shows only the habits with a Sunday cell, plus the fill habits' "+ min";
+  // on Mon–Sat a fill habit (Sport) gets "+ min" on today's page (the minutes fill from today on, so not on other days' pages).
+  function mvHabitRowsHtml(day, habits) {
+    const isSun = parseYMD(day).getDay() === 0, plusOk = day === mvToday(); let h = "";
+    for (const hb of habits) {
+      const role = sunRole(hb), fill = role === "fill" && +hb.fill > 0;
+      if (isSun && role !== "day" && !fill) continue;
+      const def = defFor(hb.id, day) || {}, nm = def.name || hb.name, ty = def.type || hb.type || "binary", val = (hb.entries || {})[day];
+      let cell = "";
+      if (isSun && role === "day" && ty === "numeric") cell = '<div class="stCell mvCell na" data-h="' + hb.id + '" data-d="' + day + '" title="Sunday: counts in the average, never scored">' + (typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : '<span class="ut">UT</span>') + "</div>";
+      else if (!isSun || role === "day") {
+        const st = habitStatus(hb, day), cls = st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";
+        cell = '<div class="stCell mvCell ' + cls + '" data-h="' + hb.id + '" data-d="' + day + '">' + habitGlyph(hb, ty, st, val, true) + "</div>";
+      }
+      h += '<div class="mvHRow"><div class="mvHName">' + esc(nm) + "</div>" + cell + (fill && plusOk ? '<button class="mvPlus" data-h="' + hb.id + '" title="Minutes you did — they fill from today on, ' + hb.fill + ' per day">+ min</button>' : "") + "</div>";
+    }
+    if (isSun) h = '<div class="mvSunNote">Sunday isn\'t scored: a missed Sunday makes Monday missed, and Sunday\'s numbers count in the averages.</div>' + h;
+    return h;
+  }
+  function mvBindHabitRows(host) {
+    host.querySelectorAll(".mvCell").forEach((c) => c.addEventListener("click", () => habitCellClick(c)));
+    host.querySelectorAll(".mvPlus").forEach((b) => b.addEventListener("click", () => { const hb = (state.habits || []).find((x) => x.id === b.dataset.h); if (hb) askBank(hb); }));
+  }
   function renderMv() {
     if (!MV) return;
     { const hd = $("mvHead"); if (hd && hd.offsetHeight) document.body.style.setProperty("--mvh", hd.offsetHeight + "px"); }
-    const t = document.querySelector("#mvHead .mvTitle"); if (t) t.textContent = MV === "note" ? "Notes" : MV === "habits" ? "Habits" : "Timer";
-    if (MV === "habits") renderMvHabits(); else if (MV === "timer") renderMvTimer();
+    const t = document.querySelector("#mvHead .mvTitle"); if (t) t.textContent = MV === "note" ? "Notes" : MV === "habits" ? "Habits" : MV === "today" ? "Today" : "Timer";
+    if (MV === "habits") renderMvHabits(); else if (MV === "timer") renderMvTimer(); else if (MV === "today") renderMvToday();
   }
+  /* v263: ?view=today (phone) — the day on one screen: the running timer; today's blocks in order (planned ones can be tapped to start
+     the timer on their task — tap again to stop; passed ones are dimmed, the current one is framed; tracked sessions are the thin dashed
+     rows); today's habits (the same cells as in the Habits view). Sunday: no blocks; habits: Saturday's before the Sunday column (v264), since then the Sunday page. */
+  function renderMvToday() {
+    const host = $("mvToday"); if (!host) return;
+    if (host.querySelector(".stCellIn:not([data-done])")) return;   // don't wipe a habit number you're still typing
+    const now = new Date(), ds = ymd(now), nowMin = now.getHours() * 60 + now.getMinutes(), catById = {}; state.categories.forEach((c) => (catById[c.id] = c));
+    const hm = (min) => pad2(Math.floor(min / 60) % 24) + ":" + pad2(Math.round(min) % 60);
+    let h = '<div class="tdDate">' + esc(now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })) + "</div>";
+    const run = state.timer && catById[state.timer.catId];
+    if (state.timer) {
+      const col = run ? run.color : "#888";
+      h += '<div class="mvRun" style="background:' + col + ";color:" + textOn(col) + '"><div class="mvRunName">' + esc(run ? run.name : "?") + '</div><div class="mvRunTime runElapsedS">' + fmtDur(Date.now() - state.timer.startMs) + "</div>" +
+        '<div class="mvRunBtns"><button data-a="stop">⏹ Stop</button><button data-a="edit">✎ Start time</button><button data-a="discard">✕ Discard</button></div></div>';
+    }
+    const cell = cellForDate(state.anchorMonday, now), wk = now.getDay() === 0 ? null : state.weeks[cell.weekIdx], rows = [];
+    let planned = 0, tracked = 0;
+    for (const b of (wk ? wk.blocks : [])) {
+      if (b.kind === "actual") {
+        if (b.date !== ds || b.endMs == null) continue;
+        const s0 = new Date(b.startMs), sMin = s0.getHours() * 60 + s0.getMinutes(), len = (b.endMs - b.startMs) / 60000;
+        rows.push({ b, s: sMin, e: Math.min(1440, sMin + len), act: true, len }); tracked += len;
+      } else if (b.day === DAYS[cell.dayIdx]) {
+        const sMin = b.startSlot * SLOT_MIN, len = b.lenSlots * SLOT_MIN;
+        rows.push({ b, s: sMin, e: sMin + len, act: false, len }); if (!b.event || b.catId) planned += len;
+      }
+    }
+    rows.sort((a, b) => (a.s - b.s) || ((a.act ? 1 : 0) - (b.act ? 1 : 0)));
+    h += '<div class="tdHd">Today' + (rows.length ? "<span>planned " + fmtHM(planned / 60) + " · tracked " + fmtHM(tracked / 60) + "</span>" : "") + "</div>";
+    if (!rows.length) h += '<div class="mvIdle">' + (now.getDay() === 0 ? "Sunday — Plapp has no Sunday." : "Nothing planned or tracked today.") + "</div>";
+    else h += '<div class="tdRows">' + rows.map((r) => {
+      const b = r.b, col = blockColor(b, catById), tap = !r.act && b.catId && catById[b.catId] && !b.oneoff;
+      const cls = "tdRow" + (r.act ? " act" : (r.e <= nowMin ? " past" : r.s <= nowMin ? " now" : "")) + (tap ? " tap" : "") + (tap && state.timer && state.timer.catId === b.catId ? " on" : "");
+      return '<div class="' + cls + '"' + (tap ? ' data-cat="' + esc(b.catId) + '"' : "") + ' style="border-left-color:' + col + '"><span class="tdTime">' + (r.act ? clock(b.startMs) + "–" + clock(b.endMs) : hm(r.s) + "–" + hm(r.e)) + '</span><span class="tdName">' + (r.act ? "✓ " : "") + esc(blockName(b, catById)) + '</span><span class="tdDur">' + fmtHM(r.len / 60) + "</span></div>";
+    }).join("") + "</div>";
+    const day = mvToday(), wi = cellForDate(state.anchorMonday, parseYMD(day)).weekIdx, st = computeWeekStats(wi);
+    h += '<div class="tdHd">Habits<span class="' + (st.achieved ? "ok" : "bad") + '">this week: ' + st.miss + " missed · Joker " + fmtJoker(st.joker) + "</span></div>";
+    if (!st.habits.length) h += '<p class="muted">No habits this week.</p>';
+    h += mvHabitRowsHtml(day, st.habits);   // v264
+    h += '<div class="tdNav"><a href="./?view=timer">Timer</a><a href="./?view=habits">Habits</a><a href="./?view=note">Notes</a></div>';
+    host.innerHTML = h;
+    host.querySelectorAll(".mvRunBtns button").forEach((b) => b.addEventListener("click", () => { const a = b.dataset.a; if (a === "stop") toggleTimer(state.timer.catId); else if (a === "edit") adjustTimerStart(); else if (a === "discard") { if (confirm("Discard this timing? Nothing will be logged.")) discardTimer(); } }));
+    host.querySelectorAll(".tdRow.tap").forEach((r) => r.addEventListener("click", () => toggleTimer(r.dataset.cat)));
+    mvBindHabitRows(host);
+  }
+  setInterval(() => { if (MV === "today" && document.visibilityState === "visible") renderMvToday(); }, 30000);   // "now" moves on
   function renderMvHabits() {
     const host = $("mvHabits"); if (!host) return;
     if (host.querySelector(".stCellIn:not([data-done])")) return;   // don't wipe a number you're still typing (e.g. when a sync arrives)
@@ -5552,20 +6012,14 @@ if (IS_BROWSER) (function () {
     const wi = cellForDate(state.anchorMonday, parseYMD(mvDay)).weekIdx, s = computeWeekStats(wi);
     let h = '<div class="mvDayNav"><button class="mvPrev" title="Previous day">&lsaquo;</button><div class="mvDay">' + (mvDay === today ? "Today · " : "") + esc(fmtDeadline(mvDay)) + '</div><button class="mvNext" title="Next day"' + (mvDay >= today ? " disabled" : "") + ">&rsaquo;</button></div>";
     h += '<div class="mvScore ' + (s.achieved ? "ok" : "bad") + '">This week: ' + s.miss + " missed · Joker " + fmtJoker(s.joker) + "</div>";
-    { const cut = dayStartMin(mvDay); h += '<button class="mvCut' + (cut ? " cut" : "") + '">Day starts ' + (cut ? fmtDayStart(cut) : "at midnight") + "</button>"; }
+    if (parseYMD(mvDay).getDay() !== 0) { const cut = dayStartMin(mvDay); h += '<button class="mvCut' + (cut ? " cut" : "") + '">Day starts ' + (cut ? fmtDayStart(cut) : "at midnight") + "</button>"; }
     if (!s.habits.length) h += '<p class="muted">No habits this week.</p>';
-    for (const hb of s.habits) {
-      const def = defFor(hb.id, mvDay) || {}, nm = def.name || hb.name, ty = def.type || hb.type || "binary";
-      const st = habitStatus(hb, mvDay), val = (hb.entries || {})[mvDay];
-      const cls = st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";
-      const glyph = st === "na" ? "NA" : (ty === "numeric" && typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : st === "ach" ? "✓" : st === "miss" ? "✕" : "");
-      h += '<div class="mvHRow"><div class="mvHName">' + esc(nm) + '</div><div class="stCell mvCell ' + cls + '" data-h="' + hb.id + '" data-d="' + mvDay + '">' + glyph + "</div></div>";
-    }
+    h += mvHabitRowsHtml(mvDay, s.habits);
     host.innerHTML = h;
-    const step = (dir) => { const d = parseYMD(mvDay); do { d.setDate(d.getDate() + dir); } while (d.getDay() === 0); const ds = ymd(d); if (ds > today) return; mvDay = ds; renderMvHabits(); };
+    const step = (dir) => { const d = parseYMD(mvDay); do { d.setDate(d.getDate() + dir); } while (d.getDay() === 0 && !sunOpen(ymd(d))); const ds = ymd(d); if (ds > today) return; mvDay = ds; renderMvHabits(); };   // v264: Sundays with their own column are a page too
     host.querySelector(".mvPrev").addEventListener("click", () => step(-1));
     host.querySelector(".mvNext").addEventListener("click", () => step(1));
-    host.querySelectorAll(".mvCell").forEach((c) => c.addEventListener("click", () => habitCellClick(c)));
+    mvBindHabitRows(host);
     { const cb = host.querySelector(".mvCut"); if (cb) cb.addEventListener("click", () => editDayStart(mvDay)); }
   }
   function renderMvTimer() {
@@ -5680,18 +6134,38 @@ if (IS_BROWSER) (function () {
     }
     h += '<table class="stGrid"><thead><tr><th class="stNameH stScoreCell ' + (s.achieved ? "ok" : "bad") + '" title="missed cells / Joker (used / available)">' + s.miss + " / " + fmtJoker(s.joker) + '</th>';
     for (let i = 0; i < 6; i++) { const ds = s.dates[i], cut = dayStartMin(ds); h += '<th class="stDayH' + (cut ? " cut" : "") + '" data-ds="' + ds + '" title="' + esc(fmtDeadline(ds)) + " — the day starts at " + (cut ? fmtDayStart(cut) : "midnight") + ' (for the habits). Tap to change.">' + dayLbls[i] + (cut ? "<sup>" + fmtDayStart(cut) + "</sup>" : "") + "</th>"; }
-    if (ui.streakAvg) h += '<th class="stAvgH" title="Average of all entered values">Ø</th>';
+    // v264: the 7th column — Sunday (Phone, Ethanol), "+" (Sport) and, in the current week, the wine-red long-run averages
+    const sun = ymd(addDays(parseYMD(s.dates[0]), 6)), sunOk = sunOpen(sun);
+    h += '<th class="stSunH" title="' + esc(fmtDeadline(sun)) + ' — the 7th column: Sunday cells (never scored), + to add minutes, and (this week) the wine-red long-run averages. The 🔥 dialog says which row has what.">S</th>';
+    if (ui.streakAvg) h += '<th class="stAvgH" title="Long-run average' + (state.trackerStart ? " since " + esc(fmtDeadline(state.trackerStart)) : "") + ' (tracker start in the 🔥 dialog)">Ø</th>';
     h += "</tr></thead><tbody>";
+    const byId = {}; (state.habits || []).forEach((x) => (byId[x.id] = x));
     for (const hb of s.habits) {
       const def = defFor(hb.id, s.dates[0]) || {}, nm = def.name || hb.name, ty = def.type || hb.type || "binary";
       h += '<tr><td class="stName" title="' + esc(nm) + '">' + esc(nm) + "</td>";
       for (let i = 0; i < 6; i++) {
         const d = s.dates[i], st = habitStatus(hb, d), val = (hb.entries || {})[d];
         const cls = st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";
-        const glyph = st === "na" ? "NA" : (ty === "numeric" && typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : "");
-        h += '<td><div class="stCell ' + cls + (d === today ? " today" : "") + (d > today ? " future" : "") + '" data-h="' + hb.id + '" data-d="' + d + '">' + glyph + "</div></td>";
+        const glyph = habitGlyph(hb, ty, st, val);
+        h += '<td><div class="stCell ' + cls + (d === today ? " today" : "") + (d > today ? " future" : "") + '" data-h="' + hb.id + '" data-d="' + d + '"' + (sunPenalty(hb, d) ? ' title="Missed because Sunday was missed"' : "") + ">" + glyph + "</div></td>";
       }
-      if (ui.streakAvg) { const a = ty === "numeric" ? habitAllAvg(hb) : null; h += '<td class="stAvg">' + (a ? (hb.hm ? fmtHM(a.avg) : fmtAvg(a.avg)) : "") + "</td>"; }
+      { const role = sunRole(hb); let c = "";
+        if (role === "fill" && +hb.fill > 0) c = '<td class="stSunTd"><div class="stCell stPlus" data-h="' + hb.id + '" data-plus="' + s.dates[0] + '" title="' + esc(hb.name) + ': type the minutes you did — they fill each day from ' + esc(bankDay(bankStart(s.dates[0]))) + " on, up to " + hb.fill + ' (a negative number takes minutes back)">+</div></td>';
+        else if (role === "day") {
+          if (!sunOk) c = '<td class="stSunTd"><div class="stCell stSunOff" title="Sundays have their own cell from ' + esc(state.sunFrom ? fmtDeadline(state.sunFrom) : "—") + ' on"></div></td>';
+          else {
+            const val = (hb.entries || {})[sun], num = ty === "numeric", st = num ? "na" : habitStatus(hb, sun);
+            const cls = st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";
+            const glyph = num ? (typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : '<span class="ut">UT</span>') : habitGlyph(hb, ty, st, val);
+            const tip = num ? esc(hb.name) + " on Sunday " + esc(fmtDeadline(sun)) + ": type the value. It counts in the average; the cell stays UT (Sundays aren't scored)." : esc(hb.name) + " on Sunday " + esc(fmtDeadline(sun)) + ": tap to cycle achieved → missed → UT. Missed → the next Monday is missed too.";
+            c = '<td class="stSunTd"><div class="stCell ' + cls + (sun === today ? " today" : "") + (sun > today ? " future" : "") + '" data-h="' + hb.id + '" data-d="' + sun + '" title="' + tip + '">' + glyph + "</div></td>";
+          }
+        } else if (role.indexOf("avg:") === 0 && main) {
+          const tg = byId[role.slice(4)], a = tg ? habitLongAvg(tg) : null;
+          c = '<td class="stSunTd stAvgW" title="' + esc(tg ? habitAvgTitle(tg, a) : "the habit for this average no longer exists — pick another in the 🔥 dialog") + '">' + (tg ? fmtHabitAvg(tg, a) : "?") + "</td>";
+        }
+        h += c || '<td class="stSunTd"></td>'; }
+      if (ui.streakAvg) { const a = ty === "numeric" ? habitAllAvg(hb) : null; h += '<td class="stAvg"' + (a ? ' title="' + esc(habitAvgTitle(hb, a)) + '"' : "") + ">" + fmtHabitAvg(hb, a) + "</td>"; }
       h += "</tr>";
     }
     return h + "</tbody></table></div>";
@@ -5758,13 +6232,10 @@ if (IS_BROWSER) (function () {
     });
   }
 
-  function openHabits() { renderHabitsTable(); renderHistory(); renderChangelog(); habitsDlg.showModal(); }
+  function openHabits() { renderHabitsTable(); renderHistory(); renderChangelog(); habitsDlg.showModal(); if (document.activeElement === $("hbStart")) $("hbStart").blur(); if (!state.trackerStart) setTimeout(() => { if (habitsDlg.open && askTrackerStart()) renderHabitsTable(); }, 60); }
   const AVG7_RE = /avgSince\s*\([^)]*,\s*7\s*\)/;   // a rule averaging per calendar day (Monday's entry = Sunday + Monday)
-  function habitAllAvg(hb) {
-    const ent = Object.entries(hb.entries || {}).filter(([, v]) => typeof v === "number"); if (!ent.length) return null;
-    const per7 = AVG7_RE.test(hb.rule || ""), days = ent.reduce((s, [d]) => s + (per7 && parseYMD(d).getDay() === 1 ? 2 : 1), 0);
-    return { avg: ent.reduce((s, [, v]) => s + v, 0) / days, n: ent.length, per7 };
-  }
+  function habitAllAvg(hb) { return habitLongAvg(hb); }   // v264: since the tracker start (was: all entries ever)
+  function avgLead(a) { return "Ø " + (a && a.per7 ? "per calendar day " : "") + (state.trackerStart ? "since " + fmtDeadline(state.trackerStart) : "(all entries — no tracker start set)") + ": "; }
   function ruleUsesAvg(hb) { return /avgSince\s*\(|\bavg\s*\(/.test(hb.rule || ""); }
   function renderHabitReview() {
     const host = $("habitReviewBody"); if (!host) return;
@@ -5777,22 +6248,56 @@ if (IS_BROWSER) (function () {
            (bi ? '<div class="hbrDesc">' + esc(bi.desc) + '</div><div class="hbrRule">' + esc(bi.rule) + "</div>"
                : '<div class="hbrDesc">' + (hb.desc ? esc(hb.desc) : '<span class="muted">— no note —</span>') + '</div>' +
                  '<div class="hbrRule">' + (hb.rule ? esc(hb.rule) : '<span class="muted">' + (ty === "binary" ? "click — no formula" : "—") + "</span>") + "</div>");
-      if (ruleUsesAvg(hb)) { const a = habitAllAvg(hb); block += '<div class="hbrAvg">' + (a && a.per7 ? "Ø per calendar day (Mon = Sun + Mon): " : "Ø of all entered values: ") + (a ? a.avg.toFixed(2) + ' <span class="muted">(' + a.n + ' entr' + (a.n === 1 ? "y" : "ies") + ')</span>' : '<span class="muted">no numeric entries yet</span>') + "</div>"; }
+      if (ruleUsesAvg(hb)) { const a = habitAllAvg(hb); block += '<div class="hbrAvg">' + avgLead(a) + (a ? a.avg.toFixed(2) + ' <span class="muted">(' + a.n + ' entr' + (a.n === 1 ? "y" : "ies") + ')</span>' : '<span class="muted">no numeric entries yet</span>') + "</div>"; }
       h += block + "</div>";
     }
     host.innerHTML = h;
   }
   function habitReviewText() {
     const list = (state.habits || []).filter((h) => !h.archived);
-    return list.map((hb) => { const ty = hb.type || "binary", bi = builtinRule(hb); let t = bi ? ("HABIT: " + hb.name + " (built-in)\nNote: " + bi.desc + "\nRule: " + bi.rule) : ("HABIT: " + hb.name + " (" + ty + ")\nNote: " + (hb.desc || "—") + "\nFormula: " + (hb.rule || (ty === "binary" ? "click — no formula" : "—"))); if (ruleUsesAvg(hb)) { const a = habitAllAvg(hb); t += (a && a.per7 ? "\nØ per calendar day (Mon = Sun + Mon): " : "\nØ all entered values: ") + (a ? a.avg.toFixed(2) + " (" + a.n + " entries)" : "none yet"); } return t; }).join("\n\n----------------------------------------\n\n");
+    return list.map((hb) => { const ty = hb.type || "binary", bi = builtinRule(hb); let t = bi ? ("HABIT: " + hb.name + " (built-in)\nNote: " + bi.desc + "\nRule: " + bi.rule) : ("HABIT: " + hb.name + " (" + ty + ")\nNote: " + (hb.desc || "—") + "\nFormula: " + (hb.rule || (ty === "binary" ? "click — no formula" : "—"))); if (ruleUsesAvg(hb)) { const a = habitAllAvg(hb); t += "\n" + avgLead(a) + (a ? a.avg.toFixed(2) + " (" + a.n + " entries)" : "none yet"); } return t; }).join("\n\n----------------------------------------\n\n");
+  }
+  /* v264: top of the 🔥 dialog — the tracker start (all averages count from it) and what each row's 7th column shows */
+  function renderSunLegend() {
+    const inp = $("hbStart"); if (inp && inp.value !== (state.trackerStart || "")) inp.value = state.trackerStart || "";
+    const row = inp && inp.closest(".hbStartRow"); if (row) row.classList.toggle("missing", !state.trackerStart);
+    const host = $("hbSunLegend"); if (!host) return;
+    const list = (state.habits || []).filter((h) => !h.archived), byId = {}; (state.habits || []).forEach((h) => (byId[h.id] = h));
+    const items = [], warn = [];
+    for (const hb of list) {
+      const r = sunRole(hb), ty = hb.type || "binary", nm = "<b>" + esc(hb.name) + "</b>";
+      if (r === "fill" && +hb.fill > 0) items.push(nm + ": <b>+</b> = the minutes you did; they fill each day from today on, up to " + hb.fill + (hb.fillMax ? " (max: " + esc(hb.fillMax) + ")" : "") + " — a negative number takes minutes back. Its day cells are plain values (typing replaces; asks first before yesterday) and show a number only while short of " + hb.fill + ".");
+      else if (r === "day" && ty === "numeric") items.push(nm + ": Sunday's value — the cell stays UT, the value counts in the average" + (AVG7_RE.test(hb.rule || "") ? " (per calendar day" + (state.sunFrom ? "; Mondays up to " + esc(fmtDeadline(ymd(addDays(parseYMD(state.sunFrom), -6)))) + " still count for Sunday + Monday" : "") + ")" : "") + ".");
+      else if (r === "day") items.push(nm + ": Sunday — tap achieved / missed / UT; <b>missed → the next Monday is missed too</b>.");
+      else if (r.indexOf("avg:") === 0) { const tg = byId[r.slice(4)]; items.push(nm + " row: <span class=\"w\">Ø " + esc(tg ? tg.name : "?") + "</span>");
+        if (tg) { const m = /avgSince\s*\(\s*["']([0-9-]{10})["']/.exec(tg.rule || ""); if (m && state.trackerStart && m[1] !== state.trackerStart) warn.push("⚠ " + esc(tg.name) + "'s rule averages since " + esc(fmtDeadline(m[1])) + ", the tracker since " + esc(fmtDeadline(state.trackerStart)) + " — so its wine-red number isn't exactly what the rule checks. Change one of the two dates if they should agree."); } }
+    }
+    if (items.some((x) => x.indexOf('class="w"') >= 0)) items.push('<span class="w">wine red</span> = long-run averages since the tracker start (hover one to see which; current week only)');
+    host.innerHTML = items.length ? "<b>7th column (S)</b> of the side-bar table:<br>" + items.map((x) => "– " + x).join("<br>") + (warn.length ? '<br><span class="warn">' + warn.join("<br>") + "</span>" : "") : "";
+  }
+  function parseDateIn(v) {   // "2026-01-01", "1.1.2026", "1.1.26", "1.1." → YYYY-MM-DD (null = unreadable)
+    v = String(v || "").trim(); let m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(v), y, mo, d;
+    if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+    else if ((m = /^(\d{1,2})\.(\d{1,2})\.?(\d{2,4})?$/.exec(v))) { d = +m[1]; mo = +m[2]; y = m[3] ? (+m[3] < 100 ? 2000 + +m[3] : +m[3]) : new Date().getFullYear(); }
+    else return null;
+    const x = new Date(y, mo - 1, d); return (x.getMonth() === mo - 1 && x.getDate() === d) ? ymd(x) : null;
+  }
+  function earliestNumberEntry() { let m = "", any = ""; for (const h of (state.habits || [])) for (const d in (h.entries || {})) { if (!any || d < any) any = d; if (typeof h.entries[d] === "number" && (!m || d < m)) m = d; } return m || any; }
+  function askTrackerStart() {   // asked when the tracker start is missing (opening the 🔥 dialog; once a while after the app starts)
+    if (state.trackerStart) return true;
+    const sug = earliestNumberEntry() || ymd(new Date(new Date().getFullYear(), 0, 1));
+    const v = prompt("When did this streak tracker start?\n\nAll averages (the wine-red numbers in the side bar, Ø) are counted from this day. Usually 1 January — for this tracker, the day you started recording numbers (suggested: the first day with a number).\n\nDate, e.g. " + sug + " or 1.1.2026:", sug);
+    if (v === null) return false;
+    const ds = parseDateIn(v); if (!ds) { toast("Couldn't read that date — set it at the top of the 🔥 dialog."); return false; }
+    snap(); state.trackerStart = ds; commit(); toast("Tracker start: " + fmtDeadline(ds) + " — averages count from then"); return true;
   }
   function renderHabitsTable() {
     const host = $("habitsTableWrap"); if (!host) return;
     const list = state.habits || [];
-    const help = '<p class="muted" style="margin-top:8px;line-height:1.6;">Types — <b>Click</b>: tap the cell (achieved→missed→NA). An optional rule acts as a guard — if you tap achieved but the rule is false, the day flips to missed. <b>Number</b>: you type a number each day and the rule decides. <b>Hours</b>: read automatically from your logged time; tap a cell to override it (auto→achieved→missed→NA→auto). A day is achieved when the rule is true; if the rule returns <code>null</code> the cell stays blank so you can click it. Variables: <code>value</code> (today’s number), <code>prev</code> (yesterday’s), <code>avg(n)</code>, <code>sum(n)</code>, <code>avgSince("YYYY-MM-DD")</code> (per entered day) or <code>avgSince("YYYY-MM-DD", 7)</code> (per calendar day — Monday’s entry counts for Sunday + Monday), <code>hours("Task", n)</code> = hours logged for a task over the last n days, <code>dow</code> (0=Mon … 5=Sat), <code>firstHours("Task", h)</code> = true if the first h logged hours today are that task. Examples: <code>value &gt;= 15</code> · <code>value &gt; 100 + (prev &lt; 100 ? (100-prev)/2 : 0)</code> · <code>avgSince("2026-06-01") &lt; 30</code> · <code>hours("Mails", 6) &lt;= 6</code> · <code>dow &lt;= 3 ? firstHours("Growth", 2) : null</code></p>';
+    const help = '<p class="muted" style="margin-top:8px;line-height:1.6;">Types — <b>Click</b>: tap the cell (achieved→missed→UT). An optional rule acts as a guard — if you tap achieved but the rule is false, the day flips to missed. <b>Number</b>: you type a number each day and the rule decides. <b>Hours</b>: read automatically from your logged time; tap a cell to override it (auto→achieved→missed→UT→auto). A day is achieved when the rule is true; if the rule returns <code>null</code> the cell stays blank so you can click it. Variables: <code>value</code> (today’s number), <code>prev</code> (yesterday’s), <code>avg(n)</code>, <code>sum(n)</code>, <code>avgSince("YYYY-MM-DD")</code> (per entered day) or <code>avgSince("YYYY-MM-DD", 7)</code> (per calendar day — Monday’s entry counts for Sunday + Monday), <code>hours("Task", n)</code> = hours logged for a task over the last n days, <code>dow</code> (0=Mon … 5=Sat), <code>firstHours("Task", h)</code> = true if the first h logged hours today are that task. Examples: <code>value &gt;= 15</code> · <code>value &gt; 100 + (prev &lt; 100 ? (100-prev)/2 : 0)</code> · <code>avgSince("2026-06-01") &lt; 30</code> · <code>hours("Mails", 6) &lt;= 6</code> · <code>dow &lt;= 3 ? firstHours("Growth", 2) : null</code></p>';
     const effNote = '<p class="muted" style="margin:2px 0 8px;">Edits take effect <b>' + esc(fmtDeadline(nextMondayYmd())) + '</b> — the current week keeps version v' + (versionForWeek(state.currentWeek) || 1) + '.</p>';
-    if (!list.length) { host.innerHTML = '<p class="muted">No habits yet — add your first below.</p>' + help; return; }
-    let h = effNote + '<table class="hbTable"><thead><tr><th>Habit</th><th>Type</th><th>Rule (achieved when true)</th><th>Note (plain language)</th><th title="Fill-forward: left = target per day; right = how far it may reach (a number of days, the word week, or blank = no limit)">Fill /day · max</th><th></th><th></th></tr></thead><tbody>';
+    if (!list.length) { host.innerHTML = '<p class="muted">No habits yet — add your first below.</p>' + help; renderSunLegend(); return; }
+    let h = effNote + '<table class="hbTable"><thead><tr><th>Habit</th><th>Type</th><th>Rule (achieved when true)</th><th>Note (plain language)</th><th title="Fill: left = target per day; right = how far the + in the 7th column may fill (a number of days, the word week, or blank = no limit)">Fill /day · max</th><th title="What this habit&#39;s row shows in the 7th (S) column of the side-bar table">7th col</th><th></th><th></th></tr></thead><tbody>';
     for (const hb of list) {
       const ty = hb.type || "binary";
       h += '<tr data-id="' + hb.id + '"><td><input class="hbName" value="' + esc(hb.name) + '"></td>';
@@ -5807,9 +6312,15 @@ if (IS_BROWSER) (function () {
         h += '<td><input class="hbDesc" placeholder="what it means" value="' + esc(hb.desc || "") + '"></td>';
       }
       h += '<td style="white-space:nowrap;"><input class="hbFill" type="number" min="0" step="5" placeholder="/day" value="' + (hb.fill ? hb.fill : "") + '" style="width:52px;" title="Target per day"> <input class="hbFillMax" type="text" placeholder="max" value="' + esc(hb.fillMax || "") + '" style="width:48px;" title="Max reach: a number of days, the word week, or blank = no limit"></td>';
+      { const role = sunRole(hb), opts = [["", "—"], ["day", "Sunday"]];   // v264
+        if (+hb.fill > 0 || role === "fill") opts.push(["fill", "+ minutes"]);
+        for (const o of list) if (!o.archived && (o.type || "binary") === "numeric") opts.push(["avg:" + o.id, "Ø " + o.name]);
+        if (role && !opts.some((x) => x[0] === role)) opts.push([role, role.indexOf("avg:") === 0 ? "Ø (habit gone)" : role]);
+        h += '<td><select class="hbSun" title="Sunday = the Sunday cell (Click: tap; missed → next Monday missed · Number: Sunday&#39;s value, counts in the average). + minutes = add minutes that fill from today on. Ø … = that habit&#39;s long-run average in wine red.">' + opts.map((o) => '<option value="' + esc(o[0]) + '"' + (o[0] === role ? " selected" : "") + ">" + esc(o[1]) + "</option>").join("") + "</select></td>"; }
       h += '<td><button class="hbArch">' + (hb.archived ? "archived" : "active") + '</button></td><td><button class="hbDel">Delete</button></td></tr>';
     }
     host.innerHTML = h + "</tbody></table>" + help;
+    renderSunLegend();
     host.querySelectorAll("tr[data-id]").forEach((tr) => {
       const id = tr.dataset.id, hb = (state.habits || []).find((x) => x.id === id); if (!hb) return;
       tr.querySelector(".hbName").addEventListener("change", (e) => { const v = e.target.value.trim(); if (v) { snap(); hb.name = v; commitDefs(); } });
@@ -5819,6 +6330,7 @@ if (IS_BROWSER) (function () {
       const ds = tr.querySelector(".hbDesc"); if (ds) ds.addEventListener("change", (e) => { snap(); hb.desc = e.target.value; commitDefs(); });
       const fl = tr.querySelector(".hbFill"); if (fl) fl.addEventListener("change", (e) => { snap(); const n = parseFloat(e.target.value); if (isNaN(n) || n <= 0) delete hb.fill; else hb.fill = n; commit(); });
       const fm = tr.querySelector(".hbFillMax"); if (fm) fm.addEventListener("change", (e) => { snap(); const v = e.target.value.trim(); if (v === "") delete hb.fillMax; else hb.fillMax = v; commit(); });
+      const sn = tr.querySelector(".hbSun"); if (sn) sn.addEventListener("change", (e) => { snap(); const v = e.target.value; if (v) hb.sun = v; else hb.sun = ""; commit(); renderSunLegend(); });   // "" (not deleted) = chosen "—", so nothing re-seeds it
       tr.querySelector(".hbArch").addEventListener("click", () => { snap(); hb.archived = !hb.archived; commitDefs(); renderHabitsTable(); });
       tr.querySelector(".hbDel").addEventListener("click", () => { if (!confirm('Delete "' + hb.name + '" and all its history? (Archiving instead keeps the history.)')) return; snap(); state.habits = (state.habits || []).filter((x) => x.id !== id); commitDefs(); renderHabitsTable(); renderHistory(); });
     });
@@ -5923,7 +6435,7 @@ if (IS_BROWSER) (function () {
     const fin = weeks.filter((w) => w.finished);
     return { weeks, cols, today, finished: fin.length, missed: fin.filter((w) => !w.s.achieved).length };
   }
-  const awVal = (c, col) => c.st === "na" ? "NA" : c.num != null ? (col.hm ? fmtHM(c.num) : fmtNum(c.num)) : "";
+  const awVal = (c, col) => c.st === "na" ? "UT" : c.num != null ? ((col.hb && +col.hb.fill > 0 && (c.num <= 0 || c.num >= +col.hb.fill)) ? "" : col.hm ? fmtHM(c.num) : fmtNum(c.num)) : "";   // v264: a fill habit (Sport) shows its minutes only while short of the target, as in the side bar
   /* Comments column: the habits at the start of the table and every change after it, from the habit definitions (versions,
      "since", archive, deleted habits) plus the built-in Mails limit (MAILS_RULE2_FROM). Each entry =
      { mon, head, items: [{ name, tag, lines: [{ k: "desc" | "formula" | "type", t }] }] }, chronological. */
@@ -6020,7 +6532,7 @@ if (IS_BROWSER) (function () {
         h += '<td class="awDay' + (dy.ds === m.today ? " today" : "") + '">' + esc(fmtDeadline(dy.ds)) + "</td>";
         dy.cells.forEach((c, j) => {
           const cls = c.off ? "off" : c.st === "ach" || c.st === "miss" || c.st === "na" ? c.st : "blank";
-          h += '<td><div class="awCell ' + cls + (dy.ds === m.today ? " today" : "") + (dy.ds > m.today ? " future" : "") + '"' + (c.off ? ' title="not tracked that week"' : "") + ">" + (c.off ? "" : esc(awVal(c, m.cols[j]))) + "</div></td>";
+          h += '<td><div class="awCell ' + cls + (dy.ds === m.today ? " today" : "") + (dy.ds > m.today ? " future" : "") + '"' + (c.off ? ' title="not tracked that week"' : "") + ">" + (c.off ? "" : c.st === "na" ? '<span class="ut">UT</span>' : esc(awVal(c, m.cols[j]))) + "</div></td>";
         });
         h += cmtCell(row++) + "</tr>";
       });
@@ -6028,8 +6540,8 @@ if (IS_BROWSER) (function () {
     if (nRows > days.length) h += '<tr class="awFirst awUp"><td class="awWk" colspan="2"><span class="awTag">upcoming</span></td>' + m.cols.map(() => "<td></td>").join("") + "</tr>";
     h += '<tr class="awEnd"><td colspan="' + (2 + m.cols.length) + '"></td></tr>';   // grows when the comments run past the last row
     h += "</tbody><tfoot>";
-    h += '<tr class="awF1"><td class="awFLbl" colspan="2" title="Achieved ÷ (achieved + missed) days — NA and blank days left out">Achieved</td>' + m.cols.map((c) => "<td" + (c.ach + c.miss ? ' title="' + c.ach + " achieved / " + c.miss + ' missed"' : "") + ">" + (c.ach + c.miss ? Math.round(100 * c.ach / (c.ach + c.miss)) + "%" : "") + "</td>").join("") + "<td></td></tr>";
-    if (m.cols.some((c) => c.avg)) h += '<tr class="awF2"><td class="awFLbl" colspan="2" title="Average of all entered values (as in the Ø column)">Ø</td>' + m.cols.map((c) => "<td" + (c.avg && c.avg.per7 ? ' title="per calendar day (Mon = Sun + Mon)"' : "") + ">" + (c.avg ? (c.hm ? fmtHM(c.avg.avg) : fmtAvg(c.avg.avg)) : "") + "</td>").join("") + "<td></td></tr>";
+    h += '<tr class="awF1"><td class="awFLbl" colspan="2" title="Achieved ÷ (achieved + missed) days — UT (untracked) and blank days left out">Achieved</td>' + m.cols.map((c) => "<td" + (c.ach + c.miss ? ' title="' + c.ach + " achieved / " + c.miss + ' missed"' : "") + ">" + (c.ach + c.miss ? Math.round(100 * c.ach / (c.ach + c.miss)) + "%" : "") + "</td>").join("") + "<td></td></tr>";
+    if (m.cols.some((c) => c.avg)) h += '<tr class="awF2"><td class="awFLbl" colspan="2" title="Long-run average since the tracker start (🔥 dialog), as in the Ø column">Ø</td>' + m.cols.map((c) => "<td" + (c.avg && c.avg.per7 ? ' title="per calendar day (Mon = Sun + Mon)"' : "") + ">" + (c.avg ? (c.hm ? fmtHM(c.avg.avg) : fmtAvg(c.avg.avg)) : "") + "</td>").join("") + "<td></td></tr>";
     host.innerHTML = h + "</tfoot></table>";
     if ($("allWeeksDialog").open) layoutComments();
   }
@@ -6047,7 +6559,7 @@ if (IS_BROWSER) (function () {
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if ($("allWeeksDialog").open) layoutComments(); });   // text heights change once the web font is in
   }
   // Spreadsheet rows. A cell = { v, t: "s" text | "n" number | "d" date (YYYY-MM-DD) | "hm" hours as h:mm | "p" fraction as %, f: fill key, b: bold, c: centred }
-  const AW_FILL = { ach: "#fff2ab", na: "#f0cf4d", miss: "#f2795f", off: "#eeeff1", ok: "#b8ecc4", bad: "#f4b0a6", head: "#eceef1" };
+  const AW_FILL = { ach: "#fff2ab", na: "#edbf40", miss: "#f2795f", off: "#eeeff1", ok: "#b8ecc4", bad: "#f4b0a6", head: "#eceef1" };
   function allWeeksDayRows(m) {
     const H = (v) => ({ v, t: "s", f: "head", b: true });
     const rows = [[H("Week"), H("Date")].concat(m.cols.map((c) => Object.assign(H(c.name), { c: 1 })), [Object.assign(H("Missed"), { c: 1 }), Object.assign(H("Joker"), { c: 1 }), H("Comments")])];
@@ -6058,7 +6570,7 @@ if (IS_BROWSER) (function () {
         dy.cells.forEach((c, j) => {
           if (c.off) { r.push({ v: "", t: "s", f: "off" }); return; }
           const f = c.st === "ach" || c.st === "miss" || c.st === "na" ? c.st : null;
-          if (c.st === "na") r.push({ v: "NA", t: "s", f, c: 1 });
+          if (c.st === "na") r.push({ v: "UT", t: "s", f, c: 1 });
           else if (c.num != null) r.push({ v: c.num, t: m.cols[j].hm ? "hm" : "n", f, c: 1 });
           else r.push({ v: c.st === "ach" ? "✓" : c.st === "miss" ? "✕" : "", t: "s", f, c: 1 });
         });
@@ -6081,7 +6593,7 @@ if (IS_BROWSER) (function () {
   }
   function allWeeksWeekRows(m) {
     const H = (v) => ({ v, t: "s", f: "head", b: true });
-    const rows = [["Week", "Monday", "Missed", "Joker", "NA cells", "Result", "Note"].map(H)];
+    const rows = [["Week", "Monday", "Missed", "Joker", "UT cells", "Result", "Note"].map(H)];
     for (const w of m.weeks) {
       const res = w.finished ? (w.s.achieved ? "achieved" : "missed") : w.isCur ? "this week (" + (w.s.achieved ? "on track" : "over the Joker") + ")" : "upcoming";
       rows.push([{ v: w.iso, t: "s" }, { v: w.s.dates[0], t: "d" }, { v: w.s.miss, t: "n", c: 1 }, { v: Math.round(w.s.joker * 10) / 10, t: "n", c: 1 }, { v: w.s.na, t: "n", c: 1 },
@@ -6227,13 +6739,14 @@ if (IS_BROWSER) (function () {
     }
     commit(); renderHistory && renderHistory(); bulkDlg.close(); toast("Updated " + n + " cell" + (n === 1 ? "" : "s") + ".");
   });
+  $("hbStart").addEventListener("change", (e) => { const v = e.target.value; if ((v || "") === (state.trackerStart || "")) return; snap(); if (v) state.trackerStart = v; else delete state.trackerStart; commit(); renderHabitsTable(); });   // v264
   $("hbAdd").addEventListener("click", () => { if (!Array.isArray(state.habits)) state.habits = []; snap(); state.habits.push({ id: "hb" + Date.now(), name: "New habit", type: "binary", rule: "", desc: "", since: ymd(mondayOf(new Date())), entries: {} }); commitDefs(); renderHabitsTable(); renderHistory(); });
   $("hbCsv").addEventListener("click", exportHabitsCSV);
   $("hbReview").addEventListener("click", () => { renderHabitReview(); $("habitReviewDialog").showModal(); });
   $("hbReviewClose").addEventListener("click", () => $("habitReviewDialog").close());
   $("hbReviewCopy").addEventListener("click", () => { const txt = habitReviewText(); const done = () => toast("Copied — paste it to Claude for a formula check"); if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(txt).then(done).catch(() => { window.prompt("Copy the habit rules below:", txt); }); } else { window.prompt("Copy the habit rules below:", txt); } });
   $("hbClearWk").addEventListener("click", () => {
-    const mon = thisMondayYmd(), sat = ymd(addDays(parseYMD(mon), 5));
+    const mon = thisMondayYmd(), sat = ymd(addDays(parseYMD(mon), 6));   // v264: through Sunday (the 7th column)
     if (!confirm("Clear all habit marks for this week (" + fmtDeadline(mon) + " – " + fmtDeadline(sat) + ")?\nYour habits and rules stay; only this week’s cells are wiped.")) return;
     snap();
     for (const hb of (state.habits || [])) { if (hb.entries) for (const d of Object.keys(hb.entries)) { if (d >= mon && d <= sat) delete hb.entries[d]; } }
@@ -6354,14 +6867,43 @@ if (IS_BROWSER) (function () {
     state.ethanol7Fix = true; saveLocal(); schedulePush();
     if (hit.length) { console.log("[habit update] per-calendar-day average: " + hit.map((x) => x[0].name).join(", ")); setTimeout(() => { try { toast("Habit update (from next Monday): " + hit.map((x) => x[0].name).join(", ") + " now averages per calendar day (Mon = Sun + Mon)"); } catch (e) {} }, 1200); }
   }
-  loadLocal(); seedHabits(); applyHabitFix(); applyEthanol7(); seedColors(); mergeSplitBlocks(); buildGrid(); dockNote(); renderAll(); renderNote(true); (state.notes || []).forEach((n) => nhDirty.add(n.id)); applyRightBar(); setupNoteResize(); checkReminder(); setupFillHandle();
+  /* v264 one-time (owner request 19 Nov 2026): the 7th (Sunday) column starts with the Sunday of this week (state.sunFrom); each habit's
+     role there is seeded by name (only where none is set): Sport → +, Phone and Ethanol → Sunday, Sleep → its own Ø, Hour(s) → Ø Sport,
+     Food → Ø Ethanol (the averages sit in the row right above their habit); rows: Mails right below Sport, Ethanol right above Phone. */
+  function applySunCol() {
+    if (!state || state.sunColV) return;
+    const hs = state.habits || [], act = hs.filter((h) => !h.archived), nm = (h) => h.name || "";
+    const isNum = (h) => (h.type || "binary") === "numeric";
+    const sport = act.find((h) => /sport|🏃/i.test(nm(h)) && +h.fill > 0) || act.find((h) => /sport|🏃/i.test(nm(h)));
+    const phone = act.find((h) => /phone|📱|handy/i.test(nm(h)) && !isNum(h));
+    const eth = act.find((h) => /🍺|ethanol|alkohol|alcohol|beer|bier/i.test(nm(h)) && isNum(h));
+    const sleep = act.find((h) => /sleep|schlaf|🛏/i.test(nm(h)) && isNum(h));
+    const hour = act.find((h) => builtinKind(h) === "hour"), mails = act.find((h) => builtinKind(h) === "mails");
+    const food = act.find((h) => /food|🍝|essen/i.test(nm(h)));
+    const set = (h, r) => { if (h && h.sun == null) h.sun = r; };
+    if (sport && +sport.fill > 0) set(sport, "fill");
+    set(phone, "day"); set(eth, "day");
+    if (sleep) set(sleep, "avg:" + sleep.id);
+    if (hour && sport) set(hour, "avg:" + sport.id);
+    if (food && eth) set(food, "avg:" + eth.id);
+    const moved = [];
+    const move = (h, ref, below) => { hs.splice(hs.indexOf(h), 1); const j = hs.indexOf(ref); hs.splice(below ? j + 1 : j, 0, h); moved.push(nm(h) + (below ? " below " : " above ") + nm(ref)); };
+    if (mails && sport && mails !== sport && hs.indexOf(mails) !== hs.indexOf(sport) + 1) move(mails, sport, true);
+    if (eth && phone && hs.indexOf(eth) !== hs.indexOf(phone) - 1) move(eth, phone, false);
+    state.sunFrom = ymd(addDays(mondayOf(new Date()), 6));
+    state.sunColV = 1; saveLocal(); schedulePush();
+    const msg = "Habit table: 7th column (Sunday · + · averages) from " + fmtDeadline(state.sunFrom) + (moved.length ? " · " + moved.join(" · ") : "");
+    console.log("[habit update] " + msg); setTimeout(() => { try { toast(msg); } catch (e) {} }, 1500);
+  }
+  loadLocal(); seedHabits(); applyHabitFix(); applyEthanol7(); applySunCol(); seedColors(); mergeSplitBlocks(); buildGrid(); dockNote(); renderAll(); renderNote(true); (state.notes || []).forEach((n) => nhDirty.add(n.id)); applyRightBar(); setupNoteResize(); checkReminder(); setupFillHandle();
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d && !mpFillGuard) d.close(); })); // click outside to close (mpFillGuard blocks the phantom click after a drag-fill)
   if (state.timer) startTimerLoop();
+  if (!MV) { let tries = 0; const ask = () => { if (state.trackerStart || tries++ > 8) return; if (document.querySelector("dialog[open]") || document.visibilityState !== "visible" || document.activeElement === $("noteBody")) { setTimeout(ask, 5000); return; } askTrackerStart(); }; setTimeout(ask, 6000); }   // v264: no tracker start yet → ask (once per start, after the cloud had time to bring one)
   setInterval(() => { if (document.visibilityState === "visible" && !drag && !noteAct) renderBlocks(); }, 15000); // advance now-line, slide plans & drop elapsed plans
   if (viewDay >= 0) $("gridScroll").scrollTop = 6 * SPH * SLOT_PX - 8; else applyGridZoom(true);   // size week-view cells to the chosen hours-in-view and scroll to that range
   window.addEventListener("resize", () => { if (viewDay < 0) applyGridZoom(false); positionCheckPop(); });
   if (!syncedAt) { provisionalBase = JSON.stringify(state); dirty = false; }   // first sync ahead: only edits made from here on count as this device's
-  guardedPull().then(() => archiveOldTicked());
+  guardedPull().then(() => { archiveOldTicked(); dailyBackup(); });
   if (!cfg) setDot("", "Sync not set up yet — tap ⚙");
 })();
 </script>
