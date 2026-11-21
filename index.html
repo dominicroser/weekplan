@@ -869,6 +869,9 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .stGrid td.stSunTd { padding-left: 3px; }   /* the 7th column (Sunday / + / averages) sits a little apart from Mon–Sat */
 .stCell.stPlus { background: #f3f4f6; color: #8a8f99; font-size: 11px; font-weight: 700; border: 1px dashed #c9ccd3; }
 .stCell.stPlus:hover { background: #e8eaee; color: var(--ink); }
+.stCell.stEntry { background: #fff; border: 1px solid #a9aeb7; color: var(--ink); font-size: 8.5px; font-weight: 600; cursor: text; }   /* v266: Sunday cells you type into (Sport minutes, Ethanol value) — plain white box with a border */
+.stCell.stEntry:hover { border-color: #6b7280; }
+.stCell.stEntry.future { opacity: 1; }
 .stCell.stSunOff { background: repeating-linear-gradient(135deg, #f1f2f5 0 3px, #fff 3px 6px); cursor: default; }
 .stGrid td.stAvgW { font-size: 8px; font-weight: 800; text-align: center; color: #7a1f3d; padding: 0 0 0 3px; cursor: help; white-space: nowrap; }   /* v264: long-run averages, dark wine red */
 .mvPlus { margin-left: 8px; height: 46px; padding: 0 12px; border-radius: 9px; border: 1px dashed #b9bdc6; background: #f3f4f6; color: var(--ink2); font: 600 15px/1 'Inter', sans-serif; flex-shrink: 0; }
@@ -1316,7 +1319,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v265 */
+/* build v266 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -5581,7 +5584,7 @@ if (IS_BROWSER) (function () {
     try { const h = await fetchRow("updated_at"); lastPull = Date.now(); if (h && !sameVer(h.updated_at, syncedAt)) pullRemote(true); } catch (e) {}
   }, 45000);
 
-  const BUILD = "v265";
+  const BUILD = "v266";
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state !== "activated" || !navigator.serviceWorker.controller) return; const go = () => { flushNoteSave(); location.reload(); }; try { caches.has("weekplan-" + BUILD).then((same) => { if (!same) go(); }, go); } catch (e) { go(); } }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows — unless this page already IS that build (v262: the page itself is fetched fresh, so the reload used to hit a page you had just started using)
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}   // v262: ask the browser not to clear Plapp's storage (plan, note history, earlier versions) when the device runs low on space
 
@@ -5737,10 +5740,10 @@ if (IS_BROWSER) (function () {
   }
   /* ── v264: the 7th (Sunday) column of the streak table ──
      Each habit can have a role there (hb.sun — chosen in the 🔥 dialog, seeded once by name in applySunCol):
-       "fill"     → "+": type the minutes you did; they fill each Mon–Sat day from today on up to the daily target (bankFill).
+       "fill"     → a white entry box (v266; was "+"): type the minutes you did; they fill each Mon–Sat day from today on up to the daily target (bankFill).
                     The day cells themselves are now plain values: typing in one replaces it (no spilling over any more).
        "day"      → the Sunday itself. A Click habit (Phone) is tapped like any day; a missed Sunday makes the next Monday missed too.
-                    A Number habit (Ethanol) takes Sunday's value, which counts in its averages; the cell stays UT (Sundays are never scored).
+                    A Number habit (Ethanol) takes Sunday's value, which counts in its averages (Sundays are never scored); v266: shown as a white entry box, no longer UT.
        "avg:<id>" → the long-run average of habit <id> since the tracker start (state.trackerStart), in wine red, current week only.
      state.sunFrom = the first Sunday with its own column (the Sunday of the week v264 first started in). Before it, a per-calendar-day
      habit's Monday entry covered Sunday + Monday (v236), so those Mondays still count twice and earlier Sundays can't be entered. */
@@ -5894,7 +5897,7 @@ if (IS_BROWSER) (function () {
       if (done) return; done = true; inp.dataset.done = "1";   // finished → the phone view may re-render this cell
       const raw = inp.value.trim(), t0 = raw.toLowerCase(), t = t0 === "ut" ? "na" : t0;
       if (t === "na" || t === "ach" || t === "miss") {
-        if (sunday) { toast("Sunday takes a number (or blank) — it always stays UT."); rerenderHabitCells(); return; }
+        if (sunday) { toast("Sunday takes a number (or blank)."); rerenderHabitCells(); return; }
         snap(); if (!h.entries) h.entries = {}; h.entries[date] = t; commit(); return;
       }
       if (t === "") { if (!(h.entries && h.entries[date] != null)) { rerenderHabitCells(); return; } snap(); delete h.entries[date]; commit(); return; }
@@ -6136,7 +6139,7 @@ if (IS_BROWSER) (function () {
     for (let i = 0; i < 6; i++) { const ds = s.dates[i], cut = dayStartMin(ds); h += '<th class="stDayH' + (cut ? " cut" : "") + '" data-ds="' + ds + '" title="' + esc(fmtDeadline(ds)) + " — the day starts at " + (cut ? fmtDayStart(cut) : "midnight") + ' (for the habits). Tap to change.">' + dayLbls[i] + (cut ? "<sup>" + fmtDayStart(cut) + "</sup>" : "") + "</th>"; }
     // v264: the 7th column — Sunday (Phone, Ethanol), "+" (Sport) and, in the current week, the wine-red long-run averages
     const sun = ymd(addDays(parseYMD(s.dates[0]), 6)), sunOk = sunOpen(sun);
-    h += '<th class="stSunH" title="' + esc(fmtDeadline(sun)) + ' — the 7th column: Sunday cells (never scored), + to add minutes, and (this week) the wine-red long-run averages. The 🔥 dialog says which row has what.">S</th>';
+    h += '<th class="stSunH" title="' + esc(fmtDeadline(sun)) + ' — the 7th column: Sunday cells (never scored), white boxes to type into (Sport minutes, Sunday values), and (this week) the wine-red long-run averages. The 🔥 dialog says which row has what.">S</th>';
     if (ui.streakAvg) h += '<th class="stAvgH" title="Long-run average' + (state.trackerStart ? " since " + esc(fmtDeadline(state.trackerStart)) : "") + ' (tracker start in the 🔥 dialog)">Ø</th>';
     h += "</tr></thead><tbody>";
     const byId = {}; (state.habits || []).forEach((x) => (byId[x.id] = x));
@@ -6150,14 +6153,14 @@ if (IS_BROWSER) (function () {
         h += '<td><div class="stCell ' + cls + (d === today ? " today" : "") + (d > today ? " future" : "") + '" data-h="' + hb.id + '" data-d="' + d + '"' + (sunPenalty(hb, d) ? ' title="Missed because Sunday was missed"' : "") + ">" + glyph + "</div></td>";
       }
       { const role = sunRole(hb); let c = "";
-        if (role === "fill" && +hb.fill > 0) c = '<td class="stSunTd"><div class="stCell stPlus" data-h="' + hb.id + '" data-plus="' + s.dates[0] + '" title="' + esc(hb.name) + ': type the minutes you did — they fill each day from ' + esc(bankDay(bankStart(s.dates[0]))) + " on, up to " + hb.fill + ' (a negative number takes minutes back)">+</div></td>';
+        if (role === "fill" && +hb.fill > 0) c = '<td class="stSunTd"><div class="stCell stEntry" data-h="' + hb.id + '" data-plus="' + s.dates[0] + '" title="' + esc(hb.name) + ': type the minutes you did — they fill each day from ' + esc(bankDay(bankStart(s.dates[0]))) + " on, up to " + hb.fill + ' (a negative number takes minutes back)"></div></td>';
         else if (role === "day") {
           if (!sunOk) c = '<td class="stSunTd"><div class="stCell stSunOff" title="Sundays have their own cell from ' + esc(state.sunFrom ? fmtDeadline(state.sunFrom) : "—") + ' on"></div></td>';
           else {
             const val = (hb.entries || {})[sun], num = ty === "numeric", st = num ? "na" : habitStatus(hb, sun);
-            const cls = st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";
-            const glyph = num ? (typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : '<span class="ut">UT</span>') : habitGlyph(hb, ty, st, val);
-            const tip = num ? esc(hb.name) + " on Sunday " + esc(fmtDeadline(sun)) + ": type the value. It counts in the average; the cell stays UT (Sundays aren't scored)." : esc(hb.name) + " on Sunday " + esc(fmtDeadline(sun)) + ": tap to cycle achieved → missed → UT. Missed → the next Monday is missed too.";
+            const cls = num ? "stEntry" : st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";   // v266: a number Sunday = white entry box
+            const glyph = num ? (typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : "") : habitGlyph(hb, ty, st, val);
+            const tip = num ? esc(hb.name) + " on Sunday " + esc(fmtDeadline(sun)) + ": type the value. It counts in the average (Sundays aren't scored)." : esc(hb.name) + " on Sunday " + esc(fmtDeadline(sun)) + ": tap to cycle achieved → missed → UT. Missed → the next Monday is missed too.";
             c = '<td class="stSunTd"><div class="stCell ' + cls + (sun === today ? " today" : "") + (sun > today ? " future" : "") + '" data-h="' + hb.id + '" data-d="' + sun + '" title="' + tip + '">' + glyph + "</div></td>";
           }
         } else if (role.indexOf("avg:") === 0 && main) {
@@ -6266,8 +6269,8 @@ if (IS_BROWSER) (function () {
     const items = [], warn = [];
     for (const hb of list) {
       const r = sunRole(hb), ty = hb.type || "binary", nm = "<b>" + esc(hb.name) + "</b>";
-      if (r === "fill" && +hb.fill > 0) items.push(nm + ": <b>+</b> = the minutes you did; they fill each day from today on, up to " + hb.fill + (hb.fillMax ? " (max: " + esc(hb.fillMax) + ")" : "") + " — a negative number takes minutes back. Its day cells are plain values (typing replaces; asks first before yesterday) and show a number only while short of " + hb.fill + ".");
-      else if (r === "day" && ty === "numeric") items.push(nm + ": Sunday's value — the cell stays UT, the value counts in the average" + (AVG7_RE.test(hb.rule || "") ? " (per calendar day" + (state.sunFrom ? "; Mondays up to " + esc(fmtDeadline(ymd(addDays(parseYMD(state.sunFrom), -6)))) + " still count for Sunday + Monday" : "") + ")" : "") + ".");
+      if (r === "fill" && +hb.fill > 0) items.push(nm + ": the white box = the minutes you did; they fill each day from today on, up to " + hb.fill + (hb.fillMax ? " (max: " + esc(hb.fillMax) + ")" : "") + " — a negative number takes minutes back. Its day cells are plain values (typing replaces; asks first before yesterday) and show a number only while short of " + hb.fill + ".");
+      else if (r === "day" && ty === "numeric") items.push(nm + ": the white box = Sunday's value; it counts in the average (Sundays aren't scored)" + (AVG7_RE.test(hb.rule || "") ? " (per calendar day" + (state.sunFrom ? "; Mondays up to " + esc(fmtDeadline(ymd(addDays(parseYMD(state.sunFrom), -6)))) + " still count for Sunday + Monday" : "") + ")" : "") + ".");
       else if (r === "day") items.push(nm + ": Sunday — tap achieved / missed / UT; <b>missed → the next Monday is missed too</b>.");
       else if (r.indexOf("avg:") === 0) { const tg = byId[r.slice(4)]; items.push(nm + " row: <span class=\"w\">Ø " + esc(tg ? tg.name : "?") + "</span>");
         if (tg) { const m = /avgSince\s*\(\s*["']([0-9-]{10})["']/.exec(tg.rule || ""); if (m && state.trackerStart && m[1] !== state.trackerStart) warn.push("⚠ " + esc(tg.name) + "'s rule averages since " + esc(fmtDeadline(m[1])) + ", the tracker since " + esc(fmtDeadline(state.trackerStart)) + " — so its wine-red number isn't exactly what the rule checks. Change one of the two dates if they should agree."); } }
@@ -6297,7 +6300,7 @@ if (IS_BROWSER) (function () {
     const help = '<p class="muted" style="margin-top:8px;line-height:1.6;">Types — <b>Click</b>: tap the cell (achieved→missed→UT). An optional rule acts as a guard — if you tap achieved but the rule is false, the day flips to missed. <b>Number</b>: you type a number each day and the rule decides. <b>Hours</b>: read automatically from your logged time; tap a cell to override it (auto→achieved→missed→UT→auto). A day is achieved when the rule is true; if the rule returns <code>null</code> the cell stays blank so you can click it. Variables: <code>value</code> (today’s number), <code>prev</code> (yesterday’s), <code>avg(n)</code>, <code>sum(n)</code>, <code>avgSince("YYYY-MM-DD")</code> (per entered day) or <code>avgSince("YYYY-MM-DD", 7)</code> (per calendar day — Monday’s entry counts for Sunday + Monday), <code>hours("Task", n)</code> = hours logged for a task over the last n days, <code>dow</code> (0=Mon … 5=Sat), <code>firstHours("Task", h)</code> = true if the first h logged hours today are that task. Examples: <code>value &gt;= 15</code> · <code>value &gt; 100 + (prev &lt; 100 ? (100-prev)/2 : 0)</code> · <code>avgSince("2026-06-01") &lt; 30</code> · <code>hours("Mails", 6) &lt;= 6</code> · <code>dow &lt;= 3 ? firstHours("Growth", 2) : null</code></p>';
     const effNote = '<p class="muted" style="margin:2px 0 8px;">Edits take effect <b>' + esc(fmtDeadline(nextMondayYmd())) + '</b> — the current week keeps version v' + (versionForWeek(state.currentWeek) || 1) + '.</p>';
     if (!list.length) { host.innerHTML = '<p class="muted">No habits yet — add your first below.</p>' + help; renderSunLegend(); return; }
-    let h = effNote + '<table class="hbTable"><thead><tr><th>Habit</th><th>Type</th><th>Rule (achieved when true)</th><th>Note (plain language)</th><th title="Fill: left = target per day; right = how far the + in the 7th column may fill (a number of days, the word week, or blank = no limit)">Fill /day · max</th><th title="What this habit&#39;s row shows in the 7th (S) column of the side-bar table">7th col</th><th></th><th></th></tr></thead><tbody>';
+    let h = effNote + '<table class="hbTable"><thead><tr><th>Habit</th><th>Type</th><th>Rule (achieved when true)</th><th>Note (plain language)</th><th title="Fill: left = target per day; right = how far the 7th-column box may fill (a number of days, the word week, or blank = no limit)">Fill /day · max</th><th title="What this habit&#39;s row shows in the 7th (S) column of the side-bar table">7th col</th><th></th><th></th></tr></thead><tbody>';
     for (const hb of list) {
       const ty = hb.type || "binary";
       h += '<tr data-id="' + hb.id + '"><td><input class="hbName" value="' + esc(hb.name) + '"></td>';
