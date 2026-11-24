@@ -1319,7 +1319,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v267 */
+/* build v268 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -3797,7 +3797,9 @@ if (IS_BROWSER) (function () {
      (background-image → shows as tiled dots since v233), since v233 the grip variables (--gx…, which would freeze laptop sizes on the phone),
      plus paddings / list-style. None of these is ever meant inline in a note, so strip them; colours, weights etc. stay (see unwrapLineStyleSpans).
      Only properties are removed (no nodes), so the caret is unaffected. Returns true if anything changed. */
-  const NOTE_JUNK_CSS = /^(--|background-(image|repeat|position|size|attachment|origin|clip)|padding|list-style|position$|box-sizing$|-webkit-tap-highlight-color$|top$|left$|right$|bottom$)/;
+  const NOTE_JUNK_CSS = /^(--|background-(image|repeat|position|size|attachment|origin|clip)|padding|margin|text-indent$|list-style|position$|box-sizing$|-webkit-tap-highlight-color$|top$|left$|right$|bottom$)/;
+  /* v268: margin / text-indent added — a line carrying an inline margin (pasted, or from the browser's own indent) sat one step too far right,
+     and Chrome copies it to every new line made from it with Enter (owner's "England" block). Plapp never sets margins in notes itself. */
   function cleanNoteStyles(root) {
     let changed = false;
     root.querySelectorAll("[style]").forEach((el) => {
@@ -5599,7 +5601,7 @@ if (IS_BROWSER) (function () {
     try { const h = await fetchRow("updated_at"); lastPull = Date.now(); if (h && !sameVer(h.updated_at, syncedAt)) pullRemote(true); } catch (e) {}
   }, 45000);
 
-  const BUILD = "v267";
+  const BUILD = "v268";
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state !== "activated" || !navigator.serviceWorker.controller) return; const go = () => { flushNoteSave(); location.reload(); }; try { caches.has("weekplan-" + BUILD).then((same) => { if (!same) go(); }, go); } catch (e) { go(); } }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows — unless this page already IS that build (v262: the page itself is fetched fresh, so the reload used to hit a page you had just started using)
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}   // v262: ask the browser not to clear Plapp's storage (plan, note history, earlier versions) when the device runs low on space
 
