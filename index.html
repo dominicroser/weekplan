@@ -1319,7 +1319,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v266 */
+/* build v267 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -1791,6 +1791,19 @@ function syncDeepEq(a, b) {
   for (const k of ka) if (!syncDeepEq(a[k], b[k])) return false;
   return true;
 }
+/* v267: the view (which week / masterplan a window shows) isn't content. Another window's or device's save that differs only there must not
+   count as "changed here" — that wiped the undo / redo history (Ctrl+Y said "Nothing to redo" as soon as a second Plapp window was open). */
+const SYNC_VIEW = ["currentWeek", "currentMasterplan"];
+function syncSameContent(a, b) {
+  if (!a || !b || typeof a !== "object" || typeof b !== "object") return syncDeepEq(a, b);
+  const x = Object.assign({}, a), y = Object.assign({}, b); for (const k of SYNC_VIEW) { delete x[k]; delete y[k]; }
+  return syncDeepEq(x, y);
+}
+function syncKeepView(merged, mine) {   // a window keeps its own view after taking over another window's changes (as long as it still exists)
+  if (!merged || !mine) return;
+  if (typeof mine.currentWeek === "number" && Array.isArray(merged.weeks) && mine.currentWeek < merged.weeks.length) merged.currentWeek = mine.currentWeek;
+  if (mine.currentMasterplan && (merged.masterplans || []).some((m) => m.id === mine.currentMasterplan)) merged.currentMasterplan = mine.currentMasterplan;
+}
 const SYNC_ATOMIC = { timer: 1, habitVersions: 1 };              // replaced as a whole when both sides changed them
 const SYNC_QUIET = { currentWeek: 1, currentMasterplan: 1, version: 1, nextId: 1, id: 1, note: 1, snapshot: 1 };   // clashes here aren't worth reporting (view state, per-device geometry of the old floating note, the daily plan snapshot)
 function syncIdArray(a) {
@@ -2105,15 +2118,15 @@ if (IS_BROWSER) (function () {
     const prevHtml = (curNote() || {}).html;
     if (!dirty) {
       if (!syncDeepEq(state, remote)) backupState("Before an update from another device", localJson);
-      state = remote; syncedAt = row.updated_at; syncGen++; saveBase(remoteJson); provisionalBase = null; saveLocal();
-      afterRemote(prevHtml, null, true); return "took";
+      const before = state; state = remote; syncedAt = row.updated_at; syncGen++; saveBase(remoteJson); provisionalBase = null; saveLocal();
+      afterRemote(prevHtml, null, !syncSameContent(before, remote)); return "took";   // v267: only content clears the undo history (not the week shown)
     }
     const res = syncMerge3(base ? JSON.parse(base) : null, JSON.parse(localJson), JSON.parse(remoteJson));
     backupState("This device's version, before merging in another device's changes", localJson);
     backupState("The other device's version, before it was merged with this one" + (res.conflicts.length ? " (both changed: " + res.conflicts.slice(0, 3).join(", ") + (res.conflicts.length > 3 ? " …" : "") + ")" : ""), remoteJson);
     state = migrate(res.value); syncedAt = row.updated_at; syncGen++; saveBase(remoteJson); provisionalBase = null;
     dirty = !syncDeepEq(state, remote); editSeq++; saveLocal();
-    afterRemote(prevHtml, res, !syncDeepEq(state, JSON.parse(localJson)));
+    afterRemote(prevHtml, res, !syncSameContent(state, JSON.parse(localJson)));
     if (dirty) armPush();
     return "merged";
   }
@@ -5553,9 +5566,11 @@ if (IS_BROWSER) (function () {
     let base = null; try { base = hit && hit.json ? JSON.parse(hit.json) : null; } catch (e) {}
     if (d.seen && typeof d.seen === "object") for (const w in d.seen) vvBump(w, +d.seen[w] || 0);
     const pending = absorbPending; absorbPending = false;
-    if (syncDeepEq(state, theirs)) { lsSee(d.wid, theirJson); return; }
+    if (syncSameContent(state, theirs)) { lsSee(d.wid, theirJson); return; }   // v267: only the other window's view (week / masterplan shown) differs → nothing to take over
     const res = syncMerge3(base, JSON.parse(JSON.stringify(state)), JSON.parse(theirJson));
-    const merged = migrate(res.value), changedHere = !syncDeepEq(merged, state), differs = !syncDeepEq(merged, theirs);
+    const merged = migrate(res.value);
+    syncKeepView(merged, state);   // v267: each window keeps the week and masterplan it shows (until v266 this window jumped to the other window's week, and the undo / redo history was wiped)
+    const changedHere = !syncDeepEq(merged, state), differs = !syncSameContent(merged, theirs);
     lsSee(d.wid, theirJson);
     const prevHtml = (curNote() || {}).html;
     if (changedHere) {
@@ -5584,7 +5599,7 @@ if (IS_BROWSER) (function () {
     try { const h = await fetchRow("updated_at"); lastPull = Date.now(); if (h && !sameVer(h.updated_at, syncedAt)) pullRemote(true); } catch (e) {}
   }, 45000);
 
-  const BUILD = "v266";
+  const BUILD = "v267";
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state !== "activated" || !navigator.serviceWorker.controller) return; const go = () => { flushNoteSave(); location.reload(); }; try { caches.has("weekplan-" + BUILD).then((same) => { if (!same) go(); }, go); } catch (e) { go(); } }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows — unless this page already IS that build (v262: the page itself is fetched fresh, so the reload used to hit a page you had just started using)
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}   // v262: ask the browser not to clear Plapp's storage (plan, note history, earlier versions) when the device runs low on space
 
@@ -6054,10 +6069,11 @@ if (IS_BROWSER) (function () {
   function weekHabitsFor(weekIdx) {
     const dates = habitWeekDates(weekIdx);
     return (state.habits || []).filter((h) => {
+      const def = defFor(h.id, dates[0]);              // did this habit exist (and unarchived) in that week's version?
+      if (def && def.archived) return false;           // v267: archived that week → hidden, even if it has marks (Bulk → "All habits" used to mark archived habits too, which brought "Flat" back)
       const hasEntry = h.entries && dates.some((d) => h.entries[d] != null);
       if (hasEntry) return true;
-      const def = defFor(h.id, dates[0]);              // did this habit exist (and unarchived) in that week's version?
-      if (!def || def.archived) return false;
+      if (!def) return false;
       if (h.since && dates[5] < h.since) return false; // week ends before the habit began
       return true;
     });
@@ -6737,7 +6753,8 @@ if (IS_BROWSER) (function () {
     let d = parseYMD(a); const end = parseYMD(b); let n = 0, guard = 0;
     while (d <= end && guard < 800) {
       guard++;
-      if (d.getDay() !== 0) { const ds = ymd(d); for (const h of habits) { if (!h.entries) h.entries = {}; if (st === "clear") delete h.entries[ds]; else h.entries[ds] = st; n++; } }
+      if (d.getDay() !== 0) { const ds = ymd(d), shown = hid === "__all" && st !== "clear" ? new Set(weekHabitsFor(cellForDate(state.anchorMonday, d).weekIdx).map((x) => x.id)) : null;   // v267: "All habits" = the habits in that week's table (not archived ones)
+        for (const h of habits) { if (shown && !shown.has(h.id)) continue; if (!h.entries) h.entries = {}; if (st === "clear") delete h.entries[ds]; else h.entries[ds] = st; n++; } }
       d = addDays(d, 1);
     }
     commit(); renderHistory && renderHistory(); bulkDlg.close(); toast("Updated " + n + " cell" + (n === 1 ? "" : "s") + ".");
