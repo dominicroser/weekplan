@@ -864,7 +864,11 @@ table.mpTable thead tr:first-child th { border-top: 1px solid var(--line); }
 .stCellIn { width: 100%; height: 100%; border: 1px solid var(--accent); border-radius: 3px; text-align: center; font: inherit; font-size: 9px; padding: 0; background: #fff; color: var(--ink); box-sizing: border-box; outline: none; }
 .stCell.ach { background: #fff2ab; color: #9c7a00; }
 .stCell.na  { background: #edbf40; color: #6f5a12; }   /* v264: UT (untracked, was NA) a touch more orange / darker */
-.stCell .ut, .awCell .ut { color: #f5cc5c; font-weight: 600; }   /* v264: the letters UT only a little lighter than the cell — there if you look */
+.stCell .ut, .awCell .ut { color: #f5cc5c; font-weight: 600; }
+/* v269: a UT day of a habit you still fill in (🔥 "UT days: enter") — UT background; the value / A / M in a pale yellow; a small dot while it's still empty */
+.stCell.utk, .awCell.utk { position: relative; }
+.stCell.utk .utv, .awCell.utk .utv { color: #fff6cf; font-weight: 800; }
+.stCell.utk.todo::after, .awCell.utk.todo::after { content: ""; position: absolute; top: 2px; right: 2px; width: 4px; height: 4px; border-radius: 50%; background: #8a5d00; }   /* v264: the letters UT only a little lighter than the cell — there if you look */
 .stGrid th.stSunH { color: var(--ink3); cursor: default; }
 .stGrid td.stSunTd { padding-left: 3px; }   /* the 7th column (Sunday / + / averages) sits a little apart from Mon–Sat */
 .stCell.stPlus { background: #f3f4f6; color: #8a8f99; font-size: 11px; font-weight: 700; border: 1px dashed #c9ccd3; }
@@ -1319,7 +1323,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v268 */
+/* build v269 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -5601,7 +5605,7 @@ if (IS_BROWSER) (function () {
     try { const h = await fetchRow("updated_at"); lastPull = Date.now(); if (h && !sameVer(h.updated_at, syncedAt)) pullRemote(true); } catch (e) {}
   }, 45000);
 
-  const BUILD = "v268";
+  const BUILD = "v269";
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state !== "activated" || !navigator.serviceWorker.controller) return; const go = () => { flushNoteSave(); location.reload(); }; try { caches.has("weekplan-" + BUILD).then((same) => { if (!same) go(); }, go); } catch (e) { go(); } }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows — unless this page already IS that build (v262: the page itself is fetched fresh, so the reload used to hit a page you had just started using)
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}   // v262: ask the browser not to clear Plapp's storage (plan, note history, earlier versions) when the device runs low on space
 
@@ -5631,7 +5635,7 @@ if (IS_BROWSER) (function () {
     return sum;
   }
   function habitCtx(h, date, value) {
-    const entryNum = (d) => { const v = h.entries ? h.entries[d] : undefined; return typeof v === "number" ? v : null; };
+    const entryNum = (d) => { const v = h.entries ? h.entries[d] : undefined; return typeof v === "number" && utkInAvg(h, d) ? v : null; };   // v269: UT-day values only where 🔥 "Ø" is on
     const lastN = (n) => { const out = []; let d = parseYMD(date); for (let i = 0; i < Math.max(1, n); i++) { const v = entryNum(ymd(d)); if (v != null) out.push(v); d = addDays(d, -1); } return out; };
     return {
       value: value,
@@ -5769,14 +5773,44 @@ if (IS_BROWSER) (function () {
   function sunPenalty(h, date) {
     if (!state.sunFrom || date <= state.sunFrom) return false;
     const d = parseYMD(date); if (d.getDay() !== 1) return false;
-    const sun = ymd(addDays(d, -1)); return !!(h.entries && h.entries[sun] === "miss");
+    const sun = ymd(addDays(d, -1)); return !!(h.entries && h.entries[sun] === "miss" && !utkDay(h, sun));   // v269: a UT Sunday never makes Monday missed
+  }
+  /* v269 (owner request 25 Nov 2026): habits you still fill in on UT days (🔥 "UT days: enter" = hb.utKeep — Ethanol, Sleep, Phone, Silence).
+     For them a UT day is a flag of its own (hb.ut[date] = 1) next to the normal value (number, or ach / miss shown as A / M), so the day
+     keeps what you enter. Such a day always counts as achieved (also before anything is entered — the daily reminder asks for the value);
+     its number counts in the averages only if hb.utAvg (🔥 "Ø": on for Ethanol, off for Sleep). Other habits: UT replaces the entry as before.
+     An old-style UT ("na") on such a habit becomes the flag as soon as you enter something. */
+  function utKeep(h) { return !!(h && h.utKeep); }
+  function utkDay(h, d) { return utKeep(h) && !!(h.ut && h.ut[d]); }
+  function utkHas(h, d) { const v = h.entries ? h.entries[d] : undefined; return typeof v === "number" || v === "ach" || v === "miss"; }
+  function utkInAvg(h, d) { return !utkDay(h, d) || !!h.utAvg; }
+  function utkSet(h, d, on) {
+    if (on) { if (!h.ut) h.ut = {}; h.ut[d] = 1; if (h.entries && h.entries[d] === "na") delete h.entries[d]; }
+    else if (h.ut && h.ut[d]) { delete h.ut[d]; }
+  }
+  function utkView(hb, d, val) {   // → { cls, glyph } for a cell of such a UT day
+    const has = utkHas(hb, d);
+    if (!has) return { cls: "na utk todo", glyph: '<span class="ut">UT</span>', tip: hb.name + ": UT day — counts as achieved; still enter the value" };
+    const g = typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : val === "ach" ? "A" : "M";
+    return { cls: "na utk", glyph: '<span class="utv">' + g + "</span>", tip: hb.name + ": UT day — counts as achieved" + (typeof val === "number" ? (hb.utAvg ? "; the value counts in the average" : "; the value doesn't count in the average") : "") };
+  }
+  /* typing into a cell of such a habit: "ut" switches the UT flag on / off (the value stays), a number / ach / miss sets the value and keeps
+     the flag (an old-style "na" becomes the flag), blank clears the value only. Returns false if `t` isn't one of these. */
+  function utkTyped(h, date, t, num) {
+    const raw = h.entries ? h.entries[date] : undefined, wasUt = utkDay(h, date) || raw === "na";
+    snap(); if (!h.entries) h.entries = {};
+    if (t === "na") { utkSet(h, date, !utkDay(h, date)); }
+    else if (t === "") { if (raw !== "na") delete h.entries[date]; if (wasUt) utkSet(h, date, true); }
+    else if (t === "ach" || t === "miss") { h.entries[date] = t; if (wasUt) utkSet(h, date, true); }
+    else { h.entries[date] = num; if (wasUt) utkSet(h, date, true); }
+    commit(); return true;
   }
   function weight7(ds) { return (parseYMD(ds).getDay() === 1 && !(state.sunFrom && ds > state.sunFrom)) ? 2 : 1; }   // per calendar day: a Monday before the Sunday column counts for Sunday + Monday
   function prevTrackerDay(ds) { const d = addDays(parseYMD(ds), -1); if (d.getDay() === 0) d.setDate(d.getDate() - 1); return ymd(d); }   // the tracker day before (Monday → Saturday)
   function habitLongAvg(hb, end) {   // the long-run average since the tracker start, through `end` (default: today) — per entered day, or per calendar day for avgSince(…, 7) rules
     const from = state.trackerStart || "", to = end || habitToday(), per7 = AVG7_RE.test(hb.rule || "");
     let sum = 0, days = 0, n = 0;
-    for (const d in (hb.entries || {})) { const v = hb.entries[d]; if (typeof v !== "number" || (from && d < from) || d > to) continue; sum += v; n++; days += per7 ? weight7(d) : 1; }
+    for (const d in (hb.entries || {})) { const v = hb.entries[d]; if (typeof v !== "number" || (from && d < from) || d > to || !utkInAvg(hb, d)) continue; sum += v; n++; days += per7 ? weight7(d) : 1; }
     return n ? { avg: sum / days, n, per7, from } : null;
   }
   function fmtHabitAvg(hb, a) { return a ? (hb.hm ? fmtHM(a.avg) : Math.abs(a.avg) >= 10 ? fmtNum(a.avg) : fmtAvg(a.avg)) : ""; }   // 13 / 12.5 · .333 · 7:15
@@ -5798,6 +5832,7 @@ if (IS_BROWSER) (function () {
     const def = defFor(h.id, date) || { type: h.type || "binary", rule: h.rule || "" };
     const type = def.type || "binary";
     const raw = h.entries ? h.entries[date] : undefined;
+    if (utkDay(h, date)) return "ach";        // v269: a UT day of a habit you still fill in always counts as achieved
     if (sunPenalty(h, date)) return "miss";   // v264: the Sunday before was missed → this Monday is missed, whatever is marked here
     if (raw === "na") return "na";
     const bk = builtinKind(h);
@@ -5873,12 +5908,18 @@ if (IS_BROWSER) (function () {
   function editHabitCell(h, date) {
     const def = defFor(h.id, date) || {}; const type = def.type || h.type || "binary";
     if (type === "binary") { cycleHabit(h, date); return; }
+    if (type === "hours" && utKeep(h)) { cycleHabit(h, date); return; }   // v269
     if (type === "hours") { const cur = h.entries ? h.entries[date] : undefined; const next = cur === "ach" ? "miss" : cur === "miss" ? "na" : cur === "na" ? null : "ach"; snap(); if (!h.entries) h.entries = {}; if (next === null) delete h.entries[date]; else h.entries[date] = next; commit(); return; }
     const cur = h.entries && h.entries[date] != null ? h.entries[date] : "";
     const curDisp = (h.hm && typeof cur === "number") ? fmtHM(cur) : (cur === "na" ? "ut" : String(cur));
     const v = prompt("Value for “" + h.name + "” on " + date + "\n(a number" + (h.hm ? " as h:mm, e.g. 6:50" : "") + "; or force with 'ach' / 'miss'; 'ut' = untracked; or blank to clear):", curDisp);
     if (v === null) return;
     const t0 = v.trim().toLowerCase(), t = t0 === "ut" ? "na" : t0;
+    if (utKeep(h)) {   // v269
+      const num = (t === "" || t === "na" || t === "ach" || t === "miss") ? null : v.indexOf(":") >= 0 ? parseHM(v) : parseFloat(v.replace(",", "."));
+      if (num !== null && isNaN(num)) { toast("Enter a number, 'ach'/'miss', 'ut', or blank."); return; }
+      utkTyped(h, date, t, num); return;
+    }
     snap(); if (!h.entries) h.entries = {};
     if (t === "") delete h.entries[date];
     else if (t === "na" || t === "ach" || t === "miss") h.entries[date] = t;
@@ -5913,6 +5954,13 @@ if (IS_BROWSER) (function () {
     const finish = () => {
       if (done) return; done = true; inp.dataset.done = "1";   // finished → the phone view may re-render this cell
       const raw = inp.value.trim(), t0 = raw.toLowerCase(), t = t0 === "ut" ? "na" : t0;
+      if (utKeep(h) && !sunday) {   // v269: "ut" switches UT on / off and keeps the value; a value on a UT day keeps it UT
+        const plain = t === "" || t === "na" || t === "ach" || t === "miss", num = plain ? null : (h.hm || raw.indexOf(":") >= 0) ? parseHM(raw) : parseFloat(raw.replace(",", "."));
+        if (num !== null && isNaN(num)) { toast("Enter a number" + (h.hm ? " as h:mm" : "") + ", ut/ach/miss, or blank."); rerenderHabitCells(); return; }
+        const cur0 = h.entries ? h.entries[date] : undefined;
+        if (t === "" && cur0 == null) { rerenderHabitCells(); return; }
+        utkTyped(h, date, t, num); return;
+      }
       if (t === "na" || t === "ach" || t === "miss") {
         if (sunday) { toast("Sunday takes a number (or blank)."); rerenderHabitCells(); return; }
         snap(); if (!h.entries) h.entries = {}; h.entries[date] = t; commit(); return;
@@ -5961,8 +6009,8 @@ if (IS_BROWSER) (function () {
       let cell = "";
       if (isSun && role === "day" && ty === "numeric") cell = '<div class="stCell mvCell na" data-h="' + hb.id + '" data-d="' + day + '" title="Sunday: counts in the average, never scored">' + (typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : '<span class="ut">UT</span>') + "</div>";
       else if (!isSun || role === "day") {
-        const st = habitStatus(hb, day), cls = st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";
-        cell = '<div class="stCell mvCell ' + cls + '" data-h="' + hb.id + '" data-d="' + day + '">' + habitGlyph(hb, ty, st, val, true) + "</div>";
+        const st = habitStatus(hb, day), uk = utkDay(hb, day) ? utkView(hb, day, val) : null, cls = uk ? uk.cls : st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";
+        cell = '<div class="stCell mvCell ' + cls + '" data-h="' + hb.id + '" data-d="' + day + '"' + (uk ? ' title="' + esc(uk.tip) + '"' : "") + ">" + (uk ? uk.glyph : habitGlyph(hb, ty, st, val, true)) + "</div>";
       }
       h += '<div class="mvHRow"><div class="mvHName">' + esc(nm) + "</div>" + cell + (fill && plusOk ? '<button class="mvPlus" data-h="' + hb.id + '" title="Minutes you did — they fill from today on, ' + hb.fill + ' per day">+ min</button>' : "") + "</div>";
     }
@@ -6088,6 +6136,13 @@ if (IS_BROWSER) (function () {
     return { dates, habits, H, na, miss, ach, blank, joker, achieved: H > 0 && miss <= joker };
   }
   function cycleHabit(h, date) {
+    if (utKeep(h)) {   // v269: blank → A → M → UT → UT·A → UT·M → blank (the UT flag and the value are separate)
+      const raw = h.entries ? h.entries[date] : undefined, u = utkDay(h, date) || raw === "na", v = raw === "ach" || raw === "miss" ? raw : null;
+      const nx = !u ? (v === null ? [false, "ach"] : v === "ach" ? [false, "miss"] : [true, null]) : (v === null ? [true, "ach"] : v === "ach" ? [true, "miss"] : [false, null]);
+      snap(); if (!h.entries) h.entries = {};
+      if (nx[1]) h.entries[date] = nx[1]; else delete h.entries[date];
+      utkSet(h, date, nx[0]); commit(); return;
+    }
     const raw = h.entries ? h.entries[date] : undefined;   // cycle on the stored value, not the (possibly guard-overridden) display
     const next = raw === "ach" ? "miss" : raw === "miss" ? "na" : raw === "na" ? null : "ach";
     snap(); if (!h.entries) h.entries = {};
@@ -6165,19 +6220,19 @@ if (IS_BROWSER) (function () {
       const def = defFor(hb.id, s.dates[0]) || {}, nm = def.name || hb.name, ty = def.type || hb.type || "binary";
       h += '<tr><td class="stName" title="' + esc(nm) + '">' + esc(nm) + "</td>";
       for (let i = 0; i < 6; i++) {
-        const d = s.dates[i], st = habitStatus(hb, d), val = (hb.entries || {})[d];
-        const cls = st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";
-        const glyph = habitGlyph(hb, ty, st, val);
-        h += '<td><div class="stCell ' + cls + (d === today ? " today" : "") + (d > today ? " future" : "") + '" data-h="' + hb.id + '" data-d="' + d + '"' + (sunPenalty(hb, d) ? ' title="Missed because Sunday was missed"' : "") + ">" + glyph + "</div></td>";
+        const d = s.dates[i], st = habitStatus(hb, d), val = (hb.entries || {})[d], uk = utkDay(hb, d) ? utkView(hb, d, val) : null;
+        const cls = uk ? uk.cls : st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";
+        const glyph = uk ? uk.glyph : habitGlyph(hb, ty, st, val);
+        h += '<td><div class="stCell ' + cls + (d === today ? " today" : "") + (d > today ? " future" : "") + '" data-h="' + hb.id + '" data-d="' + d + '"' + (uk ? ' title="' + esc(uk.tip) + '"' : sunPenalty(hb, d) ? ' title="Missed because Sunday was missed"' : "") + ">" + glyph + "</div></td>";
       }
       { const role = sunRole(hb); let c = "";
         if (role === "fill" && +hb.fill > 0) c = '<td class="stSunTd"><div class="stCell stEntry" data-h="' + hb.id + '" data-plus="' + s.dates[0] + '" title="' + esc(hb.name) + ': type the minutes you did — they fill each day from ' + esc(bankDay(bankStart(s.dates[0]))) + " on, up to " + hb.fill + ' (a negative number takes minutes back)"></div></td>';
         else if (role === "day") {
           if (!sunOk) c = '<td class="stSunTd"><div class="stCell stSunOff" title="Sundays have their own cell from ' + esc(state.sunFrom ? fmtDeadline(state.sunFrom) : "—") + ' on"></div></td>';
           else {
-            const val = (hb.entries || {})[sun], num = ty === "numeric", st = num ? "na" : habitStatus(hb, sun);
-            const cls = num ? "stEntry" : st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";   // v266: a number Sunday = white entry box
-            const glyph = num ? (typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : "") : habitGlyph(hb, ty, st, val);
+            const val = (hb.entries || {})[sun], num = ty === "numeric", st = num ? "na" : habitStatus(hb, sun), uk = !num && utkDay(hb, sun) ? utkView(hb, sun, val) : null;
+            const cls = num ? "stEntry" : uk ? uk.cls : st === "ach" ? "ach" : st === "miss" ? "miss" : st === "na" ? "na" : "blank";   // v266: a number Sunday = white entry box
+            const glyph = num ? (typeof val === "number" ? (hb.hm ? fmtHM(val) : fmtNum(val)) : "") : uk ? uk.glyph : habitGlyph(hb, ty, st, val);
             const tip = num ? esc(hb.name) + " on Sunday " + esc(fmtDeadline(sun)) + ": type the value. It counts in the average (Sundays aren't scored)." : esc(hb.name) + " on Sunday " + esc(fmtDeadline(sun)) + ": tap to cycle achieved → missed → UT. Missed → the next Monday is missed too.";
             c = '<td class="stSunTd"><div class="stCell ' + cls + (sun === today ? " today" : "") + (sun > today ? " future" : "") + '" data-h="' + hb.id + '" data-d="' + sun + '" title="' + tip + '">' + glyph + "</div></td>";
           }
@@ -6315,10 +6370,10 @@ if (IS_BROWSER) (function () {
   function renderHabitsTable() {
     const host = $("habitsTableWrap"); if (!host) return;
     const list = state.habits || [];
-    const help = '<p class="muted" style="margin-top:8px;line-height:1.6;">Types — <b>Click</b>: tap the cell (achieved→missed→UT). An optional rule acts as a guard — if you tap achieved but the rule is false, the day flips to missed. <b>Number</b>: you type a number each day and the rule decides. <b>Hours</b>: read automatically from your logged time; tap a cell to override it (auto→achieved→missed→UT→auto). A day is achieved when the rule is true; if the rule returns <code>null</code> the cell stays blank so you can click it. Variables: <code>value</code> (today’s number), <code>prev</code> (yesterday’s), <code>avg(n)</code>, <code>sum(n)</code>, <code>avgSince("YYYY-MM-DD")</code> (per entered day) or <code>avgSince("YYYY-MM-DD", 7)</code> (per calendar day — Monday’s entry counts for Sunday + Monday), <code>hours("Task", n)</code> = hours logged for a task over the last n days, <code>dow</code> (0=Mon … 5=Sat), <code>firstHours("Task", h)</code> = true if the first h logged hours today are that task. Examples: <code>value &gt;= 15</code> · <code>value &gt; 100 + (prev &lt; 100 ? (100-prev)/2 : 0)</code> · <code>avgSince("2026-06-01") &lt; 30</code> · <code>hours("Mails", 6) &lt;= 6</code> · <code>dow &lt;= 3 ? firstHours("Growth", 2) : null</code></p>';
+    const help = '<p class="muted" style="margin-top:8px;line-height:1.6;"><b>UT days · enter</b> (v269): the habit is still filled in on UT days — the cell stays UT-coloured with the value (or A / M) in pale yellow and a dot while it’s empty; the day always counts as achieved, the reminder asks for it; type <code>ut</code> to switch UT on / off (the value stays); Click habits cycle A → M → UT → UT·A → UT·M. <b>Ø</b>: those values count in the averages.<br>Types — <b>Click</b>: tap the cell (achieved→missed→UT). An optional rule acts as a guard — if you tap achieved but the rule is false, the day flips to missed. <b>Number</b>: you type a number each day and the rule decides. <b>Hours</b>: read automatically from your logged time; tap a cell to override it (auto→achieved→missed→UT→auto). A day is achieved when the rule is true; if the rule returns <code>null</code> the cell stays blank so you can click it. Variables: <code>value</code> (today’s number), <code>prev</code> (yesterday’s), <code>avg(n)</code>, <code>sum(n)</code>, <code>avgSince("YYYY-MM-DD")</code> (per entered day) or <code>avgSince("YYYY-MM-DD", 7)</code> (per calendar day — Monday’s entry counts for Sunday + Monday), <code>hours("Task", n)</code> = hours logged for a task over the last n days, <code>dow</code> (0=Mon … 5=Sat), <code>firstHours("Task", h)</code> = true if the first h logged hours today are that task. Examples: <code>value &gt;= 15</code> · <code>value &gt; 100 + (prev &lt; 100 ? (100-prev)/2 : 0)</code> · <code>avgSince("2026-06-01") &lt; 30</code> · <code>hours("Mails", 6) &lt;= 6</code> · <code>dow &lt;= 3 ? firstHours("Growth", 2) : null</code></p>';
     const effNote = '<p class="muted" style="margin:2px 0 8px;">Edits take effect <b>' + esc(fmtDeadline(nextMondayYmd())) + '</b> — the current week keeps version v' + (versionForWeek(state.currentWeek) || 1) + '.</p>';
     if (!list.length) { host.innerHTML = '<p class="muted">No habits yet — add your first below.</p>' + help; renderSunLegend(); return; }
-    let h = effNote + '<table class="hbTable"><thead><tr><th>Habit</th><th>Type</th><th>Rule (achieved when true)</th><th>Note (plain language)</th><th title="Fill: left = target per day; right = how far the 7th-column box may fill (a number of days, the word week, or blank = no limit)">Fill /day · max</th><th title="What this habit&#39;s row shows in the 7th (S) column of the side-bar table">7th col</th><th></th><th></th></tr></thead><tbody>';
+    let h = effNote + '<table class="hbTable"><thead><tr><th>Habit</th><th>Type</th><th>Rule (achieved when true)</th><th>Note (plain language)</th><th title="Fill: left = target per day; right = how far the 7th-column box may fill (a number of days, the word week, or blank = no limit)">Fill /day · max</th><th title="What this habit&#39;s row shows in the 7th (S) column of the side-bar table">7th col</th><th title="enter = you still fill this habit in on UT days; the day always counts as achieved, and the reminder asks for the value. Ø = those values count in the averages (Number habits).">UT days</th><th></th><th></th></tr></thead><tbody>';
     for (const hb of list) {
       const ty = hb.type || "binary";
       h += '<tr data-id="' + hb.id + '"><td><input class="hbName" value="' + esc(hb.name) + '"></td>';
@@ -6338,6 +6393,7 @@ if (IS_BROWSER) (function () {
         for (const o of list) if (!o.archived && (o.type || "binary") === "numeric") opts.push(["avg:" + o.id, "Ø " + o.name]);
         if (role && !opts.some((x) => x[0] === role)) opts.push([role, role.indexOf("avg:") === 0 ? "Ø (habit gone)" : role]);
         h += '<td><select class="hbSun" title="Sunday = the Sunday cell (Click: tap; missed → next Monday missed · Number: Sunday&#39;s value, counts in the average). + minutes = add minutes that fill from today on. Ø … = that habit&#39;s long-run average in wine red.">' + opts.map((o) => '<option value="' + esc(o[0]) + '"' + (o[0] === role ? " selected" : "") + ">" + esc(o[1]) + "</option>").join("") + "</select></td>"; }
+      h += '<td style="white-space:nowrap;"><label class="hbHmL" title="Still enter this habit on UT days — the day always counts as achieved; the reminder asks for the value"><input type="checkbox" class="hbUtKeep"' + (hb.utKeep ? " checked" : "") + '> enter</label>' + (ty === "numeric" ? '<label class="hbHmL" title="UT-day values count in the averages (and in rules using avgSince / avg)"><input type="checkbox" class="hbUtAvg"' + (hb.utAvg ? " checked" : "") + (hb.utKeep ? "" : " disabled") + '> Ø</label>' : "") + "</td>";   // v269
       h += '<td><button class="hbArch">' + (hb.archived ? "archived" : "active") + '</button></td><td><button class="hbDel">Delete</button></td></tr>';
     }
     host.innerHTML = h + "</tbody></table>" + help;
@@ -6351,6 +6407,8 @@ if (IS_BROWSER) (function () {
       const ds = tr.querySelector(".hbDesc"); if (ds) ds.addEventListener("change", (e) => { snap(); hb.desc = e.target.value; commitDefs(); });
       const fl = tr.querySelector(".hbFill"); if (fl) fl.addEventListener("change", (e) => { snap(); const n = parseFloat(e.target.value); if (isNaN(n) || n <= 0) delete hb.fill; else hb.fill = n; commit(); });
       const fm = tr.querySelector(".hbFillMax"); if (fm) fm.addEventListener("change", (e) => { snap(); const v = e.target.value.trim(); if (v === "") delete hb.fillMax; else hb.fillMax = v; commit(); });
+      const uk = tr.querySelector(".hbUtKeep"); if (uk) uk.addEventListener("change", (e) => { snap(); if (e.target.checked) hb.utKeep = true; else delete hb.utKeep; commit(); renderHabitsTable(); });   // v269
+      const ua = tr.querySelector(".hbUtAvg"); if (ua) ua.addEventListener("change", (e) => { snap(); hb.utAvg = !!e.target.checked; commit(); });
       const sn = tr.querySelector(".hbSun"); if (sn) sn.addEventListener("change", (e) => { snap(); const v = e.target.value; if (v) hb.sun = v; else hb.sun = ""; commit(); renderSunLegend(); });   // "" (not deleted) = chosen "—", so nothing re-seeds it
       tr.querySelector(".hbArch").addEventListener("click", () => { snap(); hb.archived = !hb.archived; commitDefs(); renderHabitsTable(); });
       tr.querySelector(".hbDel").addEventListener("click", () => { if (!confirm('Delete "' + hb.name + '" and all its history? (Archiving instead keeps the history.)')) return; snap(); state.habits = (state.habits || []).filter((x) => x.id !== id); commitDefs(); renderHabitsTable(); renderHistory(); });
@@ -6398,7 +6456,7 @@ if (IS_BROWSER) (function () {
       const wi = +btn.dataset.wi, dates = habitWeekDates(wi), mon = ymd(dateOfCell(state.anchorMonday, wi, 0));
       if (!confirm("Delete Week " + isoWeek(dateOfCell(state.anchorMonday, wi, 0)) + " from the streak tracker? Its habit marks for that week will be removed and the week will disappear.")) return;
       snap();
-      for (const hb of (state.habits || [])) { if (hb.entries) for (const d of dates) delete hb.entries[d]; }
+      for (const hb of (state.habits || [])) { if (hb.entries) for (const d of dates) delete hb.entries[d]; if (hb.ut) for (const d of dates) delete hb.ut[d]; }
       if (state.weekNotes) delete state.weekNotes[mon];
       commit(); renderHistory(); renderStreak();
     }));
@@ -6450,7 +6508,7 @@ if (IS_BROWSER) (function () {
         if (!w.ids.has(c.hb.id)) return { off: true };
         const st = habitStatus(c.hb, ds), val = (c.hb.entries || {})[ds];
         if (st === "ach") c.ach++; else if (st === "miss") c.miss++;
-        return { st, num: typeof val === "number" ? val : null };
+        return { st, num: typeof val === "number" ? val : null, utk: utkDay(c.hb, ds), am: val === "ach" ? "A" : val === "miss" ? "M" : "" };   // v269
       }) }));
     }
     const fin = weeks.filter((w) => w.finished);
@@ -6552,8 +6610,9 @@ if (IS_BROWSER) (function () {
         }
         h += '<td class="awDay' + (dy.ds === m.today ? " today" : "") + '">' + esc(fmtDeadline(dy.ds)) + "</td>";
         dy.cells.forEach((c, j) => {
-          const cls = c.off ? "off" : c.st === "ach" || c.st === "miss" || c.st === "na" ? c.st : "blank";
-          h += '<td><div class="awCell ' + cls + (dy.ds === m.today ? " today" : "") + (dy.ds > m.today ? " future" : "") + '"' + (c.off ? ' title="not tracked that week"' : "") + ">" + (c.off ? "" : c.st === "na" ? '<span class="ut">UT</span>' : esc(awVal(c, m.cols[j]))) + "</div></td>";
+          const ukv = c.utk ? (c.num != null ? (m.cols[j].hm ? fmtHM(c.num) : fmtNum(c.num)) : c.am) : "";   // v269: UT day of a habit you still fill in
+          const cls = c.off ? "off" : c.utk ? "na utk" + (ukv ? "" : " todo") : c.st === "ach" || c.st === "miss" || c.st === "na" ? c.st : "blank";
+          h += '<td><div class="awCell ' + cls + (dy.ds === m.today ? " today" : "") + (dy.ds > m.today ? " future" : "") + '"' + (c.off ? ' title="not tracked that week"' : c.utk ? ' title="UT day — counts as achieved"' : "") + ">" + (c.off ? "" : c.utk ? (ukv ? '<span class="utv">' + esc(ukv) + "</span>" : '<span class="ut">UT</span>') : c.st === "na" ? '<span class="ut">UT</span>' : esc(awVal(c, m.cols[j]))) + "</div></td>";
         });
         h += cmtCell(row++) + "</tr>";
       });
@@ -6590,8 +6649,9 @@ if (IS_BROWSER) (function () {
         const r = [{ v: w.iso, t: "s" }, { v: dy.ds, t: "d" }];
         dy.cells.forEach((c, j) => {
           if (c.off) { r.push({ v: "", t: "s", f: "off" }); return; }
-          const f = c.st === "ach" || c.st === "miss" || c.st === "na" ? c.st : null;
-          if (c.st === "na") r.push({ v: "UT", t: "s", f, c: 1 });
+          const f = c.utk ? "na" : c.st === "ach" || c.st === "miss" || c.st === "na" ? c.st : null;   // v269: a UT day you still fill in = UT colour, with its value
+          if (c.utk) { if (c.num != null) r.push({ v: c.num, t: m.cols[j].hm ? "hm" : "n", f, c: 1 }); else r.push({ v: c.am || "UT", t: "s", f, c: 1 }); }
+          else if (c.st === "na") r.push({ v: "UT", t: "s", f, c: 1 });
           else if (c.num != null) r.push({ v: c.num, t: m.cols[j].hm ? "hm" : "n", f, c: 1 });
           else r.push({ v: c.st === "ach" ? "✓" : c.st === "miss" ? "✕" : "", t: "s", f, c: 1 });
         });
@@ -6728,7 +6788,7 @@ if (IS_BROWSER) (function () {
     const today = ymd(new Date());
     if (ui.lastRemind === today) return;
     const s = computeWeekStats(state.currentWeek), misses = [];
-    for (const hb of s.habits) for (const d of s.dates) { if (d < today && habitStatus(hb, d) === null) misses.push(esc(hb.name) + " — " + d); }
+    for (const hb of s.habits) for (const d of s.dates) { if (d >= today) continue; if (utkDay(hb, d) && !utkHas(hb, d)) misses.push(esc(hb.name) + " — " + d + " (UT day — still enter it)"); else if (habitStatus(hb, d) === null) misses.push(esc(hb.name) + " — " + d); }   // v269
     if (!misses.length) return;
     ui.lastRemind = today; saveUI();
     const rb = $("remindBody"); if (rb) rb.innerHTML = '<ul style="margin:6px 0 0 18px;"><li>' + misses.slice(0, 40).join("</li><li>") + "</li></ul>";
@@ -6756,7 +6816,9 @@ if (IS_BROWSER) (function () {
     while (d <= end && guard < 800) {
       guard++;
       if (d.getDay() !== 0) { const ds = ymd(d), shown = hid === "__all" && st !== "clear" ? new Set(weekHabitsFor(cellForDate(state.anchorMonday, d).weekIdx).map((x) => x.id)) : null;   // v267: "All habits" = the habits in that week's table (not archived ones)
-        for (const h of habits) { if (shown && !shown.has(h.id)) continue; if (!h.entries) h.entries = {}; if (st === "clear") delete h.entries[ds]; else h.entries[ds] = st; n++; } }
+        for (const h of habits) { if (shown && !shown.has(h.id)) continue; if (!h.entries) h.entries = {};
+          if (utKeep(h)) { if (st === "na") utkSet(h, ds, true); else { utkSet(h, ds, false); if (st === "clear") delete h.entries[ds]; else h.entries[ds] = st; } n++; continue; }   // v269: UT keeps what's entered
+          if (st === "clear") delete h.entries[ds]; else h.entries[ds] = st; n++; } }
       d = addDays(d, 1);
     }
     commit(); renderHistory && renderHistory(); bulkDlg.close(); toast("Updated " + n + " cell" + (n === 1 ? "" : "s") + ".");
@@ -6771,7 +6833,7 @@ if (IS_BROWSER) (function () {
     const mon = thisMondayYmd(), sat = ymd(addDays(parseYMD(mon), 6));   // v264: through Sunday (the 7th column)
     if (!confirm("Clear all habit marks for this week (" + fmtDeadline(mon) + " – " + fmtDeadline(sat) + ")?\nYour habits and rules stay; only this week’s cells are wiped.")) return;
     snap();
-    for (const hb of (state.habits || [])) { if (hb.entries) for (const d of Object.keys(hb.entries)) { if (d >= mon && d <= sat) delete hb.entries[d]; } }
+    for (const hb of (state.habits || [])) { if (hb.entries) for (const d of Object.keys(hb.entries)) { if (d >= mon && d <= sat) delete hb.entries[d]; } if (hb.ut) for (const d of Object.keys(hb.ut)) { if (d >= mon && d <= sat) delete hb.ut[d]; } }
     if (state.weekNotes) delete state.weekNotes[mon];
     commit(); renderHistory();
   });
@@ -6892,6 +6954,20 @@ if (IS_BROWSER) (function () {
   /* v264 one-time (owner request 19 Nov 2026): the 7th (Sunday) column starts with the Sunday of this week (state.sunFrom); each habit's
      role there is seeded by name (only where none is set): Sport → +, Phone and Ethanol → Sunday, Sleep → its own Ø, Hour(s) → Ø Sport,
      Food → Ø Ethanol (the averages sit in the row right above their habit); rows: Mails right below Sport, Ethanol right above Phone. */
+  /* v269 one-time (owner request 25 Nov 2026): "UT days: enter" on for Ethanol, Sleep, Phone and Silence (by name; Ø on for Ethanol only).
+     Their old-style UT marks from this Monday on become the UT flag (so the reminder asks for the value); earlier weeks stay as they were. */
+  function applyUtKeep() {
+    if (!state || state.utKeepV) return;
+    const act = (state.habits || []).filter((h) => !h.archived), nm = (h) => h.name || "", mon = ymd(mondayOf(new Date())), hit = [];
+    const pick = [[/🍺|ethanol|alkohol|alcohol|beer|bier/i, true], [/sleep|schlaf|🛏/i, false], [/phone|📱|handy/i, false], [/silence|stille|schweig|ruhe|quiet|🤫|🔇|🙊/i, false]];
+    for (const [re, avg] of pick) {
+      const h = act.find((x) => re.test(nm(x)) && x.utKeep == null); if (!h) continue;
+      h.utKeep = true; h.utAvg = avg; hit.push(nm(h));
+      for (const d of Object.keys(h.entries || {})) if (d >= mon && h.entries[d] === "na") utkSet(h, d, true);
+    }
+    state.utKeepV = 1; saveLocal(); schedulePush();
+    if (hit.length) setTimeout(() => { try { toast("UT days: still enter " + hit.join(", ") + " (🔥 → UT days)"); } catch (e) {} }, 1500);
+  }
   function applySunCol() {
     if (!state || state.sunColV) return;
     const hs = state.habits || [], act = hs.filter((h) => !h.archived), nm = (h) => h.name || "";
@@ -6917,7 +6993,7 @@ if (IS_BROWSER) (function () {
     const msg = "Habit table: 7th column (Sunday · + · averages) from " + fmtDeadline(state.sunFrom) + (moved.length ? " · " + moved.join(" · ") : "");
     console.log("[habit update] " + msg); setTimeout(() => { try { toast(msg); } catch (e) {} }, 1500);
   }
-  loadLocal(); seedHabits(); applyHabitFix(); applyEthanol7(); applySunCol(); seedColors(); mergeSplitBlocks(); buildGrid(); dockNote(); renderAll(); renderNote(true); (state.notes || []).forEach((n) => nhDirty.add(n.id)); applyRightBar(); setupNoteResize(); checkReminder(); setupFillHandle();
+  loadLocal(); seedHabits(); applyHabitFix(); applyEthanol7(); applySunCol(); applyUtKeep(); seedColors(); mergeSplitBlocks(); buildGrid(); dockNote(); renderAll(); renderNote(true); (state.notes || []).forEach((n) => nhDirty.add(n.id)); applyRightBar(); setupNoteResize(); checkReminder(); setupFillHandle();
   document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d && !mpFillGuard) d.close(); })); // click outside to close (mpFillGuard blocks the phantom click after a drag-fill)
   if (state.timer) startTimerLoop();
   if (!MV) { let tries = 0; const ask = () => { if (state.trackerStart || tries++ > 8) return; if (document.querySelector("dialog[open]") || document.visibilityState !== "visible" || document.activeElement === $("noteBody")) { setTimeout(ask, 5000); return; } askTrackerStart(); }; setTimeout(ask, 6000); }   // v264: no tracker start yet → ask (once per start, after the cloud had time to bring one)

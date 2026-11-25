@@ -1,4 +1,4 @@
-const CACHE = "weekplan-v268";
+const CACHE = "weekplan-v269";
 const FONTS = "weekplan-fonts";   // web fonts: kept across versions
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 const EXTRAS = ["./icon-note.png", "./icon-habits.png", "./icon-timer.png", "./icon-today.png"];   // nice to have: a missing one must not stop an update
