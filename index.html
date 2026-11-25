@@ -1323,7 +1323,7 @@ create policy "planner anon access" on plans
 
 <script>
 "use strict";
-/* build v269 */
+/* build v270 */
 /* ═══════════════ Constants ═══════════════ */
 const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]; // Mon–Sat
@@ -2796,7 +2796,7 @@ if (IS_BROWSER) (function () {
         const nameColor = over ? c.color : (isNoneGroup(c) ? "#6b6f76" : c.color);   // None tasks: their own light grey on black, darker grey on white
         const openTxt = Math.abs(O) < 0.0001 ? "0:00" : fmtHM(Math.abs(O));
         const pCell = editable
-          ? '<button class="sgBtn sgMinus" title="−15 min">−</button><input class="sgPlan" value="' + fmtHM(bw) + '" title="Planned this week — type to set"><button class="sgBtn sgPlus" title="+15 min">+</button>'
+          ? '<button class="sgBtn sgMinus" title="Open down to the previous quarter hour (−15 min if it’s on one)">−</button><input class="sgPlan" value="' + fmtHM(bw) + '" title="Planned this week — type to set"><button class="sgBtn sgPlus" title="Open up to the next quarter hour (+15 min if it’s on one)">+</button>'
           : '<span class="sgPstatic">' + fmtHM(bw) + "</span>";
         const eqBtn = editable ? '<button class="sgBtn sgEq" title="Set Plan to timed + gridded (Open → 0:00)">=</button>' : SG_EQ_PH;   // v253: "=" sits right of the Open time
         const cls = [rowCls, extraCls].filter(Boolean).join(" ");
@@ -2863,7 +2863,11 @@ if (IS_BROWSER) (function () {
         if (nv == null) delete poolMp.wprio[cat.id][cw]; else poolMp.wprio[cat.id][cw] = nv;
         commit();
       });
-      const stepP = (d) => { snap(); const nb = Math.max(0, Math.round((weekBudget(cat, cw) + d * 0.25) * 60) / 60); ensureBudgets(state.weeks[cw])[cat.id] = nb; localUpdatedAt = Date.now(); saveLocal(); schedulePush(); poolDirty = true; schedulePoolReflow(); };   // v255: steps round to whole minutes (was 1/100 h = 36 s, so 15:11 → + → − gave 15:10:48)
+      /* v270 (owner request 25 Nov 2026): + / − first move Open to the next quarter-hour mark (0:09 → + → 0:15, − → 0:00; over by 0:09 → + → 0:00);
+         Open already on a mark → a 15-min step as before. Plan changes by whatever that takes (Open = Plan − timed − gridded, whole minutes). */
+      const stepP = (d) => { snap(); const bw = weekBudget(cat, cw); let nb = bw + d * 0.25;
+        if (!planTimeBlocked(cat)) { const om = Math.round((bw - effUsed(cat.id)) * 60), tm = d > 0 ? (Math.floor(om / 15) + 1) * 15 : (Math.ceil(om / 15) - 1) * 15; nb = bw + (tm - om) / 60; }
+        nb = Math.max(0, Math.round(nb * 60) / 60); ensureBudgets(state.weeks[cw])[cat.id] = nb; localUpdatedAt = Date.now(); saveLocal(); schedulePush(); poolDirty = true; schedulePoolReflow(); };   // v255: steps round to whole minutes (was 1/100 h = 36 s, so 15:11 → + → − gave 15:10:48)
       const mn = tr.querySelector(".sgMinus"); if (mn) mn.addEventListener("click", (e) => { e.stopPropagation(); stepP(-1); });
       const pl = tr.querySelector(".sgPlus"); if (pl) pl.addEventListener("click", (e) => { e.stopPropagation(); stepP(1); });
       const eq = tr.querySelector(".sgEq"); if (eq) eq.addEventListener("click", (e) => { e.stopPropagation(); snap(); ensureBudgets(state.weeks[cw])[cat.id] = effUsed(cat.id); commit(); });
@@ -5605,7 +5609,7 @@ if (IS_BROWSER) (function () {
     try { const h = await fetchRow("updated_at"); lastPull = Date.now(); if (h && !sameVer(h.updated_at, syncedAt)) pullRemote(true); } catch (e) {}
   }, 45000);
 
-  const BUILD = "v269";
+  const BUILD = "v270";
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").then((reg) => { if (reg) { reg.update(); reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state !== "activated" || !navigator.serviceWorker.controller) return; const go = () => { flushNoteSave(); location.reload(); }; try { caches.has("weekplan-" + BUILD).then((same) => { if (!same) go(); }, go); } catch (e) { go(); } }); }); } }).catch(() => {});   // a newer build replacing an active one → reload once so the fresh code shows — unless this page already IS that build (v262: the page itself is fetched fresh, so the reload used to hit a page you had just started using)
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}   // v262: ask the browser not to clear Plapp's storage (plan, note history, earlier versions) when the device runs low on space
 
